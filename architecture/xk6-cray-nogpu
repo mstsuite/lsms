@@ -1,0 +1,14 @@
+export LIBS += -L$(TOP_DIR)/CBLAS/lib
+export ADD_LIBS +=  -lcblas_LINUX 
+
+export INC_PATH += -I $(TOP_DIR)/CBLAS/include 
+
+export ADDITIONAL_TARGETS = CBLAS_target
+
+export BOOST_ROOT=$(TOP_DIR)
+
+export CC=cc -I$(BOOST_ROOT)
+export CXX=CC -I$(BOOST_ROOT) -hgnu
+#export CXX=CC -I$(BOOST_ROOT) -DUSE_PAPI
+export LUACXX=g++
+export F77=ftn

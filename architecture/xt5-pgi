@@ -1,0 +1,22 @@
+# export USE_GPTL=1
+ export USE_OPENMP=1
+
+export LIBS += 
+export ADD_LIBS += -L$(TOP_DIR)/CBLAS/lib -lcblas_LINUX $(FPMPI_POST_LINK_OPTS)
+
+export INC_PATH += -I $(TOP_DIR)/CBLAS/include
+
+export ADDITIONAL_TARGETS = CBLAS_target
+
+export BOOST_ROOT=$(TOP_DIR)
+
+ifdef USE_OPENMP
+  export CXX=CC -I$(BOOST_ROOT) -mp
+  #export CXX=CC -I$(BOOST_ROOT) -DUSE_PAPI -mp
+  export F77=ftn -mp
+else
+  export CXX=CC -I$(BOOST_ROOT)
+  #export CXX=CC -I$(BOOST_ROOT) -DUSE_PAPI
+  export F77=ftn
+endif
+export LUACXX = $(CXX)

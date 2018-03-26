@@ -1,0 +1,16 @@
+*.o
+*.lo
+*.dSYM
+*.a
+architecture.h
+lsms
+wl-lsms
+rewl-lsms
+
+lua
+luac
+
+*.aux
+*.log
+*.toc
+lsms_manual.pdf

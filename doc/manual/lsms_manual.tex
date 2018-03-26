@@ -1,0 +1,31 @@
+\documentclass[12pt]{scrbook}
+\usepackage{makeidx}
+
+\KOMAoptions{toc=flat}
+
+\newcommand{\LSMS}{\texttt{LSMS}}
+
+\title{\LSMS}
+\subtitle{The Locally Selfconsistent Multiple-Scattering Code}
+\author{M. Eisenbach}
+\publishers{Oak Ridge National Laboratory}
+\date{13-January-2016}
+
+\begin{document}
+\frontmatter
+\maketitle
+\tableofcontents
+
+\mainmatter
+\input{instalation.tex}
+
+\input{input_format.tex}
+
+\backmatter
+\input{units.tex}
+
+\bibliographystyle{plain}
+\bibliography{lsms}
+
+\printindex
+\end{document}

@@ -1,0 +1,11 @@
+Using libxc:
+To use libxc, [http://www.tddft.org/programs/octopus/wiki/index.php/Libxc]
+
+the script 'build_libxc' will build and install the version of libxc included with LSMS
+
+configure libxc with --prefix=[LSMS_3 top directory]/opt
+compile libxc and install
+
+to build LSMS:
+set USE_LIBXC in the appropriate architecture file
+build LSMS

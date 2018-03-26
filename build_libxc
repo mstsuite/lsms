@@ -1,0 +1,9 @@
+TOP_DIR=`pwd`
+echo $TOP_DIR
+cd libxc
+./configure --prefix=$TOP_DIR/opt
+make clean
+make
+make check
+make install
+
