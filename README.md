@@ -1,7 +1,7 @@
 # LSMS
 LSMS is a code for scalable first principles calculations of materials using multiple scattering theory.
 
-# Citing LSMS
+## Citing LSMS
 If you publish results obtained using LSMS we ask that you cite the following publications:
 
 * Y. Wang, G. M. Stocks, W. A. Shelton, D. M. C. Nicholson, W. M. Temmerman, and Z. Szotek. _Order-n multiple scattering approach to electronic structure calculations_. Phys. Rev. Lett. **75**, 2867 (1995).
