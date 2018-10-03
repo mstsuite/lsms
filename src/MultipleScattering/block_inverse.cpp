@@ -2,7 +2,9 @@
 #include "Complex.hpp"
 #include "Matrix.hpp"
 
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_CUDA_C)
 #include "Accelerator/DeviceStorage.hpp"
+#endif
 
 extern "C" {
   void zblock_lu_(Complex *a, int *lda, int *blk_sz, int *nblk, int *ipvt, int *mp, int *idcol, int *k);
@@ -10,7 +12,10 @@ extern "C" {
 }
 
 int zblock_lu_cpp(Matrix<Complex> &a, int *blk_sz, int nblk, int *ipvt, int *idcol);
+
+#if defined(ACCELERATOR_CUBLAS)
 int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int nblk, int *ipvt, int *idcol);
+#endif
 
 void block_inverse(Matrix<Complex> &a, int *blk_sz, int nblk, Matrix<Complex> &delta, int *ipvt, int *idcol)
 {

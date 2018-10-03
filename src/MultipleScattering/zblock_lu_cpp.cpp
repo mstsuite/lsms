@@ -7,7 +7,7 @@
 extern "C" {
 void zgetrf_(int *m, int *n, Complex *a, int *lda, int *ipvt, int *info);
 void zgetrs_(const char *, int *m, int *ioff, Complex *a, int *lda, int *ipvt, Complex *b, int *ldb, int *info);
-void zgemm_(const char *, const char *, int *m, int *n, int *k, Complex *alpha, Complex *a, int *lda, Complex *b, int *ldb, Complex *beta, Complex *c, int *ldc);
+// void zgemm_(const char *, const char *, int *m, int *n, int *k, Complex *alpha, Complex *a, int *lda, Complex *b, int *ldb, Complex *beta, Complex *c, int *ldc);
 }
   
 // a: input matrix -> output in block 1 of a
@@ -74,13 +74,13 @@ int zblock_lu_cpp(Matrix<Complex> &a, int *blk_sz, int nblk, int *ipvt, int *idc
           {
             int off1 = ioff-k+1;
             int off2 = na-ioff;
-            zgemm_("n", "n", &n, &off1, &off2, &cmone, &a(joff,ioff), &lda, &a(ioff,k-1), &lda, &cone, &a(joff,k-1), &lda);
-            zgemm_("n", "n", &joff, &n, &off2, &cmone, &a(0,ioff), &lda, &a(ioff,joff), &lda, &cone, &a(0,joff), &lda);
+            BLAS::zgemm_("n", "n", &n, &off1, &off2, &cmone, &a(joff,ioff), &lda, &a(ioff,k-1), &lda, &cone, &a(joff,k-1), &lda);
+            BLAS::zgemm_("n", "n", &joff, &n, &off2, &cmone, &a(0,ioff), &lda, &a(ioff,joff), &lda, &cone, &a(0,joff), &lda);
           }
         }
         int off3 = blk_sz[0]-k+1;
         int off4 = na-blk_sz[0];
-        zgemm_("n", "n", &blk_sz[0], &off3, &off4, &cmone, &a(0,blk_sz[0]), &lda, &a(blk_sz[0],k-1), &lda, &cone, &a(0,0), &lda);
+        BLAS::zgemm_("n", "n", &blk_sz[0], &off3, &off4, &cmone, &a(0,blk_sz[0]), &lda, &a(blk_sz[0],k-1), &lda, &cone, &a(0,0), &lda);
       }
 
 //     write(6,*) "k out =",k

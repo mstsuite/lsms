@@ -24,31 +24,31 @@ namespace BLAS {
 // ============================================================================
 // = Level 3 BLAS             GEMM
 // ============================================================================
-extern "C" void sgemm_(char*,char*,int*,int*,int*,const float*,
+extern "C" void sgemm_(const char*,const char*,int*,int*,int*,const float*,
 		       const float*,int*,const float*,int*,
 		       const float*,float*,int*);
-extern "C" void dgemm_(char*,char*,int*,int*,int*,const double*,
+extern "C" void dgemm_(const char*,const char*,int*,int*,int*,const double*,
 		       const double*,int*,const double*,int*,
 		       const double*,double*,int*);
-extern "C" void cgemm_(char*,char*,int*,int*,int*,const std::complex<float>*,
+extern "C" void cgemm_(const char*,const char*,int*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,const std::complex<float>*,int*,
 		       const std::complex<float>*,std::complex<float>*,int*);
-extern "C" void zgemm_(char*,char*,int*,int*,int*,const std::complex<double>*,
+extern "C" void zgemm_(const char*,const char*,int*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,const std::complex<double>*,int*,
 		       const std::complex<double>*,std::complex<double>*,int*);
 //*****************************************************************************
 //*                           SYMM 
 //*****************************************************************************
 
-extern "C" void ssymm_(char*,char*,int*,int*,const float*,const float*,int*,
+extern "C" void ssymm_(const char*,const char*,int*,int*,const float*,const float*,int*,
 		       const float*,int*,const float*,const float*,int*);
-extern "C" void dsymm_(char*,char*,int*,int*,const double*,const double*,int*,
+extern "C" void dsymm_(const char*,const char*,int*,int*,const double*,const double*,int*,
 		       const double*,int*,const double*,const double*,int*);
-extern "C" void csymm_(char*,char*,int*,int*,const std::complex<float>*,
+extern "C" void csymm_(const char*,const char*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,
 		       const std::complex<float>*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*);
-extern "C" void zsymm_(char*,char*,int*,int*,const std::complex<double>*,
+extern "C" void zsymm_(const char*,const char*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,
 		       const std::complex<double>*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*);
@@ -57,10 +57,10 @@ extern "C" void zsymm_(char*,char*,int*,int*,const std::complex<double>*,
 //*                           HEMM
 //*****************************************************************************
 
-extern "C" void chemm_(char*,char*,int*,int*,const std::complex<float>*,
+extern "C" void chemm_(const char*,const char*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,const std::complex<float>*,
 		       int*,const std::complex<float>*,std::complex<float>*,int*);
-extern "C" void zhemm_(char*,char*,int*,int*,const std::complex<double>*,
+extern "C" void zhemm_(const char*,const char*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,const std::complex<double>*,
 		       int*,const std::complex<double>*,std::complex<double>*,int*);
 
@@ -68,200 +68,200 @@ extern "C" void zhemm_(char*,char*,int*,int*,const std::complex<double>*,
 // *                          SYRK
 // ****************************************************************************
 
-extern "C" void ssyrk_(char*,char*,int*,int*,const float*,const float*,int*,
+extern "C" void ssyrk_(const char*,const char*,int*,int*,const float*,const float*,int*,
 		       const float*,float*,int*);
-extern "C" void dsyrk_(char*,char*,int*,int*,const double*,const double*,int*,
+extern "C" void dsyrk_(const char*,const char*,int*,int*,const double*,const double*,int*,
 		       const double*,double*,int*);
-extern "C" void csyrk_(char*,char*,int*,int*,const std::complex<float>*,
+extern "C" void csyrk_(const char*,const char*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,
 		       const std::complex<float>*,std::complex<float>*,int*);
-extern "C" void zsyrk_(char*,char*,int*,int*,const std::complex<double>*,
+extern "C" void zsyrk_(const char*,const char*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,
 		       const std::complex<double>*,std::complex<double>*,int*);
 
 // ****************************************************************************
 // *                          HERK
 // ****************************************************************************
-extern "C" void cherk_(char*,char*,int*,int*,const std::complex<float>*,
+extern "C" void cherk_(const char*,const char*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,
 		       const std::complex<float>*,std::complex<float>*,int*);
 
-extern "C" void zherk_(char*,char*,int*,int*,const std::complex<double>*,
+extern "C" void zherk_(const char*,const char*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,
 		       const std::complex<double>*,std::complex<double>*,int*);
 // ****************************************************************************
 // *                          SYR2K
 // ****************************************************************************
-extern "C" void ssyr2k_(char*,char*,int*,int*,const float*,const float*,int*,
+extern "C" void ssyr2k_(const char*,const char*,int*,int*,const float*,const float*,int*,
 		       const float*,int*,const float*,float*,int*);
-extern "C" void dsyr2k_(char*,char*,int*,int*,const double*,const double*,int*,
+extern "C" void dsyr2k_(const char*,const char*,int*,int*,const double*,const double*,int*,
 		       const double*,int*,const double*,double*,int*);
-extern "C" void csyr2k_(char*,char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void csyr2k_(const char*,const char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
 		       int*,const std::complex<float>*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);
-extern "C" void zsyr2k_(char*,char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zsyr2k_(const char*,const char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
 		       int*,const std::complex<double>*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);
 // ****************************************************************************
 // *                          HER2k
 // ****************************************************************************
-extern "C" void cher2k_(char*,char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void cher2k_(const char*,const char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
 		       int*,const std::complex<float>*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);
-extern "C" void zher2k_(char*,char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zher2k_(const char*,const char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
 		       int*,const std::complex<double>*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);
 // ****************************************************************************
 // *                          TRMM
 // ****************************************************************************
-extern "C" void strmm_(char*,char*,char*,char*,int*,int*,const float*,const float*,
+extern "C" void strmm_(const char*,const char*,char*,char*,int*,int*,const float*,const float*,
 		       int*,float*,int*);
-extern "C" void dtrmm_(char*,char*,char*,char*,int*,int*,const double*,const double*,
+extern "C" void dtrmm_(const char*,const char*,char*,char*,int*,int*,const double*,const double*,
 		       int*,double*,int*);
-extern "C" void ctrmm_(char*,char*,char*,char*,int*,int*,const std::complex<float>*,
+extern "C" void ctrmm_(const char*,const char*,char*,char*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,std::complex<float>*,int*);
-extern "C" void ztrmm_(char*,char*,char*,char*,int*,int*,const std::complex<double>*,
+extern "C" void ztrmm_(const char*,const char*,char*,char*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,std::complex<double>*,int*);
 // ****************************************************************************
 // *                          TRSM
 // ****************************************************************************
-extern "C" void strsm_(char*,char*,char*,char*,int*,int*,const float*,const float*,
+extern "C" void strsm_(const char*,const char*,char*,char*,int*,int*,const float*,const float*,
 		       int*,float*,int*);
-extern "C" void dtrsm_(char*,char*,char*,char*,int*,int*,const double*,const double*,
+extern "C" void dtrsm_(const char*,const char*,char*,char*,int*,int*,const double*,const double*,
 		       int*,double*,int*);
-extern "C" void ctrsm_(char*,char*,char*,char*,int*,int*,const std::complex<float>*,
+extern "C" void ctrsm_(const char*,const char*,char*,char*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,std::complex<float>*,int*);
-extern "C" void ztrsm_(char*,char*,char*,char*,int*,int*,const std::complex<double>*,
+extern "C" void ztrsm_(const char*,const char*,char*,char*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,std::complex<double>*,int*);
 // ****************************************************************************
 // *    Level 2 BLAS          GEMV
 // ****************************************************************************
-extern "C" void sgemv_(char*,int*,int*,const float*,const float*,int*,
+extern "C" void sgemv_(const char*,int*,int*,const float*,const float*,int*,
 		       const float*,int*,const float*,float*,int*);
-extern "C" void dgemv_(char*,int*,int*,const double*,const double*,int*,
+extern "C" void dgemv_(const char*,int*,int*,const double*,const double*,int*,
 		       const double*,int*,const double*,double*,int*);
-extern "C" void cgemv_(char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void cgemv_(const char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
 		       int*,const std::complex<float>*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);  
-extern "C" void zgemv_(char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zgemv_(const char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
 		       int*,const std::complex<double>*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);
 // ****************************************************************************
 // *                          GBMV
 // ****************************************************************************
-extern "C" void sgbmv_(char*,int*,int*,int*,int*,const float*,const float*,int*,
+extern "C" void sgbmv_(const char*,int*,int*,int*,int*,const float*,const float*,int*,
 		       const float*,int*,const float*,float*,int*);
-extern "C" void dgbmv_(char*,int*,int*,int*,int*,const double*,const double*,int*,
+extern "C" void dgbmv_(const char*,int*,int*,int*,int*,const double*,const double*,int*,
 		       const double*,int*,const double*,double*,int*);
-extern "C" void cgbmv_(char*,int*,int*,int*,int*,const std::complex<float>*,
+extern "C" void cgbmv_(const char*,int*,int*,int*,int*,const std::complex<float>*,
 		       const std::complex<float>*,int*,const std::complex<float>*,int*,
 		       const std::complex<float>*,std::complex<float>*,int*);
-extern "C" void zgbmv_(char*,int*,int*,int*,int*,const std::complex<double>*,
+extern "C" void zgbmv_(const char*,int*,int*,int*,int*,const std::complex<double>*,
 		       const std::complex<double>*,int*,const std::complex<double>*,int*,
 		       const std::complex<double>*,std::complex<double>*,int*);
 			 
 // ****************************************************************************
 // *                          HEMV
 // ****************************************************************************
-extern "C" void chemv_(char*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void chemv_(const char*,int*,const std::complex<float>*,const std::complex<float>*,
 		       int*,const std::complex<float>*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);
-extern "C" void zhemv_(char*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zhemv_(const char*,int*,const std::complex<double>*,const std::complex<double>*,
 		       int*,const std::complex<double>*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);			 
 // ****************************************************************************
 // *                         HBMV
 // ****************************************************************************
-extern "C" void chbmv_(char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void chbmv_(const char*,int*,int*,const std::complex<float>*,const std::complex<float>*,
 		       int*,const std::complex<float>*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);
-extern "C" void zhbmv_(char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zhbmv_(const char*,int*,int*,const std::complex<double>*,const std::complex<double>*,
 		       int*,const std::complex<double>*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);			 
 // ****************************************************************************
 // *                         HPMV
 // ****************************************************************************
-extern "C" void chpmv_(char*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void chpmv_(const char*,int*,const std::complex<float>*,const std::complex<float>*,
 		       const std::complex<float>*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);
-extern "C" void zhpmv_(char*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zhpmv_(const char*,int*,const std::complex<double>*,const std::complex<double>*,
 		       const std::complex<double>*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);
 // ******************************************************************************
 // *                         SYMV
 // ******************************************************************************
-extern "C" void ssymv_(char*,int*,const float*,const float*,int*,const float*,int*,const float*,
+extern "C" void ssymv_(const char*,int*,const float*,const float*,int*,const float*,int*,const float*,
 		       float*,int*);
-extern "C" void dsymv_(char*,int*,const double*,const double*,int*,const double*,int*,
+extern "C" void dsymv_(const char*,int*,const double*,const double*,int*,const double*,int*,
 		       const double*,double*,int*);
 // ******************************************************************************
 // *                         SBMV
 // ******************************************************************************
-extern "C" void ssbmv_(char*,int*,int*,const float*,const float*,int*,const float*,
+extern "C" void ssbmv_(const char*,int*,int*,const float*,const float*,int*,const float*,
 		       int*,const float*,float*,int*);
-extern "C" void dsbmv_(char*,int*,int*,const double*,const double*,int*,const double*, int*,
+extern "C" void dsbmv_(const char*,int*,int*,const double*,const double*,int*,const double*, int*,
 		       const double*,double*,int*);
 // ******************************************************************************
 // *                         SPMV
 // ******************************************************************************
-extern "C" void sspmv_(char*,int*,const float*,const float*,const float*,int*,const float*,
+extern "C" void sspmv_(const char*,int*,const float*,const float*,const float*,int*,const float*,
 		       float*,int*);
-  extern "C" void dspmv_(char*,int*,const double*,const double*,const double*,int*,const double*,
+  extern "C" void dspmv_(const char*,int*,const double*,const double*,const double*,int*,const double*,
 		       double*,int*);
 // ******************************************************************************
 // *                         TRMV
 // ******************************************************************************
-extern "C" void strmv_(char*,char*,char*,int*,const float*,int*,float*,int*);
-extern "C" void dtrmv_(char*,char*,char*,int*,const double*,int*,double*,int*);
-extern "C" void ctrmv_(char*,char*,char*,int*,const std::complex<float>*,int*,
+extern "C" void strmv_(const char*,const char*,const char*,int*,const float*,int*,float*,int*);
+extern "C" void dtrmv_(const char*,const char*,const char*,int*,const double*,int*,double*,int*);
+extern "C" void ctrmv_(const char*,const char*,const char*,int*,const std::complex<float>*,int*,
 		       std::complex<float>*,int*);
-extern "C" void ztrmv_(char*,char*,char*,int*,const std::complex<double>*,int*,
+extern "C" void ztrmv_(const char*,const char*,const char*,int*,const std::complex<double>*,int*,
 		       std::complex<double>*,int*);
 
 // ******************************************************************************
 // *                         TBMV
 // ******************************************************************************
-extern "C" void stbmv_(char*,char*,char*,int*,int*,const float*,int*,float*,int*);
-extern "C" void dtbmv_(char*,char*,char*,int*,int*,const double*,int*,double*,int*);
-extern "C" void ctbmv_(char*,char*,char*,int*,int*,const std::complex<float>*,int*,
+extern "C" void stbmv_(const char*,const char*,const char*,int*,int*,const float*,int*,float*,int*);
+extern "C" void dtbmv_(const char*,const char*,const char*,int*,int*,const double*,int*,double*,int*);
+extern "C" void ctbmv_(const char*,const char*,const char*,int*,int*,const std::complex<float>*,int*,
 		       std::complex<float>*,int*);
-extern "C" void ztbmv_(char*,char*,char*,int*,int*,const std::complex<double>*,int*,
+extern "C" void ztbmv_(const char*,const char*,const char*,int*,int*,const std::complex<double>*,int*,
 		       std::complex<double>*,int*);
 // ******************************************************************************
 // *                         TPMV
 // ******************************************************************************
-extern "C" void stpmv_(char*,char*,char*,int*,const float*,float*,int*);
-extern "C" void dtpmv_(char*,char*,char*,int*,const double*,double*,int*);
-extern "C" void ctpmv_(char*,char*,char*,int*,const std::complex<float>*,
+extern "C" void stpmv_(const char*,const char*,const char*,int*,const float*,float*,int*);
+extern "C" void dtpmv_(const char*,const char*,const char*,int*,const double*,double*,int*);
+extern "C" void ctpmv_(const char*,const char*,const char*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);
-extern "C" void ztpmv_(char*,char*,char*,int*,const std::complex<double>*,
+extern "C" void ztpmv_(const char*,const char*,const char*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);
 // ******************************************************************************
 // *                         TRSV
 // ******************************************************************************
-extern "C" void strsv_(char*,char*,char*,int*,const float*,int*,float*,int*);
-extern "C" void dtrsv_(char*,char*,char*,int*,const double*,int*,double*,int*);
-extern "C" void ctrsv_(char*,char*,char*,int*,const std::complex<float>*,int*,
+extern "C" void strsv_(const char*,const char*,const char*,int*,const float*,int*,float*,int*);
+extern "C" void dtrsv_(const char*,const char*,const char*,int*,const double*,int*,double*,int*);
+extern "C" void ctrsv_(const char*,const char*,const char*,int*,const std::complex<float>*,int*,
 		       std::complex<float>*,int*);
-extern "C" void ztrsv_(char*,char*,char*,int*,const std::complex<double>*,int*,
+extern "C" void ztrsv_(const char*,const char*,const char*,int*,const std::complex<double>*,int*,
 		       std::complex<double>*,int*);
 // ******************************************************************************
 // *                         TBSV
 // ******************************************************************************
-extern "C" void stbsv_(char*,char*,char*,int*,int*,const float*,int*,float*,int*);
-extern "C" void dtbsv_(char*,char*,char*,int*,int*,const double*,int*,double*,int*);
-extern "C" void ctbsv_(char*,char*,char*,int*,int*,const std::complex<float>*,int*,
+extern "C" void stbsv_(const char*,const char*,const char*,int*,int*,const float*,int*,float*,int*);
+extern "C" void dtbsv_(const char*,const char*,const char*,int*,int*,const double*,int*,double*,int*);
+extern "C" void ctbsv_(const char*,const char*,const char*,int*,int*,const std::complex<float>*,int*,
 		       std::complex<float>*,int*);
-extern "C" void ztbsv_(char*,char*,char*,int*,int*,const std::complex<double>*,int*,
+extern "C" void ztbsv_(const char*,const char*,const char*,int*,int*,const std::complex<double>*,int*,
 		       std::complex<double>*,int*);
 // ******************************************************************************
 // *                         TPSV
 // ******************************************************************************
-extern "C" void stpsv_(char*,char*,char*,int*,const float*,float*,int*);
-extern "C" void dtpsv_(char*,char*,char*,int*,const double*,double*,int*);
-extern "C" void ctpsv_(char*,char*,char*,int*,const std::complex<float>*,
+extern "C" void stpsv_(const char*,const char*,const char*,int*,const float*,float*,int*);
+extern "C" void dtpsv_(const char*,const char*,const char*,int*,const double*,double*,int*);
+extern "C" void ctpsv_(const char*,const char*,const char*,int*,const std::complex<float>*,
 		       std::complex<float>*,int*);
-extern "C" void ztpsv_(char*,char*,char*,int*,const std::complex<double>*,
+extern "C" void ztpsv_(const char*,const char*,const char*,int*,const std::complex<double>*,
 		       std::complex<double>*,int*);
 // ******************************************************************************
 // *                         GER
@@ -287,54 +287,54 @@ extern "C" void zgerc_(int*,int*,const std::complex<double>*,const std::complex<
 // ******************************************************************************
 // *                         HER
 // ******************************************************************************
-extern "C" void cher_(char*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void cher_(const char*,int*,const std::complex<float>*,const std::complex<float>*,
 		      int*,std::complex<float>*,int*);
-extern "C" void zher_(char*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zher_(const char*,int*,const std::complex<double>*,const std::complex<double>*,
 		      int*,std::complex<double>*,int*);
 // ******************************************************************************
 // *                         HPR
 // ******************************************************************************
-extern "C" void chpr_(char*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void chpr_(const char*,int*,const std::complex<float>*,const std::complex<float>*,
 		      int*,std::complex<float>*);
-extern "C" void zhpr_(char*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zhpr_(const char*,int*,const std::complex<double>*,const std::complex<double>*,
 		      int*,std::complex<float>*);
 // ******************************************************************************
 // *                         HER2
 // ******************************************************************************
-extern "C" void cher2_(char*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void cher2_(const char*,int*,const std::complex<float>*,const std::complex<float>*,
 		       int*,const std::complex<float>*,int*,std::complex<float>*,int*);
-extern "C" void zher2_(char*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zher2_(const char*,int*,const std::complex<double>*,const std::complex<double>*,
 		       int*,const std::complex<double>*,int*,std::complex<double>*,int*);
 // ******************************************************************************
 // *                         HPR2
 // ******************************************************************************
-extern "C" void chpr2_(char*,int*,const std::complex<float>*,const std::complex<float>*,
+extern "C" void chpr2_(const char*,int*,const std::complex<float>*,const std::complex<float>*,
 		       int*,const std::complex<float>*,int*,std::complex<float>*);
-extern "C" void zhpr2_(char*,int*,const std::complex<double>*,const std::complex<double>*,
+extern "C" void zhpr2_(const char*,int*,const std::complex<double>*,const std::complex<double>*,
 		       int*,const std::complex<double>*,int*,std::complex<double>*);
 // ******************************************************************************
 // *                         SYR
 // ******************************************************************************
-  extern "C" void ssyr_(char*,int*,const float*,const float*,int*,float*,int*);
-  extern "C" void dsyr_(char*,int*,const double*,const double*,int*,double*,int*);
+  extern "C" void ssyr_(const char*,int*,const float*,const float*,int*,float*,int*);
+  extern "C" void dsyr_(const char*,int*,const double*,const double*,int*,double*,int*);
 // ******************************************************************************
 // *                         SPR
 // ******************************************************************************
-  extern "C" void sspr_(char*,int*,const float*,const float*,int*,float*);
-  extern "C" void dspr_(char*,int*,const double*,const double*,int*,double*);
+  extern "C" void sspr_(const char*,int*,const float*,const float*,int*,float*);
+  extern "C" void dspr_(const char*,int*,const double*,const double*,int*,double*);
 // ******************************************************************************
 // *                         SYR2
 // ******************************************************************************
-  extern "C" void ssyr2_(char*,int*,const float*,const float*,int*,const float*,
+  extern "C" void ssyr2_(const char*,int*,const float*,const float*,int*,const float*,
 			 int*,float*,int*);
-  extern "C" void dsyr2_(char*,int*,const double*,const double*,int*,const double*,
+  extern "C" void dsyr2_(const char*,int*,const double*,const double*,int*,const double*,
 			 int*,double*,int*);
 // ******************************************************************************
 // *                         SPR2
 // ******************************************************************************
-  extern "C" void sspr2_(char*,int*,const float*,const float*,int*,const float*,
+  extern "C" void sspr2_(const char*,int*,const float*,const float*,int*,const float*,
 			 int*,float*);
-  extern "C" void dspr2_(char*,int*,const double*,const double*,int*,const double*,
+  extern "C" void dspr2_(const char*,int*,const double*,const double*,int*,const double*,
 			 int*,double*);
 // ******************************************************************************
 // *Level 1 BLAS

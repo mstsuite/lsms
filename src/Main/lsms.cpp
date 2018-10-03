@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
 
 // initialize Mixing
   Mixing *mixing;
-  setupMixing(mix, mixing);
+  setupMixing(mix, mixing, lsms.global.iprint);
 
 // need to calculate madelung matrices
   calculateMadelungMatrices(lsms, crystal, local);

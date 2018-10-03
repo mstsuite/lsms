@@ -15,7 +15,7 @@ else
   export GPTL_OPT=
 endif
 
-export LIBS +=  -L/usr/local/lib/gcc/6 -lhdf5 -lgfortran \
+export LIBS +=  -L/usr/local/lib/gcc/8 -lhdf5 -lgfortran \
          -framework Accelerate $(GPTL_LIB)
 #export LIBS +=  -L/usr/local/lib -L/usr/local/lib/gcc/x86_64-apple-darwin13.4.0/4.9.1 -lhdf5 -framework Accelerate $(GPTL_LIB) \
 #                -lgfortran

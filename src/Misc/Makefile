@@ -8,8 +8,11 @@ OBJ = zeroout.o fstop.o newint.o fit.o interp.o trltog.o spin_trafo.o fitpot.o r
       bulirschStoerIntegrator.o \
       calculateGauntCoeficients.o \
       associatedLegendreFunction.o \
-      readLastLine.o stop_with_backtrace.o \
-      essl_workaround.o
+      readLastLine.o stop_with_backtrace.o
+
+ifdef ESSL_WORKAROUND
+  OBJ += essl_workaround.o
+endif
 
 # removed: plglmax.o getclm.o -> replaced with: associatedLegendreFunction.o
 

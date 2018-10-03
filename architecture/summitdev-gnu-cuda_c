@@ -11,6 +11,8 @@ export LIBS += -lm -L${OLCF_ESSL_ROOT}/lib64 -lessl -L/sw/summitdev/xl/20161123/
 export ADD_LIBS +=  -L$(CUDA_DIR)/lib64 -lcudart -lcublas -L$(OLCF_HDF5_ROOT)/lib -lhdf5 -lgfortran
 # export ADD_LIBS += -L$(TOP_DIR)/CBLAS/lib -lcblas_LINUX $(FPMPI_POST_LINK_OPTS) -L$(CULA_LIB_PATH_64) $(CRAY_CUDA_POST_LINK_OPTS) -lcublas -lcula_core -lcula_lapack -lcula_lapack_fortran
 
+export ESSL_WORKAROUND=1
+
 export INC_PATH += -I $(TOP_DIR)/CBLAS/include -I $(CUDA_DIR)/include
 
 export ADDITIONAL_TARGETS = CBLAS_target

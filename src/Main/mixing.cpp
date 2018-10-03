@@ -468,10 +468,11 @@ public:
 
 
 
-void setupMixing(MixingParameters &mix, Mixing* &mixing)
+void setupMixing(MixingParameters &mix, Mixing* &mixing, int iprint)
 {
 
-  printf("\n");
+  if(iprint >= 0)
+    printf("\n");
   mixing = NULL;
 
   // frozen potential by default
@@ -482,13 +483,15 @@ void setupMixing(MixingParameters &mix, Mixing* &mixing)
       !mix.quantity[MixingParameters::moment_direction])
   {
     mixing = new FrozenPotential;
-    printf("Mixing method     : frozen potential (default)\n");
+    if(iprint >= 0)
+      printf("Mixing method     : frozen potential (default)\n");
   }
   // no mixing
   else if (mix.quantity[MixingParameters::no_mixing])
   {
     mixing = new NoMixing;
-    printf("Mixing method     : no mixing\n");
+    if(iprint >= 0)
+      printf("Mixing method     : no mixing\n");
   }
   // charge mixing
   else if (!mix.quantity[MixingParameters::no_mixing] &&
@@ -500,18 +503,23 @@ void setupMixing(MixingParameters &mix, Mixing* &mixing)
     switch (mix.algorithm[MixingParameters::charge]) {
       case 1 :
         mixing = new SimpleChargeDensityMixing(mix.mixingParameter[MixingParameters::charge]);
-        printf("Mixing method     : simple\n");
+        if(iprint >= 0)
+          printf("Mixing method     : simple\n");
         break;
       case 2 :
         mixing = new BroydenChargeDensityMixing(mix.mixingParameter[MixingParameters::charge]);
-        printf("Mixing method     : broyden\n");
+        if(iprint >= 0)
+          printf("Mixing method     : broyden\n");
         break;
       default :
         mixing = new NoMixing;
-        printf("Mixing method     : no mixing\n");
+        if(iprint >= 0)
+          printf("Mixing method     : no mixing\n");
     }
-    printf("Mixing quantity   : charge\n");
-    printf("Mixing parameters : %4.2f\n", mix.mixingParameter[MixingParameters::charge]);
+    if(iprint >= 0){
+      printf("Mixing quantity   : charge\n");
+      printf("Mixing parameters : %4.2f\n", mix.mixingParameter[MixingParameters::charge]);
+    }
   }
   // potential mixing
   else if (!mix.quantity[MixingParameters::no_mixing] &&
@@ -524,32 +532,40 @@ void setupMixing(MixingParameters &mix, Mixing* &mixing)
       case 1 :
         if (mix.mixingParameter[MixingParameters::potential] == 0.0) {
           mixing = new FrozenPotential;
-          printf("Mixing method     : frozen potential\n");
+          if(iprint >= 0)
+            printf("Mixing method     : frozen potential\n");
         }
         else {
           mixing = new SimplePotentialMixing(mix.mixingParameter[MixingParameters::potential]);
-          printf("Mixing method     : simple\n");
+          if(iprint >= 0)
+            printf("Mixing method     : simple\n");
         }
         break;
       case 2 :
         mixing = new BroydenPotentialMixing(mix.mixingParameter[MixingParameters::potential]);
-        printf("Mixing method     : broyden\n");
+        if(iprint >= 0)
+          printf("Mixing method     : broyden\n");
         break;
       default :
         mixing = new FrozenPotential;
-        printf("Mixing method     : frozen potential\n");
+        if(iprint >= 0)
+          printf("Mixing method     : frozen potential\n");
     }
-    printf("Mixing quantity   : potential\n");
-    printf("Mixing parameters : %4.2f\n", mix.mixingParameter[MixingParameters::potential]);
+    if(iprint >= 0){
+      printf("Mixing quantity   : potential\n");
+      printf("Mixing parameters : %4.2f\n", mix.mixingParameter[MixingParameters::potential]);
+    }
   }
   else
   {
-    printf("Type of mixing is not supported.\n");
-    for (int i = 0; i < mix.numQuantities; i++) {
-      printf("quantity = %5d, algorithm = %5d, mixing parameter = %6.3f\n", 
-             mix.quantity[i], mix.algorithm[i], mix.mixingParameter[i]);
+    if(iprint >= 0) {
+      printf("Type of mixing is not supported.\n");
+      for (int i = 0; i < mix.numQuantities; i++) {
+        printf("quantity = %5d, algorithm = %5d, mixing parameter = %6.3f\n", 
+               mix.quantity[i], mix.algorithm[i], mix.mixingParameter[i]);
+      }
+      exit(1);
     }
-    exit(1);
   }
 
 }

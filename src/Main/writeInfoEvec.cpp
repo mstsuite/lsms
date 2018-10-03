@@ -3,7 +3,7 @@
 void writeSingleEvec(FILE *f,int z, int i, Real posX, Real posY, Real posZ, AtomData &atom)
 {
 // Z global_id x y z  qtotws  mtotws  evec_x evec_y evec_z  e_mix  B_x B_y B_z  vSpinShift
-  fprintf(f,"%3d %8d  %21.15lf  %21.15lf  %21.15lf  %12.6lf  %21.15lf  %21.15lf  %21.15lf  %6.2lf  %21.15lf  %21.15lf  %21.15lf  %8.4lf  %21.15lf  %21.15lf  %21.15lf\n",
+  fprintf(f,"%3d %8d  %21.15lf  %21.15lf  %21.15lf  %12.6lf %12.6lf  %21.15lf  %21.15lf  %21.15lf  %6.2lf  %21.15lf  %21.15lf  %21.15lf  %8.4lf  %21.15lf  %21.15lf  %21.15lf\n",
           z,i, posX, posY, posZ,
           atom.qtotws, atom.mtotws,
           atom.evec[0], atom.evec[1], atom.evec[2],

@@ -90,9 +90,11 @@ Real &energy, Real &pressure)
   kineticEnergy -= integrateOneDim(grid0, integrand, integral, rSphere); // (3)
   // kineticEnergy -= integrateOneDim<0>(gridSqrt, integrand, integral, std::sqrt(rSphere)); // (3)
   // kineticEnergy -= integrateOneDim<11>(gridCbrt, integrand, integral, std::cbrt(rSphere)); // (3)
-
-  printf("evssum                      = %35.25lf Ry\n",eigenvalueSum);
-  printf("kinetic Energy              = %35.25lf Ry\n",kineticEnergy);
+  if (lsms.global.iprint >= 0)
+  {
+    printf("evssum                      = %35.25lf Ry\n",eigenvalueSum);
+    printf("kinetic Energy              = %35.25lf Ry\n",kineticEnergy);
+  }
 
 // calculate Coulomb Energy E_C:
 // E_C = \int \rho(r) v_{Coulomb} d^3r          -- (5)
@@ -128,7 +130,8 @@ Real &energy, Real &pressure)
   fit.set(grid0,integral,2);
   integral[0]=fit(0.0);
   Real erho = integrateOneDim(grid0, integral, integrand, rSphere); // (5a)
-  printf("erho                        = %35.25lf Ry\n",erho);
+  if (lsms.global.iprint >= 0)
+    printf("erho                        = %35.25lf Ry\n",erho);
 
   if(lsms.n_spin_pola==1)
   {
@@ -145,10 +148,12 @@ Real &energy, Real &pressure)
   fit.set(grid0,integrand,2);
   integrand[0]=fit(0.0);
   Real ezrho=-integrateOneDim(grid0, integrand, integral, rSphere); // (5b)
-  printf("ezrho                       = %35.25lf Ry\n",ezrho);
+  if (lsms.global.iprint >= 0)
+    printf("ezrho                       = %35.25lf Ry\n",ezrho);
 
   coulombEnergy = erho+ezrho; // (5)
-  printf("Coulomb Energy              = %35.25lf Ry\n",coulombEnergy);
+  if (lsms.global.iprint >= 0)
+    printf("Coulomb Energy              = %35.25lf Ry\n",coulombEnergy);
 
 // Exchange-Correlation energy                  -- (7)
 
@@ -190,9 +195,12 @@ Real &energy, Real &pressure)
     printf("Unknown xc function in localTotalEnergy!\n");
     exit(1);
   }
-  printf("Exchange-Correlation Energy = %35.25lf Ry\n", xcEnergy);
+  if (lsms.global.iprint >= 0)
+  {
+    printf("Exchange-Correlation Energy = %35.25lf Ry\n", xcEnergy);
 
-  printf("ezpt                        = %35.25lf Ry\n\n",ezpt);
+    printf("ezpt                        = %35.25lf Ry\n\n",ezpt);
+  }
 // add all energy contributions:
 
   energy += kineticEnergy + coulombEnergy + xcEnergy + ezpt;

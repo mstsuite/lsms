@@ -9,7 +9,7 @@
 // such that the spherical harmonics are:
 // Y_lm(\theta, \phi) = \bar{P}_{lm}(\cos \theta) e^{i m \phi}
 // use the recursion relation:
-// P_{00}(x) = \sqrt{1/2\pi}
+// P_{00}(x) = \sqrt{1/4\pi}
 //
 // i.e \bar{P}_{lm}=\sqrt{\frac{(2l+1)(l-m)!}{4\pi(l+m)!}} P_{lm}
 //

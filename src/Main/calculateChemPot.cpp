@@ -40,9 +40,11 @@ c     ================================================================
 // if(iharris<=1)
     Real etop = lsms.chempot;
     if (lsms.global.iprint >= 0)
+    {
       printf("atom[0].dosint[0] = %lf  atom[0].dosint[1] = %lf\n",local.atom[0].dosint[0], local.atom[0].dosint[1]);
       printf("calculateChempot: xtws = %lf zvaltss = %lf tnen = %lf old chempot = %lf\n",
              xtws, lsms.zvaltss, tnen, lsms.chempot);
+    }
 //    lsms.chempot = lsms.energyContour.etop + (lsms.zvaltss-xtws)/tnen;
     lsms.chempot = etop + (lsms.zvaltss - xtws) / tnen;
     if (lsms.global.iprint >= 0)

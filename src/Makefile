@@ -3,7 +3,8 @@ export LIBS += -L$(TOP_DIR)/lib -lLSMSLua -lCommunication \
                -lMultipleScattering -lSingleSite -lCore -lVORPOL -lAccelerator \
                -lMadelung -lPotential -lTotalEnergy -lMisc
 
-all: lsms wl-lsms rewl-lsms
+all: lsms wl-lsms
+# all: lsms wl-lsms rewl-lsms (rewl-lsms has problems with the seed generation)
 
 clean:
 	cd RadialGrid && $(MAKE) clean

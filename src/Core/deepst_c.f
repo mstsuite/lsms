@@ -221,7 +221,9 @@ c
 c     ================================================================
 c     just in case the energy becomes zero
 c     ================================================================
-      write(6,'('' DEEPST:: zero energy'',f5.2)')z
+      write(6,'('' DEEPST:: zero energy '',f5.2)')z
+      write(6,'('' DEEPST:: n = '',i2)') nqn
+      write(6,'('' DEEPST:: l = '',i2)') lqn
       call fstop(sname)
 c
 c     ================================================================

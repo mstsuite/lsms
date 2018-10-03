@@ -64,7 +64,7 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
         // Atoms in the LSMS_1 HDF5 file are numbered starting from 000001
         snprintf(fname,250,"%06d",i+1);
         fid_1=H5Gopen2(fid,fname,H5P_DEFAULT);
-        printf("Reading data from group '%s'\n",fname);
+        // printf("Reading data from group '%s'\n",fname);
         if(fid_1<0)
         {
           printf("Can't open group '%s'\n",fname);

@@ -12,7 +12,7 @@ int read_scalar(hid_t loc_id, const char *name, T &value, hid_t dti)
   hid_t space_id,dset_id;
   int hdferr,num_read;
 
-  printf("Attempting to read scalar '%s'\n",name);
+  // printf("Attempting to read scalar '%s'\n",name);
 
   num_read=-1;
   dset_id=H5Dopen2(loc_id,name,H5P_DEFAULT);
@@ -84,7 +84,7 @@ int read_vector(hid_t loc_id,const char *name,T *value,int len)
   int hdferr,ndims;
   hsize_t dims[2], maxdims[2];
 
-  printf("Attempting to read vector '%s'\n",name);
+  // printf("Attempting to read vector '%s'\n",name);
 
   dset_id= H5Dopen2(loc_id,name,H5P_DEFAULT);
 

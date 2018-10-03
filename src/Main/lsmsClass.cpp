@@ -223,7 +223,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
     printLocalTypeInfo(stdout, local);
 
   // initialize Mixing
-  setupMixing(mix, mixing);
+  setupMixing(mix, mixing, lsms.global.iprint);
 
   // set and copy potentialShifter
   potentialShifter.resize(local.num_local);

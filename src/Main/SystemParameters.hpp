@@ -161,6 +161,7 @@ public:
   void setMaxPts(int n) {for(int i=0; i<num_local; i++) atom[i].resizePotential(n);}
   void setMaxCore(int n) {for(int i=0; i<num_local; i++) atom[i].resizeCore(n);}
   int maxNrmat(void) {int v=0; for(int i=0; i<num_local; i++) if(atom[i].nrmat>v) v=atom[i].nrmat; return v;}
+  int maxjws(void) {int m=0; for(int i=0; i<num_local; i++) if(atom[i].jws>m) m=atom[i].jws; return m;}
   int num_local;
   std::vector<int> global_id;
   std::vector<AtomData> atom;

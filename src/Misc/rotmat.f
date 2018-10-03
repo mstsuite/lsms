@@ -59,7 +59,10 @@
       c=(0.d0,0.d0)
       do 70 i=1,ij
    70    c=c+d(i,i)
-      if (dabs(dimag(c)).gt.1.d-10) stop 10
+      if (dabs(dimag(c)).gt.1.d-10) then
+        write(*,*) "Error in rotmat |imag(c)| = ",dabs(dimag(c))
+        stop
+      end if
       tr=c
       return
       end

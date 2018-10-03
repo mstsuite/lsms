@@ -380,7 +380,7 @@ public:
 };
 */
 
-void setupMixing(MixingParameters &mix, Mixing* &mixing);
+void setupMixing(MixingParameters &mix, Mixing* &mixing, int iprint);
 
 
 #endif

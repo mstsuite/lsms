@@ -226,13 +226,15 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   // dosck=0.0;
   Array3d<Complex> dipole(6,4,local.num_local);
   // dipole=0.0;
-  Array3d<Complex> green(local.atom[0].jws,4,local.num_local); // would be better as std::vector<Matrix<Complex>> to avoid problems with different jws.
+  Array3d<Complex> green(local.maxjws(),4,local.num_local); // would be better as std::vector<Matrix<Complex>> to avoid problems with different jws.
+  // Array3d<Complex> green(local.atom[0].jws,4,local.num_local); // would be better as std::vector<Matrix<Complex>> to avoid problems with different jws.
                                                                // or declare as lsms.global.iprpts instead!
   // green=0.0;
   // orbital dos and densities
   Matrix<Complex> dos_orb(3,local.num_local);
   Matrix<Complex> dosck_orb(3,local.num_local);
-  Array3d<Complex> dens_orb(local.atom[0].jws,3,local.num_local);
+  Array3d<Complex> dens_orb(local.maxjws(),3,local.num_local);
+  // Array3d<Complex> dens_orb(local.atom[0].jws,3,local.num_local);
 
 // setup Device constant on GPU
   int maxNumLIZ=0;

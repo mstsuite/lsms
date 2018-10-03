@@ -76,7 +76,7 @@ int loadAlloyBank(LSMSCommunication &comm, LSMSSystemParameters &lsms, AlloyMixi
       {
         // Atoms in the LSMS_1 HDF5 file are numbered starting from 000001
         snprintf(fname, 250, "%06d", id+1);
-        printf("Reading data from group '%s'\n",fname);
+        // printf("Reading data from group '%s'\n",fname);
         fid_1 = H5Gopen2(fid, fname, H5P_DEFAULT);
         if( fid_1 < 0 ) {
           printf("Can't open group '%s'\n",fname);
