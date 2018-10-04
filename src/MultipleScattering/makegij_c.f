@@ -140,10 +140,10 @@ c     hankel function is hfn*exp(i*z)/z
       if(rmag.lt.ptol) stop 'Error in makegij: rmag = 0.'
       if(prel.eq.czero) then
 c if prel is zero then we calculate Gij for multipole Coulomb interaction.
-	hfn(0)=cone/rmag
-	do l=1,lend
-	  hfn(l)=sqrtm1*(2*l-1)*hfn(l-1)/rmag
-	enddo
+        hfn(0)=cone/rmag
+        do l=1,lend
+          hfn(l)=sqrtm1*(2*l-1)*hfn(l-1)/rmag
+        enddo
       else
         z=prel*rmag
         hfn(0)=-sqrtm1
@@ -173,10 +173,10 @@ c     =================================================================
 c     multiply be the normalization constant...........................
       ndlm_local=(lend+1)*(lend+2)/2
       if(ndlm_local.gt.ndlm) then
-	write(6,'(''MAKEGIJ:: ndlm incorrect!'')')
+        write(6,'(''MAKEGIJ:: ndlm incorrect!'')')
         write(6,*) 'ndlm=',ndlm
         write(6,*) 'ndlm_local=',ndlm_local
-	call fstop(sname)
+        call fstop(sname)
       endif
       do j=1,ndlm_local
          plm(j)=clm(j)*plm(j)
@@ -200,14 +200,14 @@ c     calculate cos(phi) and sin(phi) .................................
 c        
       j=0
       do l=0,lend
-	 ll=l*(l+1)
-	 j=ll+1
-	 ll=ll/2+1
-	 m1m=one
+         ll=l*(l+1)
+         j=ll+1
+         ll=ll/2+1
+         m1m=one
          dlm(j)= hfn(l)*plm(ll)
          do m=1,l
-	    m1m=-m1m
-	    fac=plm(ll+m)*dcmplx(cosmp(m),sinmp(m))
+            m1m=-m1m
+            fac=plm(ll+m)*dcmplx(cosmp(m),sinmp(m))
             dlm(j-m)= hfn(l)*m1m*fac
             dlm(j+m)= hfn(l)*conjg(fac)
          enddo
@@ -219,7 +219,7 @@ c     =================================================================
          write(6,*) "cos(theta)=",costheta
          write(6,'(/)')
          write(6,'('' makegij:: l,m,dlm(l,m):'')')
-	 do j=1,ndlj
+         do j=1,ndlj
             write(6,'(2i3,2x,f10.5,1x,d16.8)')
      >      lofk(j),mofk(j),dlm(j)
          enddo
@@ -251,9 +251,9 @@ c           illp(lm2,lm1) = i
 c
 c           perform sum over l3 with gaunt # ......................
 c           ==========================================================
-	    m3=m2-m1
-	    llow=max(abs(m3),abs(l1-l2))
-	    if(prel.eq.czero) llow=l1+l2
+            m3=m2-m1
+            llow=max(abs(m3),abs(l1-l2))
+            if(prel.eq.czero) llow=l1+l2
             do l3=l1+l2,llow,-2
                j=l3*(l3+1)+m3+1
                gij(lm2,lm1) = gij(lm2,lm1)+cgnt(l3/2+1,lm1,lm2)*dlm(j)

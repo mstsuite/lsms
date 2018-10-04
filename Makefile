@@ -25,17 +25,17 @@ all: liblua $(ADDITIONAL_TARGETS) libmjson LSMS
 clean:
 	cd lua && $(MAKE) clean
 	cd mjson && $(MAKE) clean
-	cd libjson && $(MAKE) clean
 	cd src && $(MAKE) clean
 	cd lib && $(MAKE) clean
 	cd doc && $(MAKE) clean
 	cd CBLAS && $(MAKE) clean
 	cd Tools && $(MAKE) clean
+#	cd libjson && $(MAKE) clean
 
 LSMS: liblua libmjson $(ADDITIONAL_TARGETS)
 	cd src && $(MAKE)
 
-Tools: liblua libjson
+Tools: liblua 
 	cd Tools && $(MAKE)
 
 Documentation:
@@ -47,8 +47,8 @@ liblua:
 libmjson:
 	cd mjson && $(MAKE)
 
-libjson:
-	cd libjson && $(MAKE)
+# libjson:
+#	cd libjson && $(MAKE)
 
 zblock_lu_driver: liblua CBLAS_target
 	cd src && $(MAKE) zblock_lu_driver

@@ -1,5 +1,5 @@
 OBJ = zeroout.o fstop.o newint.o fit.o interp.o trltog.o spin_trafo.o fitpot.o rwave.o \
-      initwave.o dfv.o dfv_new.o bsstep.o mmid.o rzextr.o zsphbesjh.o zsphbesj.o cinterp.o cgaunt_c.o \
+      initwave.o dfv.o dfv_new.o rzextr.o zsphbesjh.o zsphbesj.o cinterp.o cgaunt_c.o \
       gaunt.o quadrature.o ifacts_c.o clock_time.o cmtruni.o \
       constraint.o v_plus_minus.o congauss_c.o u_sigma_u.o fnpi.o wrtmtx.o mbeqa.o \
       cnewint.o  ylag.o ricbes.o newder.o \
