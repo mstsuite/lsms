@@ -14,9 +14,9 @@
 
 extern "C" int zmatinv_prep1_ (void **a, void **b, int *n, int *lda, cudaStream_t thisstream);
 extern "C" int zmatinv_batch_ (cuDoubleComplex **A, cuDoubleComplex **Ainv, int *n, int *batch, cudaStream_t thisstream);
-extern "C" int ilaenv_(int*,char*,char*,int*,int*,int*,int*);
+extern "C" int ilaenv_(int*,const char*,const char*,int*,int*,int*,int*);
 
-void handle_cuda_error ( cudaError_t cerr, char *errmsg ) 
+void handle_cuda_error ( cudaError_t cerr, const char *errmsg ) 
 {
   if ( cerr ) {
     printf ("CUDA ERROR (%d) %s \n", cerr, errmsg);
@@ -28,7 +28,7 @@ void handle_cuda_error ( cudaError_t cerr, char *errmsg )
   }
 }
 
-void handle_cublas_error ( cublasStatus_t cs, char *errmsg ) 
+void handle_cublas_error ( cublasStatus_t cs, const char *errmsg ) 
 {
   if ( cs ) {
     printf ("cuBLAS ERROR (%d) %s \n", cs, errmsg);
