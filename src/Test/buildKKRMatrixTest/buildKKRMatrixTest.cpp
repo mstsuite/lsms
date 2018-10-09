@@ -70,6 +70,17 @@ void set_atom(AtomData &atom)
   }
 }
 
+void writeKKRMatrix(const char *name, Matrix<Complex> &m)
+{
+  FILE *f = fopen(name,"w");
+
+  for(int i=0; i<m.n_row(); i++)
+    for(int j=0; j<m.n_col(); j++)
+      fprintf(f,"%5d %5d  %21.15lf %21.15lf\n",i,j,m(i,j).real(),m(i,j).imag());
+
+  fclose(f);
+}
+
 int main(int argc, char *argv[])
 {
   Complex energy;
@@ -104,9 +115,11 @@ int main(int argc, char *argv[])
   if(argc<2)
   {
     printf("Usage: buildKKRMatrixTest c|n|o [loop_count]\n");
-    printf("  c - compare old and new construction results\n");
-    printf("  n - time new matrix construction\n");
-    printf("  o - time old matrix construction\n");
+    printf("  c  - compare old and new construction results\n");
+    printf("  n  - time new matrix construction\n");
+    printf("  o  - time old matrix construction\n");
+    printf("  wn - write matrix from new construction\n");
+    printf("  wo - write matrix from old construction\n");
     exit(0); 
   }
 
@@ -146,7 +159,7 @@ int main(int argc, char *argv[])
     }
     t1 = omp_get_wtime();
     printf(" time: %lf seconds.\n", t1-t0);
-  } else {
+  } else if(argc>1 && *argv[1]=='o') {
 // timing loop
     int loop_count=10;
     if(argc>2) loop_count=atoi(argv[2]);
@@ -158,6 +171,14 @@ int main(int argc, char *argv[])
     }
     t1 = omp_get_wtime();
     printf(" time: %lf seconds.\n", t1-t0);
+  } else if(argc>1 && *argv[1]=='w' && argv[1][1]=='o') {
+    buildKKRMatrix_orig(lsms, local, atom, energy, prel,m);
+    writeKKRMatrix("oldMatrix.out",m);
+  } else if(argc>1 && *argv[1]=='w' && argv[1][1]=='n') {
+    buildKKRMatrix_nrel_ns2(lsms, local, atom, energy, prel,m);
+    writeKKRMatrix("newMatrix.out",m);
+  } else {
+    printf("Unknown option: %s\n",argv[1]);
   }
 
   return 0;
