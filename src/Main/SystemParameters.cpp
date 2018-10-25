@@ -89,9 +89,9 @@ void printLocalTypeInfo(FILE *f, LocalTypeInfo &local)
 
 void printAlloyParameters(FILE *f, AlloyMixingDesc &alloy)
 {
-  fprintf(f,"No. of Alloy Classes : %1d\n",alloy.size());
+  fprintf(f,"No. of Alloy Classes : %lu\n",alloy.size());
   for(int i = 0; i < alloy.size(); i++) {
-    fprintf(f,"Alloy Class #%1d contains %1d components\n",i+1,alloy[i].size());
+    fprintf(f,"Alloy Class #%1d contains %lu components\n",i+1,alloy[i].size());
     for(int j = 0; j < alloy[i].size(); j++) {
       fprintf(f, "  atom : %s\n", alloy[i][j].name);
       fprintf(f, "    conc : %.8f\n", alloy[i][j].conc);
