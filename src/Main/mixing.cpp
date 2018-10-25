@@ -178,7 +178,7 @@ public:
   }
 };
 
-
+Mixing::~Mixing() {}
 
 class NoMixing : public Mixing {
 public:
