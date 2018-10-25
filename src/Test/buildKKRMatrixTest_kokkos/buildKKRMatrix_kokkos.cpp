@@ -10,8 +10,6 @@
 
 #include "associatedLegendreFunction.hpp"
 
-#include <cblas.h>
-
  #define INLINE_PLGLMAX
  #define INLINE_MAKEGIJ
 
@@ -101,7 +99,7 @@ void buildKKRMatrix_kokkos(LSMSSystemParameters &lsms, LocalTypeInfo &local,Atom
           for(int is=0; is<lsms.n_spin_cant; is++)
           {
             int jm=jsm+kkrsz_ns*j+kkrsz*is;
-            // cblas_zcopy(kkr1,&local.tmatStore(jm,atom.LIZStoreIdx[ir1]),1,&tmat_n[im],1);
+            // BLAS::zcopy_(&kkr1,&local.tmatStore(jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
             for(int k=0; k<kkr1; k++) tmat_n(im+k, ir1)=tmatStore(jm+k,LIZStoreIdx(ir1));
             im+=kkr1;
           }
@@ -310,9 +308,9 @@ c                  l    ij
           }
         }
 /*
-        cblas_zgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,kkr1_ns,kkr2_ns,kkr1_ns,&cmone,
-                    &tmat_n(0,ir1),kkr1_ns,bgij,kkr1_ns,&czero,
-                    &m(nsts.data()[ir1],nsts.data()[ir2]),nrmat_ns);
+        BLAS::zgemm_("n","n",&kkr1_ns,&kkr2_ns,&kkr1_ns,&cmone,
+                    &tmat_n(0,ir1),&kkr1_ns,bgij,&kkr1_ns,&czero,
+                    &m(nsts.data()[ir1],nsts.data()[ir2]),&nrmat_ns);
 //*/
 //*
         int nsts_1=nsts(ir1);

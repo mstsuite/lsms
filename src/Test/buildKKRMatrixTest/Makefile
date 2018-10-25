@@ -17,7 +17,6 @@ all: buildKKRMatrixTest
 
 clean:
 	rm -f *.o buildKKRMatrixTest
-	cd ../../../CBLAS && $(MAKE) clean
 
 cgaunt_c.o: $(MISC)/cgaunt_c.f
 	$(F77) -c $(MISC)/cgaunt_c.f
@@ -61,12 +60,9 @@ buildKKRMatrix_nrel_ns2.o: buildKKRMatrix_nrel_ns2.cpp
 
 buildKKRMatrixTest: buildKKRMatrixTest.cpp $(COEFICIENTS) \
                     buildKKRMatrix_original.o makegij_c.o setgij.o \
-                    buildKKRMatrix_nrel_ns2.o makegij_new.o plglmax_new.o \
-                    CBLAS_target
+                    buildKKRMatrix_nrel_ns2.o makegij_new.o plglmax_new.o 
 	$(CXX) $(INC_PATH) -o buildKKRMatrixTest buildKKRMatrixTest.cpp \
                buildKKRMatrix_original.o buildKKRMatrix_nrel_ns2.o \
                makegij_c.o setgij.o \
                $(COEFICIENTS) $(ADD_LIBS) $(LIBS)
 
-CBLAS_target:
-	cd ../../../CBLAS && $(MAKE) alllib

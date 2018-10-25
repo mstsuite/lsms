@@ -5,6 +5,8 @@ all: pdf
 
 pdf: $(TEX_FILES)
 	pdflatex lsms_manual.tex
+	bibtex lsms_manual
+	pdflatex lsms_manual.tex
 	pdflatex lsms_manual.tex
 
 clean:
@@ -12,3 +14,4 @@ clean:
 	rm -f *.aux
 	rm -f *.log
 	rm -f *.toc
+	rm -f *.bbl *.blg

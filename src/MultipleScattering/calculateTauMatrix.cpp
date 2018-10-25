@@ -3,7 +3,6 @@
 #include "Complex.hpp"
 #include <vector>
 #include <cmath>
-#include <cblas.h>
 #include "PhysicalConstants.hpp"
 
 #include "lapack.h"
@@ -138,7 +137,8 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &a
         for(int is=0; is<lsms.n_spin_cant; is++)
         {
           int jm=jsm+kkrsz_ns*j+kkrsz*is;
-          cblas_zcopy(kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),1,&tmat_n[im],1);
+          int one=1;
+          BLAS::zcopy_(&kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
           im+=kkr1;
         }
       }
@@ -188,9 +188,9 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &a
           for(int jj=ncst; jj<ncst+kkr2_ns; jj++)
             Gij_full(ii,jj)=bgij[ii-nrst+(jj-ncst)*kkr2_ns];
 #endif
-        cblas_zgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,kkr1_ns,kkr2_ns,kkr1_ns,&cmone,
-                    tmat_n,kkr1_ns,bgij,kkr1_ns,&czero,
-                    &m(nrst,ncst),nrmat_ns);
+        BLAS::zgemm_("n","n",&kkr1_ns,&kkr2_ns,&kkr1_ns,&cmone,
+                    tmat_n,&kkr1_ns,bgij,&kkr1_ns,&czero,
+                    &m(nrst,ncst),&nrmat_ns);
       }
       ncst+=kkr2_ns;
     }

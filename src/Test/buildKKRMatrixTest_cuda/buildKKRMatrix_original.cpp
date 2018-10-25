@@ -6,8 +6,6 @@
 #include "TestStructures.hpp"
 #include "Misc/Coeficients.hpp"
 
-#include <cblas.h>
-
 #ifdef CRAYPAT
 #include <pat_api.h>
 #endif
@@ -126,7 +124,8 @@ PAT_region_begin(2,"build local t_mat");
         for(int is=0; is<lsms.n_spin_cant; is++)
         {
           int jm=jsm+kkrsz_ns*j+kkrsz*is;
-          cblas_zcopy(kkr1,&local.tmatStore(jm,atom.LIZStoreIdx[ir1]),1,&tmat_n[im],1);
+          int one=1;
+          BLAS::zcopy_(&kkr1,&local.tmatStore(jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
           im+=kkr1;
         }
       }
@@ -181,9 +180,9 @@ PAT_region_begin(3,"buildKKRMatrix ir2 loop");
             Gij_full(ii,jj)=bgij[ii-nrst+(jj-ncst)*kkr2_ns];
 #endif
 
-        cblas_zgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,kkr1_ns,kkr2_ns,kkr1_ns,&cmone,
-                    tmat_n,kkr1_ns,bgij,kkr1_ns,&czero,
-                    &m(nrst,ncst),nrmat_ns);
+        BLAS::zgemm_("n","n",&kkr1_ns,&kkr2_ns,&kkr1_ns,&cmone,
+                    tmat_n,&kkr1_ns,bgij,&kkr1_ns,&czero,
+                    &m(nrst,ncst),&nrmat_ns);
 /*
         for(int j=0; j<kkr2_ns; j++)
           for(int i=0; i<kkr1_ns; i++)

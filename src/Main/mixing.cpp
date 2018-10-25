@@ -59,7 +59,7 @@ public:
     LAPACK::dgetrf_(&nn,&nn,&A(0,0),&LDIM,&ipiv[0],&INFO);
     LAPACK::dgetri_(&nn,&A(0,0),&LDIM,&ipiv[0],WORK,&LWORK,&INFO);
 
-    delete WORK;
+    delete[] WORK;
   }
 
   void init(Real a_, int vs, int mbl=10, int itres=25)

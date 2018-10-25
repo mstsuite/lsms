@@ -32,7 +32,6 @@ COEFICIENTS = cgaunt_c.o ifacts_c.o quadrature.o  fstop.o zeroout.o \
 
 clean: kokkos-clean
 	rm -f *.o buildKKRMatrixTest
-	cd ../../../CBLAS && $(MAKE) clean
 
 cgaunt_c.o: $(MISC)/cgaunt_c.f
 	$(F77) -c $(MISC)/cgaunt_c.f
@@ -74,11 +73,9 @@ buildKKRMatrixTest: buildKKRMatrixTest.cpp $(COEFICIENTS) \
                     buildKKRMatrix_original.o makegij_c.o setgij.o \
                     buildKKRMatrix_nrel_ns2.o makegij_new.o plglmax_new.o \
                     buildKKRMatrix_kokkos.o \
-                    CBLAS_target $(KOKKOS_LINK_DEPENDS) $(KOKKOS_CPP_DEPENDS)
+                    $(KOKKOS_LINK_DEPENDS) $(KOKKOS_CPP_DEPENDS)
 	$(CXX) $(INC_PATH) -o buildKKRMatrixTest buildKKRMatrixTest.cpp \
                buildKKRMatrix_original.o buildKKRMatrix_nrel_ns2.o \
                buildKKRMatrix_kokkos.o makegij_c.o setgij.o \
                $(COEFICIENTS) $(ADD_LIBS) $(KOKKOS_LDFLAGS) $(KOKKOS_LIBS) $(LIBS) 
 
-CBLAS_target:
-	cd ../../../CBLAS && $(MAKE) alllib

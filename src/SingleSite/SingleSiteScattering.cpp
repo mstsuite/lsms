@@ -1,4 +1,3 @@
-#include <cblas.h>
 #include "SingleSiteScattering.hpp"
 
 extern "C"
@@ -36,7 +35,7 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
                              &lsms.global.iprint,lsms.global.istop,32);
     int kkrszsqr=atom.kkrsz*atom.kkrsz;
     int one=1;
-    cblas_zcopy(kkrszsqr,&solution.tmat_l(0,0,0),1,&solution.tmat_g(0,0),1);
+    BLAS::zcopy_(&kkrszsqr,&solution.tmat_l(0,0,0),&one,&solution.tmat_g(0,0),&one);
   } else {
     for(int is=0; is<lsms.n_spin_pola; is++)
     {
@@ -59,8 +58,8 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
     } else {
       int kkrszsqr=atom.kkrsz*atom.kkrsz;
       int one=1;
-      cblas_zcopy(kkrszsqr,&solution.tmat_l(0,0,0),1,&solution.tmat_g(0,0),1);
-      cblas_zcopy(kkrszsqr,&solution.tmat_l(0,0,1),1,&solution.tmat_g(0,atom.kkrsz),1);
+      BLAS::zcopy_(&kkrszsqr,&solution.tmat_l(0,0,0),&one,&solution.tmat_g(0,0),&one);
+      BLAS::zcopy_(&kkrszsqr,&solution.tmat_l(0,0,1),&one,&solution.tmat_g(0,atom.kkrsz),&one);
     }
   }
 }

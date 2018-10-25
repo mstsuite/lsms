@@ -4,7 +4,6 @@
 #include <complex>
 #include "cuda_runtime.h"
 #include "cublas_v2.h"
-#include "../../CBLAS/include/cblas.h"
 #include <omp.h>
 #include "cudaCheckError.hpp"
 #include "cudaDoubleComplex.hpp"

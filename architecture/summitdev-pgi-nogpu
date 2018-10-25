@@ -6,12 +6,11 @@
 
 export LIBS += -lm -L${OLCF_ESSL_ROOT}/lib64 -lessl -L/sw/summitdev/xl/20161123/xlf/15.1.5/lib/ -lxlfmath -lxl -lxlf90_r -llapack -lblas
 export ADD_LIBS +=  -lpgf90 -lpgf902 -lpgf90_rpm1 -lpgf90rtl -L$(OLCF_HDF5_ROOT)/lib -lhdf5
-# export ADD_LIBS += -L$(TOP_DIR)/CBLAS/lib -lcblas_LINUX $(FPMPI_POST_LINK_OPTS) -L$(CULA_LIB_PATH_64) $(CRAY_CUDA_POST_LINK_OPTS) -lcublas -lcula_core -lcula_lapack -lcula_lapack_fortran
 
-export INC_PATH += -I $(TOP_DIR)/CBLAS/include 
+export INC_PATH += 
 # -I $(HDF5_INCLUDE_OPTS)
 
-export ADDITIONAL_TARGETS = CBLAS_target
+export ADDITIONAL_TARGETS = 
 
 export BOOST_ROOT=$(TOP_DIR)
 

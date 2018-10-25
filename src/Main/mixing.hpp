@@ -225,6 +225,7 @@ public:
 
 class Mixing {
 public:
+  virtual ~Mixing() = 0;
   // virtual void updateChargeDensity(LSMSSystemParameters &lsms, AtomData &a) = 0;
   virtual void updateChargeDensity(LSMSCommunication &comm, LSMSSystemParameters &lsms, std::vector<AtomData> &as) = 0;
   // virtual void updatePotential(LSMSSystemParameters &lsms, AtomData &a) = 0;

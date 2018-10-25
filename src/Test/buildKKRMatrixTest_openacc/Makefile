@@ -8,7 +8,7 @@ export LIBS := -L$(OLCF_CUDA_ROOT)/lib64 -lgfortran -L$(OLCF_ESSL_ROOT)/lib64 -l
 #include arch-minsky-gnu
 include arch-minsky-pgi
 
-export INC_PATH += -I$(TOP_DIR)/include -I$(TOP_DIR)/src -I$(TOP_DIR)/CBLAS/include -I${TOP_DIR}/include
+export INC_PATH += -I$(TOP_DIR)/include -I$(TOP_DIR)/src -I${TOP_DIR}/include
 export MISC = $(TOP_DIR)/src/Misc
 
 COEFICIENTS = cgaunt_c.o ifacts_c.o quadrature.o  fstop.o zeroout.o \
@@ -18,7 +18,6 @@ all: buildKKRMatrixTest-acc
 
 clean:
 	rm -f *.o buildKKRMatrixTest
-	cd ../../../CBLAS && $(MAKE) clean
 
 cgaunt_c.o: $(MISC)/cgaunt_c.f
 	$(F77) -c $(MISC)/cgaunt_c.f
@@ -71,8 +70,7 @@ c_kkrmat.o: c_kkrmat.c
 buildKKRMatrixTest-acc: buildKKRMatrixTest.cpp $(COEFICIENTS) \
                     buildKKRMatrix_original.o makegij_c.o setgij.o \
 										buildKKRMatrix_nrel_ns2.o \
-                    kkrmat_acc-mix.o c_kkrmat.o makegij_new.o plglmax_new.o \
-                    CBLAS_target
+                    kkrmat_acc-mix.o c_kkrmat.o makegij_new.o plglmax_new.o 
 	$(CXX) $(INC_PATH) -mp -ta=tesla:cc60,cuda8.0,flushz,fastmath,safecache -Minfo=accel \
 	  -o buildKKRMatrixTest-acc buildKKRMatrixTest.cpp \
     buildKKRMatrix_original.o buildKKRMatrix_nrel_ns2.o kkrmat_acc-mix.o c_kkrmat.o \
@@ -81,5 +79,3 @@ buildKKRMatrixTest-acc: buildKKRMatrixTest.cpp $(COEFICIENTS) \
 	#$(CXX) $(INC_PATH) \
 	#$(CXX) $(INC_PATH) -ta=tesla:cuda8.0,fastmath,flushz -Minfo=accel \
 
-CBLAS_target:
-	cd ../../../CBLAS && $(MAKE) alllib

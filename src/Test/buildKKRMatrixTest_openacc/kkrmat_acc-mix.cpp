@@ -6,8 +6,6 @@
 #include "TestStructures.hpp"
 #include "Misc/Coeficients.hpp"
 
-//#include <cblas.h>
-
 // [eric] complex conversion
 #define CXX2C(a) (*((double _Complex*)(&(a))))
 

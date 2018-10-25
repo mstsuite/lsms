@@ -1,7 +1,7 @@
 # export USE_GPTL=1
 #export USE_OPENMP=1
 # export USE_GMP=1
- export USE_LIBXC=1
+# export USE_LIBXC=1
 # define HAS_BACKTRACE if glibc backtrace functionality is available
 # export HAS_BACKTRACE=1
 

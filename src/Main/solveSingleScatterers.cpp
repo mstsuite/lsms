@@ -2,7 +2,6 @@
 #include "Complex.hpp"
 #include <vector>
 #include <cmath>
-#include <cblas.h>
 #include "PhysicalConstants.hpp"
 
 #include "lapack.h"
@@ -17,6 +16,7 @@ void solveSingleScatterers(LSMSSystemParameters &lsms, LocalTypeInfo &local,
                            std::vector<Matrix<Real> > &vr, Complex energy,
                            std::vector<NonRelativisticSingleScattererSolution> &solution,int iie)
 {
+  int one=1;
 // ========================== SINGLE SCATTERER STUFF
   Complex prel=std::sqrt(energy*(1.0+energy*c2inv));
   Complex pnrel=std::sqrt(energy);
@@ -52,8 +52,8 @@ void solveSingleScatterers(LSMSSystemParameters &lsms, LocalTypeInfo &local,
       Complex *pmat = new Complex[kkrszsqr];
       Complex *wbig = new Complex[kkrszsqr];
       Complex *pmat_m_ptr=&local.atom[i].pmat_m[iie](0,0);
-      cblas_zcopy(kkrszsqr,&solution[i].tmat_l(0,0,0),1,pmat,1);
-      cblas_zcopy(kkrszsqr,&solution[i].tmat_l(0,0,1),1,pmat_m_ptr,1);
+      BLAS::zcopy_(&kkrszsqr,&solution[i].tmat_l(0,0,0),&one,pmat,&one);
+      BLAS::zcopy_(&kkrszsqr,&solution[i].tmat_l(0,0,1),&one,pmat_m_ptr,&one);
       zgetrf_(&kkrsz,&kkrsz,pmat_m_ptr,&kkrsz,ipvt,&info);
       zgetri_(&kkrsz,pmat_m_ptr,&kkrsz,ipvt,wbig,&kkrszsqr,&info);
 //    -------------------------------------------------------------

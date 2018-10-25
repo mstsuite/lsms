@@ -6,8 +6,6 @@
 #include "TestStructures.hpp"
 #include "Misc/Coeficients.hpp"
 
-#include <cblas.h>
-
 #define USE_ALLOCA
 #define INLINE_PLGLMAX
 #define INLINE_MAKEGIJ
@@ -96,7 +94,7 @@ void buildKKRMatrix_nrel_ns2(LSMSSystemParameters &lsms, LocalTypeInfo &local,At
           for(int is=0; is<lsms.n_spin_cant; is++)
           {
             int jm=jsm+kkrsz_ns*j+kkrsz*is;
-            // cblas_zcopy(kkr1,&local.tmatStore(jm,atom.LIZStoreIdx[ir1]),1,&tmat_n[im],1);
+            // BLAS::zcopy_(&kkr1,&local.tmatStore(jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
             for(int k=0; k<kkr1; k++) tmat_n[im+k]=local.tmatStore(jm+k,atom.LIZStoreIdx[ir1]);
             im+=kkr1;
           }
@@ -362,9 +360,9 @@ void buildKKRMatrix_nrel_ns2(LSMSSystemParameters &lsms, LocalTypeInfo &local,At
           }
         }
 //*
-        cblas_zgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,kkr1_ns,kkr2_ns,kkr1_ns,&cmone,
-                    tmat_n,kkr1_ns,bgij,kkr1_ns,&czero,
-                    &m(nrst,ncst),nrmat_ns);
+        BLAS::zgemm_("n","n",&kkr1_ns,&kkr2_ns,&kkr1_ns,&cmone,
+                    tmat_n,&kkr1_ns,bgij,&kkr1_ns,&czero,
+                    &m(nrst,ncst),&nrmat_ns);
 //*/
 /*
         for(int j=0; j<kkr2_ns; j++)

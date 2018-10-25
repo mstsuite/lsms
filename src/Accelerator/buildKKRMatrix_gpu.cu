@@ -15,8 +15,6 @@
 #include "SingleSite/AtomData.hpp"
 #include "Misc/Coeficients.hpp"
 
-#include <cblas.h>
-
 #ifdef CRAYPAT
 #include <pat_api.h>
 #endif
@@ -144,6 +142,7 @@ void freeDConst(void * d_const)
  //host side function for comparison
  void makeTmat(int iie, const LSMSSystemParameters &lsms, /*const*/ LocalTypeInfo &local, const AtomData &atom, int ir1, int kkr1,int kkrsz_ns,int kkrsz, Complex *tmat_n) {
    int im=0;
+   const int one=1;
 
    for(int js=0; js<lsms.n_spin_cant; js++) //2
    {
@@ -154,7 +153,7 @@ void freeDConst(void * d_const)
        {
          int jm=jsm+kkrsz_ns*j+kkrsz*is;
          //copy of size kkr1 from local.tmatStore(jm,atom.LIZStoreIdx) to tmat_n
-         cblas_zcopy(kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),1,&tmat_n[im],1);
+         BLAS::zcopy_(&kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
          im+=kkr1;
        }
      }
@@ -242,9 +241,9 @@ void freeDConst(void * d_const)
          const Complex cmone=-1.0;
          const Complex czero=0.0;
          //SIZE:  32x32 . 32x32
-         cblas_zgemm(CblasColMajor,CblasNoTrans,CblasNoTrans,kkr1_ns,kkr2_ns,kkr1_ns,&cmone,
-             tmat_n,kkr1_ns,bgij+4*kkrsz*kkrsz*ir2,kkr1_ns,&czero,
-             &m(nrst,ncst),nrmat_ns);
+         BLAS::zgemm_("n","n",&kkr1_ns,&kkr2_ns,&kkr1_ns,&cmone,
+               tmat_n,&kkr1_ns,bgij+4*kkrsz*kkrsz*ir2,&kkr1_ns,&czero,
+               &m(nrst,ncst),&nrmat_ns);
        }
        ncst+=kkr2_ns;
      }

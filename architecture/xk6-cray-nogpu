@@ -1,9 +1,9 @@
-export LIBS += -L$(TOP_DIR)/CBLAS/lib
-export ADD_LIBS +=  -lcblas_LINUX 
+export LIBS += 
+export ADD_LIBS += 
 
-export INC_PATH += -I $(TOP_DIR)/CBLAS/include 
+export INC_PATH += 
 
-export ADDITIONAL_TARGETS = CBLAS_target
+export ADDITIONAL_TARGETS = 
 
 export BOOST_ROOT=$(TOP_DIR)
 

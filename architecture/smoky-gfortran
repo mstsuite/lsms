@@ -14,12 +14,11 @@ endif
 export LIBS +=  -lgfortran \
          $(ACML_LIB) -lacml_mv $(GPTL_LIB)
 
-export INC_PATH += -I$(TOP_DIR)/CBLAS/include $(HDF5_CLIB) \
+export INC_PATH += $(HDF5_CLIB) \
           $(GPTL_INC)
 
-export ADD_LIBS += -L$(TOP_DIR)/CBLAS/lib/ -lcblas_LINUX \
-                 $(HDF5_CLIB) -lhdf5
-export ADDITIONAL_TARGETS = CBLAS_target
+export ADD_LIBS += $(HDF5_CLIB) -lhdf5
+export ADDITIONAL_TARGETS =
 
 export BOOST_ROOT=$(TOP_DIR)
 

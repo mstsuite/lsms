@@ -2,11 +2,11 @@
 export USE_OPENMP=1
 
 export LIBS +=  
-export ADD_LIBS += $(FPMPI_POST_LINK_OPTS) -L$(TOP_DIR)/CBLAS/lib -lcblas_LINUX
+export ADD_LIBS += $(FPMPI_POST_LINK_OPTS)
 
-export INC_PATH += -I $(TOP_DIR)/CBLAS/include
+export INC_PATH +=
 
-export ADDITIONAL_TARGETS = CBLAS_target
+export ADDITIONAL_TARGETS =
 
 export BOOST_ROOT=$(TOP_DIR)
 

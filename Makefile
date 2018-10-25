@@ -28,7 +28,6 @@ clean:
 	cd src && $(MAKE) clean
 	cd lib && $(MAKE) clean
 	cd doc && $(MAKE) clean
-	cd CBLAS && $(MAKE) clean
 	cd Tools && $(MAKE) clean
 #	cd libjson && $(MAKE) clean
 
@@ -50,11 +49,9 @@ libmjson:
 # libjson:
 #	cd libjson && $(MAKE)
 
-zblock_lu_driver: liblua CBLAS_target
+zblock_lu_driver: liblua 
 	cd src && $(MAKE) zblock_lu_driver
 
-CBLAS_target:
-	cd CBLAS && $(MAKE) alllib
 
 test: liblua $(ADDITIONAL_TARGETS) libmjson
 	cd src && $(MAKE) test

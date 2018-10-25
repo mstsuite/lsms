@@ -5,12 +5,12 @@ export USE_ACCELERATOR = -DACCELERATOR_CUDA_C
 export USE_LIBXC=1
 
 export LIBS +=
-export ADD_LIBS += -L$(TOP_DIR)/CBLAS/lib -lcblas_LINUX $(FPMPI_POST_LINK_OPTS) $(CRAY_CUDA_POST_LINK_OPTS) -lcublas -pgf90libs
-# export ADD_LIBS += -L$(TOP_DIR)/CBLAS/lib -lcblas_LINUX $(FPMPI_POST_LINK_OPTS) -L$(CULA_LIB_PATH_64) $(CRAY_CUDA_POST_LINK_OPTS) -lcublas -lcula_core -lcula_lapack -lcula_lapack_fortran
+export ADD_LIBS += $(FPMPI_POST_LINK_OPTS) $(CRAY_CUDA_POST_LINK_OPTS) -lcublas -pgf90libs
+# export ADD_LIBS += $(FPMPI_POST_LINK_OPTS) -L$(CULA_LIB_PATH_64) $(CRAY_CUDA_POST_LINK_OPTS) -lcublas -lcula_core -lcula_lapack -lcula_lapack_fortran
 
-#export INC_PATH += -I $(TOP_DIR)/CBLAS/include -I $(HDF5_INCLUDE_OPTS)
+#export INC_PATH += -I $(HDF5_INCLUDE_OPTS)
 
-export ADDITIONAL_TARGETS = CBLAS_target
+export ADDITIONAL_TARGETS = 
 
 export BOOST_ROOT=$(TOP_DIR)
 
