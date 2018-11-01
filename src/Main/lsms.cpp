@@ -213,10 +213,16 @@ int main(int argc, char *argv[])
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
   iFactors.init(lsms, crystal.maxlmax);
 
-  // printf("before buildLIZandCommLists\n");
+  double timeBuildLIZandCommList = MPI_Wtime();
+  if (lsms.global.iprint >= 0)
+    printf("building the LIZ and Communication lists [buildLIZandCommLists]\n");
   buildLIZandCommLists(comm, lsms, crystal, local);
-  // printf("after buildLIZandCommLists: num_local=%d\n", local.num_local);
-
+  timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time for buildLIZandCommLists [num_local=%d]: %lf sec\n",
+           local.num_local, timeBuildLIZandCommList);
+  }
 
 // initialize the potential accelerators (GPU)
 // we need to know the max. size of the kkr matrix to invert: lsms.n_spin_cant*local.maxNrmat()
