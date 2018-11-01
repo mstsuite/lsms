@@ -173,7 +173,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
            3 : spin polarized, non-collinear
            4 : fully relativistic
 */
-  lsms.nspin=2;
+  lsms.nspin=3;
   luaGetInteger(L,"nspin",&lsms.nspin);
   if(lsms.relativity==full)
   {

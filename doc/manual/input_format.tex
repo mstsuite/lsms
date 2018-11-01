@@ -67,12 +67,29 @@ Monte-Carlo simulations).
 \section{Control of the Calculation}
 
 \subsection{\texttt{systemid}}
+A short string to identify the system and used to construct the
+default filenames for the input and output potential files.
+
+
 
 \subsection{\texttt{system\_title}}
 
+\subsection{\texttt{potential\_file\_in}}
+default: $\texttt{v\_}\langle\textit{systemid}\rangle$
+
+\subsection{\texttt{potential\_file\_out}}
+default: $\texttt{w\_}\langle\textit{systemid}\rangle$
+
 \subsection{\texttt{pot\_in\_type}}
+The type of the input potential file. The possible values are 0 for
+the LSMS~1 HDF5 file format and 1 for the SSITE text format.
+(default value: 0, i.e. HDF5)
 
 \subsection{\texttt{pot\_out\_type}}
+The file format for the output potential. The file formats are the
+same as for \texttt{pot\_in\_type} with the addition of $-1$ to
+suppress the generation of an output potential.
+(default value: $-1$, no output potential)
 
 \subsection{\texttt{iprint}}
 
@@ -81,13 +98,17 @@ Monte-Carlo simulations).
 \subsection{\texttt{print\_node}}
 
 \subsection{\texttt{istop}}
+default: \texttt{main}
+
+\subsection{\texttt{gpu\_threads}}
 
 %%%%%
 %%%%%
 \subsection{\texttt{nspin}}
 This parameter selects the treatment of magnetism. Possible values are: 1 for non spin-polarized calculations,
 2 for spin-polarized collinear clacluations and 3 for non-collinear spin polarized calculations.
-The default value fon non relativistic and scalar relativistic calculations is 2 in the fully relativistic
+The default value fon non relativistic and scalar relativistic
+calculations is 3. In the fully relativistic
 calculations this parameter is ignored and assumed to be 3 (always non-collinear!). Note that this is different from LSMS\_1
 where a fully relativistic calculation was requested by \texttt{nspin=4}, now this is selected by \texttt{relativity="full"}.
 
@@ -97,11 +118,15 @@ approximation treatment of the atomic potentials. Default value: 0 for
 muffin-tin. \textit{This parameter will be replaced by the}
 \texttt{potential} \textit{parameter in a future version.}
 
+\subsection{\texttt{fixRMT}}
+default: 0
+
 \subsection{\texttt{potential} not yet implemented}
 Possible values: \texttt{spherical}, \texttt{muffin-tin},
 \texttt{atomic-sphere-approximation} or \texttt{full-potential}
 
 \subsection{\texttt{xcFunctional}}
+default: \{0, 1\}, Built in von Barth-Hedin
 
 \subsection{\texttt{relativity}}
 This parameter selects the treatment of the valence electrons as non-relativistic, scalar-relativistic
@@ -124,11 +149,22 @@ Default value: \texttt{default}
 \subsection{\texttt{nscf}}
 The maximum number of selfconsistency steps tp be performed.
 
+\subsection{\texttt{writeSteps}}
+The frequency of writing potentials during a selfconsistent
+calculation. The output potential is written every \texttt{writeSteps}
+iteration steps. Note the potential always is written at the end of
+the calculation (if the output type is not negative.)
+default: 30000 (for practical purposes, the potential never gets
+written with the default!)
+
 \subsection{\texttt{rmsTolerance}}
 The convergence criterion for selfconsistent iterations. The convergence criterion is reached when
 the charge RMS difference is smaller than \texttt{rmsTolerance} for every site.
 
 Default values: $10^{-8}$
+
+\subsection{\texttt{zblockLUSize}}
+default: 0, LSMS tries to find the optimal size for a given architecture.
 
 %%%%%
 \subsection{\texttt{energyContour}}
@@ -148,10 +184,38 @@ Default values: $10^{-8}$
 \subsubsection{\texttt{energyContour.maxGroupSize}}
 
 %%%%
+\subsection{\texttt{numberOfMixingQuantities}}
+
 \subsection{\texttt{mixing}}
 
 \subsubsection{\texttt{mixing.quantity}}
 
 \subsubsection{\texttt{mixing.algorithm}}
+possible values: \texttt{simple}, \texttt{broyden}
 
 \subsubsection{\texttt{mixing.mixing\_parameter}}
+
+%%%% Wang Landau for alloys
+
+\subsection{\texttt{alloy\_file\_in}}
+default: $\texttt{bank\_v\_}\langle\textit{systemid}\rangle$
+
+\subsection{\texttt{alloy\_file\_out}}
+default: $\texttt{bank\_w\_}\langle\textit{systemid}\rangle$
+
+\subsection{\texttt{nalloy\_class}}
+number of site occupation classes.
+default: 0
+
+\subsection{\texttt{alloy\_class}}
+\subsubsection{\texttt{alloy\_class.ncomp}}
+number of possible elements in this alloy class
+\subsubsection{\texttt{alloy\_class.comp.atom}}
+\subsubsection{\texttt{alloy\_class.comp.conc}}
+Concentration
+\subsubsection{\texttt{alloy\_class.comp.Z}}
+\subsubsection{\texttt{alloy\_class.comp.Zc}}
+\subsubsection{\texttt{alloy\_class.comp.Zs}}
+\subsubsection{\texttt{alloy\_class.comp.Zv}}
+
+
