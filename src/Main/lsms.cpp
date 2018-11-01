@@ -535,6 +535,8 @@ int main(int argc, char *argv[])
     printf("timeScfLoop[rank==0] = %lf sec\n", timeScfLoop);
     printf(".../lsms.nscf = %lf sec\n", timeScfLoop / (double)lsms.nscf);
     printf("timeCalcChemPot[rank==0]/lsms.nscf = %lf sec\n", timeCalcChemPot / (double)lsms.nscf);
+    printf("timeBuildLIZandCommList[rank==0]: %lf sec\n",
+           timeBuildLIZandCommList);
   }
 
   local.tmatStore.unpinMemory();
