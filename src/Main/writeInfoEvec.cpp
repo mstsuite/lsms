@@ -26,7 +26,7 @@ void readSingleEvec(FILE *f,int &z, int &i, Real &posX, Real &posY, Real &posZ, 
          &atom.evecOut[0], &atom.evecOut[1], &atom.evecOut[2]);
 }
 
-int writeInfoEvec(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local, const char *name)
+int writeInfoEvec(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local, Real eband, const char *name)
 {
   AtomData pot_data;
 
@@ -34,6 +34,8 @@ int writeInfoEvec(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPar
   {
     FILE *outf=fopen(name,"w");
 
+    fprintf(outf,"%lf %lf %lf\n", lsms.totalEnergy, eband, lsms.chempot);
+    
 // loop over all atom types:
     for(int i=0; i<crystal.num_types; i++)
     {
@@ -72,11 +74,14 @@ int readInfoEvec(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPara
 
   int Z,ii;
   Real posX,posY,posZ;
+  Real ef, etot, eband;
 
   if(comm.rank==0)
   {
     FILE *inf=fopen(name,"r");
 
+    fscanf(inf,"%lf %lf %lf\n", &etot, &eband, &ef);
+    
 // loop over all atom types:
     for(int i=0; i<crystal.num_types; i++)
     {
