@@ -49,6 +49,8 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Pack(&lsms.pot_out_type,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.alloy_in_type,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.alloy_out_type,1,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack(lsms.infoEvecFileIn,128,MPI_CHAR,buf,s,&pos,comm.comm);
+    MPI_Pack(lsms.infoEvecFileOut,128,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.num_atoms,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.nspin,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.relativity,1,MPI_INT,buf,s,&pos,comm.comm);
@@ -114,6 +116,8 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&lsms.pot_out_type,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.alloy_in_type,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.alloy_out_type,1,MPI_INT,comm.comm);
+    MPI_Unpack(buf,s,&pos,lsms.infoEvecFileIn,128,MPI_CHAR,comm.comm);
+    MPI_Unpack(buf,s,&pos,lsms.infoEvecFileOut,128,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.num_atoms,1,MPI_INT,comm.comm);
     crystal.num_atoms=lsms.num_atoms;
     MPI_Unpack(buf,s,&pos,&lsms.nspin,1,MPI_INT,comm.comm);
