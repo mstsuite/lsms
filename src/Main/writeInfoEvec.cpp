@@ -34,7 +34,7 @@ int writeInfoEvec(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPar
   {
     FILE *outf=fopen(name,"w");
 
-    fprintf(outf,"%lf %lf %lf\n", lsms.totalEnergy, eband, lsms.chempot);
+    fprintf(outf,"%.15lf %.15lf %.15lf\n", lsms.totalEnergy, eband, lsms.chempot);
     
 // loop over all atom types:
     for(int i=0; i<crystal.num_types; i++)
