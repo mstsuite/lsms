@@ -49,7 +49,8 @@ public:
   char alloy_file_in[128];
   char alloy_file_out[128]; 
   int alloy_in_type,alloy_out_type;
-  char evecInfoFile[128];
+  char infoEvecFileIn[128];
+  char infoEvecFileOut[128];
   int mixing; // combines LSMS_1's mix_quant & mix_algor : -1 don't mix. mix_quant=mixing%4; mix_algor=mixing>>2;
               // mix_quant  0: charge, 1: potential
               // mix_algor  0: simple (linear) mixing; 1: broyden

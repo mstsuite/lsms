@@ -140,6 +140,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   lsms.relativity=scalar;
   lsms.nrelc=lsms.nrelv=0;
   char rel_str[80];
+  rel_str[0]='s'; rel_str[1]=0; // defualt is scalar relativistic
   luaGetStrN(L,"relativity",rel_str,40);
   switch(rel_str[0])
   {
@@ -147,6 +148,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     case 's': case 'S': lsms.relativity=scalar; lsms.nrelv=0; lsms.nrelc=0; break;
     case 'f': case 'F': lsms.relativity=full; lsms.nrelv=0; lsms.nrelc=0; break;
   }
+  rel_str[0]='d'; rel_str[1]=0; // default 
   luaGetStrN(L,"core_relativity",rel_str,40);
   switch(rel_str[0])
   {
@@ -485,8 +487,10 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   }
 
   // check to read evec and constraints from file:
-  lsms.evecInfoFile[0]=0;
-  luaGetStrN(L,"systemid",lsms.evecInfoFile,120);
+  lsms.infoEvecFileIn[0]=0;
+  luaGetStrN(L,"infoEvecFileIn",lsms.infoEvecFileIn,120);
+  snprintf(lsms.infoEvecFileOut,120,"info_evec_out");
+  luaGetStrN(L,"infoEvecFileOut",lsms.infoEvecFileOut,120);
 
   // read default block size for zblock_lu
   lsms.zblockLUSize=0;

@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
 
   }
 
-  writeInfoEvec(comm, lsms, crystal, local, eband, "info_evec_out");
+  writeInfoEvec(comm, lsms, crystal, local, eband, lsms.infoEvecFileOut);
 
   if (kFile != NULL)
     fclose(kFile);
