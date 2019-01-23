@@ -9,6 +9,7 @@
 #include "initializeAtom.hpp"
 #include "Core/CoreStates.hpp"
 #include "Misc/integrateOneDim.cpp"
+#include "Potential/calculateChargesPotential.hpp"
 
 /* initializeAtom(AtomData &a)
    initialize an atom using the following information in AtomData
@@ -256,7 +257,7 @@ void initializeAtom(AtomData &a)
       }
     }
     j++;
-    printf("%d %d\n",i,j);
+    // printf("%d %d\n",i,j);
   }
   
   // add charge density contributions
@@ -264,6 +265,9 @@ void initializeAtom(AtomData &a)
   // (add small spliting in spin up/down valence densities to initialize magnetic calculations)
   Real delta=0.1;
   Real valenceDensityUp, valenceDensityDown;
+  Real vmt, vmt1;
+  vmt=0.0;
+  vmt1=0.0;
   Real atomVolume=(4.0/3.0)*M_PI*a.rws*a.rws*a.rws;  // a.rmt*a.rmt*a.rmt;
   if(a.nspin==1)
   {
@@ -280,13 +284,27 @@ void initializeAtom(AtomData &a)
   // calculate potential from initial density guess
   std::vector<Real> chargeDensity(a.r_mesh.size()+1);
   std::vector<Real> electrostaticPotential(a.r_mesh.size()+1);
+  // std::vector<Real> exchangeCorrelationPotential(a.r_mesh.size()+1);
   std::vector<Real> mesh0(a.r_mesh.size()+1);
+
+  // printf("jmt =%d\n",a.jmt);
+
+  Matrix<Real> rhoTemp(a.jmt+2,2); 
+  std::vector<Real> rTemp(a.jmt+3);
+  rTemp[0] = 0.0;
+  for (int j=0; j<a.jmt+2; j++)
+  {
+    //rTemp's indices need to be shifted by 1 for passing into getqm_mt!
+    rTemp[j+1] = std::sqrt(a.r_mesh[j]);
+  }
+
+  
   chargeDensity[0]=0.0;
   mesh0[0]=0.0;
   if(a.nspin==1)
     for(int ir=0; ir<a.r_mesh.size(); ir++)
     {
-      chargeDensity[ir+1]=2.0*a.rhotot(ir,0); // factor 2 for solution of radial poisson eq. : v(r) = 8 pi/r \int_0^r r'^2 \rho(r')dr' 
+      chargeDensity[ir+1]=a.rhotot(ir,0); // factor 2 for solution of radial poisson eq. : v(r) = 8 pi/r \int_0^r r'^2 \rho(r')dr' 
       mesh0[ir+1]=a.r_mesh[ir];
     }
   else
@@ -298,11 +316,35 @@ void initializeAtom(AtomData &a)
   
   integrateOneDim(mesh0, chargeDensity, electrostaticPotential);
 
-  Real potMix = 1.0; // 0.1
+  // calculate the exchange correlation potential
+  for(int is=0; is<a.nspin; is++)
+  {
+    a.qInt = 0.0; // a.qtotws - a.qtotmt;
+    Real spin = 1.0 - Real(is) * 2.0;
+    Real ro3 = std::pow( (4.0*M_PI/3.0) * a.rhoInt, -1.0/3.0);
+    Real dz = 0.0; //a.mInt / a.qInt;
+    int iexch = 0; // von Barth-Hedin
+    int mtasa = 0;
+    newexchg_(&a.nspin, &spin, &a.rhotot(0,0), &a.rhotot(0,a.nspin-1),
+	      &a.exchangeCorrelationPotential(0,is), &a.exchangeCorrelationEnergy(0,is),
+	      &a.exchangeCorrelationV[is], &a.exchangeCorrelationE,
+	      &ro3, &dz, &a.r_mesh[0], &a.jmt, &iexch);
+
+    newpot_(&a.nspin, &a.ztotss, &a.rhotot(0,0),
+	    &a.rhotot(0,a.nspin-1), &rhoTemp(0,0),
+	    &a.vr(0,is), &a.vrNew(0,is), &a.vrms[is],
+	    &a.exchangeCorrelationPotential(0,is), &vmt1, &vmt, &a.exchangeCorrelationV[is], &rTemp[0],
+	    &a.jmt, &a.rInscribed, &a.rInscribed,
+	    &mtasa, &iexch);
+  }
+  
+  Real potMix = 0.1; // 0.1
   for(int ir=0; ir<a.r_mesh.size(); ir++)
   {
-    a.vr(ir,0)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1])+(1.0-potMix)*a.vr(ir,0);
-    a.vr(ir,1)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1])+(1.0-potMix)*a.vr(ir,1);
+    // a.vr(ir,0)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1]+a.exchangeCorrelationPotential(ir,0))+(1.0-potMix)*a.vr(ir,0);
+    // a.vr(ir,1)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1]+a.exchangeCorrelationPotential(ir,1))+(1.0-potMix)*a.vr(ir,1);
+    a.vr(ir,0)= potMix*a.vrNew(ir,0)+(1.0-potMix)*a.vr(ir,0);
+    a.vr(ir,1)= potMix*a.vrNew(ir,1)+(1.0-potMix)*a.vr(ir,1);
   }
 
   if(generatePlot)
@@ -344,7 +386,7 @@ void initializeAtom(AtomData &a)
 // iteration for preliminary potential
   for(int iteration=0; iteration<50; iteration++)
   {
-    printf("iter %d\n",iteration);
+    // printf("iter %d\n",iteration);
     for(int ir=0; ir<a.r_mesh.size(); ir++)
     {
       a.rhotot(ir,0)=a.rhoNew(ir,0)=valenceDensityUp;
@@ -394,10 +436,36 @@ void initializeAtom(AtomData &a)
       }
     integrateOneDim(mesh0, chargeDensity, electrostaticPotential);
 
+  // calculate the exchange correlation potential
+    for(int is=0; is<a.nspin; is++)
+    {
+      a.qInt = 0.0; // a.qtotws - a.qtotmt;
+      Real spin = 1.0 - Real(is) * 2.0;
+      Real ro3 = std::pow( (4.0*M_PI/3.0) * a.rhoInt, -1.0/3.0);
+      Real dz = 0.0; //a.mInt / a.qInt;
+      int iexch = 0; // von Barth-Hedin
+      int mtasa=0;
+      newexchg_(&a.nspin, &spin, &a.rhotot(0,0), &a.rhotot(0,a.nspin-1),
+		&a.exchangeCorrelationPotential(0,is), &a.exchangeCorrelationEnergy(0,is),
+		&a.exchangeCorrelationV[is], &a.exchangeCorrelationE,
+		&ro3, &dz, &a.r_mesh[0], &a.jmt, &iexch);
+
+      
+      newpot_(&a.nspin, &a.ztotss, &a.rhotot(0,0),
+	      &a.rhotot(0,a.nspin-1), &rhoTemp(0,0),
+	      &a.vr(0,is), &a.vrNew(0,is), &a.vrms[is],
+	      &a.exchangeCorrelationPotential(0,is), &vmt1, &vmt, &a.exchangeCorrelationV[is], &rTemp[0],
+	      &a.jmt, &a.rInscribed, &a.rInscribed,
+	      &mtasa, &iexch);
+    }
+    
+    potMix = 0.1; // 0.1
     for(int ir=0; ir<a.r_mesh.size(); ir++)
     {
-      a.vr(ir,0)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1])+(1.0-potMix)*a.vr(ir,0);
-      a.vr(ir,1)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1])+(1.0-potMix)*a.vr(ir,1);
+      // a.vr(ir,0)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1]+a.exchangeCorrelationPotential(ir,0))+(1.0-potMix)*a.vr(ir,0);
+      // a.vr(ir,1)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1]+a.exchangeCorrelationPotential(ir,1))+(1.0-potMix)*a.vr(ir,1);
+      a.vr(ir,0)= potMix*a.vrNew(ir,0)+(1.0-potMix)*a.vr(ir,0);
+      a.vr(ir,1)= potMix*a.vrNew(ir,1)+(1.0-potMix)*a.vr(ir,1);
     }
   }
 
