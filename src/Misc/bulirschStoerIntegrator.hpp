@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <vector>
+#include <cmath>
 
 template<typename Rx, typename Ry>
 void modifiedMidpoint(Rx x0, Rx x1, Ry *y0,
