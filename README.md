@@ -10,6 +10,6 @@ and if the GPU accelerated version was used, please cite additionally:
 
 * M. Eisenbach, J. Larkin, J. Lutjens, S. Rennich, and J. H. Rogers. _GPU acceleration of the locally selfconsistent multiple scattering code for first principles calculation of the ground state and statistical physics of materials_. Computer Physics Communications **211**, 2 (2017).
 
-and for calulations using the Monte-Carlo simulations:
+and for calculations using the Monte-Carlo simulations:
 
-* M. Eisenbach, C.-G. Zhou, D. M. Nicholson, G. Brown, J. Larkin, and T. C. Schulthess. _A Scalable Method for Ab Initio Computation of Free Energies in Nanoscale Systems_. Proceedings of the Conference on High Performance Computing Networking, Storage and Analysis, ACM, New York, 64 (2009)
+* M. Eisenbach, C.-G. Zhou, D. M. C. Nicholson, G. Brown, J. Larkin, and T. C. Schulthess. _A Scalable Method for Ab Initio Computation of Free Energies in Nanoscale Systems_. Proceedings of the Conference on High Performance Computing Networking, Storage and Analysis, ACM, New York, 64 (2009)
