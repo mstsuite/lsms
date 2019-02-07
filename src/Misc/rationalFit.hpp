@@ -271,6 +271,8 @@ public:
   }
 };
 
+/// Given a table of function values r[i] -> f(r[i])
+/// find the interpolated value of f(x)
 template<typename T>
 T interpolate(std::vector<T> &r, std::vector<T> &f, T x)
 {
