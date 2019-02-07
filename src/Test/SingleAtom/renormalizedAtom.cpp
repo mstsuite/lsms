@@ -113,11 +113,33 @@ void integrateDirac(std::vector<Real> &r_mesh, Real atomicNumber, std::vector<Re
   }
 }
 
-int main()
+void printUsage(const char *name, Real R)
+{
+  printf("Usage: %s Z n kappa [R]\n",name);
+  printf("       Z: atomic number\n");
+  printf("       n: principal quantum number (1, 2, 3, ...)\n");
+  printf("       R: atomic sphere radius (optional, default=%lf)\n",R);
+}
+
+int main(int argc, char *argv[])
 {
   int atomicNumber = 29; // test copper
-  int lmax, nspin, ncore;
+  int principalQuantumNumber = 1;
+  int kappa = -1; // l=0
   int atomRadius = 3.0;
+
+  if(argc != 4 && argc != 5)
+  {
+    printUsage(argv[0], atomRadius);
+    exit(1);
+  }
+  atomicNumber = atoi(argv[1]);
+  principalQuantumNumber = atoi(argv[2]);
+  kappa = atoi(argv[3]);
+  if(argc == 5)
+    atomRadius = atof(argv[4]);
+
+  int lmax, nspin, ncore;
 
   std::vector<Real> r_mesh, vr;
   Matrix<Real> pq;
@@ -130,8 +152,6 @@ int main()
   for(int i=0; i<r_mesh.size(); i++) vr[i] = -2.0*Real(atomicNumber);
 
   pq.resize(2,r_mesh.size());
-  int principalQuantumNumber = 1;
-  int kappa = -1; // l=0
 
   Real energyUpper, energyLower;
 
@@ -177,7 +197,7 @@ int main()
     energyUpper = energy;
   }
 
-  Real energyEpsilon = 1.0e-12;
+  Real energyEpsilon = 1.0e-15;
   while(std::abs(energyUpper - energyLower) > energyEpsilon)
   {
     energy = energyLower + 0.5*(energyUpper-energyLower);
