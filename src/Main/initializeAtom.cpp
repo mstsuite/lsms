@@ -59,10 +59,10 @@ c               dm:      h/720;
 */
 extern "C"
 {
-  void deepst_(int *nqn, int *lqn, int *kqn, Real *en, Real *rv, Real*r,
+  void deepst_check_(int *nqn, int *lqn, int *kqn, Real *en, Real *rv, Real*r,
                Real *rf, Real*h, Real *z, Real *c,
                int *nitmax, Real *tol, int *nws, int *nlast, int *iter,
-               int *iprpts, int *ipdeq);
+		     int *iprpts, int *ipdeq, int *found);
 }
 
 // approximation for the error function
@@ -75,6 +75,206 @@ Real approxErfc(Real x)
 
   Real t = 1.0 / (1.0 + p*x);
   return 1.0 - ((a1 + (a2 + a3*t) * t) * t) * std::exp(-(x*x));
+}
+
+int calculateAtomLevels(AtomData &a, std::vector<InitialAtomLevels> &atomLevels,
+			Matrix<Real> &rhoValence, bool writeOrbitals=false)
+{
+  // find the lowest zcorss+zsemss levels
+  // maximum number of states to test: (lmax+1)*(lmax+2)/2
+  // assuming kappa degeneracy, iterating over principal quantum number and l
+  // we treat core and semi-core states the same for the initialization,
+  // using deepst for both
+
+  int lmaxCore = std::min(a.lmax, 3);   // only consider s,p,d,f electrons (we should never need g or higher)
+
+  int  numAtomLevels = ((lmaxCore+1) * (lmaxCore+2)) / 2;
+  int  kappa         = 0;
+  Real energy        = 0.0;
+  Real cLight        = 2.0 * 137.0359895;
+  int  nitmax        = 100;                // maximum number of iterations
+  Real tol           = 1.0e-8;             // energy tolerance
+  int  last          = a.r_mesh.size();
+  int  ipdeq         = 5;
+  int  iter          = 0;
+  int found;
+
+  std::vector<Real> rf(a.r_mesh.size()+1);
+  std::vector<Real> rfNormalized(a.r_mesh.size()+1);
+  std::vector<Real> unnormalizedDensity(a.r_mesh.size()+1);
+
+  int nlast;
+  
+  int nl = 0;
+  
+  for(int n=1; n<=lmaxCore+1; n++)
+  {
+    for (int l=0; l<n; l++)
+    {
+      kappa  = -l - 1;        //only use kappa -l-1 this will work for all l (including l=0)
+      energy = -(a.ztotss) * (a.ztotss) / Real(n*n);
+
+      if(writeOrbitals)
+	printf("calculating n=%2d  l=%2d  :  Energy guess=%12.6lf\n", n, l, energy);
+      
+      atomLevels[nl].rho.resize(a.r_mesh.size());
+      
+      deepst_check_(&n, &l, &kappa, &energy, &a.vr(0,0), &a.r_mesh[0],
+              &atomLevels[nl].rho[0], &a.h,
+              &a.ztotss, &cLight, &nitmax, &tol, &a.jws, &last, &iter,
+		    &last, &ipdeq, &found);
+      // normalize the density:
+      for(int ir=0; ir<a.r_mesh.size(); ir++)
+        atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]; ///a.r_mesh[ir];
+      integrateOneDim(a.r_mesh, atomLevels[nl].rho, rf);
+      Real normalizationFactor = 1.0/rf[a.jws]; // rf[last-2];
+      char fname[256];
+      
+      FILE *orbitalFile;
+      if(writeOrbitals)
+      {
+	sprintf(fname,"orbital_density_n%d_l%d",n,l);
+	orbitalFile=fopen(fname,"w");
+      }
+      
+      for(int ir=0; ir<a.r_mesh.size(); ir++)
+      {
+        unnormalizedDensity[ir]=atomLevels[nl].rho[ir];
+        atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]*normalizationFactor; // *a.r_mesh[ir];;
+      }
+      // test normalization
+      integrateOneDim(a.r_mesh, atomLevels[nl].rho, rfNormalized);
+      
+      if(writeOrbitals)
+      {
+	for(int ir=0; ir<a.r_mesh.size(); ir++)
+        {
+	  fprintf(orbitalFile,"%4d %g  %g %g",ir,a.r_mesh[ir],unnormalizedDensity[ir],rf[ir]);
+	  fprintf(orbitalFile," %g",atomLevels[nl].rho[ir]);
+	  fprintf(orbitalFile," %g\n",rfNormalized[ir]);
+	}
+	fclose(orbitalFile);
+      }
+      
+      atomLevels[nl].n = n;
+      atomLevels[nl].l = l;
+      atomLevels[nl].energy = energy;
+      if(writeOrbitals)
+	printf("n=%2d  l=%2d  :  Energy=%12.6lf\n", n, l, energy);
+      nl++;
+    }
+  }
+    // sort
+  std::sort(atomLevels.begin(), atomLevels.end(), compareInitialAtomLevels());
+//            [](myclass const & a, myclass const &b){return a.energy < b.energy;});
+// fill core states:
+  int coreTarget = a.zcorss + a.zsemss;
+  int coreElectrons = 0;
+  a.numc = 0;
+  for (int i=0; i<atomLevels.size(); i++)
+  {
+    if (coreElectrons < coreTarget)
+    {
+      if(coreElectrons<a.zcorss)
+      {
+        printf("C ");
+        atomLevels[i].type='C';
+      } else {
+        printf("S ");
+        atomLevels[i].type='S';
+      }
+      coreElectrons += 2*(2*atomLevels[i].l+1);
+      if(atomLevels[i].l == 0)
+        a.numc += 1;
+      else
+        a.numc += 2;
+    }
+    else
+    {
+      printf("V ");
+      atomLevels[i].type='V';
+    }
+    printf("n=%2d  l=%2d  :  Energy=%12.6lf\n",atomLevels[i].n,atomLevels[i].l,atomLevels[i].energy);
+  }
+
+  a.resizeCore(a.numc);
+  int j = 0;
+  for (int i=0; i<a.numc; i++)
+  {
+    a.ec(i,0) = a.ec(i,1) = atomLevels[j].energy;
+    a.nc(i,0) = a.nc(i,1) = atomLevels[j].n;
+    a.lc(i,0) = a.lc(i,1) = atomLevels[j].l;
+    a.kc(i,0) = a.kc(i,1) = -atomLevels[j].l-1;
+    if(atomLevels[j].type=='C') // accumulate the density for core levels
+    {
+      for(int ir=0; ir<a.r_mesh.size(); ir++)
+      {
+        a.corden(ir,0) += Real((3-a.nspin)*(-a.kc(i,0)))*atomLevels[j].rho[ir];
+        a.corden(ir,1) += Real((3-a.nspin)*(-a.kc(i,1)))*atomLevels[j].rho[ir];
+      }
+    } else if(atomLevels[j].type=='S') { // accumulate the density for semi-core levels
+      for(int ir=0; ir<a.r_mesh.size(); ir++)
+      {
+        a.semcor(ir,0) += Real((3-a.nspin)*(-a.kc(i,0)))*atomLevels[j].rho[ir];
+        a.semcor(ir,1) += Real((3-a.nspin)*(-a.kc(i,1)))*atomLevels[j].rho[ir];
+      }
+    }
+    if(atomLevels[j].l != 0)
+    {
+      i++;
+      a.ec(i,0) = a.ec(i,1) = atomLevels[j].energy;
+      a.nc(i,0) = a.nc(i,1) = atomLevels[j].n;
+      a.lc(i,0) = a.lc(i,1) = atomLevels[j].l;
+      a.kc(i,0) = a.kc(i,1) = atomLevels[j].l;
+      if(atomLevels[j].type=='C') // accumulate the density for core levels
+      {
+        for(int ir=0; ir<a.r_mesh.size(); ir++)
+        {
+          a.corden(ir,0)+=Real((3-a.nspin)*a.kc(i,0))*atomLevels[j].rho[ir];
+          a.corden(ir,1)+=Real((3-a.nspin)*a.kc(i,1))*atomLevels[j].rho[ir];
+        }
+      } else if(atomLevels[j].type=='S') { // accumulate the density for semi-core levels
+        for(int ir=0; ir<a.r_mesh.size(); ir++)
+        {
+          a.semcor(ir,0)+=Real((3-a.nspin)*a.kc(i,0))*atomLevels[j].rho[ir];
+          a.semcor(ir,1)+=Real((3-a.nspin)*a.kc(i,1))*atomLevels[j].rho[ir];
+        }
+      }
+    }
+    j++;
+    // printf("%d %d\n",i,j);
+  }
+  // accumulate valence density
+  for(int ir=0; ir<a.r_mesh.size(); ir++)
+  {
+    rhoValence(ir,0)=rhoValence(ir,1)=0.0;
+  }
+  int numValenceRemaining = a.zvalss;
+  j=0; while(atomLevels[j].type != 'V') j++;
+  while(numValenceRemaining>0)
+  {
+    int multiplicity = 2*atomLevels[j].l+1;
+    if(2*multiplicity <= numValenceRemaining)
+    {
+      for(int ir=0; ir<a.r_mesh.size(); ir++)
+      {
+	rhoValence(ir,0) += Real(multiplicity*(3-a.nspin))*atomLevels[j].rho[ir];
+	rhoValence(ir,1) += Real(multiplicity*(3-a.nspin))*atomLevels[j].rho[ir];
+      }
+      numValenceRemaining -= 2*multiplicity;
+      j++;
+    } else {
+      for(int ir=0; ir<a.r_mesh.size(); ir++)
+      {
+	rhoValence(ir,0) += 0.5*Real(numValenceRemaining*(3-a.nspin))*atomLevels[j].rho[ir];
+	rhoValence(ir,1) += 0.5*Real(numValenceRemaining*(3-a.nspin))*atomLevels[j].rho[ir];
+      }
+      numValenceRemaining = 0;
+      j++;
+    }
+  }
+  
+  return coreElectrons;
 }
 
 void initializeAtom(AtomData &a)
@@ -127,159 +327,45 @@ void initializeAtom(AtomData &a)
   int  ipdeq         = 5;
   int  iter          = 0;
   std::vector<InitialAtomLevels> atomLevels(numAtomLevels);
-  std::vector<Real> rf(a.r_mesh.size()+1);
-  std::vector<Real> rfNormalized(a.r_mesh.size()+1);
-  std::vector<Real> unnormalizedDensity(a.r_mesh.size()+1);
-  int nl = 0;
-  for(int n=1; n<=lmaxCore+1; n++)
-  {
-    for (int l=0; l<n; l++)
-    {
-      kappa  = -l - 1;        //only use kappa -l-1 this will work for all l (including l=0)
-      energy = -(a.ztotss) * (a.ztotss) / Real(n*n);
-
-      printf("calculating n=%2d  l=%2d  :  Energy guess=%12.6lf\n", n, l, energy);
-      atomLevels[nl].rho.resize(a.r_mesh.size());
-      
-      deepst_(&n, &l, &kappa, &energy, &a.vr(0,0), &a.r_mesh[0],
-              &atomLevels[nl].rho[0], &a.h,
-              &a.ztotss, &cLight, &nitmax, &tol, &a.jws, &last, &iter,
-              &last, &ipdeq);
-      // normalize the density:
-      for(int ir=0; ir<a.r_mesh.size(); ir++)
-        atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]; ///a.r_mesh[ir];
-      integrateOneDim(a.r_mesh, atomLevels[nl].rho, rf);
-      Real normalizationFactor = 1.0/rf[last-2];
-      char fname[256];
-      sprintf(fname,"orbital_density_n%d_l%d",n,l);
-      FILE *orbitalFile=fopen(fname,"w");
-      for(int ir=0; ir<a.r_mesh.size(); ir++)
-      {
-        unnormalizedDensity[ir]=atomLevels[nl].rho[ir];
-        atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]*normalizationFactor; // *a.r_mesh[ir];;
-      }
-      // test normalization
-      integrateOneDim(a.r_mesh, atomLevels[nl].rho, rfNormalized);
-      for(int ir=0; ir<a.r_mesh.size(); ir++)
-      {
-        fprintf(orbitalFile,"%4d %g  %g %g",ir,a.r_mesh[ir],unnormalizedDensity[ir],rf[ir]);
-        fprintf(orbitalFile," %g",atomLevels[nl].rho[ir]);
-        fprintf(orbitalFile," %g\n",rfNormalized[ir]);
-      }
-      fclose(orbitalFile);
-      atomLevels[nl].n = n;
-      atomLevels[nl].l = l;
-      atomLevels[nl].energy = energy;
-      printf("n=%2d  l=%2d  :  Energy=%12.6lf\n", n, l, energy);
-      nl++;
-    }
-  }
-  // sort
-  std::sort(atomLevels.begin(), atomLevels.end(), compareInitialAtomLevels());
-//            [](myclass const & a, myclass const &b){return a.energy < b.energy;});
-// fill core states:
+  Matrix<Real> rhoValence(a.r_mesh.size(),2);
+  
   int coreTarget = a.zcorss + a.zsemss;
-  int coreElectrons = 0;
-  a.numc = 0;
-  for (int i=0; i<atomLevels.size(); i++)
-  {
-    if (coreElectrons < coreTarget)
-    {
-      if(coreElectrons<a.zcorss)
-      {
-        printf("C ");
-        atomLevels[i].type='C';
-      } else {
-        printf("S ");
-        atomLevels[i].type='S';
-      }
-      coreElectrons += 2*(2*atomLevels[i].l+1);
-      if(atomLevels[i].l == 0)
-        a.numc += 1;
-      else
-        a.numc += 2;
-    }
-    else
-    {
-      printf("V ");
-      atomLevels[i].type='V';
-    }
-    printf("n=%2d  l=%2d  :  Energy=%12.6lf\n",atomLevels[i].n,atomLevels[i].l,atomLevels[i].energy);
-  }
+  int coreElectrons = calculateAtomLevels(a, atomLevels, rhoValence, true);
   
   if (coreElectrons != coreTarget)
   {
     printf("Warning: initializeAtom can't satisfy the core electron requirement:\n  Target: %d (%lf + %lf)\n  Actual: %d\n",
            coreTarget, a.zcorss, a.zsemss, coreElectrons);
   }
-  a.resizeCore(a.numc);
-  int j = 0;
-  for (int i=0; i<a.numc; i++)
-  {
-    a.ec(i,0) = a.ec(i,1) = atomLevels[j].energy;
-    a.nc(i,0) = a.nc(i,1) = atomLevels[j].n;
-    a.lc(i,0) = a.lc(i,1) = atomLevels[j].l;
-    a.kc(i,0) = a.kc(i,1) = -atomLevels[j].l-1;
-    if(atomLevels[j].type=='C') // accumulate the density for core levels
-    {
-      for(int ir=0; ir<a.r_mesh.size(); ir++)
-      {
-        a.corden(ir,0) += Real((3-a.nspin)*(-a.kc(i,0)))*atomLevels[j].rho[ir];
-        a.corden(ir,1) += Real((3-a.nspin)*(-a.kc(i,1)))*atomLevels[j].rho[ir];
-      }
-    } else if(atomLevels[j].type=='S') { // accumulate the density for semi-core levels
-      for(int ir=0; ir<a.r_mesh.size(); ir++)
-      {
-        a.semcor(ir,0) += Real((3-a.nspin)*(-a.kc(i,0)))*atomLevels[j].rho[ir];
-        a.semcor(ir,1) += Real((3-a.nspin)*(-a.kc(i,1)))*atomLevels[j].rho[ir];
-      }
-    }
-    if(atomLevels[j].l != 0)
-    {
-      i++;
-      a.ec(i,0) = a.ec(i,1) = atomLevels[j].energy;
-      a.nc(i,0) = a.nc(i,1) = atomLevels[j].n;
-      a.lc(i,0) = a.lc(i,1) = atomLevels[j].l;
-      a.kc(i,0) = a.kc(i,1) = atomLevels[j].l;
-      if(atomLevels[j].type=='C') // accumulate the density for core levels
-      {
-        for(int ir=0; ir<a.r_mesh.size(); ir++)
-        {
-          a.corden(ir,0)+=Real((3-a.nspin)*a.kc(i,0))*atomLevels[j].rho[ir];
-          a.corden(ir,1)+=Real((3-a.nspin)*a.kc(i,1))*atomLevels[j].rho[ir];
-        }
-      } else if(atomLevels[j].type=='S') { // accumulate the density for semi-core levels
-        for(int ir=0; ir<a.r_mesh.size(); ir++)
-        {
-          a.semcor(ir,0)+=Real((3-a.nspin)*a.kc(i,0))*atomLevels[j].rho[ir];
-          a.semcor(ir,1)+=Real((3-a.nspin)*a.kc(i,1))*atomLevels[j].rho[ir];
-        }
-      }
-    }
-    j++;
-    // printf("%d %d\n",i,j);
-  }
+
   
   // add charge density contributions
   // take constant charge density from valence electrons
   // (add small spliting in spin up/down valence densities to initialize magnetic calculations)
   Real delta=0.1;
-  Real valenceDensityUp, valenceDensityDown;
+  
+  // Real valenceDensityUp, valenceDensityDown;
   Real vmt, vmt1;
   vmt=0.0;
   vmt1=0.0;
   Real atomVolume=(4.0/3.0)*M_PI*a.rws*a.rws*a.rws;  // a.rmt*a.rmt*a.rmt;
+  /*
   if(a.nspin==1)
   {
-    valenceDensityUp=valenceDensityDown=a.zvalss/atomVolume;
+    for(int ir=0; ir<a.r_mesh.size(); ir++)
+      rhoValence(ir,0)=rhoValence(ir,1)=a.zvalss/atomVolume;
   } else {
-    valenceDensityUp=(0.5*a.zvalss+delta)/atomVolume;
-    valenceDensityDown=(0.5*a.zvalss-delta)/atomVolume;
+    for(int ir=0; ir<a.r_mesh.size(); ir++)
+    {
+      rhoValence(ir,0)=(0.5*a.zvalss+delta)/atomVolume;
+      rhoValence(ir,1)=(0.5*a.zvalss-delta)/atomVolume;
+    }
   }
+  */
   for(int ir=0; ir<a.r_mesh.size(); ir++)
   {
-    a.rhotot(ir,0)=a.rhoNew(ir,0)=a.corden(ir,0)+a.semcor(ir,0)+valenceDensityUp;
-    a.rhotot(ir,1)=a.rhoNew(ir,1)=a.corden(ir,1)+a.semcor(ir,1)+valenceDensityDown;
+    a.rhotot(ir,0)=a.rhoNew(ir,0)=a.corden(ir,0)+a.semcor(ir,0)+rhoValence(ir,0);
+    a.rhotot(ir,1)=a.rhoNew(ir,1)=a.corden(ir,1)+a.semcor(ir,1)+rhoValence(ir,1);
   }
   // calculate potential from initial density guess
   std::vector<Real> chargeDensity(a.r_mesh.size()+1);
@@ -325,6 +411,8 @@ void initializeAtom(AtomData &a)
     Real dz = 0.0; //a.mInt / a.qInt;
     int iexch = 0; // von Barth-Hedin
     int mtasa = 0;
+    int jmt = a.jmt;
+    
     newexchg_(&a.nspin, &spin, &a.rhotot(0,0), &a.rhotot(0,a.nspin-1),
 	      &a.exchangeCorrelationPotential(0,is), &a.exchangeCorrelationEnergy(0,is),
 	      &a.exchangeCorrelationV[is], &a.exchangeCorrelationE,
@@ -346,7 +434,11 @@ void initializeAtom(AtomData &a)
     a.vr(ir,0)= potMix*a.vrNew(ir,0)+(1.0-potMix)*a.vr(ir,0);
     a.vr(ir,1)= potMix*a.vrNew(ir,1)+(1.0-potMix)*a.vr(ir,1);
   }
-
+  for(int ir=a.jmt-1; ir<a.r_mesh.size(); ir++)
+  {
+    a.vr(ir,0)= a.vr(a.jmt-2,0);
+    a.vr(ir,1)= a.vr(a.jmt-2,1);
+  }
   if(generatePlot)
   {
     fprintf(plotFile,"set term pdf\nset outp 'initialPotential_start.pdf'\n");
@@ -384,42 +476,23 @@ void initializeAtom(AtomData &a)
   potMix = 0.02;
   
 // iteration for preliminary potential
-  for(int iteration=0; iteration<50; iteration++)
+  for(int iteration=0; iteration<20; iteration++)
   {
     // printf("iter %d\n",iteration);
     for(int ir=0; ir<a.r_mesh.size(); ir++)
     {
-      a.rhotot(ir,0)=a.rhoNew(ir,0)=valenceDensityUp;
-      a.rhotot(ir,1)=a.rhoNew(ir,1)=valenceDensityDown;
+      a.rhotot(ir,0)=a.rhoNew(ir,0)=0.0;
+      a.rhotot(ir,1)=a.rhoNew(ir,1)=0.0;
     }
-    for(int nl=0; nl<a.numc; nl++)
+
+    calculateAtomLevels(a, atomLevels, rhoValence);
+
+    for(int ir=0; ir<a.r_mesh.size(); ir++)
     {
-      deepst_(&a.nc(nl,0), &a.lc(nl,0), &a.kc(nl,0), &a.ec(nl,0), &a.vr(0,0), &a.r_mesh[0],
-              &atomLevels[nl].rho[0], &a.h,
-              &a.ztotss, &cLight, &nitmax, &tol, &a.jws, &last, &iter,
-              &last, &ipdeq);
-      // normalize the density:
-      for(int ir=0; ir<a.r_mesh.size(); ir++)
-        atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]; ///a.r_mesh[ir];
-      integrateOneDim(a.r_mesh, atomLevels[nl].rho, rf);
-      Real normalizationFactor = 1.0/rf[last-2];
-      if(a.kc(nl,0)<0)
-      {
-        for(int ir=0; ir<a.r_mesh.size(); ir++)
-        {
-          atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]*normalizationFactor; // *a.r_mesh[ir];;
-          a.rhotot(ir,0)+=Real((3-a.nspin)*(-a.kc(nl,0)))*atomLevels[nl].rho[ir];
-          a.rhotot(ir,1)+=Real((3-a.nspin)*(-a.kc(nl,1)))*atomLevels[nl].rho[ir];
-        }
-      } else {
-        for(int ir=0; ir<a.r_mesh.size(); ir++)
-        {
-          atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]*normalizationFactor; // *a.r_mesh[ir];;
-          a.rhotot(ir,0)+=Real((3-a.nspin)*a.kc(nl,0))*atomLevels[nl].rho[ir];
-          a.rhotot(ir,1)+=Real((3-a.nspin)*a.kc(nl,1))*atomLevels[nl].rho[ir];
-        }
-      }
+      a.rhotot(ir,0)=a.rhoNew(ir,0)=a.corden(ir,0)+a.semcor(ir,0)+rhoValence(ir,0);
+      a.rhotot(ir,1)=a.rhoNew(ir,1)=a.corden(ir,1)+a.semcor(ir,1)+rhoValence(ir,1);
     }
+
     chargeDensity[0]=0.0;
     mesh0[0]=0.0;
     if(a.nspin==1)
@@ -445,6 +518,8 @@ void initializeAtom(AtomData &a)
       Real dz = 0.0; //a.mInt / a.qInt;
       int iexch = 0; // von Barth-Hedin
       int mtasa=0;
+      int jmt = a.jmt;
+      
       newexchg_(&a.nspin, &spin, &a.rhotot(0,0), &a.rhotot(0,a.nspin-1),
 		&a.exchangeCorrelationPotential(0,is), &a.exchangeCorrelationEnergy(0,is),
 		&a.exchangeCorrelationV[is], &a.exchangeCorrelationE,
@@ -466,6 +541,11 @@ void initializeAtom(AtomData &a)
       // a.vr(ir,1)= potMix*(-2.0*a.ztotss+electrostaticPotential[ir+1]+a.exchangeCorrelationPotential(ir,1))+(1.0-potMix)*a.vr(ir,1);
       a.vr(ir,0)= potMix*a.vrNew(ir,0)+(1.0-potMix)*a.vr(ir,0);
       a.vr(ir,1)= potMix*a.vrNew(ir,1)+(1.0-potMix)*a.vr(ir,1);
+    }
+    for(int ir=a.jmt-1; ir<a.r_mesh.size(); ir++)
+    {
+      a.vr(ir,0)= a.vr(a.jmt-2,0);
+      a.vr(ir,1)= a.vr(a.jmt-2,1);
     }
   }
 

@@ -212,7 +212,8 @@ c     ================================================================
       imm=0
       val=abs(de/en)
       if (val.le.tol) go to 7
-  5   enew=en+de
+ 5    enew=en+de
+
       if(enew.lt.0.0d0) go to 6
       de=de+0.5d0
       val=val*0.5d0
