@@ -126,7 +126,7 @@ int calculateAtomLevels(AtomData &a, std::vector<InitialAtomLevels> &atomLevels,
       // normalize the density:
       for(int ir=0; ir<a.r_mesh.size(); ir++)
         atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]; ///a.r_mesh[ir];
-      integrateOneDim(a.r_mesh, atomLevels[nl].rho, rf);
+      integrateOneDimSpherical(a.r_mesh, atomLevels[nl].rho, rf);
       Real normalizationFactor = 1.0/rf[a.jws]; // rf[last-2];
       char fname[256];
       
@@ -143,7 +143,7 @@ int calculateAtomLevels(AtomData &a, std::vector<InitialAtomLevels> &atomLevels,
         atomLevels[nl].rho[ir]=atomLevels[nl].rho[ir]*normalizationFactor; // *a.r_mesh[ir];;
       }
       // test normalization
-      integrateOneDim(a.r_mesh, atomLevels[nl].rho, rfNormalized);
+      integrateOneDimSpherical(a.r_mesh, atomLevels[nl].rho, rfNormalized);
       
       if(writeOrbitals)
       {
@@ -400,7 +400,7 @@ void initializeAtom(AtomData &a)
       mesh0[ir+1]=a.r_mesh[ir];
     }
   
-  integrateOneDim(mesh0, chargeDensity, electrostaticPotential);
+  integrateOneDimSpherical(mesh0, chargeDensity, electrostaticPotential);
 
   // calculate the exchange correlation potential
   for(int is=0; is<a.nspin; is++)
@@ -507,7 +507,7 @@ void initializeAtom(AtomData &a)
         chargeDensity[ir+1]=2.0*(a.rhotot(ir,0)+a.rhotot(ir,1));
         mesh0[ir+1]=a.r_mesh[ir];
       }
-    integrateOneDim(mesh0, chargeDensity, electrostaticPotential);
+    integrateOneDimSpherical(mesh0, chargeDensity, electrostaticPotential);
 
   // calculate the exchange correlation potential
     for(int is=0; is<a.nspin; is++)

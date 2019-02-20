@@ -258,6 +258,11 @@ void initOrbitals(int Z, std::vector<std::tuple<int, int>> &orbitals)
   orbitals.push_back(std::make_tuple<int,int>(7,-2));
 }
 
+void sphericalPoisson(Real *rho, Real *r, int nr, Real *vr)
+{
+  
+}
+
 void printUsage(const char *name, Real R)
 {
   printf("Usage: %s Z [R]\n",name);
