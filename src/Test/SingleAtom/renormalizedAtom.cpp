@@ -258,9 +258,26 @@ void initOrbitals(int Z, std::vector<std::tuple<int, int>> &orbitals)
   orbitals.push_back(std::make_tuple<int,int>(7,-2));
 }
 
-void sphericalPoisson(Real *rho, Real *r, int nr, Real *vr)
+// assume that rho is actually r^2 rho, calulate r v
+void sphericalPoisson(std::vector<Real> &rho, std::vector<Real> &r_mesh, std::vector<Real> &vr)
 {
-  
+  // V_l(r) = 4pi/(2l+1) [1/r^(l+1) int_0^r rho_l(r') r'^(l+2) dr'
+  //                      + r^l     int_r^R rho_l(r') / r^(l-1) dr']
+  // l = 0
+  // vr <- int_0^r rho(r') r'^2 dr'
+  integrateOneDim(r_mesh, rho, vr);
+  // vr <- 1/r  int_0^r rho(r') r'^2 dr' THIS IS NOT NEEDED AS WE STORE V*r
+  // for(int i=0; i<r_mesh.size(); i++)
+  //  vr[i] = vr[i] / r_mesh[i];
+
+  //  int_r^R rho(r') / r^(-1) dr'
+  //  = int_0^R rho(r') r' dr' - int_0^r rho(r') r' dr'
+  std::vector<Real> integral;
+  integral.resize(r_mesh.size());
+  // 
+  integrateOneDimRPower(r_mesh, rho, integral, -1); // p=-1 because rho is actually rho r^2
+  for(int i=0; i<r_mesh.size(); i++)
+    vr[i] = 4.0*M_PI*(vr[i] + (integral[integral.size()-1] - integral[i]) * r_mesh[i]);
 }
 
 void printUsage(const char *name, Real R)
@@ -369,6 +386,9 @@ int main(int argc, char *argv[])
     }
     orbitalIdx++;
   }
+  sphericalPoisson(rhotot, r_mesh, vr);
+  // add nuclear charge
+  for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber);
 
   /*
   printf("# energy: %lg Ry\n",energy);
