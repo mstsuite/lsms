@@ -274,10 +274,12 @@ void sphericalPoisson(std::vector<Real> &rho, std::vector<Real> &r_mesh, std::ve
   //  = int_0^R rho(r') r' dr' - int_0^r rho(r') r' dr'
   std::vector<Real> integral;
   integral.resize(r_mesh.size());
-  // 
+  //
+  
   integrateOneDimRPower(r_mesh, rho, integral, -1); // p=-1 because rho is actually rho r^2
   for(int i=0; i<r_mesh.size(); i++)
-    vr[i] = 4.0*M_PI*(vr[i] + (integral[integral.size()-1] - integral[i]) * r_mesh[i]);
+    vr[i] = 2.0*4.0*M_PI*(vr[i] + (integral[integral.size()-1] - integral[i]) * r_mesh[i]);
+  
 }
 
 void printUsage(const char *name, Real R)
@@ -354,6 +356,7 @@ int main(int argc, char *argv[])
   // accumulate the charge from all the electrons in the atom
   std::vector<Real> rhotot;
   rhotot.resize(r_mesh.size());
+  for(int i=0; i<rhotot.size(); i++) rhotot[i]=0;
   int electronsMissing = atomicNumber; // still need Z electrons
   std::sort(orbitalEnergiesAndDensities.begin(), orbitalEnergiesAndDensities.end(),
 	    [](AtomOrbital const & a, AtomOrbital const &b){return a.energy < b.energy;});
@@ -390,18 +393,16 @@ int main(int argc, char *argv[])
   // add nuclear charge
   for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber);
 
-  /*
-  printf("# energy: %lg Ry\n",energy);
-  printf("# nodes: P:%d Q:%d\n",numNodesP, numNodesQ);
-  printf("# target number of nodes: %d\n",targetNumberOfNodes);
+  ///*
+  FILE *outf=fopen("rho_vr.out","w");
+  fprintf(outf,"# Atomic Number: %d\n",atomicNumber);
 
   for(int i=0; i<r_mesh.size(); i++)
   {
-    Real rho = std::abs(pq(0,i))*std::abs(pq(0,i))
-             + std::abs(pq(1,i))*std::abs(pq(1,i));
-    printf("%5d %lg %lg %lg %lg\n",i, r_mesh[i], rho, pq(0,i), pq(1,i));
+    fprintf(outf,"%5d %lg %lg %lg\n",i, r_mesh[i], rhotot[i], vr[i]);
   }
-  */
+  fclose(outf);
+  //*/
 
   return 0;
 }
