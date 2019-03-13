@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 // Renormalized Atom
 
 #include <tuple>
@@ -262,7 +263,7 @@ void initOrbitals(int Z, std::vector<std::tuple<int, int>> &orbitals)
 void sphericalPoisson(std::vector<Real> &rho, std::vector<Real> &r_mesh, std::vector<Real> &vr)
 {
   // V_l(r) = 4pi/(2l+1) [1/r^(l+1) int_0^r rho_l(r') r'^(l+2) dr'
-  //                      + r^l     int_r^R rho_l(r') / r^(l-1) dr']
+  //                      + r^l     int_r^R rho_l(r') / r'^(l-1) dr']
   // l = 0
   // vr <- int_0^r rho(r') r'^2 dr'
   integrateOneDim(r_mesh, rho, vr);
@@ -276,61 +277,23 @@ void sphericalPoisson(std::vector<Real> &rho, std::vector<Real> &r_mesh, std::ve
   integral.resize(r_mesh.size());
   //
   
-  integrateOneDimRPower(r_mesh, rho, integral, -1); // p=-1 because rho is actually rho r^2
+  integrateOneDimRPower(r_mesh, rho, integral, -1); // p=-1 because rho is actually rho * r^2
   for(int i=0; i<r_mesh.size(); i++)
     vr[i] = 2.0*4.0*M_PI*(vr[i] + (integral[integral.size()-1] - integral[i]) * r_mesh[i]);
   
 }
 
-void printUsage(const char *name, Real R)
+void calculateOrbitals(std::vector<Real> &r_mesh, std::vector<Real> &vr, int atomicNumber,
+                       std::vector<std::tuple<int, int>> &orbitals,
+                       std::vector<AtomOrbital> &orbitalEnergiesAndDensities)
 {
-  printf("Usage: %s Z [R]\n",name);
-  printf("       Z: atomic number\n");
-  printf("       R: atomic sphere radius (optional, default=%lf)\n",R);
-}
-
-int main(int argc, char *argv[])
-{
-  int atomicNumber = 29; // test copper
-  int principalQuantumNumber = 1;
-  int kappa = -1; // l=0
-  int atomRadius = 3.0;
-
-  if(argc != 2 && argc != 3)
-  {
-    printUsage(argv[0], atomRadius);
-    exit(1);
-  }
-  atomicNumber = atoi(argv[1]);
-  if(argc == 3)
-    atomRadius = atof(argv[2]);
-
-  int maxPrincipalQuantumNumber;
-
-  std::vector<std::tuple<int, int>> orbitals;
-  initOrbitals(atomicNumber, orbitals);
-
-  printf("number of orbitals to be computed: %d\n",orbitals.size());
-  
-  std::vector<Real> r_mesh, vr;
-  std::vector<Matrix<Real> > pqs;
-  std::vector<AtomOrbital> orbitalEnergiesAndDensities;
-  pqs.resize(orbitals.size());
-  orbitalEnergiesAndDensities.resize(orbitals.size());
-
-// initialize r_mesh (unit of length is the Bohr radius)
-  generateRadialMesh(r_mesh, 1500, 1.5e-10, atomRadius);
-
-// initialize Z/r potential e^2=2
-  vr.resize(r_mesh.size());
-  for(int i=0; i<r_mesh.size(); i++) vr[i] = -2.0*Real(atomicNumber);
-
   printf(" n  kappa  energy\n");
   for(int i=0; i<orbitals.size(); i++)
   {
-    Matrix<Real> &pq = pqs[i];
-    principalQuantumNumber = std::get<0>(orbitals[i]);
-    kappa = std::get<1>(orbitals[i]);
+    // Matrix<Real> &pq = pqs[i];
+    Matrix<Real> pq;
+    int principalQuantumNumber = std::get<0>(orbitals[i]);
+    int kappa = std::get<1>(orbitals[i]);
     pq.resize(2,r_mesh.size());
   
     Real energy = energyGuess(principalQuantumNumber, atomicNumber, kappa);
@@ -353,13 +316,17 @@ int main(int argc, char *argv[])
     int numNodesP = countNodes(pq,0);
     int numNodesQ = countNodes(pq,1);
   }
-  // accumulate the charge from all the electrons in the atom
-  std::vector<Real> rhotot;
-  rhotot.resize(r_mesh.size());
-  for(int i=0; i<rhotot.size(); i++) rhotot[i]=0;
-  int electronsMissing = atomicNumber; // still need Z electrons
+  
   std::sort(orbitalEnergiesAndDensities.begin(), orbitalEnergiesAndDensities.end(),
 	    [](AtomOrbital const & a, AtomOrbital const &b){return a.energy < b.energy;});
+
+}
+
+void accumulateDensities(std::vector<AtomOrbital> &orbitalEnergiesAndDensities, int atomicNumber,
+                         std::vector<Real> &rhotot)
+{
+  for(int i=0; i<rhotot.size(); i++) rhotot[i]=0;
+  int electronsMissing = atomicNumber; // still need Z electrons
   int orbitalIdx=0; // the index of the current orbital
   while(electronsMissing>0)
   {
@@ -389,10 +356,85 @@ int main(int argc, char *argv[])
     }
     orbitalIdx++;
   }
+}
+
+void printUsage(const char *name, Real R)
+{
+  printf("Usage: %s Z [R]\n",name);
+  printf("       Z: atomic number\n");
+  printf("       R: atomic sphere radius (optional, default=%lf)\n",R);
+}
+
+int main(int argc, char *argv[])
+{
+  int atomicNumber = 29; // test copper
+  int principalQuantumNumber = 1;
+  int kappa = -1; // l=0
+  int atomRadius = 3.0;
+  Real rmsRho;
+
+  if(argc != 2 && argc != 3)
+  {
+    printUsage(argv[0], atomRadius);
+    exit(1);
+  }
+  atomicNumber = atoi(argv[1]);
+  if(argc == 3)
+    atomRadius = atof(argv[2]);
+
+  int maxPrincipalQuantumNumber;
+
+  std::vector<std::tuple<int, int>> orbitals;
+  initOrbitals(atomicNumber, orbitals);
+
+  printf("number of orbitals to be computed: %d\n",orbitals.size());
+  
+  std::vector<Real> r_mesh, vr;
+  // std::vector<Matrix<Real> > pqs;
+  std::vector<AtomOrbital> orbitalEnergiesAndDensities;
+  // pqs.resize(orbitals.size());
+  orbitalEnergiesAndDensities.resize(orbitals.size());
+
+// initialize r_mesh (unit of length is the Bohr radius)
+  generateRadialMesh(r_mesh, 1500, 1.5e-10, atomRadius);
+  std::vector<Real> rhotot, rhonew;
+  rhotot.resize(r_mesh.size());
+  rhonew.resize(r_mesh.size());
+  
+// initialize Z/r potential e^2=2
+  vr.resize(r_mesh.size());
+  for(int i=0; i<r_mesh.size(); i++) vr[i] = -2.0*Real(atomicNumber);
+
+  calculateOrbitals(r_mesh, vr, atomicNumber, orbitals, orbitalEnergiesAndDensities);
+  // accumulate the charge from all the electrons in the atom
+  accumulateDensities(orbitalEnergiesAndDensities, atomicNumber, rhotot);
   sphericalPoisson(rhotot, r_mesh, vr);
   // add nuclear charge
   for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber);
+  
+  // iterate on the charge density with mixing
+  Real mixing = 0.05;
+  for(int iter=0; iter < 50; iter++)
+  {
+    calculateOrbitals(r_mesh, vr, atomicNumber, orbitals, orbitalEnergiesAndDensities);
+    // accumulate the charge from all the electrons in the atom
+    accumulateDensities(orbitalEnergiesAndDensities, atomicNumber, rhonew);
 
+    Real rms=0.0;
+    for(int i=0; i<rhotot.size(); i++)
+      rms += (rhotot[i]-rhonew[i])*(rhotot[i]-rhonew[i]);
+    rms = std::sqrt(rms/Real(rhotot.size()));
+    printf("iter %3d: rms = %lg\n",iter, rms);
+
+    // mixing
+    for(int i=0; i<rhotot.size(); i++)
+      rhotot[i] = (1.0-mixing)*rhotot[i] + mixing*rhonew[i];
+
+    sphericalPoisson(rhotot, r_mesh, vr);
+    // add nuclear charge
+    for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber);
+  }
+    
   ///*
   FILE *outf=fopen("rho_vr.out","w");
   fprintf(outf,"# Atomic Number: %d\n",atomicNumber);
