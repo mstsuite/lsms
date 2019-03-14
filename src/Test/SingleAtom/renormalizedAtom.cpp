@@ -406,7 +406,7 @@ int main(int argc, char *argv[])
 
   printf("number of orbitals to be computed: %d\n",orbitals.size());
   
-  std::vector<Real> r_mesh, vr;
+  std::vector<Real> r_mesh, vr, vXC;
   // std::vector<Matrix<Real> > pqs;
   std::vector<AtomOrbital> orbitalEnergiesAndDensities;
   // pqs.resize(orbitals.size());
@@ -420,6 +420,7 @@ int main(int argc, char *argv[])
   
 // initialize Z/r potential e^2=2
   vr.resize(r_mesh.size());
+  vXC.resize(r_mesh.size());
   for(int i=0; i<r_mesh.size(); i++) vr[i] = -2.0*Real(atomicNumber);
 
   calculateOrbitals(r_mesh, vr, atomicNumber, orbitals, orbitalEnergiesAndDensities);
@@ -448,8 +449,10 @@ int main(int argc, char *argv[])
       rhotot[i] = (1.0-mixing)*rhotot[i] + mixing*rhonew[i];
 
     sphericalPoisson(rhotot, r_mesh, vr);
-    // add nuclear charge
-    for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber);
+    // calculate exchange-correltaion potential
+    exchangePotentialLDA(rhotot, r_mesh, vXC);
+    // add nuclear charge and exchange-correlation potential
+    for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber) + vXC[i]*r_mesh[i];
   }
     
   ///*
