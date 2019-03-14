@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "SingleSiteScattering.hpp"
 
 extern "C"
@@ -126,4 +127,33 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
    // t now is in the local frame of refference, now we have to
    // transform it into the global frame:
    tripmt_(&atom.dmat(0,0),&solution.tmat_g(0,0),&atom.dmatp(0,0),&kmymax,&kmymax,&kmymax);
+}
+
+
+void calculateScatteringSolutions(LSMSSystemParameters &lsms, std::vector<AtomData> &atom,
+                                  Complex energy,
+                                  std::vector<RelativisticSingleScattererSolution> &solution)
+{
+  // if(atom.size()>solution.size()) solution.resize(atom.size());
+  for(int i=0; i<atom.size(); i++)
+    calculateSingleScattererSolution(lsms,atom[i],atom[i].vr,energy,solution[i]);
+}
+
+//=============== Full-Potential Relativistic ==============
+
+void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom,
+                                  Complex energy,
+                                  FullPotentialRelativisticSingleScattererSolution &solution)
+{
+  printf("Full-Potential Relativistic Solver not completed yet!\n");
+  exit(1);
+}
+  
+void calculateScatteringSolutions(LSMSSystemParameters &lsms, std::vector<AtomData> &atom,
+                                  Complex energy,
+                                  std::vector<FullPotentialRelativisticSingleScattererSolution> &solution)
+{
+  // if(atom.size()>solution.size()) solution.resize(atom.size());
+  for(int i=0; i<atom.size(); i++)
+    calculateSingleScattererSolution(lsms,atom[i],atom[i].vr,energy,solution[i]);
 }

@@ -45,6 +45,11 @@ public:
   Complex ubr[4], ubrd[4];
 };
 
+class FullPotentialNonRelativisticSingleScattererSolution : public SingleScattererSolution {
+public:
+  Array3d<Complex> sineMatrix, cosineMatrix; // sineMatrix(ir, Lambda', Lambda)
+};
+
 class RelativisticSingleScattererSolution : public SingleScattererSolution {
 public:
 // relativistic wave functions
@@ -122,6 +127,12 @@ extern "C"
 
 }
 
+// =========================
+// SPHERICAL Case
+// =========================
+
+// non relativistic
+
 void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom,
                                       Matrix<Real> &vr,
                                       Complex energy, Complex prel, Complex pnrel,
@@ -130,8 +141,41 @@ void calculateScatteringSolutions(LSMSSystemParameters &lsms, std::vector<AtomDa
                                   Complex energy, Complex prel, Complex pnrel,
                                   std::vector<NonRelativisticSingleScattererSolution> &solution);
 
+// relativistic
+
 void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom,
                                       Matrix<Real> &vr,
                                       Complex energy,
                                       RelativisticSingleScattererSolution &solution);
+
+void calculateScatteringSolutions(LSMSSystemParameters &lsms, std::vector<AtomData> &atom,
+                                  Complex energy,
+                                  std::vector<RelativisticSingleScattererSolution> &solution);
+
+// ===================================
+// FULL-POTENTIAL (NON-SPHERICAL) Case
+// ===================================
+
+// non relativistic
+
+/*
+void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom,
+                                      Complex energy,
+                                      FullPotentialNonRelativisticSingleScattererSolution &solution);
+void calculateScatteringSolutions(LSMSSystemParameters &lsms, std::vector<AtomData> &atom,
+                                  Complex energy,
+                                  std::vector<FullPotentialNonRelativisticSingleScattererSolution> &solution);
+*/
+// relativistic
+
+void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom,
+                                      Complex energy,
+                                      FullPotentialRelativisticSingleScattererSolution &solution);
+
+void calculateScatteringSolutions(LSMSSystemParameters &lsms, std::vector<AtomData> &atom,
+                                  Complex energy,
+                                  std::vector<FullPotentialRelativisticSingleScattererSolution> &solution);
+
+
+
 #endif

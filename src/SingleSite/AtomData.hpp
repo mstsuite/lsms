@@ -341,9 +341,18 @@ public:
   std::vector<Real> madelungMatrix;
 
 // Potential and charge density
+  bool nonSpherical;
+// for spherical solvers
   Real vSpinShift; // relativ shift of the spin up and spin down potentials
                    // for use in WL-LSMS. Applied using the PotentialShifter class
   Matrix<Real> vr, rhotot;
+
+// Potential and charge density
+// for non-spherical full-potential solvers
+// the potential is expanded in spherical harmonics up to lpot:
+// v(r,s) = \sum Y_L v(r,L,s) : s - spin (0,1); L - (l,m), need only m>=0 as v is real
+  int lpot;
+  Array3d<Complex> potentialL; // (radial grid point, lm, spin index)
 
 // Storage for newly calculated potential and chage densities before mixing
   Matrix<Real> vrNew,rhoNew;
