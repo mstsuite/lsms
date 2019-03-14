@@ -13,6 +13,9 @@
 #include "../../Misc/rationalFit.hpp"
 #include "../../Misc/integrateOneDim.cpp"
 
+
+#include "calculateXC.cpp"
+
 /*
 // integrate a system of n coupled ordinary differential equations
 // from x0 to x1 with initial values in y0
@@ -160,28 +163,33 @@ Real findDiracEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real 
 
   int numNodesP = countNodes(pq,0);
   int numNodesQ = countNodes(pq,1);
+  int numNodesPUpper, numNodesPLower;
 
   if(numNodesP>targetNumberOfNodes)
   {
     energyUpper = energy;
+    numNodesPUpper = numNodesP;
     while(numNodesP>targetNumberOfNodes)
     {
-      energy -= 1.0;
+      energy -= 0.5;
       integrateDirac(r_mesh, atomicNumber, vr, energy, kappa, pq);
       numNodesP = countNodes(pq,0);
     }
     energyLower = energy;
+    numNodesPLower = numNodesP;
   } else {
     energyLower = energy;
+    numNodesPLower = numNodesP;
     while(numNodesP<=targetNumberOfNodes)
     {
-      energy += 1.0;
+      energy += 0.5;
       integrateDirac(r_mesh, atomicNumber, vr, energy, kappa, pq);
       numNodesP = countNodes(pq,0);
     }
     energyUpper = energy;
+    numNodesPUpper = numNodesP;
   }
-
+  
   Real energyEpsilon = 1.0e-15;
   while(std::abs((energyUpper - energyLower)/energy) > energyEpsilon)
   {
@@ -191,8 +199,10 @@ Real findDiracEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real 
     if(numNodesP>targetNumberOfNodes)
     {
       energyUpper = energy;
+      numNodesPUpper = numNodesP;
     } else {
       energyLower = energy;
+      numNodesPLower = numNodesP;
     }
     // printf("%lf %lf  %lg\n",energyLower, energyUpper, energyUpper - energyLower);
   }
@@ -305,10 +315,17 @@ void calculateOrbitals(std::vector<Real> &r_mesh, std::vector<Real> &vr, int ato
 					     principalQuantumNumber, kappa, energy,
 					     pq);
 
-    printf(" %d    %2d    %lg Ry\n",principalQuantumNumber, kappa,orbitalEnergiesAndDensities[i].energy);
+    printf(" %d    %2d    %lg Ry",principalQuantumNumber, kappa,orbitalEnergiesAndDensities[i].energy);
 
     orbitalEnergiesAndDensities[i].rho.resize(r_mesh.size());
     calculateRadialDensity(r_mesh, pq, orbitalEnergiesAndDensities[i].rho);
+
+    if(orbitalEnergiesAndDensities[i].rho[r_mesh.size()-1] > 0.0001)
+    {
+      printf(" !!\n");
+    } else {
+      printf("\n");
+    }
     
     int l = kappa;
     if(l<0) l = -kappa - 1;
