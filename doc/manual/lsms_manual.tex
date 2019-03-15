@@ -1,5 +1,6 @@
 \documentclass[12pt]{scrbook}
-\usepackage{makeidx}
+% \usepackage{makeidx}
+\usepackage{imakeidx}
 \usepackage{natbib}
 
 \KOMAoptions{toc=flat}
@@ -10,9 +11,11 @@
 \subtitle{The Locally Selfconsistent Multiple-Scattering Code}
 \author{M. Eisenbach}
 \publishers{Oak Ridge National Laboratory}
-\date{22-May-2018}
+\date{15-March-2019}
 
+\makeindex
 \begin{document}
+\nocite{Wang1995}
 \frontmatter
 \maketitle
 \tableofcontents
@@ -22,10 +25,10 @@
 
 \input{input_format.tex}
 
-\cite{Eisenbach2017}
-
 \backmatter
 \input{units.tex}
+
+\input{implementation_notes.tex}
 
 \bibliographystyle{plain}
 \bibliography{lsms}

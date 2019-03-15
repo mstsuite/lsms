@@ -1,0 +1,12 @@
+\chapter{Implementation Nptes}
+\section{GPU acceleration}
+The approach to accelerating the GPU version of \LSMS\ has been described in
+\cite{Eisenbach2017}.
+
+\section{Non-Spherical Potentials}
+The non-spherical potential capability of LSMS is based on solving the single site scattering
+problem using the phase integral technique as described for the relativistic Dirac equation
+case in \cite{Liu2016}. The numerical stability problem of the irregular solution in
+multiple-scattering is circumvented by calculating observables by splitting the
+single scattering and multiple scattering contribution into two different integration paths
+and thus avoiding the need for the irregular solution. This approach is described in \cite{Liu2018}.

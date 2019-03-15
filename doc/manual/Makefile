@@ -15,3 +15,4 @@ clean:
 	rm -f *.log
 	rm -f *.toc
 	rm -f *.bbl *.blg
+	rm -r *.idx *.ilg *.ind
