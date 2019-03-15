@@ -68,9 +68,8 @@ c
       parameter  (onh=137.0359895d+00)
       parameter  (tol=1.0d-10)
       parameter  (sname='corslv')
-      integer solver
-!     parameter (solver=2)
-      parameter (solver=1)
+!     integer solver
+!     parameter (solver=1)
       integer nr
       parameter (nr=4)
       real*8 potc(nr,iprpts)
@@ -99,13 +98,13 @@ c
          return
       endif
       nitmax=50
-      if(solver.eq.1) then
+!     if(solver.eq.1) then
       fnstrc=one/onh
       c=two/fnstrc
       c=c*ten**nrelc
-      else
-      call fitpot(r,rv,potc,nr,jmt,last)
-      endif
+!     else
+!     call fitpot(r,rv,potc,nr,jmt,last)
+!     endif
 c
 c     ================================================================
 c     call deepst for each core state.................................
@@ -116,7 +115,7 @@ c     ================================================================
       do i=1,numc
          fac1=(3-n_spin_pola)*abs(kc(i))
          ndeep=ndeep+fac1
-	 if(solver.eq.1) then
+! if(solver.eq.1) then
 c        -------------------------------------------------------------
          call deepst(nc(i),lc(i),kc(i),ecore(i),
      >               rv,r,f(1),h,z,c,nitmax,tol,jws,last,iter,
@@ -134,15 +133,15 @@ c           ----------------------------------------------------------
      >                  iprpts,ipdeq)
 c           ----------------------------------------------------------
          endif
-	 else
-	 if(nrelc.eq.0) then
-	   kappa=kc(i)
-	 else
-	   kappa=lc(i)
-	 endif
-	 call srcore(nrelc.eq.0,ecore(i),f(1),nc(i),kappa,potc,nr,
-     &        r,nitmax,tol,last2,1.d0)
-	 endif
+! else
+! if(nrelc.eq.0) then
+!   kappa=kc(i)
+! else
+!   kappa=lc(i)
+! endif
+! call srcore(nrelc.eq.0,ecore(i),f(1),nc(i),kappa,potc,nr,
+!    &        r,nitmax,tol,last2,1.d0)
+! endif
 c     ================================================================
 c     normalize the wavefunctions
 c     ================================================================
