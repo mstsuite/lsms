@@ -1,5 +1,5 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-// Renormalized Atom
+// Non Relativistic Renormalized Atom
 
 #include <tuple>
 #include <algorithm>
@@ -36,42 +36,36 @@ template<typename T>
 T interpolate(std::vector<T> &r, std::vector<T> &f, T x)
 */
 
-// Dirac RHS for radial electrostatic potential without magnetic field:
-// in: r, pq[0] = p (= r*g) , pd[1] = q = (= r*f)
-// out: dpq[0] = dp/dr , dpq[1] = dq/dr
-
-void diracRHS(Real r, Real *pq, Real *dpq, std::vector<Real> &r_mesh, std::vector<Real> &vr,
-              Real e, Real kappa)
+// Schroedinger RHS for radial electrostatic potential without magnetic field:
+// in: r, p[0] , p[1] = dp[0]/dr
+// out: dp[0] = p[1], dp[1] = (v + l*(l+1)/(r*r) - e) * p[0]
+void schroedingerRHS(Real r, Real *p, Real *dp, std::vector<Real> &r_mesh, std::vector<Real> &vr,
+              Real e, Real l)
 {
-  const Real cLight = 274.072;
   Real v = interpolate<Real>(r_mesh, vr, r)/r;
-  // note: e = W - mc^2
-  // dP/dr = -kappa/r * P(r) + 1/(c hbar) * (e - V(r) + 2mc^2) * Q(r)
-  // dQ/dr =  kappa/r * Q(r) - 1/(c hbar) * (e - V(r)        ) * P(r)
-  dpq[0] = -(kappa/r) * pq[0] + ((e-v)/cLight + cLight) * pq[1];
-  dpq[1] =  (kappa/r) * pq[1] - ((e-v)/cLight         ) * pq[0];
+  dp[0] = p[1];
+  dp[1] = (v + l*(l+1)/(r*r) - e) * p[0];
 }
 
+
+// p ~ r^(l+1); dp/dr ~ (l+1) r^l
 template<typename PQType>
-void diracBoundaryConditionNearOrigin(Real r, PQType *pq, Real Z, Real kappa)
+void schroedingerBoundaryConditionNearOrigin(Real r, PQType *pdp, Real Z, Real l)
 {
   const Real cLight = 274.072;
   Real zeta = 2.0*Z/cLight; // Z * alpha
 
-  pq[0] = 1.0e-20;
-  // pq[1] = ((kappa + std::sqrt(kappa*kappa - zeta*zeta))/zeta)*cLight * pq[0];
-  pq[1] = ((kappa + std::sqrt(kappa*kappa - zeta*zeta))/zeta) * pq[0];
+  pdp[0] = std::pow(r, l+1);
+  pdp[1] = (l+1) * std::pow(r, l);
 }
 
-Real energyGuess(int n, Real Z, Real kappa)
+
+Real energyGuess(int n, Real Z, int l)
 {
   const Real cLight = 274.072;
   Real zeta = 2.0*Z/cLight; // Z * alpha
 
-//  return (2.0*Z*Z)*(-1.0/(2.0*Real(n*n)));
-
-  return (2.0*Z*Z)*(-1.0/(2.0*Real(n*n)) +
-                      (zeta*zeta)*(3.0/(8.0*Real(n*n*n*n)) - 1.0/(2.0*Real(n*n*n)*std::abs(kappa)))); 
+  return (2.0*Z*Z)*(-1.0/(2.0*Real(n*n)));
 }
 
 void generateRadialMesh(std::vector<Real> &r_mesh, int N, Real r0, Real rN)
@@ -102,19 +96,20 @@ int countNodes(Matrix<Real> &y, int c=0)
   return n;
 }
 
-void integrateDirac(std::vector<Real> &r_mesh, Real atomicNumber, std::vector<Real> &vr,
-                    Real energy, Real kappa, Matrix<Real> &pq)
+
+void integrateSchroedinger(std::vector<Real> &r_mesh, Real atomicNumber, std::vector<Real> &vr,
+                    Real energy, Real l, Matrix<Real> &pdp)
 {
   // printf("integrateDirac: energy=%lg\n",energy);
 // outward integration
-  diracBoundaryConditionNearOrigin(r_mesh[0], &pq(0,0), Real(atomicNumber), kappa);
+  schroedingerBoundaryConditionNearOrigin(r_mesh[0], &pdp(0,0), Real(atomicNumber), l);
 
   // for(int i=1; i<iFitting; i++)
   for(int i=1; i<r_mesh.size(); i++)
   {
-    if(bulirschStoerIntegrator<Real, Real>(r_mesh[i-1], r_mesh[i], &pq(0,i-1), &pq(0,i), 2,
+    if(bulirschStoerIntegrator<Real, Real>(r_mesh[i-1], r_mesh[i], &pdp(0,i-1), &pdp(0,i), 2,
                            [&](Real r, Real *y, Real *dy)
-                           {diracRHS(r, y, dy, r_mesh, vr, energy, kappa);},
+                           {schroedingerRHS(r, y, dy, r_mesh, vr, energy, l);},
                            1.0e-12))
     {
       printf("integration did not succeed: %d:%lg -> %d:%lg!\n",i-1,r_mesh[i-1],i,r_mesh[i]);
@@ -122,18 +117,17 @@ void integrateDirac(std::vector<Real> &r_mesh, Real atomicNumber, std::vector<Re
   }
 }
 
-void calculateRadialDensity(std::vector<Real> &r_mesh, Matrix<Real> &pq, std::vector<Real> &rho)
+void calculateRadialDensity(std::vector<Real> &r_mesh, Matrix<Real> &pdp, std::vector<Real> &rho)
 {
   std::vector<Real> rhoIntegrated(r_mesh.size());
 
   for(int i=0; i<r_mesh.size(); i++)
   {
-    rho[i] = std::abs(pq(0,i))*std::abs(pq(0,i))
-      + std::abs(pq(1,i))*std::abs(pq(1,i));
+    rho[i] = std::abs(pdp(0,i))*std::abs(pdp(0,i));
   }
 
   // integrateOneDimSpherical(r_mesh, rho, rhoIntegrated);
-  // the p & q already contain a factor of r,
+  // the p already contains a factor of r,
   // thus the rho above is actually r^2 rho and a standard integration
   // is to be performed to yield the spherical integral of |psi|^2
   // we only need a facto of 4 pi
@@ -147,22 +141,20 @@ void calculateRadialDensity(std::vector<Real> &r_mesh, Matrix<Real> &pq, std::ve
   }
 }
 
-Real findDiracEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real atomicNumber,
-			 int principalQuantumNumber, int kappa, Real energy,
-			 Matrix<Real> &pq)
+Real findSchroedingerEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real atomicNumber,
+			 int principalQuantumNumber, int l, Real energy,
+			 Matrix<Real> &pdp)
 {
   Real energyUpper, energyLower;
-  int l = kappa;
-  if(l<0) l = -kappa - 1;
 
   int targetNumberOfNodes = principalQuantumNumber - l - 1;
 
 // find energy bounds
 
-  integrateDirac(r_mesh, atomicNumber, vr, energy, kappa, pq);
+  integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
 
-  int numNodesP = countNodes(pq,0);
-  int numNodesQ = countNodes(pq,1);
+  int numNodesP = countNodes(pdp,0);
+  int numNodesDP = countNodes(pdp,1);
   int numNodesPUpper, numNodesPLower;
 
   if(numNodesP>targetNumberOfNodes)
@@ -172,8 +164,8 @@ Real findDiracEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real 
     while(numNodesP>targetNumberOfNodes)
     {
       energy -= 0.5;
-      integrateDirac(r_mesh, atomicNumber, vr, energy, kappa, pq);
-      numNodesP = countNodes(pq,0);
+      integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+      numNodesP = countNodes(pdp,0);
     }
     energyLower = energy;
     numNodesPLower = numNodesP;
@@ -183,8 +175,8 @@ Real findDiracEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real 
     while(numNodesP<=targetNumberOfNodes)
     {
       energy += 0.5;
-      integrateDirac(r_mesh, atomicNumber, vr, energy, kappa, pq);
-      numNodesP = countNodes(pq,0);
+      integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+      numNodesP = countNodes(pdp,0);
     }
     energyUpper = energy;
     numNodesPUpper = numNodesP;
@@ -194,8 +186,8 @@ Real findDiracEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real 
   while(std::abs((energyUpper - energyLower)/energy) > energyEpsilon)
   {
     energy = energyLower + 0.5*(energyUpper-energyLower);
-    integrateDirac(r_mesh, atomicNumber, vr, energy, kappa, pq);
-    numNodesP = countNodes(pq,0);
+    integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+    numNodesP = countNodes(pdp,0);
     if(numNodesP>targetNumberOfNodes)
     {
       energyUpper = energy;
@@ -212,61 +204,49 @@ Real findDiracEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real 
 
 class AtomOrbital {
 public:
-  int n,kappa;
+  int n,l;
   Real energy;
   std::vector<Real> rho; // radial charge density contribution from an electron in this level
   // char type; // 'C' for core lectron, 'S' for semi-core and 'V' for valence electrons
 } ;
 
 
-// generate a list of (n, kappa) orbitals
+// generate a list of (n, l) orbitals
 void initOrbitals(int Z, std::vector<std::tuple<int, int>> &orbitals)
 {
   orbitals.clear();
   // He: 1s^2
-  orbitals.push_back(std::make_tuple<int,int>(1,-1));
+  orbitals.push_back(std::make_tuple<int,int>(1, 0));
   if(Z<3) return;
   // Ne: [He] 2s^2 2p^6
-  orbitals.push_back(std::make_tuple<int,int>(2,-1));
+  orbitals.push_back(std::make_tuple<int,int>(2, 0));
   orbitals.push_back(std::make_tuple<int,int>(2, 1));
-  orbitals.push_back(std::make_tuple<int,int>(2,-2));
   if(Z<11) return;
   // Ar: [Ne] 3s^2 3p^6
-  orbitals.push_back(std::make_tuple<int,int>(3,-1));
+  orbitals.push_back(std::make_tuple<int,int>(3, 0));
   orbitals.push_back(std::make_tuple<int,int>(3, 1));
-  orbitals.push_back(std::make_tuple<int,int>(3,-2));
   if(Z<19) return;
   // Kr: [Ar] 3d^10 4s^2 4p^6
   orbitals.push_back(std::make_tuple<int,int>(3, 2));
-  orbitals.push_back(std::make_tuple<int,int>(3,-3));
-  orbitals.push_back(std::make_tuple<int,int>(4,-1));
+  orbitals.push_back(std::make_tuple<int,int>(4, 0));
   orbitals.push_back(std::make_tuple<int,int>(4, 1));
-  orbitals.push_back(std::make_tuple<int,int>(4,-2));
   if(Z<37) return;
   // Xe: [Kr] 4d^10 5s^2 5p^6
   orbitals.push_back(std::make_tuple<int,int>(4, 2));
-  orbitals.push_back(std::make_tuple<int,int>(4,-3));
-  orbitals.push_back(std::make_tuple<int,int>(5,-1));
+  orbitals.push_back(std::make_tuple<int,int>(5, 0));
   orbitals.push_back(std::make_tuple<int,int>(5, 1));
-  orbitals.push_back(std::make_tuple<int,int>(5,-2));
   if(Z<55) return;
   // Rn: [Xe] 4f^14 5d^10 6s^2 6p^6
   orbitals.push_back(std::make_tuple<int,int>(4, 3));
-  orbitals.push_back(std::make_tuple<int,int>(4,-4));
   orbitals.push_back(std::make_tuple<int,int>(5, 2));
-  orbitals.push_back(std::make_tuple<int,int>(5,-3));
-  orbitals.push_back(std::make_tuple<int,int>(6,-1));
+  orbitals.push_back(std::make_tuple<int,int>(6, 0));
   orbitals.push_back(std::make_tuple<int,int>(6, 1));
-  orbitals.push_back(std::make_tuple<int,int>(6,-2));
   if(Z<87) return;
   // Og: [Rn] 5f^14 6d^10 7s^2 7p^6
   orbitals.push_back(std::make_tuple<int,int>(5, 3));
-  orbitals.push_back(std::make_tuple<int,int>(5,-4));
   orbitals.push_back(std::make_tuple<int,int>(6, 2));
-  orbitals.push_back(std::make_tuple<int,int>(6,-3));
-  orbitals.push_back(std::make_tuple<int,int>(7,-1));
+  orbitals.push_back(std::make_tuple<int,int>(7, 0));
   orbitals.push_back(std::make_tuple<int,int>(7, 1));
-  orbitals.push_back(std::make_tuple<int,int>(7,-2));
 }
 
 // assume that rho is actually r^2 rho, calulate r v
@@ -297,28 +277,27 @@ void calculateOrbitals(std::vector<Real> &r_mesh, std::vector<Real> &vr, int ato
                        std::vector<std::tuple<int, int>> &orbitals,
                        std::vector<AtomOrbital> &orbitalEnergiesAndDensities)
 {
-  printf(" n  kappa  energy\n");
+  printf(" n  l  energy\n");
   for(int i=0; i<orbitals.size(); i++)
   {
-    // Matrix<Real> &pq = pqs[i];
-    Matrix<Real> pq;
+    Matrix<Real> pdp;
     int principalQuantumNumber = std::get<0>(orbitals[i]);
-    int kappa = std::get<1>(orbitals[i]);
-    pq.resize(2,r_mesh.size());
+    int l = std::get<1>(orbitals[i]);
+    pdp.resize(2,r_mesh.size());
   
-    Real energy = energyGuess(principalQuantumNumber, atomicNumber, kappa);
+    Real energy = energyGuess(principalQuantumNumber, atomicNumber, l);
   // printf("# energy: %lg Ry\n",energy);
 
     orbitalEnergiesAndDensities[i].n = principalQuantumNumber;
-    orbitalEnergiesAndDensities[i].kappa = kappa;
-    orbitalEnergiesAndDensities[i].energy = findDiracEigenvalue(r_mesh, vr, atomicNumber,
-					     principalQuantumNumber, kappa, energy,
-					     pq);
+    orbitalEnergiesAndDensities[i].l = l;
+    orbitalEnergiesAndDensities[i].energy = findSchroedingerEigenvalue(r_mesh, vr, atomicNumber,
+					     principalQuantumNumber, l, energy,
+					     pdp);
 
-    printf(" %d    %2d    %lg Ry",principalQuantumNumber, kappa,orbitalEnergiesAndDensities[i].energy);
+    printf(" %d %2d %lg Ry",principalQuantumNumber, l,orbitalEnergiesAndDensities[i].energy);
 
     orbitalEnergiesAndDensities[i].rho.resize(r_mesh.size());
-    calculateRadialDensity(r_mesh, pq, orbitalEnergiesAndDensities[i].rho);
+    calculateRadialDensity(r_mesh, pdp, orbitalEnergiesAndDensities[i].rho);
 
     if(orbitalEnergiesAndDensities[i].rho[r_mesh.size()-1] > 0.0001)
     {
@@ -327,11 +306,9 @@ void calculateOrbitals(std::vector<Real> &r_mesh, std::vector<Real> &vr, int ato
       printf("\n");
     }
     
-    int l = kappa;
-    if(l<0) l = -kappa - 1;
     int targetNumberOfNodes = principalQuantumNumber - l - 1;
-    int numNodesP = countNodes(pq,0);
-    int numNodesQ = countNodes(pq,1);
+    int numNodesP = countNodes(pdp,0);
+    int numNodesQ = countNodes(pdp,1);
   }
   
   std::sort(orbitalEnergiesAndDensities.begin(), orbitalEnergiesAndDensities.end(),
@@ -347,17 +324,17 @@ void accumulateDensities(std::vector<AtomOrbital> &orbitalEnergiesAndDensities, 
   int orbitalIdx=0; // the index of the current orbital
   while(electronsMissing>0)
   {
-    if(electronsMissing >= 2*std::abs(orbitalEnergiesAndDensities[orbitalIdx].kappa)) // a filled orbital
+    if(electronsMissing >= 2*(2*std::abs(orbitalEnergiesAndDensities[orbitalIdx].l)+1)) // a filled orbital
     {
       for(int i=0; i<rhotot.size(); i++)
 	rhotot[i] += orbitalEnergiesAndDensities[orbitalIdx].rho[i]
-	  * 2 * std::abs(orbitalEnergiesAndDensities[orbitalIdx].kappa);
-      electronsMissing -= 2 * std::abs(orbitalEnergiesAndDensities[orbitalIdx].kappa);
+	  * 2 * (2 * std::abs(orbitalEnergiesAndDensities[orbitalIdx].l) + 1);
+      electronsMissing -= 2 * (2 * std::abs(orbitalEnergiesAndDensities[orbitalIdx].l) + 1);
       printf("%d %2d %lg Ry: filled (%2d electrons)\n",
 	     orbitalEnergiesAndDensities[orbitalIdx].n,
-	     orbitalEnergiesAndDensities[orbitalIdx].kappa,
+	     orbitalEnergiesAndDensities[orbitalIdx].l,
 	     orbitalEnergiesAndDensities[orbitalIdx].energy,
-	     2 * std::abs(orbitalEnergiesAndDensities[orbitalIdx].kappa));
+	     2 * (2 * std::abs(orbitalEnergiesAndDensities[orbitalIdx].l) + 1));
     } else {
       for(int i=0; i<rhotot.size(); i++)
 	rhotot[i] += orbitalEnergiesAndDensities[orbitalIdx].rho[i]
@@ -365,7 +342,7 @@ void accumulateDensities(std::vector<AtomOrbital> &orbitalEnergiesAndDensities, 
       
       printf("%d %2d %lg Ry: partially filled (%2d electrons)\n",
 	     orbitalEnergiesAndDensities[orbitalIdx].n,
-	     orbitalEnergiesAndDensities[orbitalIdx].kappa,
+	     orbitalEnergiesAndDensities[orbitalIdx].l,
 	     orbitalEnergiesAndDensities[orbitalIdx].energy,
 	     electronsMissing);
 
@@ -386,7 +363,7 @@ int main(int argc, char *argv[])
 {
   int atomicNumber = 29; // test copper
   int principalQuantumNumber = 1;
-  int kappa = -1; // l=0
+  int l=0;
   Real atomRadius = 3.0;
   Real rmsRho;
 
@@ -459,10 +436,12 @@ int main(int argc, char *argv[])
   ///*
   FILE *outf=fopen("rho_vr.out","w");
   fprintf(outf,"# Atomic Number: %d\n",atomicNumber);
-
+  fprintf(outf,"# i r[i] rho vr vXC\n");
+  Real exc;
   for(int i=0; i<r_mesh.size(); i++)
   {
-    fprintf(outf,"%5d %lg %lg %lg\n",i, r_mesh[i], rhotot[i], vr[i]);
+    fprintf(outf,"%5d %lg %lg %lg %lg %lg\n",i, r_mesh[i], rhotot[i], vr[i], vXC[i],
+            chachiyo2016(rhotot[i]/(4.0*M_PI*r_mesh[i]*r_mesh[i]), exc));
   }
   fclose(outf);
   //*/

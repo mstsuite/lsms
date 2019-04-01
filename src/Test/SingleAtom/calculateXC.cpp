@@ -12,6 +12,8 @@ Real densityParameterRs(Real rho)
   return std::pow( (4.0*M_PI/3.0) * rho, -1.0/3.0);
 }
 
+// v_xv = e_xc + rho * d e_xc/d rho
+
 /*
       function alpha2(rs,dz,sp,iexch,exchg)
 
@@ -91,18 +93,54 @@ Real alpha2(Real rs, Real dz, Real sp, Real &eXC)
 //     exchange-correlation potential
   return exc + (excf-exc) * fdz - rs*decd/3.0 + sp*(1.0 - sp*dz)*dedz;
 }
+
+
+// correlation energy from T. Chachiyo, J. Chem. Phys. 145, 021101 (2016).
+Real chachiyo2016(Real rho, Real &exc)
+{
+  // total XC energy = int rho*exc dr
+  // exchange energy density:
+  //
+  //Real ex = 0;
+  Real ex = -6.0*std::pow(rho * 3.0/(64.0*M_PI), 1.0/3.0);
+  // correlation energy density:
+  // e_c = a ln(1 + b/r_s + b/r_s^2)
+  // constatnts from eq. 3 in T. Chachiyo, J. Chem. Phys. 145, 021101 (2016)
+  Real const a = (std::log(2) - 1.0)/(M_PI * M_PI); // converted from Hartree in Chachiyo to Rydberg
+  Real const b = 20.4562557;
+  // r_s = (4 pi rho / 3) ^ -1/3 ->
+  // 1/rs = (4 pi rho / 3) ^ 1/3
+  Real rsInv = std::pow(4.0 * M_PI * rho / 3.0, 1.0/3.0);
+  Real ec = a*std::log(1.0 + b*rsInv + b*rsInv*rsInv);
+  exc = ex + ec;
+  
+  // exchange correlation potential:
+  // v_xc(r) = e_xc(rho(r)) + rho(r) * d e_xc(rho)/d rho
+  // rho_dex = rho * d e_x / d rho = 1/3 e_x
+  Real rho_dex = ex/3.0;
+  //
+  Real rho_dec = a*b*(rsInv + 2.0*rsInv*rsInv)/(3.0*(1.0 + b*rsInv + b*rsInv*rsInv));
+
+  return exc + rho_dex + rho_dec;
+}
     
-Real exchangePotentialLDA(Real rho, Real r)
+Real exchangeCorrelationPotentialLDA(Real rho, Real r)
 {
   Real eXC;
+  /*
+  if(rho < 1.0e-9)
+    return 0.0;
+  // return alpha2(std::pow(3.0/rho , 1.0/3.0), 0.0, 1.0, eXC);
   return alpha2(std::pow(3.0*r*r/rho , 1.0/3.0), 0.0, 1.0, eXC);
+  //*/
+  return chachiyo2016(rho/(4.0*M_PI*r*r), eXC);
 }
 
-void exchangePotentialLDA(std::vector<Real> &rho, std::vector<Real> &r_mesh, std::vector<Real> &vXC)
+void exchangeCorrelationPotentialLDA(std::vector<Real> &rho, std::vector<Real> &r_mesh, std::vector<Real> &vXC)
 {
   for(int i=0; i<rho.size(); i++)
   {
-    vXC[i] = exchangePotentialLDA(rho[i], r_mesh[i]);
+    vXC[i] = exchangeCorrelationPotentialLDA(rho[i], r_mesh[i]);
   }
 }
 
