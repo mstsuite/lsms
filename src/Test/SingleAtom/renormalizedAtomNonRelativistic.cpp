@@ -59,6 +59,14 @@ void schroedingerBoundaryConditionNearOrigin(Real r, PQType *pdp, Real Z, Real l
   pdp[1] = (l+1) * std::pow(r, l);
 }
 
+template<typename PQType>
+void schroedingerBoundaryConditionAtBoundary(Real r, PQType *pdp, int numberOfNodes)
+{
+  pdp[0] = 0.0; // psi(R) = 0
+  pdp[1] = 1.0; // 0.0001; //
+  if(numberOfNodes % 2) // for an odd number of nodes change initital slope
+    pdp[1] = -pdp[1];
+}
 
 Real energyGuess(int n, Real Z, int l)
 {
@@ -107,13 +115,52 @@ void integrateSchroedinger(std::vector<Real> &r_mesh, Real atomicNumber, std::ve
   // for(int i=1; i<iFitting; i++)
   for(int i=1; i<r_mesh.size(); i++)
   {
+    /*
+    modifiedMidpoint<Real, Real>(r_mesh[i-1], r_mesh[i], &pdp(0,i-1), &pdp(0,i), 2,
+                                 [&](Real r, Real *y, Real *dy)
+                                 {schroedingerRHS(r, y, dy, r_mesh, vr, energy, l);},
+                                 10);
+    //*/
+    //*
     if(bulirschStoerIntegrator<Real, Real>(r_mesh[i-1], r_mesh[i], &pdp(0,i-1), &pdp(0,i), 2,
                            [&](Real r, Real *y, Real *dy)
                            {schroedingerRHS(r, y, dy, r_mesh, vr, energy, l);},
                            1.0e-12))
     {
-      printf("integration did not succeed: %d:%lg -> %d:%lg!\n",i-1,r_mesh[i-1],i,r_mesh[i]);
+      printf("outward integration did not succeed: %d:%lg -> %d:%lg!\n",i-1,r_mesh[i-1],i,r_mesh[i]);
+      exit(0);
     }
+    //*/
+  }
+}
+
+void integrateSchroedingerInward(std::vector<Real> &r_mesh, Real atomicNumber, std::vector<Real> &vr,
+                                 Real energy, Real l, int principleQuantumNumber, Matrix<Real> &pdp)
+{
+  // printf("integrateDirac: energy=%lg\n",energy);
+// inward integration
+  int numberOfNodes = principleQuantumNumber - l - 1;
+  schroedingerBoundaryConditionAtBoundary(r_mesh[r_mesh.size()-1], &pdp(0,r_mesh.size()-1), numberOfNodes);
+
+  // for(int i=1; i<iFitting; i++)
+  for(int i=r_mesh.size()-1; i>1; i--)
+  {
+    /*
+    modifiedMidpoint<Real, Real>(r_mesh[i], r_mesh[i-1], &pdp(0,i), &pdp(0,i-1), 2,
+                                 [&](Real r, Real *y, Real *dy)
+                                 {schroedingerRHS(r, y, dy, r_mesh, vr, energy, l);},
+                                 10);
+    //*/   
+    //*
+    if(bulirschStoerIntegrator<Real, Real>(r_mesh[i], r_mesh[i-1], &pdp(0,i), &pdp(0,i-1), 2,
+                           [&](Real r, Real *y, Real *dy)
+                           {schroedingerRHS(r, y, dy, r_mesh, vr, energy, l);},
+                           1.0e-12))
+    {
+      printf("inward integration did not succeed: %d:%lg -> %d:%lg!\n",i-1,r_mesh[i-1],i,r_mesh[i]);
+      exit(1);
+    }
+    //*/
   }
 }
 
@@ -141,22 +188,72 @@ void calculateRadialDensity(std::vector<Real> &r_mesh, Matrix<Real> &pdp, std::v
   }
 }
 
+Real minimizationQuantityForMatching(Matrix<Real> &pdpOut, Matrix<Real> &pdpIn, int matchingPoint, Real energy)
+{
+  Real logDerivativeOut = pdpOut(1,matchingPoint)/(std::sqrt(std::abs(energy))*pdpOut(0,matchingPoint));
+  Real logDerivativeIn = pdpIn(1,matchingPoint)/(std::sqrt(std::abs(energy))*pdpIn(0,matchingPoint));
+
+  if(std::sqrt(std::abs(energy))<1)
+  {
+    logDerivativeOut = pdpOut(1,matchingPoint)/(pdpOut(0,matchingPoint));
+    logDerivativeIn = pdpIn(1,matchingPoint)/(pdpIn(0,matchingPoint));
+  }
+  
+  // return logDerivativeOut - logDerivativeIn; // log derivative difference
+  return (1.0+logDerivativeIn)/(1.0-logDerivativeIn) -  (1.0+logDerivativeOut)/(1.0-logDerivativeOut);
+}
+
 Real findSchroedingerEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr, Real atomicNumber,
 			 int principalQuantumNumber, int l, Real energy,
 			 Matrix<Real> &pdp)
 {
   Real energyUpper, energyLower;
 
+  Real matchingQuantity;
+  int matchingPoint = 95*r_mesh.size()/100;
+  Matrix<Real> pdpInward;
+  pdpInward.resize(2,r_mesh.size());
+  
   int targetNumberOfNodes = principalQuantumNumber - l - 1;
 
 // find energy bounds
 
+  // printf("find energy bounds\n");
   integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+  integrateSchroedingerInward(r_mesh, atomicNumber, vr, energy, l, principalQuantumNumber, pdpInward);
+  matchingQuantity = minimizationQuantityForMatching(pdp,pdpInward,matchingPoint,energy);
 
   int numNodesP = countNodes(pdp,0);
   int numNodesDP = countNodes(pdp,1);
   int numNodesPUpper, numNodesPLower;
 
+  /*
+  energyUpper = energy;
+  numNodesPUpper = numNodesP;
+  // find lower energy
+  while(numNodesP>targetNumberOfNodes)
+  {
+    energy -= 0.1;;
+    integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+    numNodesP = countNodes(pdp,0);
+    printf(">nodes: %d target: %d energy: %.15lg\n",numNodesP,targetNumberOfNodes,energy);
+  }
+  energyLower = energy;
+  numNodesPLower = numNodesP;
+  // find upper energy
+  // energy = energyUpper;
+  // numNodesP =  numNodesPUpper;
+  while(numNodesP<targetNumberOfNodes)
+  {
+    energy += 0.1;;
+    integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+    numNodesP = countNodes(pdp,0);
+    printf("<nodes: %d target: %d energy: %.15lg\n",numNodesP,targetNumberOfNodes,energy);
+  }
+  energyUpper = energy;
+  numNodesPUpper = numNodesP;
+  */
+  //*
   if(numNodesP>targetNumberOfNodes)
   {
     energyUpper = energy;
@@ -181,8 +278,10 @@ Real findSchroedingerEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr
     energyUpper = energy;
     numNodesPUpper = numNodesP;
   }
+  //*/
   
-  Real energyEpsilon = 1.0e-15;
+  Real energyEpsilon = 1.0e-3; // 1.0e-15
+  /*
   while(std::abs((energyUpper - energyLower)/energy) > energyEpsilon)
   {
     energy = energyLower + 0.5*(energyUpper-energyLower);
@@ -198,7 +297,129 @@ Real findSchroedingerEigenvalue(std::vector<Real> &r_mesh, std::vector<Real> &vr
     }
     // printf("%lf %lf  %lg\n",energyLower, energyUpper, energyUpper - energyLower);
   }
+  //*/
 
+  integrateSchroedinger(r_mesh, atomicNumber, vr, energyUpper, l, pdp);
+  integrateSchroedingerInward(r_mesh, atomicNumber, vr, energyUpper, l, principalQuantumNumber, pdpInward);
+  Real matchingQuantityUpper = minimizationQuantityForMatching(pdp,pdpInward,matchingPoint,energyUpper);
+
+  integrateSchroedinger(r_mesh, atomicNumber, vr, energyLower, l, pdp);
+  integrateSchroedingerInward(r_mesh, atomicNumber, vr, energyLower, l, principalQuantumNumber, pdpInward);
+  Real matchingQuantityLower = minimizationQuantityForMatching(pdp,pdpInward,matchingPoint,energyLower);
+
+  // printf("***\n");
+  // while(std::signbit(logDerivativeDifferenceLower) == std::signbit(logDerivativeDifferenceUpper))
+  // {
+
+  //   Real d = (logDerivativeDifferenceUpper - logDerivativeDifferenceLower); // /(energyUpper - energyLower);
+  //   printf("eL lDDL  eU lDDU -> d: %.15lg %.15lg   %.15lg %.15lg  -> %.15lg\n",energyLower, logDerivativeDifferenceLower, energyUpper, logDerivativeDifferenceUpper, d);
+
+  //   if(logDerivativeDifferenceUpper > 0.0)
+  //   {
+  //     if(d > 0.0)
+  //     {
+  //       energyLower -= logDerivativeDifferenceLower/d;
+  //       integrateSchroedinger(r_mesh, atomicNumber, vr, energyLower, l, pdp);
+  //       integrateSchroedingerInward(r_mesh, atomicNumber, vr, energyLower, l, principalQuantumNumber, pdpInward);
+  //       logDerivativeDifferenceLower = pdp(1,matchingPoint)/pdp(0,matchingPoint)
+  //         - pdpInward(1,matchingPoint)/pdpInward(0,matchingPoint);
+  //     } else {
+  //       energyUpper += logDerivativeDifferenceUpper/d;
+  //       integrateSchroedinger(r_mesh, atomicNumber, vr, energyUpper, l, pdp);
+  //       integrateSchroedingerInward(r_mesh, atomicNumber, vr, energyUpper, l, principalQuantumNumber, pdpInward);
+  //       logDerivativeDifferenceUpper = pdp(1,matchingPoint)/pdp(0,matchingPoint)
+  //         - pdpInward(1,matchingPoint)/pdpInward(0,matchingPoint);
+  //     }
+  //   } else {
+  //     if(d < 0.0)
+  //     {
+  //       energyLower -= logDerivativeDifferenceLower/d;
+  //       integrateSchroedinger(r_mesh, atomicNumber, vr, energyLower, l, pdp);
+  //       integrateSchroedingerInward(r_mesh, atomicNumber, vr, energyLower, l, principalQuantumNumber, pdpInward);
+  //       logDerivativeDifferenceLower = pdp(1,matchingPoint)/pdp(0,matchingPoint)
+  //         - pdpInward(1,matchingPoint)/pdpInward(0,matchingPoint);
+  //     } else {
+  //       energyUpper += logDerivativeDifferenceUpper/d;
+  //       integrateSchroedinger(r_mesh, atomicNumber, vr, energyUpper, l, pdp);
+  //       integrateSchroedingerInward(r_mesh, atomicNumber, vr, energyUpper, l, principalQuantumNumber, pdpInward);
+  //       logDerivativeDifferenceUpper = pdp(1,matchingPoint)/pdp(0,matchingPoint)
+  //         - pdpInward(1,matchingPoint)/pdpInward(0,matchingPoint);
+  //     }
+  //   }
+  // }
+
+  energy = energyLower + 0.5*(energyUpper-energyLower);
+  while(std::abs((energyUpper - energyLower)/energy) > energyEpsilon)
+  {
+    energy = energyLower + 0.5*(energyUpper-energyLower);
+    integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+    integrateSchroedingerInward(r_mesh, atomicNumber, vr, energy, l, principalQuantumNumber, pdpInward);
+    matchingQuantity = minimizationQuantityForMatching(pdp,pdpInward,matchingPoint,energy);
+    
+    Real f = pdp(0,matchingPoint)/pdpInward(0,matchingPoint);
+    for(int i=matchingPoint; i<r_mesh.size(); i++)
+    {
+      pdp(0,i) = f*pdpInward(0,i);
+      pdp(1,i) = f*pdpInward(1,i);
+    }
+    numNodesP = countNodes(pdp,0);
+    if((std::signbit(matchingQuantityLower) == std::signbit(matchingQuantity))
+       || (numNodesP<targetNumberOfNodes))
+    {
+      matchingQuantityLower = matchingQuantity;
+      energyLower = energy;
+    } else {
+      matchingQuantityUpper = matchingQuantity;
+      energyUpper = energy;
+    }
+  }
+
+  energy = energyLower + 0.00001; //energyUpper;
+  Real energyOld = energyLower;
+  matchingQuantity = matchingQuantityUpper;
+  Real matchingQuantityOld = matchingQuantityLower;
+
+
+  while(std::abs(matchingQuantity) > 1.0e-8)
+  {
+    Real d = (energy - energyOld)/(matchingQuantity - matchingQuantityOld);
+    Real tEnergy = energy -  matchingQuantity*d;
+  
+    energyOld = energy;
+    matchingQuantityOld = matchingQuantity;
+     energy = tEnergy;
+
+    integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+    integrateSchroedingerInward(r_mesh, atomicNumber, vr, energy, l, principalQuantumNumber, pdpInward);
+    matchingQuantity = minimizationQuantityForMatching(pdp,pdpInward,matchingPoint,energy);
+  //   Real f = pdp(0,matchingPoint)/pdpInward(0,matchingPoint);
+  //   for(int i=matchingPoint; i<r_mesh.size(); i++)
+  //   {
+  //     pdp(0,i) = f*pdpInward(0,i);
+  //     pdp(1,i) = f*pdpInward(1,i);
+  //   }
+  //   numNodesP = countNodes(pdp,0);
+  //   if((std::signbit(logDerivativeDifferenceLower) == std::signbit(logDerivativeDifference))
+  //      || (numNodesP<targetNumberOfNodes))
+  //   {
+  //     logDerivativeDifferenceLower = logDerivativeDifference;
+  //     energyLower = energy;
+  //   } else {
+  //     logDerivativeDifferenceUpper = logDerivativeDifference;
+  //     energyUpper = energy;
+  //   }
+    // printf("energy = %.15lg  logDerivativeDifference = %.15lg\n",energy,matchingQuantity);
+  }
+  
+
+  Real f = pdp(0,matchingPoint)/pdpInward(0,matchingPoint);
+  for(int i=matchingPoint; i<r_mesh.size(); i++)
+  {
+    pdp(0,i) = f*pdpInward(0,i);
+    pdp(1,i) = f*pdpInward(1,i);
+  }
+
+  // exit(0);
   return energy;
 }
 
@@ -281,11 +502,15 @@ void calculateOrbitals(std::vector<Real> &r_mesh, std::vector<Real> &vr, int ato
   for(int i=0; i<orbitals.size(); i++)
   {
     Matrix<Real> pdp;
+    // int principalQuantumNumber = orbitalEnergiesAndDensities[i].n; //std::get<0>(orbitals[i]);
+    // int l = orbitalEnergiesAndDensities[i].l; //std::get<1>(orbitals[i]);
     int principalQuantumNumber = std::get<0>(orbitals[i]);
     int l = std::get<1>(orbitals[i]);
     pdp.resize(2,r_mesh.size());
   
     Real energy = energyGuess(principalQuantumNumber, atomicNumber, l);
+    // if(orbitalEnergiesAndDensities[i].energy != 0.0)
+    //  energy = orbitalEnergiesAndDensities[i].energy;
   // printf("# energy: %lg Ry\n",energy);
 
     orbitalEnergiesAndDensities[i].n = principalQuantumNumber;
@@ -352,11 +577,76 @@ void accumulateDensities(std::vector<AtomOrbital> &orbitalEnergiesAndDensities, 
   }
 }
 
+void calculateSingeOrbitalLogDerivative(int atomicNumber, int l, Real energy,
+                                        Real energyTop, Real dEnergy, Real atomRadius)
+{
+  std::vector<Real> r_mesh, vr, rho, rhoInward;
+  Matrix<Real> pdp, pdpInward;
+  generateRadialMesh(r_mesh, 1500, 1.5e-10, atomRadius);
+  vr.resize(r_mesh.size());
+  rho.resize(r_mesh.size());
+  rhoInward.resize(r_mesh.size());
+  pdp.resize(2,r_mesh.size());
+  pdpInward.resize(2,r_mesh.size());
+  for(int i=0; i<r_mesh.size(); i++) vr[i] = -2.0*Real(atomicNumber);
+
+  int matchingPoint = 95*r_mesh.size()/100;
+  
+  FILE *outf=fopen("logDerivative.out","w");
+  fprintf(outf,"# Atomic Number: %d\n",atomicNumber);
+  fprintf(outf,"# energy derivOut derivIn difference nodesOut nodesIn\n");
+  for(; energy<energyTop; energy += dEnergy)
+  {
+    integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+    calculateRadialDensity(r_mesh, pdp, rho);
+    integrateSchroedingerInward(r_mesh, atomicNumber, vr, energy, l, 1, pdpInward);
+    calculateRadialDensity(r_mesh, pdpInward, rhoInward);
+ 
+    fprintf(outf,"%lg %lg %lg %lg %d %d\n",energy, pdp[1,matchingPoint]/pdp[0,matchingPoint],
+            pdpInward[1,matchingPoint]/pdpInward[0,matchingPoint],
+            minimizationQuantityForMatching(pdp,pdpInward,matchingPoint,energy),
+            countNodes(pdp,0), countNodes(pdpInward,0));
+  }
+  fclose(outf);
+}
+
+void calculateSingeOrbital(int atomicNumber, int l, Real energy, Real atomRadius)
+{
+  std::vector<Real> r_mesh, vr, rho, rhoInward;
+  Matrix<Real> pdp, pdpInward;
+  generateRadialMesh(r_mesh, 1500, 1.5e-10, atomRadius);
+  vr.resize(r_mesh.size());
+  rho.resize(r_mesh.size());
+  rhoInward.resize(r_mesh.size());
+  pdp.resize(2,r_mesh.size());
+  pdpInward.resize(2,r_mesh.size());
+  for(int i=0; i<r_mesh.size(); i++) vr[i] = -2.0*Real(atomicNumber);
+  
+  integrateSchroedinger(r_mesh, atomicNumber, vr, energy, l, pdp);
+  calculateRadialDensity(r_mesh, pdp, rho);
+  integrateSchroedingerInward(r_mesh, atomicNumber, vr, energy, l, 1, pdpInward);
+  calculateRadialDensity(r_mesh, pdpInward, rhoInward);
+
+  printf("number of nodes: %d\n",countNodes(pdp,0));
+  
+  FILE *outf=fopen("orbital.out","w");
+  fprintf(outf,"# Atomic Number: %d\n",atomicNumber);
+  fprintf(outf,"# i r[i] rho rhoInward\n");
+  Real exc;
+  for(int i=0; i<r_mesh.size(); i++)
+  {
+    fprintf(outf,"%5d %lg %lg %lg\n",i, r_mesh[i], rho[i], rhoInward[i]);
+  }
+  fclose(outf);
+}
+
 void printUsage(const char *name, Real R)
 {
   printf("Usage: %s Z [R]\n",name);
   printf("       Z: atomic number\n");
   printf("       R: atomic sphere radius (optional, default=%lf)\n",R);
+  printf("       %s o Z l energy [R]\n",name);
+  printf("       %s d Z l energy energyTop dEnergy [R]\n",name);
 }
 
 int main(int argc, char *argv[])
@@ -366,15 +656,41 @@ int main(int argc, char *argv[])
   int l=0;
   Real atomRadius = 3.0;
   Real rmsRho;
+  char mode = 's'; // scf atom
+  Real energy;
 
-  if(argc != 2 && argc != 3)
+  if(argc != 2 && argc != 3 && argc != 5 && argc != 6 && argc != 7 && argc != 8)
   {
     printUsage(argv[0], atomRadius);
     exit(1);
   }
-  atomicNumber = atoi(argv[1]);
-  if(argc == 3)
-    atomRadius = atof(argv[2]);
+  if(argv[1][0]=='o')
+  {
+    mode = 'o'; // one orbital
+    atomicNumber = atoi(argv[2]);
+    l = atoi(argv[3]);
+    energy = atof(argv[4]);
+    if (argc == 6)
+      atomRadius = atof(argv[2]);
+    calculateSingeOrbital(atomicNumber, l, energy, atomRadius);
+    return 0;
+  } else if(argv[1][0] =='d') {
+    mode = 'd';
+    atomicNumber = atoi(argv[2]);
+    l = atoi(argv[3]);
+    energy = atof(argv[4]);
+    Real energyTop = atof(argv[5]);
+    Real dEnergy =  atof(argv[6]);
+    if (argc == 8)
+      atomRadius = atof(argv[7]);
+    calculateSingeOrbitalLogDerivative(atomicNumber, l, energy,
+                                       energyTop, dEnergy, atomRadius);
+    return 0;
+  } else {
+    atomicNumber = atoi(argv[1]);
+    if(argc == 3)
+      atomRadius = atof(argv[2]);
+  }
 
   int maxPrincipalQuantumNumber;
 
@@ -388,6 +704,12 @@ int main(int argc, char *argv[])
   std::vector<AtomOrbital> orbitalEnergiesAndDensities;
   // pqs.resize(orbitals.size());
   orbitalEnergiesAndDensities.resize(orbitals.size());
+  for(int i=0; i<orbitals.size(); i++)
+  {
+    orbitalEnergiesAndDensities[i].n = std::get<0>(orbitals[i]);
+    orbitalEnergiesAndDensities[i].l = std::get<1>(orbitals[i]);
+    orbitalEnergiesAndDensities[i].energy = 0.0;
+  }
 
 // initialize r_mesh (unit of length is the Bohr radius)
   generateRadialMesh(r_mesh, 1500, 1.5e-10, atomRadius);
@@ -410,7 +732,7 @@ int main(int argc, char *argv[])
   // iterate on the charge density with mixing
   Real mixing = 0.05;
   Real rms=1.0;
-  for(int iter=0; iter < 500 && rms > 0.0001; iter++)
+  for(int iter=0; iter < 50 && rms > 0.0001; iter++)
   {
     calculateOrbitals(r_mesh, vr, atomicNumber, orbitals, orbitalEnergiesAndDensities);
     // accumulate the charge from all the electrons in the atom
