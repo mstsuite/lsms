@@ -167,6 +167,7 @@ int main(int argc, char *argv[])
     if (luaL_loadfile(L, inputFileName) || lua_pcall(L,0,0,0))
     {
       fprintf(stderr, "!! Cannot run input file!!\n");
+      luaStackDump(L);
       exit(1);
     }
 
