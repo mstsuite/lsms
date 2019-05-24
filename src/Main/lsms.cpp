@@ -45,6 +45,7 @@
 #include "Potential/PotentialShifter.hpp"
 #include "TotalEnergy/calculateTotalEnergy.hpp"
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
+#include "LuaInterface/LuaSupport.hpp"
 
 #include "Misc/readLastLine.hpp"
 
@@ -175,6 +176,7 @@ int main(int argc, char *argv[])
     if (readInput(L, lsms, crystal, mix, potentialShifter, alloyDesc))
     {
       fprintf(stderr, "!! Something wrong in input file!!\n");
+      luaStackDump(L);
       exit(1);
     }
 
@@ -305,6 +307,8 @@ int main(int argc, char *argv[])
   calculateCoreStates(comm, lsms, local);
   if (lsms.global.iprint >= 0)
     printf("Finished calculateCoreStates(...)\n");
+
+  lsms.energyContour.ebot = lsms.largestCorestate + 0.25;
 
 // check that vrs have not changed ...
 //  bool vr_check=false;
@@ -469,6 +473,8 @@ int main(int argc, char *argv[])
 
     // Recalculate core states for new potential if we are performing scf calculations
     calculateCoreStates(comm, lsms, local);
+
+    lsms.energyContour.ebot = lsms.largestCorestate + 0.25;
 
     // Periodically write the new potential for scf calculations 
     potentialWriteCounter++;
