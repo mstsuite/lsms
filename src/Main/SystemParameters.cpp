@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include <stdio.h>
 #include <string>
 #include "SystemParameters.hpp"
@@ -48,7 +49,8 @@ void printLSMSSystemParameters(FILE *f,LSMSSystemParameters &lsms)
   std::string name;
   getXCName(lsms,name);
   fprintf(f," [%s]",name.c_str());
-    fprintf(f,"\n");
+  fprintf(f,"\n");
+  fprintf(f,"Electron Temperature: %lgK\n",lsms.temperature);
   fprintf(f,"RMS Tolerance: %lg\n",lsms.rmsTolerance);
 }
 
