@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMSCOMMUNICATION_H
 #define LSMSCOMMUNICATION_H
 
@@ -91,5 +92,6 @@ void globalSum(LSMSCommunication &comm,T *a, int n)
 */
 }
 
+long calculateFomScale(LSMSCommunication &comm, LocalTypeInfo &local);
 
 #endif
