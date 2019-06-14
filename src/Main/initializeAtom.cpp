@@ -66,13 +66,21 @@ Real generateLinearRadialMesh(std::vector<Real> &r_mesh, int N, Real r0, Real rN
     return dr;
 }
 
-void calculateRadialDensity(std::vector<Real> &r_mesh, Matrix<Real> &f, int solution, std::vector<Real> &rho)
+void calculateRadialDensity(std::vector<Real> &r_mesh, Matrix<Real> &f, int solution, Real energy, std::vector<Real> &rho)
 {
+  const bool constantDensityForPositiveEnergies=false;
   std::vector<Real> rhoIntegrated(r_mesh.size());
 
   for(int i=0; i<r_mesh.size(); i++)
   {
     rho[i] = std::abs(f(i,solution))*std::abs(f(i,solution));
+  }
+  if(constantDensityForPositiveEnergies && energy > 0.0)
+  {
+    for(int i=0; i<r_mesh.size(); i++)
+    {
+      rho[i] = r_mesh[i]*r_mesh[i];
+    } 
   }
 
   // integrateOneDimSpherical(r_mesh, rho, rhoIntegrated);
@@ -173,14 +181,18 @@ void calculateOrbitals(std::vector<Real> &r_mesh, std::vector<Real> &vr, int ato
       printf(" %d %2d %lg Ry",principalQuantumNumber, l, orbitalEnergiesAndDensities[orbitalIdx].energy);
 
       orbitalEnergiesAndDensities[orbitalIdx].rho.resize(r_mesh.size());
-      calculateRadialDensity(r_mesh, f, i, orbitalEnergiesAndDensities[orbitalIdx].rho);
+      calculateRadialDensity(r_mesh, f, i, energies[i], orbitalEnergiesAndDensities[orbitalIdx].rho);
 
+      /*
       if(orbitalEnergiesAndDensities[orbitalIdx].rho[r_mesh.size()-1] > 0.0001)
       {
         printf(" !!\n");
       } else {
         printf("\n");
       }
+      */
+      printf("\n");
+
       orbitalIdx++;
     }
   }
@@ -305,10 +317,12 @@ void iterateOrbitals(int atomicNumber, Real atomRadius, std::vector<Real> &r_mes
 {
   int linearMeshSize = 6000;
   Real meshOrigin = 1.5e-10;
-  int maxIterations = 50;
+  int maxIterations = 100;
+  Real mixingDensity = 1.0;
+  Real mixingPot = 0.1;
   Real rmsTarget = 0.0001;
   
-  std::vector<Real> vXC;
+  std::vector<Real> vXC, vrNew;
   // std::vector<InitialAtomLevel> orbitalEnergiesAndDensities;
   
 // initialize r_mesh (unit of length is the Bohr radius)
@@ -319,6 +333,7 @@ void iterateOrbitals(int atomicNumber, Real atomRadius, std::vector<Real> &r_mes
   
 // initialize Z/r potential e^2=2
   vr.resize(r_mesh.size());
+  vrNew.resize(r_mesh.size());
   vXC.resize(r_mesh.size());
   for(int i=0; i<r_mesh.size(); i++) vr[i] = -2.0*Real(atomicNumber);
 
@@ -330,7 +345,7 @@ void iterateOrbitals(int atomicNumber, Real atomRadius, std::vector<Real> &r_mes
   for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber);
   
   // iterate on the charge density with mixing
-  Real mixing = 0.05;
+  
   Real rms=1.0;
   for(int iter=0; iter < maxIterations && rms > rmsTarget; iter++)
   {
@@ -346,13 +361,17 @@ void iterateOrbitals(int atomicNumber, Real atomRadius, std::vector<Real> &r_mes
 
     // mixing
     for(int i=0; i<rhotot.size(); i++)
-      rhotot[i] = (1.0-mixing)*rhotot[i] + mixing*rhonew[i];
+      rhotot[i] = (1.0-mixingDensity)*rhotot[i] + mixingDensity*rhonew[i];
 
-    sphericalPoisson(rhotot, r_mesh, vr);
+    sphericalPoisson(rhotot, r_mesh, vrNew);
     // calculate exchange-correltaion potential
     exchangeCorrelationPotentialLDA(rhotot, r_mesh, vXC);
     // add nuclear charge and exchange-correlation potential
-    for(int i=0; i<r_mesh.size(); i++) vr[i] += -2.0*Real(atomicNumber) + vXC[i]*r_mesh[i];
+    for(int i=0; i<r_mesh.size(); i++) vrNew[i] += -2.0*Real(atomicNumber) + vXC[i]*r_mesh[i];
+
+    // mixing
+    for(int i=0; i<vr.size(); i++)
+      vr[i] = (1.0-mixingPot)*vr[i] + mixingPot*vrNew[i];
   }
 }
 

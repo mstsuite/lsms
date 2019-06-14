@@ -94,9 +94,46 @@ Real alpha2(Real rs, Real dz, Real sp, Real &eXC)
   return exc + (excf-exc) * fdz - rs*decd/3.0 + sp*(1.0 - sp*dz)*dedz;
 }
 
+// spin polarization weighting function from Cachiyo2016
+Real fChachiyo2016(Real zeta)
+{
+  const Real c = 1.0/(2.0*(std::cbrt(2) - 1.0));
+  return c*(std::pow(1.0+zeta, 4.0/3.0) + std::pow(1.0-zeta, 4.0/3.0) -2.0);
+}
+
+Real exchangeLDA(Real rho, Real &ex)
+{
+  ex = -6.0*std::pow(rho * 3.0/(64.0*M_PI), 1.0/3.0);
+  return ex + ex/3.0;
+}
 
 // correlation energy from T. Chachiyo, J. Chem. Phys. 145, 021101 (2016).
-Real chachiyo2016(Real rho, Real &exc)
+Real chachiyo2016Correlation(Real rho, Real &ec)
+{
+  // total XC energy = int rho*exc dr
+  // exchange energy density:
+  //
+  
+  // correlation energy density:
+  // e_c = a ln(1 + b/r_s + b/r_s^2)
+  // constatnts from eq. 3 in T. Chachiyo, J. Chem. Phys. 145, 021101 (2016)
+  Real const a = (std::log(2) - 1.0)/(M_PI * M_PI); // converted from Hartree in Chachiyo to Rydberg
+  Real const b = 20.4562557;
+  // r_s = (4 pi rho / 3) ^ -1/3 ->
+  // 1/rs = (4 pi rho / 3) ^ 1/3
+  Real rsInv = std::pow(4.0 * M_PI * rho / 3.0, 1.0/3.0);
+  Real ec = a*std::log(1.0 + b*rsInv + b*rsInv*rsInv);
+  
+  // exchange correlation potential:
+  // v_xc(r) = e_xc(rho(r)) + rho(r) * d e_xc(rho)/d rho
+ 
+  Real rho_dec = a*b*(rsInv + 2.0*rsInv*rsInv)/(3.0*(1.0 + b*rsInv + b*rsInv*rsInv));
+
+  return ec + rho_dec;
+}
+
+// correlation energy from T. Chachiyo, J. Chem. Phys. 145, 021101 (2016).
+Real chachiyo2016XC(Real rho, Real &exc)
 {
   // total XC energy = int rho*exc dr
   // exchange energy density:
@@ -123,7 +160,56 @@ Real chachiyo2016(Real rho, Real &exc)
 
   return exc + rho_dex + rho_dec;
 }
-    
+
+// correlation energy from T. Chachiyo, J. Chem. Phys. 145, 021101 (2016).
+Real chachiyo2016PolarizedCorrelation(Real rho, Real &ec)
+{
+  // total XC energy = int rho*exc dr
+  // 
+  // correlation energy density:
+  // e_c = a ln(1 + b/r_s + b/r_s^2)
+  // constatnts from eq. 3 in T. Chachiyo, J. Chem. Phys. 145, 021101 (2016)
+  Real const a = (std::log(2) - 1.0)/(2.0*M_PI * M_PI); // converted from Hartree in Chachiyo to Rydberg
+  Real const b = 27.4203609;
+  // r_s = (4 pi rho / 3) ^ -1/3 ->
+  // 1/rs = (4 pi rho / 3) ^ 1/3
+  Real rsInv = std::pow(4.0 * M_PI * rho / 3.0, 1.0/3.0);
+  Real ec = a*std::log(1.0 + b*rsInv + b*rsInv*rsInv);
+  
+  // exchange correlation potential:
+  // v_xc(r) = e_xc(rho(r)) + rho(r) * d e_xc(rho)/d rho
+  
+  Real rho_dec = a*b*(rsInv + 2.0*rsInv*rsInv)/(3.0*(1.0 + b*rsInv + b*rsInv*rsInv));
+
+  return ec + rho_dec;
+}
+
+Real exchangeCorrelationPotentialLDAPolarized(Real rhoUp, Real rhoDown, Real r)
+{
+  Real eXC, eC_0, eC_1, vC_0, vC_1, rho, zeta;
+  Real vXC, vX, vXup, vXdown, eX, eXup, eXdown;
+  rho = rhoUp+rhoDown;
+  zeta = (rhoUp-rhoDown)/rho;
+  /*
+  if(rho < 1.0e-9)
+    return 0.0;
+  // return alpha2(std::pow(3.0/rho , 1.0/3.0), 0.0, 1.0, eXC);
+  return alpha2(std::pow(3.0*r*r/rho , 1.0/3.0), 0.0, 1.0, eXC);
+  //*/
+  vXup = exchangeLDA(2.0*rhoUp/(4.0*M_PI*r*r), eXup);
+  vXdown = exchangeLDA(2.0*rhoDown/(4.0*M_PI*r*r), eXdown);
+  eX = 0.5*(eXup + eXdown);
+  vX = 0.5*(vXup + vXdown);
+
+  vXC_0 = chachiyo2016(rho/(4.0*M_PI*r*r), eXC_0);
+  vXC_1 = chachiyo2016Polarized(rho/(4.0*M_PI*r*r), eXC_1);
+  eXC = eX + eC_0 + (eC_1 - eC_0)*fChachiyo2016(zeta);
+  // vXCup, vXCdown = eXC + rho (d eXC/d rho) +- (1 -+ zeta) (d eXC/d zeta)
+  // vXC = vX + vC_0 + (vC_1 - vC_0)*fChachiyo2016(zeta);
+  vXCup = eXC + rho * decx + (1.0 - zeta) * decDzeta;
+  vXCdown = eXC + rho * decx - (1.0 + zeta) * decDzeta;
+}
+
 Real exchangeCorrelationPotentialLDA(Real rho, Real r)
 {
   Real eXC;

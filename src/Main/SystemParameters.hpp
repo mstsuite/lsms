@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_SYSTEM_PARAM_H
 #define LSMS_SYSTEM_PARAM_H
 #include <stdio.h>
@@ -104,7 +105,7 @@ public:
   Real u0;                     // Contribution of the Muffin-tin zero potential to the Coulomb energy
   Real totalEnergy;            // Total energy
   //Real pressure;               // Pressure
-
+  Real largestCorestate;       // maximum of the core levels
 };
 
 extern const char *potentialTypeName[];

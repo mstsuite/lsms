@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "calculateChemPot.hpp"
 
 // calculate the chemical potential and the eigenvalue sum
@@ -47,6 +48,20 @@ c     ================================================================
     }
 //    lsms.chempot = lsms.energyContour.etop + (lsms.zvaltss-xtws)/tnen;
     lsms.chempot = etop + (lsms.zvaltss - xtws) / tnen;
+    // restrict the change in the chemical potential and prevent it from dropping below ebot
+    if(std::abs(lsms.chempot-etop)>0.1)
+    {
+      lsms.chempot = etop + 0.1 *  (lsms.zvaltss - xtws) / std::abs(lsms.zvaltss - xtws);
+      if (lsms.global.iprint >= 0)
+	printf("           chempot stepsize restrcited!\n");
+    }
+    if(lsms.chempot < lsms.energyContour.ebot)
+    {
+      lsms.chempot = 0.5*(lsms.energyContour.ebot + etop);
+      if (lsms.global.iprint >= 0)
+	printf("           chempot limited by botom of contour!\n");
+    }
+    
     if (lsms.global.iprint >= 0)
       printf("           new chempot = %lf\n", lsms.chempot);
     Real chempot = lsms.chempot;

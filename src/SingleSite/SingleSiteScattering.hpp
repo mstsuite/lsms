@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_SINGLESITESCATTERING_H
 #define LSMS_SINGLESITESCATTERING_H
 
@@ -86,6 +87,10 @@ public:
   }
 };
 
+class FullPotentialRelativisticSingleScattererSolution : public SingleScattererSolution {
+public:
+  Array3d<Complex> sineMatrix, cosineMatrix; // sineMatrix(ir, Lambda', Lambda)
+};
 
 extern "C"
 {
