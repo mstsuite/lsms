@@ -553,8 +553,8 @@ int main(int argc, char *argv[])
     }
     printf("FOM Scale = %lf\n",(double)fomScale);
     printf("Energy Contour Points = %ld\n",energyContourPoints);
-    printf("FOM = %lf/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
-    printf("FOM * energyContourPoints = = %lf/sec\n",
+    printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
+    printf("FOM * energyContourPoints = = %lg/sec\n",
             (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
   }
 
