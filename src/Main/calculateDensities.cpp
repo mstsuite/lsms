@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "Real.hpp"
 #include "Complex.hpp"
 #include <vector>
