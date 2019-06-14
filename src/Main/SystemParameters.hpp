@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_SYSTEM_PARAM_H
 #define LSMS_SYSTEM_PARAM_H
 #include <stdio.h>
@@ -84,6 +85,7 @@ public:
   int fixRMT; // n_fix_mt from LSMS_1:
               //   0 -> set rmt to calculated inscribed sphere in atomic volume
               //   1 -> set it to rmt read in from potential file
+  Real temperature;
   Real clight;
   int maxlmax;
   LSMSGlobals global;

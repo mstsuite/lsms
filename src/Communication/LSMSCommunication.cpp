@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include <mpi.h>
 #include "LSMSCommunication.hpp"
 
@@ -63,6 +64,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Pack(&lsms.fixRMT,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.nscf,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.writeSteps,1,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack(&lsms.temperature,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.clight,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
 
     MPI_Pack(&lsms.energyContour.grid,1,MPI_INT,buf,s,&pos,comm.comm);
@@ -131,6 +133,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&lsms.fixRMT,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.nscf,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.writeSteps,1,MPI_INT,comm.comm);
+    MPI_Unpack(buf,s,&pos,&lsms.temperature,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.clight,1,MPI_DOUBLE,comm.comm);
 
     MPI_Unpack(buf,s,&pos,&lsms.energyContour.grid,1,MPI_INT,comm.comm);
@@ -472,3 +475,16 @@ void globalAnd(LSMSCommunication &comm,bool &a)
   if(r==0) a=false;
 }
 
+
+long calculateFomScale(LSMSCommunication &comm, LocalTypeInfo &local)
+{
+  // fomScale = \sum_#atoms (LIZ * (lmax+1)^2)^3
+  long fomLocal = 0;
+  long fom  = 0;
+
+  for(int i=0; i<local.num_local; i++)
+  {
+    fom += local.atom[i].nrmat*local.atom[i].nrmat*local.atom[i].nrmat;
+  }
+  MPI_Allreduce(&fomLocal,&fom,1,MPI_LONG,MPI_SUM,comm.comm);
+}
