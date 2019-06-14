@@ -85,6 +85,7 @@ public:
   int fixRMT; // n_fix_mt from LSMS_1:
               //   0 -> set rmt to calculated inscribed sphere in atomic volume
               //   1 -> set it to rmt read in from potential file
+  Real temperature;
   Real clight;
   int maxlmax;
   LSMSGlobals global;

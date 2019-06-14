@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include <stdlib.h>
 
 #include "lua.hpp"
@@ -399,6 +400,9 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   luaGetIntegerFieldInTable(L,"energyContour","npts",&lsms.energyContour.npts);
   lsms.energyContour.maxGroupSize=50;
   luaGetIntegerFieldInTable(L,"energyContour","maxGroupSize",&lsms.energyContour.maxGroupSize);
+
+  lsms.temperature = 0.0;
+  luaGetReal(L,"temperature",&lsms.temperature);
 
 // c
 // c     ================================================================
