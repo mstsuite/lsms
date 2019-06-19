@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -527,6 +528,9 @@ int main(int argc, char *argv[])
     writePotentials(comm, lsms, crystal, local);
   }
 
+
+  long fomScale = calculateFomScale(comm, local);
+
   if (comm.rank == 0)
   {
     printf("Band Energy = %.15lf Ry\n", eband);
@@ -537,6 +541,21 @@ int main(int argc, char *argv[])
     printf("timeCalcChemPot[rank==0]/lsms.nscf = %lf sec\n", timeCalcChemPot / (double)lsms.nscf);
     printf("timeBuildLIZandCommList[rank==0]: %lf sec\n",
            timeBuildLIZandCommList);
+    // fom = [ \sum_#atoms (LIZ * (lmax+1)^2)^3 ] / time per iteration
+    //     = [ \sum_#atoms (LIZ * (lmax+1)^2)^3 ] * lsms.nscf / timeScfLoop
+    // fom_e = fom * energy contour points
+    // fomScale = \sum_#atoms (LIZ * (lmax+1)^2)^3
+    // energyContourPoints
+    long energyContourPoints = 1;
+    if(lsms.energyContour.grid==2)
+    {
+      energyContourPoints = lsms.energyContour.npts+1;
+    }
+    printf("FOM Scale = %lf\n",(double)fomScale);
+    printf("Energy Contour Points = %ld\n",energyContourPoints);
+    printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
+    printf("FOM * energyContourPoints = = %lg/sec\n",
+            (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
   }
 
   local.tmatStore.unpinMemory();
