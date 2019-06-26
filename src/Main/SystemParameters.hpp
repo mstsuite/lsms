@@ -113,9 +113,10 @@ extern const char *potentialTypeName[];
 
 class AtomType {
 public:
-  AtomType() : pot_in_idx(-1), store_id(-1) {}
+  AtomType() : pot_in_idx(-1), store_id(-1), forceZeroMoment(0) {}
   char name[4];
   int lmax,Z,Zc,Zs,Zv;
+  int forceZeroMoment;
   int first_instance, number_of_instances;
   Real rsteps[4];
   Real rLIZ, rad;

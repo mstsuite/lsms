@@ -453,6 +453,7 @@ int initializeNewPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, 
     local.atom[i].zcorss = (Real)crystal.types[local.global_id[i]].Zc;
     local.atom[i].zsemss = (Real)crystal.types[local.global_id[i]].Zs;
     local.atom[i].zvalss = (Real)crystal.types[local.global_id[i]].Zv;
+    local.atom[i].forceZeroMoment = crystal.types[local.global_id[i]].forceZeroMoment;
     local.atom[i].vdif = 0.0;
     local.atom[i].vdifNew = 0.0;
     local.atom[i].spinFlipped = false;

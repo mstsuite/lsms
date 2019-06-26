@@ -242,6 +242,7 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &l
     MPI_Pack(&atom.alloy_class,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.lmax,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.nspin,1,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack(&atom.forceZeroMoment,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.numc,1,MPI_INT,buf,s,&pos,comm.comm);
     t=atom.vr.n_row();
     MPI_Pack(&t,1,MPI_INT,buf,s,&pos,comm.comm);
@@ -303,6 +304,7 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &l
     MPI_Unpack(buf,s,&pos,&atom.lmax,1,MPI_INT,comm.comm);
     atom.kkrsz = (atom.lmax+1)*(atom.lmax+1);
     MPI_Unpack(buf,s,&pos,&atom.nspin,1,MPI_INT,comm.comm);
+    MPI_Unpack(buf,s,&pos,&atom.forceZeroMoment,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&atom.numc,1,MPI_INT,comm.comm);
 
     MPI_Unpack(buf,s,&pos,&t,1,MPI_INT,comm.comm);

@@ -236,6 +236,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       luaGetIntegerFieldFromStack(L,"Zc",&crystal.types[crystal.num_types].Zc);
       luaGetIntegerFieldFromStack(L,"Zs",&crystal.types[crystal.num_types].Zs);
       luaGetIntegerFieldFromStack(L,"Zv",&crystal.types[crystal.num_types].Zv);
+      luaGetIntegerFieldFromStack(L,"forceZeroMoment",&crystal.types[crystal.num_types].forceZeroMoment);
       luaGetIntegerFieldFromStack(L,"alloy_class",&crystal.types[crystal.num_types].alloy_class);
       crystal.types[crystal.num_types].alloy_class--; // <-- zero-based indexing
       luaGetRealFieldFromStack(L,"rLIZ",&crystal.types[crystal.num_types].rLIZ);

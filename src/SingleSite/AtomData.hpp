@@ -188,6 +188,7 @@ public:
     zvalss = a.zvalss;
 
     nspin = a.nspin;
+    forceZeroMoment = a.forceZeroMoment;
     numc = a.numc;
     spinFlipped = a.spinFlipped;
 
@@ -323,6 +324,8 @@ public:
   Real mIntComponent[3];              // Interstitial moment components
   int nspin;                          // Number of spin direction-related settings
                                       //  (determines n_spin_cant & n_spin_pola)
+  int forceZeroMoment;                // if != 0, average spin up and spin down densities
+                                      // to force zero magnetic moment
   int numc;                           // Number of core states
   bool spinFlipped;                   // Flag for antiferromagnetic condition
 
