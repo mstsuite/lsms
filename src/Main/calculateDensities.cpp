@@ -158,6 +158,15 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
   exit(1);
 #endif
 
+  // if forceZeroMoment != force the up and down densities to be identical
+  if(atom.forceZeroMoment)
+  {
+    for(int ir=0; ir<atom.jws; ir++)
+    { 
+      rhonew(ir,1) = rhonew(ir,0) = 0.5*(rhonew(ir,0)+rhonew(ir,1));
+    }
+  }
+
   // calculate valence charge
   qvalmt=0.0;
   for(int is=0; is<lsms.n_spin_pola; is++)
