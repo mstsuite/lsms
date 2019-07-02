@@ -115,6 +115,18 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
 // adjust the local potentials:
   for(int i=0; i<local.num_local; i++)
   {
+    if(local.atom[i].nspin != lsms.n_spin_pola)
+    {
+      printf("Input potential: %d spins != lsms setting: %d spins\n",
+             local.atom[i].nspin, lsms.n_spin_pola);
+      local.atom[i].changeNspin(lsms.n_spin_pola);
+    }
+    local.atom[i].forceZeroMoment = crystal.types[local.global_id[i]].forceZeroMoment;
+    // if(local.atom[i].forceZeroMoment)
+    // {
+    //   local.atom[i].averageSpins();
+    // }
+
     local.atom[i].generateRadialMesh();
     local.atom[i].ztotss=(Real)crystal.types[local.global_id[i]].Z;
     local.atom[i].zcorss=(Real)crystal.types[local.global_id[i]].Zc;

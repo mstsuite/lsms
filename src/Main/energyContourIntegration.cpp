@@ -390,6 +390,26 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                         &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
                         &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
                         &lsms.global.iprint,lsms.global.istop,32);
+
+        if(local.atom[i].forceZeroMoment &&(lsms.n_spin_pola>1))
+        {
+          if(lsms.n_spin_cant>1) // spin canted case
+          {
+            for(int ir=0; ir<green.l_dim1(); ir++)
+            {
+              // green(ir,0,i) is the charge density part and green(ir,1:3,i) are the magnetic moment part
+              green(ir,1,i) = green(ir,2,i) = green(ir,3,0) = 0.0;
+            }
+          } else { // spin polarized collinear case
+            for(int ir=0; ir<green.l_dim1(); ir++)
+            {
+              // green(ir,0,i) is the spin up charge density and green(ir,1,i) is spin down part
+              green(ir,0,i) = 0.5*(green(ir,0,i) + green(ir,1,i));
+              green(ir,1,i) = green(ir,0,i);
+            }
+          }
+        }
+
         Complex tr_pxtau[3];
         calculateDensities(lsms, i, 0, ie, nume, energy, dele1[ie],
                            dos,dosck,green,

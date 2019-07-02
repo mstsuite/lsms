@@ -255,6 +255,8 @@ int main(int argc, char *argv[])
   {
     fprintf(stdout,"LIZ for atom 0 on this node\n");
     printLIZInfo(stdout, local.atom[0]);
+    if(local.atom[0].forceZeroMoment)
+      fprintf(stdout,"\nMagnetic moment of atom 0 forced to be zero!\n\n");
   }
   if (lsms.global.iprint >= 1)
   {
@@ -459,6 +461,13 @@ int main(int argc, char *argv[])
       printf("Fermi Energy = %lf Ry\n", lsms.chempot);
       printf("Total Energy = %lf Ry\n", lsms.totalEnergy);
       printf("RMS = %lg\n",rms);
+      printf("  qrms[0] = %lg   qrms[1] = %lg\n",local.qrms[0], local.qrms[1]);
+      printf("  local.atom[i]:\n");
+      for (int i=0; i<local.num_local; i++)
+      {
+        printf("  %d : qrms[0] = %lg   qrms[1] = %lg\n",i,local.atom[i].qrms[0], local.atom[i].qrms[1]);
+        printf("  %d : vrms[0] = %lg   vrms[1] = %lg\n",i,local.atom[i].vrms[0], local.atom[i].vrms[1]);
+      }
     }
 
     if (kFile != NULL)

@@ -159,12 +159,18 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
 #endif
 
   // if forceZeroMoment != force the up and down densities to be identical
-  if(atom.forceZeroMoment)
+  if(atom.forceZeroMoment && (lsms.n_spin_pola!=1))
   {
+    Real diff = 0.0;
     for(int ir=0; ir<atom.jws; ir++)
-    { 
-      rhonew(ir,1) = rhonew(ir,0) = 0.5*(rhonew(ir,0)+rhonew(ir,1));
+    {
+      diff += (rhonew(ir,0)-rhonew(ir,1))*(rhonew(ir,0)-rhonew(ir,1));
+      // rhonew(ir,1) = rhonew(ir,0) = 0.5*(rhonew(ir,0)+rhonew(ir,1));
+      // atom.corden(ir,1) = atom.corden(ir,0) = 0.5*(atom.corden(ir,0) + atom.corden(ir,1));
+      // atom.semcor(ir,1) = atom.semcor(ir,0) = 0.5*(atom.semcor(ir,0) + atom.semcor(ir,1));
     }
+    printf("forceZeroAtom: diff(rhonew up, down)=%lg\n",std::sqrt(diff));
+    // atom.averageSpins();
   }
 
   // calculate valence charge
@@ -207,6 +213,17 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
     for(int ir=0; ir<atom.jws; ir++) 
       rhonew(ir,is)+=0.5*(w1[ir+1]+w2[ir+1]+fac*(w1[ir+1]-w2[ir+1]));
   }
+
+  // if(atom.forceZeroMoment && (lsms.n_spin_pola!=1))
+  // {
+  //   for(int ir=0; ir<atom.jws; ir++)
+  //   { 
+  //     rhonew(ir,1) = rhonew(ir,0) = 0.5*(rhonew(ir,0)+rhonew(ir,1)); 
+  //     // atom.corden(ir,1) = atom.corden(ir,0) = 0.5*(atom.corden(ir,0) + atom.corden(ir,1));
+  //     // atom.semcor(ir,1) = atom.semcor(ir,0) = 0.5*(atom.semcor(ir,0) + atom.semcor(ir,1));
+  //   }
+  // }
+
 
 // calculate the rms between old and new charge densities
   for(int is=0; is<lsms.n_spin_pola; is++)
