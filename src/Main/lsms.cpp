@@ -485,9 +485,13 @@ int main(int argc, char *argv[])
     if ((lsms.pot_out_type >= 0 && potentialWriteCounter >= lsms.writeSteps)
         || converged)
     {
-      if (comm.rank == 0) std::cout << "Writing new potentials.\n";
+      if (comm.rank == 0) std::cout << "Writing new potentials and restart file.\n";
       writePotentials(comm, lsms, crystal, local);
       potentialWriteCounter = 0;
+      if (comm.rank == 0)
+      { 
+        writeRestart("i_lsms.restart", lsms, crystal, mix, potentialShifter, alloyDesc);
+      }
     }
 
   }
@@ -535,6 +539,11 @@ int main(int argc, char *argv[])
   {
     if (comm.rank == 0) std::cout << "Writing new potentials.\n";
     writePotentials(comm, lsms, crystal, local);
+    if (comm.rank == 0)
+    {
+      std::cout << "Writing restart file.\n";
+      writeRestart("i_lsms.restart", lsms, crystal, mix, potentialShifter, alloyDesc);
+    }
   }
 
 

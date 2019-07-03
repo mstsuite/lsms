@@ -10,7 +10,8 @@ LSMS_OBJ = SystemParameters.o read_input.o PotentialIO.o buildLIZandCommLists.o 
            energyContourIntegration.o solveSingleScatterers.o \
            calculateDensities.o calculateChemPot.o checkConsistency.o \
            lsmsClass.o calculateEvec.o initializeAtom.o mixing.o \
-           ReplicaExchangeWL.o AlloyBankIO.o rotateToGlobal.o
+           ReplicaExchangeWL.o AlloyBankIO.o rotateToGlobal.o \
+           write_restart.o
 
 clean:
 	rm -f *.o *.a lsms $(TOP_DIR)/bin/lsms \

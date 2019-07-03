@@ -243,6 +243,8 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       luaGetFieldFromStack(L,"rsteps");
       for(int j=0; j<4; j++) luaGetRealPositionFromStack(L,j+1,&crystal.types[crystal.num_types].rsteps[j]);
       lua_pop(L,1);
+      crystal.types[crystal.num_types].rad = 2.0;
+      luaGetRealFieldFromStack(L,"rad",&crystal.types[crystal.num_types].rad);
       crystal.types[crystal.num_types].first_instance=i;
       crystal.types[crystal.num_types].number_of_instances=1;
       crystal.type[i]=crystal.num_types;
