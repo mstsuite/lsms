@@ -50,6 +50,7 @@
 #include "Misc/readLastLine.hpp"
 
 #include "writeInfoEvec.cpp"
+#include "write_restart.hpp"
 
 SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
