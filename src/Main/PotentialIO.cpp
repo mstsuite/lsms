@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include <stdio.h>
 #include <hdf5.h>
 #include "Main/SystemParameters.hpp"
@@ -102,6 +103,11 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
           communicateSingleAtomData(comm, comm.rank, crystal.types[i].node, crystal.types[i].local_id, pot_data);
         }
       }
+    }
+    // close the file
+    if(lsms.pot_out_type==0)
+    {
+      H5Fclose(fid);
     }
   } else { // comm.rank!=0
     int local_id;
@@ -267,6 +273,12 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
         }
       }
     }
+    // close the file
+    if(lsms.pot_out_type==0)
+    {
+      H5Fclose(fid);
+    }
+    
   } else { // comm.rank!=0
     for(int i=0; i<local.num_local; i++)
     {
