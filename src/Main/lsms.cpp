@@ -397,7 +397,8 @@ int main(int argc, char *argv[])
     kFile = fopen("k.out","a");
   }
 
-  for (int iteration=0; iteration<lsms.nscf && !converged; iteration++)
+  int iteration;
+  for (iteration=0; iteration<lsms.nscf && !converged; iteration++)
   {
     if (lsms.global.iprint >= 0)
       printf("SCF iteration %d:\n", iteration);
@@ -547,7 +548,6 @@ int main(int argc, char *argv[])
     }
   }
 
-
   long fomScale = calculateFomScale(comm, local);
 
   if (comm.rank == 0)
@@ -556,8 +556,11 @@ int main(int argc, char *argv[])
     printf("Fermi Energy = %.15lf Ry\n", lsms.chempot);
     printf("Total Energy = %.15lf Ry\n", lsms.totalEnergy);
     printf("timeScfLoop[rank==0] = %lf sec\n", timeScfLoop);
-    printf(".../lsms.nscf = %lf sec\n", timeScfLoop / (double)lsms.nscf);
-    printf("timeCalcChemPot[rank==0]/lsms.nscf = %lf sec\n", timeCalcChemPot / (double)lsms.nscf);
+    printf("     number of iteration:%d\n",iteration);
+    printf("timeScfLoop/iteration = %lf sec\n", timeScfLoop / (double)iteration);
+    // printf(".../lsms.nscf = %lf sec\n", timeScfLoop / (double)lsms.nscf);
+    printf("timeCalcChemPot[rank==0]/iteration = %lf sec\n", timeCalcChemPot / (double)iteration);
+    // printf("timeCalcChemPot[rank==0]/lsms.nscf = %lf sec\n", timeCalcChemPot / (double)lsms.nscf);
     printf("timeBuildLIZandCommList[rank==0]: %lf sec\n",
            timeBuildLIZandCommList);
     // fom = [ \sum_#atoms (LIZ * (lmax+1)^2)^3 ] / time per iteration
@@ -572,9 +575,11 @@ int main(int argc, char *argv[])
     }
     printf("FOM Scale = %lf\n",(double)fomScale);
     printf("Energy Contour Points = %ld\n",energyContourPoints);
-    printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
+    printf("FOM = %lg/sec\n",fomScale * (double)iteration / timeScfLoop);
+    // printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
     printf("FOM * energyContourPoints = = %lg/sec\n",
-            (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
+            (double)energyContourPoints * (double)fomScale * (double)iteration / timeScfLoop);
+    //         (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
   }
 
   local.tmatStore.unpinMemory();
