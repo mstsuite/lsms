@@ -26,9 +26,12 @@
 #ifdef _OPENMP
 #include <omp.h>
 #else
+#ifndef LSMS_DUMMY_OPENMP
+#define LSMS_DUMMY_OPENMP
 inline int omp_get_max_threads() {return 1;}
 inline int omp_get_num_threads() {return 1;}
 inline int omp_get_thread_num() {return 0;}
+#endif
 inline double omp_get_wtime() {return 0.0;}
 #endif
 

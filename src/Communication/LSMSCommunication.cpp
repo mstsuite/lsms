@@ -206,6 +206,9 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   for(int i=0; i<crystal.num_types; i++)
     if(crystal.types[i].lmax>crystal.maxlmax) crystal.maxlmax=crystal.types[i].lmax; 
   lsms.maxlmax=crystal.maxlmax;
+
+// set lsms.commRank to comm.rank
+  lsms.commRank = comm.rank;
 }
 
 void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &local_id, AtomData &atom, int tag)
