@@ -424,6 +424,7 @@ int main(int argc, char *argv[])
     // Calculate charge densities, potentials, and total energy
     calculateAllLocalChargeDensities(lsms, local);
     calculateChargesPotential(comm, lsms, local, crystal, 0);
+    checkAllLocalCharges(lsms, local);
     calculateTotalEnergy(comm, lsms, local, crystal);
 
     // Mix charge density

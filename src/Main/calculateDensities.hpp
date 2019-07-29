@@ -18,4 +18,6 @@ void calculateDensities(LSMSSystemParameters &lsms, int iatom, int is, int ie, i
                         Array3d<Complex> &dipole,
                         AtomData &atom);
 
+void checkAllLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local);
+
 #endif

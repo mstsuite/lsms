@@ -254,7 +254,7 @@ void calculateAllLocalChargeDensities(LSMSSystemParameters &lsms, LocalTypeInfo 
                  local.atom[i].evec[2]*local.atom[i].evecNew[2];
     calculateChargeDensity(lsms, local.atom[i], edote,
                            local.atom[i].rhoNew, local.atom[i].qvalmt, &local.atom[i].qrms[0]); // &local_qrms[2*i]);
-    checkCharge(lsms, local.atom[i]);
+    // checkCharge(lsms, local.atom[i]);
   }
 
   int n=0;
@@ -269,3 +269,11 @@ void calculateAllLocalChargeDensities(LSMSSystemParameters &lsms, LocalTypeInfo 
   local.qrms[1] = local.qrms[1]/Real(n);
 }
 
+void checkAllLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local)
+{
+#pragma omp parallel for default(none) shared(lsms,local)
+  for(int i=0; i<local.num_local; i++)
+  {
+    checkCharge(lsms, local.atom[i]);
+  }
+}

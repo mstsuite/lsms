@@ -828,6 +828,7 @@ Real LSMS::oneStepEnergy(Real *eb)
   mixEvec(lsms,local,0.0);
   calculateAllLocalChargeDensities(lsms,local);
   calculateLocalCharges(lsms, local, 0);
+  checkAllLocalCharges(lsms, local);
 
   energyLoopCount++;
 
@@ -867,6 +868,7 @@ Real LSMS::multiStepEnergy()
   mixEvec(lsms,local,0.0);
   calculateAllLocalChargeDensities(lsms,local);
   calculateLocalCharges(lsms,local,0);
+  checkAllLocalCharges(lsms, local);
   
   // calculate the Zeeman contribution from the spin shift and adjust the band energy acordingly
   if(1==0)
@@ -876,6 +878,7 @@ Real LSMS::multiStepEnergy()
     mixEvec(lsms,local,0.0);
     calculateAllLocalChargeDensities(lsms,local);
     calculateLocalCharges(lsms,local,0);
+    checkAllLocalCharges(lsms, local);
     Real eZeeman=0.0;
     for(int i=0; i<local.num_local; i++)
     {
@@ -980,6 +983,7 @@ Real LSMS::scfEnergy(Real *eb)
 
     calculateAllLocalChargeDensities(lsms, local);
     calculateChargesPotential(comm, lsms, local, crystal, 0);
+    checkAllLocalCharges(lsms, local);
     calculateTotalEnergy(comm, lsms, local, crystal);
 
     // calculate the Zeeman contribution from the spin shift and adjust the band energy accordingly
