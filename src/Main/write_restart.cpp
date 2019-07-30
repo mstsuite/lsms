@@ -35,7 +35,9 @@ int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalPar
   if(lsms.infoEvecFileIn[0]!=0)
     fprintf(of,"infoEvecFileIn=\"%s\"\n",lsms.infoEvecFileIn);
   fprintf(of,"infoEvecFileOut=\"%s\"\n\n",lsms.infoEvecFileOut);
-  
+
+  if(lsms.localAtomDataFile[0]!=0)
+    fprintf(of,"localAtomDataFile=\"%s\"\n\n",lsms.localAtomDataFile);
   
   fprintf(of,"gpu_threads=%d\n",lsms.global.GPUThreads);
 
