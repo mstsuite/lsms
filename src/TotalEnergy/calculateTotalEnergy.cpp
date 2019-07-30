@@ -155,7 +155,7 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
       int i = 0;
       emad[is] = spinFactor * (local.atom[i].qInt + spin * local.atom[i].mInt) * local.atom[i].exchangeCorrelationE;
       emadp[is] = -spinFactor * (local.atom[i].qInt + spin * local.atom[i].mInt) * 3.0 * (local.atom[0].exchangeCorrelationE - local.atom[i].exchangeCorrelationV[is]);
-      printf("is, emad, emadp = %5d %35.25f %35.25f\n", is, emad[is], emadp[is]);
+      // printf("is, emad, emadp = %5d %35.25f %35.25f\n", is, emad[is], emadp[is]);
     }
 
     totalEnergy += emad[is];
