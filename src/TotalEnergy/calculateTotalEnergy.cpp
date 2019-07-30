@@ -96,10 +96,12 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
                 &lsms.global.iprint, lsms.global.istop, 32);
       }
 
+      local.atom[i].localEnergy = energy;
       totalEnergy += energy * local.n_per_type[i];
       totalPressure += pressure * local.n_per_type[i];
     } else { // new energy calculation
       localTotalEnergy(lsms, local.atom[i], energyNew, pressureNew);
+      local.atom[i].localEnergy = energyNew;
       totalEnergyNew += energyNew * local.n_per_type[i];
       totalPressureNew += pressureNew * local.n_per_type[i];
     }
@@ -153,12 +155,18 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
       int i = 0;
       emad[is] = spinFactor * (local.atom[i].qInt + spin * local.atom[i].mInt) * local.atom[i].exchangeCorrelationE;
       emadp[is] = -spinFactor * (local.atom[i].qInt + spin * local.atom[i].mInt) * 3.0 * (local.atom[0].exchangeCorrelationE - local.atom[i].exchangeCorrelationV[is]);
-      // printf("is, emad, emadp = %5d %35.25f %35.25f\n", is, emad[is], emadp[is]);
+      printf("is, emad, emadp = %5d %35.25f %35.25f\n", is, emad[is], emadp[is]);
     }
 
     totalEnergy += emad[is];
     totalPressure += emadp[is];
   }
+  for (int i=0; i<local.num_local; i++)
+  {
+    for (int is=0; is<lsms.n_spin_pola; is++)
+      local.atom[i].localEnergy += emad[is]/Real(lsms.num_atoms);
+  }
+  
 
   totalEnergy += lsms.u0;
   totalPressure += lsms.u0;

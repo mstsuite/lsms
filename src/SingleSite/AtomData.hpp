@@ -326,6 +326,7 @@ public:
     forceZeroMoment = a.forceZeroMoment;
     numc = a.numc;
     spinFlipped = a.spinFlipped;
+    localEnergy = a.localEnergy;
 
     evec[0] = a.evec[0];
     evec[1] = a.evec[1];
@@ -464,6 +465,10 @@ public:
   int numc;                           // Number of core states
   bool spinFlipped;                   // Flag for antiferromagnetic condition
 
+// local energy
+  Real localEnergy;
+  Real localMadelungEnergy;
+  
 // Alloy Class
   int alloy_class;
 

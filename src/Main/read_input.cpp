@@ -499,6 +499,9 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   snprintf(lsms.infoEvecFileOut,120,"info_evec_out");
   luaGetStrN(L,"infoEvecFileOut",lsms.infoEvecFileOut,120);
 
+  lsms.localAtomDataFile[0]=0;
+  luaGetStrN(L,"localAtomDataFile",lsms.localAtomDataFile,120);
+  
   // read default block size for zblock_lu
   lsms.zblockLUSize=0;
   luaGetInteger(L,"zblockLUSize",&lsms.zblockLUSize);

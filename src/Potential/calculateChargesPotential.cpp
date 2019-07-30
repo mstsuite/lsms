@@ -587,6 +587,7 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
     //Real madterm = -(vmt1 - alpha_mad * local.atom[i].rhoInt);
     vmtSum += vmt * local.n_per_type[i];
     u0Sum += u0 * local.n_per_type[i];
+    local.atom[i].localMadelungEnergy = u0;
   }
 
 /*

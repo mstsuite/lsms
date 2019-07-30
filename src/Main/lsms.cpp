@@ -499,12 +499,16 @@ int main(int argc, char *argv[])
 
   }
 
+ timeScfLoop = MPI_Wtime() - timeScfLoop;
+  
   writeInfoEvec(comm, lsms, crystal, local, eband, lsms.infoEvecFileOut);
+  if(lsms.localAtomDataFile[0]!=0)
+    writeLocalAtomData(comm, lsms, crystal, local, eband, lsms.localAtomDataFile);
 
   if (kFile != NULL)
     fclose(kFile);
 
-  timeScfLoop = MPI_Wtime() - timeScfLoop;
+ 
 
 // -----------------------------------------------------------------------------
 
