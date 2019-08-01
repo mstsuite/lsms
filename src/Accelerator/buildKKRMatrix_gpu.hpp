@@ -43,6 +43,6 @@ void setupForBuildKKRMatrix_gpu(LSMSSystemParameters &lsms, AtomData &atom,Devic
 void setupForBuildKKRMatrix_gpu_opaque(LSMSSystemParameters &lsms, AtomData &atom, void *d_const);
 
 void buildKKRMatrix_gpu(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, Complex energy, Complex prel, int iie, Matrix<Complex> &m, DeviceConstants &d_const);
-void buildKKRMatrix_gpu_opaque(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, Complex energy, Complex prel, int iie, Matrix<Complex> &m, void *d_const);
+void buildKKRMatrix_gpu_opaque(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, int ispin, Complex energy, Complex prel, int iie, Matrix<Complex> &m, void *d_const);
 
 #endif

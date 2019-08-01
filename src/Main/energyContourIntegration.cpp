@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 // this replaces zplanint from LSMS_1.9
 
 #include <vector>
@@ -219,7 +220,11 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   
   int maxkkrsz=(lsms.maxlmax+1)*(lsms.maxlmax+1);
   int maxkkrsz_ns=lsms.n_spin_cant*maxkkrsz;
-  Matrix<Complex> tau00_l(maxkkrsz_ns*maxkkrsz_ns,local.num_local); // This would be cleaner as a std::vector<Matrix<Complex>>
+  // for non spin canted, but spin polarized we store tau00_l for local site i for spin up and down as
+  // tau00_l(*,i) and tau00_l(*,i + local.num_local)
+  // i.e. tau00_l hase size (maxkkrsz_ns*maxkkrsz_ns,2*local.num_local)
+  // n.b. n_spin_pola/n_spin_cant == 1 if non polarized or spin canted; == 2 iff collinear
+  Matrix<Complex> tau00_l(maxkkrsz_ns*maxkkrsz_ns,local.num_local*lsms.n_spin_pola/lsms.n_spin_cant); // This would be cleaner as a std::vector<Matrix<Complex>>
   Matrix<Complex> dos(4,local.num_local);
   // dos=0.0;
   Matrix<Complex> dosck(4,local.num_local);
@@ -390,6 +395,21 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                         &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
                         &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
                         &lsms.global.iprint,lsms.global.istop,32);
+	if((lsms.n_spin_pola == 2) && (lsms.n_spin_cant == 1)) // spin polarized, collinear case
+	{
+	  green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
+                        &local.atom[i].lmax, &local.atom[i].kkrsz,
+                        &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
+                        &rins,&r_sph,&local.atom[i].r_mesh[0],&local.atom[i].jmt,&local.atom[i].jws,
+                        &pnrel,&tau00_l(0,i+local.num_local),&solutionNonRel[iie][i].matom(0,1),
+                        &solutionNonRel[iie][i].zlr(0,0,1),&solutionNonRel[iie][i].jlr(0,0,1),
+                        &nprpts,&nplmax,
+                        &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
+                        &dos(1,i),&dosck(1,i),&green(0,1,i),&dipole(0,0,i),
+                        &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
+                        &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
+                        &lsms.global.iprint,lsms.global.istop,32);
+	}
 
         if(local.atom[i].forceZeroMoment &&(lsms.n_spin_pola>1))
         {
@@ -400,6 +420,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
               // green(ir,0,i) is the charge density part and green(ir,1:3,i) are the magnetic moment part
               green(ir,1,i) = green(ir,2,i) = green(ir,3,0) = 0.0;
             }
+	    dos(1,i) = dos(2,i) = dos(3,i) = dosck(1,i) = dosck(2,i) = dos(3,i) = 0.0;
           } else { // spin polarized collinear case
             for(int ir=0; ir<green.l_dim1(); ir++)
             {
@@ -415,6 +436,13 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                            dos,dosck,green,
                            dipole,
                            local.atom[i]);
+	if((lsms.n_spin_pola == 2) && (lsms.n_spin_cant == 1)) // spin polarized, collinear case
+	{
+	  calculateDensities(lsms, i, 1, ie, nume, energy, dele1[ie],
+			     dos,dosck,green,
+			     dipole,
+			     local.atom[i]);
+	}
 
       }
     } else {

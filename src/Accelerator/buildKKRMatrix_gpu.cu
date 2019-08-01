@@ -281,7 +281,9 @@ void printDeviceComplex(char* where, Complex* val) {
   cudaMemcpy(&h,val,sizeof(Complex),cudaMemcpyDeviceToHost);
   printf("**********************%s: %lg, %lg\n",where,h.real(),h.imag());
 }
-void buildKKRMatrix_gpu(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, Complex energy, Complex prel, int iie, Matrix<Complex> &m, DeviceConstants &d_const)
+
+// meis: not set up to use ispin for collinear spin polarized calculations
+void buildKKRMatrix_gpu(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, int ispin, Complex energy, Complex prel, int iie, Matrix<Complex> &m, DeviceConstants &d_const)
 {
   int lmax=lsms.maxlmax;
   int kkrsz=(lmax+1)*(lmax+1);
