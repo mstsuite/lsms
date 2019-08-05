@@ -105,7 +105,7 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
       }
     }
     // close the file
-    if(lsms.pot_out_type==0)
+    if(lsms.pot_in_type==0)
     {
       H5Fclose(fid);
     }

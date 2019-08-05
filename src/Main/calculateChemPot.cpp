@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "calculateChemPot.hpp"
 
 // calculate the chemical potential and the eigenvalue sum
@@ -17,7 +18,7 @@ c     ================================================================
   Real xtws = 0.0, tnen = 0.0;
   for (int i=0; i<local.num_local; i++)
   {
-    if (lsms.n_spin_cant == 2 || lsms.n_spin_pola == 1)
+    if (lsms.n_spin_cant == lsms.n_spin_pola) // either non spin polarized or spin canted
     {
       xtws += local.atom[i].dosint[0] * Real(local.n_per_type[i]);
       tnen += local.atom[i].doslast[0] * Real(local.n_per_type[i]);
@@ -42,6 +43,8 @@ c     ================================================================
     if (lsms.global.iprint >= 0)
     {
       printf("atom[0].dosint[0] = %lf  atom[0].dosint[1] = %lf\n",local.atom[0].dosint[0], local.atom[0].dosint[1]);
+      if(lsms.n_spin_cant==2)
+	printf("atom[0].dosint[2] = %lf  atom[0].dosint[3] = %lf\n",local.atom[0].dosint[2], local.atom[0].dosint[3]);
       printf("calculateChempot: xtws = %lf zvaltss = %lf tnen = %lf old chempot = %lf\n",
              xtws, lsms.zvaltss, tnen, lsms.chempot);
     }

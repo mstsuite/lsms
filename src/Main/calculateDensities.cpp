@@ -25,10 +25,10 @@ void calculateDensities(LSMSSystemParameters &lsms, int iatom, int is, int ie, i
   {
     int isq=isp;
     if(lsms.n_spin_cant<2) isq=is;
-    atom.dos_real(ie,isq)=std::imag(dos(isp,iatom));
-    atom.evalsum[isq]+=std::imag(ede*dos(isp,iatom));
-    atom.dosint[isq]+=std::imag(dos(isp,iatom)*dele1);
-    atom.dosckint[isq]+=std::imag(dosck(isp,iatom)*dele1);
+    atom.dos_real(ie,isq)=std::imag(dos(isq,iatom));
+    atom.evalsum[isq]+=std::imag(ede*dos(isq,iatom));
+    atom.dosint[isq]+=std::imag(dos(isq,iatom)*dele1);
+    atom.dosckint[isq]+=std::imag(dosck(isq,iatom)*dele1);
     if(lsms.relativity!=full)
     {
       for(int ir=0; ir<green.l_dim1(); ir++)
@@ -60,8 +60,8 @@ void calculateDensities(LSMSSystemParameters &lsms, int iatom, int is, int ie, i
     {
       int isq=isp;
       if(lsms.n_spin_cant<2) isq=is;
-      atom.doslast[isq]=std::imag(dos(isp,iatom));
-      atom.doscklast[isq]=std::imag(dosck(isp,iatom));
+      atom.doslast[isq]=std::imag(dos(isq,iatom));
+      atom.doscklast[isq]=std::imag(dosck(isq,iatom));
       if(lsms.relativity!=full)
       {
         for(int ir=0; ir<green.l_dim1(); ir++)

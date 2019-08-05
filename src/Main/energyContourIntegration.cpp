@@ -445,7 +445,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 	}
 
       }
-    } else {
+    } else { // fully relativistic
       for(int i=0; i<local.num_local; i++)
       {
         //Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
@@ -484,7 +484,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                            dipole,
                            local.atom[i]);
         
-          }
+      }
     }
 #ifdef USE_NVTX
     nvtxRangePop();
