@@ -70,18 +70,19 @@ c     ----------------------------------------------------------------
          vhart=two*(vrnew(ir)+rhot(jmt,2)-rhot(ir,2))
 ctest    vhart=two*(vrnew(ir)+rhot_rins-rhot(ir,2))
          vrnew(ir)=(vhart+vx(ir)-vmt1-vmt-vxout)*sqr(ir)*sqr(ir)
-         if(iexch.ge.100)
-     >   vrnew(ir)=-vrnew(ir)+sqr(ir)**2*(-vxout+
-     >   epcorr(.5d0*rhot(ir,1),0.d0,sqr(ir)**2,0,alpgga,40.d0))
+!         if(iexch.ge.100)
+!     >   vrnew(ir)=-vrnew(ir)+sqr(ir)**2*(-vxout+
+!     >   epcorr(.5d0*rhot(ir,1),0.d0,sqr(ir)**2,0,alpgga,40.d0))
       enddo
       if(mtasa.ge.2) then
       width=sqr(jmt)-sqr(jmt-1)
       sqrmt=sqrt(rins)
       do ir=1,jmt
-	 if(iexch.lt.100)vrnew(ir)=vrnew(ir)+vmt*sqr(ir)*sqr(ir)
+!        if(iexch.lt.100)vrnew(ir)=vrnew(ir)+vmt*sqr(ir)*sqr(ir)
+         vrnew(ir)=vrnew(ir)+vmt*sqr(ir)*sqr(ir)
      *   /(one+exp((sqrmt-sqr(ir))/width))
- 	 if(iexch.ge.100)vrnew(ir)=vrnew(ir)-vmt*sqr(ir)*sqr(ir)
-     *   /(one+exp((sqrmt-sqr(ir))/width))
+!        if(iexch.ge.100)vrnew(ir)=vrnew(ir)-vmt*sqr(ir)*sqr(ir)
+!     *   /(one+exp((sqrmt-sqr(ir))/width))
       enddo
       endif
 c use rhot as temp storage

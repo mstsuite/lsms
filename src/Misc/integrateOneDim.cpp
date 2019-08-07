@@ -30,19 +30,19 @@ void integrateOneDim(Real *grid, Real *integrand, Real *integral, size_t n)
   const Real invStepSubdivision=1.0/Real(stepSubdivision);
   integral[0]=0.0;
   if(stepSubdivision==0) // use fit.integral for integration steps
-    for(size_t i=0; i<n-2; i++)
+    for(size_t i=0; i<n-1; i++)
     {
       fit.set(grid,integrand,i,n);
       integral[i+1]=integral[i]+fit.integral(grid[i],grid[i+1]);
     }
   else if(stepSubdivision==1)
-    for(size_t i=0; i<n-2; i++)
+    for(size_t i=0; i<n-1; i++)
     {
       fit.set(grid,integrand,i,n);
       integral[i+1]=integral[i]+integrateStep(grid[i],grid[i+1],fit);
     }
   else
-    for(size_t i=0; i<n-2; i++)
+    for(size_t i=0; i<n-1; i++)
     {
       fit.set(grid,integrand,i,n);
       Real h=(grid[i+1]-grid[i])*invStepSubdivision;
@@ -64,19 +64,19 @@ void integrateOneDim(std::vector<Real> &grid, Func fn, std::vector<Real> &integr
   const Real invStepSubdivision=1.0/Real(stepSubdivision);
   integral[0]=0.0;
   if(stepSubdivision==0) // use fit.integral for integration steps
-    for(size_t i=0; i<grid.size()-2; i++)
+    for(size_t i=0; i<grid.size()-1; i++)
     {
       fit.set(grid,fn,i);
       integral[i+1]=integral[i]+fit.integral(grid[i],grid[i+1]);
     }
   else if(stepSubdivision==1)
-    for(size_t i=0; i<grid.size()-2; i++)
+    for(size_t i=0; i<grid.size()-1; i++)
     {
       fit.set(grid,fn,i);
       integral[i+1]=integral[i]+integrateStep(grid[i],grid[i+1],fit);
     }
     else
-      for(size_t i=0; i<grid.size()-2; i++)
+      for(size_t i=0; i<grid.size()-1; i++)
       {
         fit.set(grid,fn,i);
         Real h=(grid[i+1]-grid[i])*invStepSubdivision;
@@ -105,19 +105,19 @@ void integrateOneDimSpherical(Real *grid, Real *integrand, Real *integral, size_
   integral[0]=0.0;
   
   if(stepSubdivision==0) // use fit.integral for integration steps
-    for(size_t i=0; i<n-2; i++)
+    for(size_t i=0; i<n-1; i++)
     {
       fit.set(grid,integrand,[](Real r, Real f){return 4.0*M_PI*r*r*f;}, i, n);
       integral[i+1]=integral[i]+fit.integral(grid[i],grid[i+1]);
     }
   else if(stepSubdivision==1)
-    for(size_t i=0; i<n-2; i++)
+    for(size_t i=0; i<n-1; i++)
     {
       fit.set(grid,integrand,[](Real r, Real f){return 4.0*M_PI*r*r*f;}, i, n);
       integral[i+1]=integral[i]+integrateStep(grid[i],grid[i+1],fit);
     }
   else
-    for(size_t i=0; i<n-2; i++)
+    for(size_t i=0; i<n-1; i++)
     {
       fit.set(grid,integrand,[](Real r, Real f){return 4.0*M_PI*r*r*f;}, i, n);
       Real h=(grid[i+1]-grid[i])*invStepSubdivision;
@@ -149,5 +149,53 @@ template <size_t stepSubdivision=DEFAULT_STEP_SUBDIVISION>
 Real integrateOneDimSpherical(std::vector<Real> &grid, std::vector<Real> &integrand, std::vector<Real> &integral, Real r)
 {
   integrateOneDimSpherical<stepSubdivision>(grid, integrand, integral);
+  return interpolate(grid, integral, r);
+}
+
+template <size_t stepSubdivision=DEFAULT_STEP_SUBDIVISION>
+void integrateOneDimRPower(Real *grid, Real *integrand, Real *integral, size_t n, int p)
+{
+  RationalFit<Real> fit;
+  const Real invStepSubdivision=1.0/Real(stepSubdivision);
+  integral[0]=0.0;
+  
+  if(stepSubdivision==0) // use fit.integral for integration steps
+    for(size_t i=0; i<n-1; i++)
+    {
+      fit.set(grid,integrand,[p](Real r, Real f){return std::pow(r,p)*f;}, i, n);
+      integral[i+1]=integral[i]+fit.integral(grid[i],grid[i+1]);
+    }
+  else if(stepSubdivision==1)
+    for(size_t i=0; i<n-1; i++)
+    {
+      fit.set(grid,integrand,[p](Real r, Real f){return std::pow(r,p)*f;}, i, n);
+      integral[i+1]=integral[i]+integrateStep(grid[i],grid[i+1],fit);
+    }
+  else
+    for(size_t i=0; i<n-1; i++)
+    {
+      fit.set(grid,integrand,[p](Real r, Real f){return std::pow(r,p)*f;}, i, n);
+      Real h=(grid[i+1]-grid[i])*invStepSubdivision;
+      Real x0=grid[i]; Real x1=x0+h;
+      Real stepIntegral=0.0;
+      for(size_t j=0; j<stepSubdivision; j++)
+      {
+        stepIntegral+=integrateStep(x0,x1,fit);
+        x0=x1; x1=x0+h;
+      }
+      integral[i+1]=integral[i]+stepIntegral;
+    }
+}
+
+template <size_t stepSubdivision=DEFAULT_STEP_SUBDIVISION>
+inline void integrateOneDimRPower(std::vector<Real> &grid, std::vector<Real> &integrand, std::vector<Real> &integral, int p)
+{
+  integrateOneDimRPower<stepSubdivision>(&grid[0], &integrand[0], &integral[0], integrand.size(), p);
+}
+
+template <size_t stepSubdivision=DEFAULT_STEP_SUBDIVISION>
+Real integrateOneDimRPower(std::vector<Real> &grid, std::vector<Real> &integrand, std::vector<Real> &integral, Real r, int p)
+{
+  integrateOneDimRPower<stepSubdivision>(grid, integrand, integral, p);
   return interpolate(grid, integral, r);
 }

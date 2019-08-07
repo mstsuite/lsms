@@ -34,6 +34,7 @@ void calculateCoreStates(LSMSCommunication &comm, LSMSSystemParameters &lsms, Lo
   }
   globalMax(comm,etopcor);
 
+  lsms.largestCorestate=etopcor;
 /*
       if(etopcor+0.1d0 .gt. ebot) then
          write(6,'('' GETCOR: etopcor+0.1 .gt. ebot'',2d12.5)')

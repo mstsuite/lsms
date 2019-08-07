@@ -33,6 +33,7 @@ ifdef USE_GMP
 endif
 
 # export CUDA_CXX=nvcc -arch=sm_20
+export OMPI_CXX=g++-8
 
 ifdef USE_OPENMP
   export CXX=mpicxx -g -std=c++11 -fopenmp -O3 -I$(BOOST_ROOT) $(GPTL_OPT) $(OPT_DEFINES)

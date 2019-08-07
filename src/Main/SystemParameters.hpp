@@ -112,6 +112,7 @@ public:
 // repeat the MPI rank from comm for reporting purposes
   int commRank;
 
+  Real largestCorestate;       // maximum of the core levels
 };
 
 extern const char *potentialTypeName[];
