@@ -112,6 +112,7 @@ public:
 // repeat the MPI rank from comm for reporting purposes
   int commRank;
 
+  Real adjustContourBottom;    // if >0.0. set ebot to largestCorestate + adjustContourBottom
   Real largestCorestate;       // maximum of the core levels
 };
 

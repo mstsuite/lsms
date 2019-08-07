@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "Main/SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 #include "Misc/Coeficients.hpp"
@@ -59,6 +60,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
       local.atom[i].rmt=local.atom[i].rInscribed;
       local.atom[i].generateNewMesh = true;
     }
+    // do we need to change rmt for mtasa==1?
 
     local.atom[i].omegaMT=sphereVolumeFactor*std::pow(local.atom[i].rmt,3);
     local.atom[i].omegaWS=local.atom[i].voronoi.omegaInt+local.atom[i].omegaMT;

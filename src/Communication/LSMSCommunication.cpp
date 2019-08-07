@@ -76,6 +76,8 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Pack(&lsms.energyContour.eitop,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.energyContour.maxGroupSize,1,MPI_INT,buf,s,&pos,comm.comm);
 
+    MPI_Pack(&lsms.adjustContourBottom,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
+
     MPI_Pack(&lsms.mixing,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.alphaDV,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.rmsTolerance,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
@@ -145,6 +147,8 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&lsms.energyContour.eibot,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.energyContour.eitop,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.energyContour.maxGroupSize,1,MPI_INT,comm.comm);
+
+    MPI_Unpack(buf,s,&pos,&lsms.adjustContourBottom,1,MPI_DOUBLE,comm.comm);
 
     MPI_Unpack(buf,s,&pos,&lsms.mixing,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.alphaDV,1,MPI_DOUBLE,comm.comm);

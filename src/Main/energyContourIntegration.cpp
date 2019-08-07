@@ -164,8 +164,12 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
       Real h_app_perp_mag=0.0;
       // int iprpts=local.atom[i].r_mesh.size();
       int iprpts=vr_con[i].l_dim();
+      Real rmt = local.atom[i].rmt;
+      if(lsms.mtasa>0) rmt = local.atom[i].rws;
+      int jmt = local.atom[i].jmt;
+      if(lsms.mtasa==1) jmt = local.atom[i].jws;
 // here I leave out the i_vdif<0 case!
-      constraint_(&local.atom[i].jmt,&local.atom[i].rmt,&lsms.n_spin_pola,
+      constraint_(&jmt,&rmt,&lsms.n_spin_pola,
                   &(vr_con[i])(0,0),&local.atom[i].r_mesh[0],&pi4,
                   &local.atom[i].evec[0],&evec_r(0,i),local.atom[i].b_con,
                   local.atom[i].b_basis,&i_vdif,&h_app_para_mag,&h_app_perp_mag,
@@ -379,6 +383,8 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         Real r_sph=local.atom[i].rInscribed;
         if(lsms.mtasa>0) r_sph=local.atom[i].rws;
         Real rins=local.atom[i].rmt;
+	int jmt = local.atom[i].jmt;
+	if(lsms.mtasa==1) jmt = local.atom[i].jws;
 //        int nprpts=solutionNonRel[iie][i].zlr.l_dim1();
         int nprpts=local.atom[i].r_mesh.size();
 //        int nplmax=solutionNonRel[iie][i].zlr.l_dim2()-1;
@@ -386,7 +392,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
                         &local.atom[i].lmax, &local.atom[i].kkrsz,
                         &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
-                        &rins,&r_sph,&local.atom[i].r_mesh[0],&local.atom[i].jmt,&local.atom[i].jws,
+                        &rins,&r_sph,&local.atom[i].r_mesh[0],&jmt,&local.atom[i].jws,
                         &pnrel,&tau00_l(0,i),&solutionNonRel[iie][i].matom(0,0),
                         &solutionNonRel[iie][i].zlr(0,0,0),&solutionNonRel[iie][i].jlr(0,0,0),
                         &nprpts,&nplmax,
@@ -400,7 +406,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 	  green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
                         &local.atom[i].lmax, &local.atom[i].kkrsz,
                         &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
-                        &rins,&r_sph,&local.atom[i].r_mesh[0],&local.atom[i].jmt,&local.atom[i].jws,
+                        &rins,&r_sph,&local.atom[i].r_mesh[0],&jmt,&local.atom[i].jws,
                         &pnrel,&tau00_l(0,i+local.num_local),&solutionNonRel[iie][i].matom(0,1),
                         &solutionNonRel[iie][i].zlr(0,0,1),&solutionNonRel[iie][i].jlr(0,0,1),
                         &nprpts,&nplmax,

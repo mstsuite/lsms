@@ -80,6 +80,8 @@ int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalPar
   fprintf(of,"energyContour.eitop=%lf\n",lsms.energyContour.eitop);
   fprintf(of,"energyContour.maxGroupSize=%d\n\n",lsms.energyContour.maxGroupSize);
 
+  fprintf(of,"adjustContourBottom=%lf\n\n",lsms.adjustContourBottom);
+
   fprintf(of,"temperature=%lf\n\n",lsms.temperature);
 
 

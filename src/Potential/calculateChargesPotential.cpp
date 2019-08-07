@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "calculateChargesPotential.hpp"
 #ifdef USE_LIBXC
 #include "libxcInterface.hpp"
@@ -134,17 +135,21 @@ void calculateLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local, int
 //   ----------------------------------------------------------------
 
     Real rSphere;
+    int jmt;
 
     switch (lsms.mtasa)
     {
       case 1:
         rSphere = local.atom[i].rws;
+	jmt = local.atom[i].jws;
         break;
       case 2:
         rSphere = local.atom[i].rws;
+	jmt = local.atom[i].jws; // ?
         break;
       default:
         rSphere = local.atom[i].rInscribed;
+	jmt = local.atom[i].jmt;
     }
 
     Real *rTemp;
@@ -415,6 +420,22 @@ void calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, Local
   switch (lsms.mtasa)
   {
     case 1:             // ASA (not implemented)
+      for(int i=0; i<local.num_local; i++)
+      {
+	qmIntTotal[0] += local.atom[i].qInt * Real(local.n_per_type[i]);
+	qmIntTotal[1] += local.atom[i].omegaWS * Real(local.n_per_type[i]); // in LSMS_1 it is omegmt, but this is supposedly set to omegws
+      }
+      globalSum(comm, qmIntTotal, 4);
+      for(int i=0; i<local.num_local; i++)
+      {
+	local.atom[i].rhoInt = 4.0*M_PI*qmIntTotal[0] / (qmIntTotal[1] * Real(lsms.n_spin_pola));
+	// if(std::abs(local.atom[i].rhoInt)>1.0e-10)
+	// {
+	for(int is=0; is<lsms.n_spin_pola; is++)
+	  for(int ir=0; ir<local.atom[i].jws; ir++)
+	    local.atom[i].rhoNew(ir,is) += local.atom[i].rhoInt*local.atom[i].r_mesh[ir]*local.atom[i].r_mesh[ir];
+	// }
+      }
       break;
 
     default:            // Muffin-tin or ASA-MT cases
@@ -604,6 +625,10 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
   switch (lsms.mtasa)
   {
     case 1:                            // ASA case
+      globalSum(comm, vmtSum);
+      globalSum(comm, u0Sum);
+      vmt = vmtSum / Real(lsms.num_atoms);
+      lsms.u0 = u0Sum;
       // not implemented
       printf("Potential/calculateChargesPotential.cpp: calculatePotential: ASA not implemented yet!\n");
       exit(1);

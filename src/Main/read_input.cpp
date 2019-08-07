@@ -404,6 +404,9 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   lsms.energyContour.maxGroupSize=50;
   luaGetIntegerFieldInTable(L,"energyContour","maxGroupSize",&lsms.energyContour.maxGroupSize);
 
+  lsms.adjustContourBottom = -1.0;
+  luaGetReal(L,"adjustContourBottom",&lsms.adjustContourBottom);
+
   lsms.temperature = 0.0;
   luaGetReal(L,"temperature",&lsms.temperature);
 

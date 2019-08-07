@@ -313,7 +313,8 @@ int main(int argc, char *argv[])
   if (lsms.global.iprint >= 0)
     printf("Finished calculateCoreStates(...)\n");
 
-  lsms.energyContour.ebot = lsms.largestCorestate + 0.25;
+  if(lsms.adjustContourBottom>0.0)
+    lsms.energyContour.ebot = lsms.largestCorestate + lsms.adjustContourBottom;
 
 // check that vrs have not changed ...
 //  bool vr_check=false;
@@ -488,7 +489,8 @@ int main(int argc, char *argv[])
     // Recalculate core states for new potential if we are performing scf calculations
     calculateCoreStates(comm, lsms, local);
 
-    lsms.energyContour.ebot = lsms.largestCorestate + 0.25;
+    if(lsms.adjustContourBottom>0.0)
+      lsms.energyContour.ebot = lsms.largestCorestate + lsms.adjustContourBottom;
 
     // Periodically write the new potential for scf calculations 
     potentialWriteCounter++;

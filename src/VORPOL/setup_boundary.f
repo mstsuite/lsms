@@ -90,14 +90,16 @@ c     ===============================================================
          n2=n_max
          n3=n_max
       n0=0
-      do 1 i0=-n1,n1
-      do 1 j0=-n2,n2
-      do 1 k0=-n3,n3
-         n0=n0+1
-         in(n0)=i0
-         jn(n0)=j0
-         kn(n0)=k0
- 1    continue
+      do i0=-n1,n1
+        do j0=-n2,n2
+          do k0=-n3,n3
+            n0=n0+1
+            in(n0)=i0
+            jn(n0)=j0
+            kn(n0)=k0
+          end do
+        end do
+      end do
 c
       j=0
       do n=1,n0
