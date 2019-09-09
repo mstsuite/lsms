@@ -22,6 +22,16 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
     pot_data.resizeCore(lsms.global.ipcore);
   }
 
+  // safe the input rmt, jmt, jws:
+  Real rfixgrid[local.num_local];
+  int jmtIn[local.num_local], jwsIn[local.num_local];
+  for(int i=0; i<local.num_local; i++)
+  {
+    rfixgrid[i] = local.atom[i].rmt;
+    jmtIn[i] = local.atom[i].jmt;
+    jwsIn[i] = local.atom[i].jws;
+  }
+
   if(comm.rank==0)
   {
     hid_t fid,fid_1;

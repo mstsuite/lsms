@@ -33,7 +33,11 @@ void interpolatePotential(LSMSSystemParameters &lsms, AtomData &atom)
     if (atom.r_mesh[ir] < atom.rws && lsms.mtasa == 0)
       atom.jws = ir + 2;
     if (atom.jws > lsms.global.iprpts)
+    {
       printf("Problem! jws > iprpts. jws = %8d iprpts = %8d\n", atom.jws, lsms.global.iprpts);
+      printf("         rmt = %lf  rws = %lf last r_mesh = %lf\n",
+        atom.rmt, atom.rws, atom.r_mesh[lsms.global.iprpts-1]);
+    }
   }
 
   // Interpolate potential onto the new mesh

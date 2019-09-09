@@ -241,6 +241,7 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
     newint_(&ir_sph_p1,&rtmp[0],&w2[0],w1,&seven);
     interp_(&rtmp[0],&w1[0],&ir_sph_p1,&sqrt_r_sph,&qrms[is],&dummy,&f);
     qrms[is] = std::sqrt(qrms[is] / (4.0*M_PI*atom.omegaMT));
+    // qrms[is] = qrms[is] / (4.0*M_PI*atom.omegaMT);
   }
 }
 

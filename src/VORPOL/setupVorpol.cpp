@@ -48,12 +48,13 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
                   &atom_position_2[0], &atom_position_3[0],
                   &crystal.bravais(0,0),
                   &lmax,&shc.clm[0],&lsms.ngaussq,&lsms.ngaussr,
-                  &local.atom[i].rInscribed,&local.atom[i].voronoi.omegaInt,
+                  &local.atom[i].voronoi.rInscribedSphere,&local.atom[i].voronoi.omegaInt,
                   local.atom[i].voronoi.dipint,&rad[0],
                   &ipvp,&ipnode,&ipcorn,&ipedge,&iprcrit,
                   &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.grwylm(0,0),
                   &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.wylm(0,0,0),
                   &lsms.global.iprint,lsms.global.istop,32);
+    local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
 // set rmt according to value of fixRMT
     if(lsms.fixRMT==0)
     {
@@ -65,6 +66,22 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
     local.atom[i].omegaMT=sphereVolumeFactor*std::pow(local.atom[i].rmt,3);
     local.atom[i].omegaWS=local.atom[i].voronoi.omegaInt+local.atom[i].omegaMT;
     local.atom[i].rws=std::pow(local.atom[i].omegaWS/sphereVolumeFactor,1.0/3.0);
+
+    switch(lsms.mtasa)
+    {
+    case 1:
+      local.atom[i].rmt=local.atom[i].rws;
+      local.atom[i].omegaMT=local.atom[i].omegaWS;
+      local.atom[i].rInscribed=local.atom[i].rws;
+      break;
+    case 2:
+      local.atom[i].rmt=local.atom[i].rws;
+      local.atom[i].omegaMT=local.atom[i].omegaWS;
+      local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
+      break;
+    default: // MT
+      local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
+    }
  }
 }
 

@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_VORPOL_H
 #define LSMS_VORPOL_H
 
@@ -25,6 +26,7 @@ c wylm = array containing the step function for each r-mesh point
  common /common_step/ wylm,gwwylm,grwylm,ncrit
 */
   int ncrit;
+  Real rInscribedSphere; // inscribed sphere
   Real omegaInt; // interstitial volume
   Complex dipint[6];
   Array3d<Complex> wylm;

@@ -46,7 +46,6 @@
 #include "Potential/PotentialShifter.hpp"
 #include "TotalEnergy/calculateTotalEnergy.hpp"
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
-#include "LuaInterface/LuaSupport.hpp"
 
 #include "Misc/readLastLine.hpp"
 
@@ -169,7 +168,6 @@ int main(int argc, char *argv[])
     if (luaL_loadfile(L, inputFileName) || lua_pcall(L,0,0,0))
     {
       fprintf(stderr, "!! Cannot run input file!!\n");
-      luaStackDump(L);
       exit(1);
     }
 
@@ -179,7 +177,6 @@ int main(int argc, char *argv[])
     if (readInput(L, lsms, crystal, mix, potentialShifter, alloyDesc))
     {
       fprintf(stderr, "!! Something wrong in input file!!\n");
-      luaStackDump(L);
       exit(1);
     }
 
@@ -271,7 +268,7 @@ int main(int argc, char *argv[])
 //  initialAtomSetup(comm,lsms,crystal,local);
 
 // the next line is a hack for initialization of potentials from scratch to work.
-  if(lsms.pot_in_type < 0) setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
 
   loadPotentials(comm, lsms, crystal, local);
 
@@ -312,9 +309,6 @@ int main(int argc, char *argv[])
   calculateCoreStates(comm, lsms, local);
   if (lsms.global.iprint >= 0)
     printf("Finished calculateCoreStates(...)\n");
-
-  if(lsms.adjustContourBottom>0.0)
-    lsms.energyContour.ebot = lsms.largestCorestate + lsms.adjustContourBottom;
 
 // check that vrs have not changed ...
 //  bool vr_check=false;
@@ -453,16 +447,23 @@ int main(int argc, char *argv[])
     calculateChargesPotential(comm, lsms, local, crystal, 1);
     mixing -> updatePotential(comm, lsms, local.atom);
 
-    Real rms = 0.5 * (local.qrms[0] + local.qrms[1]);
-
-    // Check for convergence
+    // Real rms = 0.5 * (local.qrms[0] + local.qrms[1]);
+    Real rms = 0.0;
+    for(int i=0; i<local.num_local; i++)
+      rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
+    globalMax(comm, rms);
+    
+// check for convergence
+    converged = rms < lsms.rmsTolerance;
+    /*
     converged = true;
     for (int i=0; i<local.num_local; i++)
     {
       converged = converged
-                && (0.5 * (local.atom[i].qrms[0] + local.atom[i].qrms[1]) < lsms.rmsTolerance);
+                && (0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1])<lsms.rmsTolerance);
     }
     globalAnd(comm, converged);
+    */
 
     if (comm.rank == 0)
     {
@@ -470,12 +471,15 @@ int main(int argc, char *argv[])
       printf("Fermi Energy = %lf Ry\n", lsms.chempot);
       printf("Total Energy = %lf Ry\n", lsms.totalEnergy);
       printf("RMS = %lg\n",rms);
-      printf("  qrms[0] = %lg   qrms[1] = %lg\n",local.qrms[0], local.qrms[1]);
-      printf("  local.atom[i]:\n");
-      for (int i=0; i<local.num_local; i++)
+      if(lsms.global.iprint > 0)
       {
-        printf("  %d : qrms[0] = %lg   qrms[1] = %lg\n",i,local.atom[i].qrms[0], local.atom[i].qrms[1]);
-        printf("  %d : vrms[0] = %lg   vrms[1] = %lg\n",i,local.atom[i].vrms[0], local.atom[i].vrms[1]);
+        printf("  qrms[0] = %lg   qrms[1] = %lg\n",local.qrms[0], local.qrms[1]);
+        printf("  local.atom[i]:\n");
+        for (int i=0; i<local.num_local; i++)
+        {
+          printf("  %d : qrms[0] = %lg   qrms[1] = %lg\n",i,local.atom[i].qrms[0], local.atom[i].qrms[1]);
+          printf("  %d : vrms[0] = %lg   vrms[1] = %lg\n",i,local.atom[i].vrms[0], local.atom[i].vrms[1]);
+        }
       }
     }
 
@@ -488,9 +492,6 @@ int main(int argc, char *argv[])
 
     // Recalculate core states for new potential if we are performing scf calculations
     calculateCoreStates(comm, lsms, local);
-
-    if(lsms.adjustContourBottom>0.0)
-      lsms.energyContour.ebot = lsms.largestCorestate + lsms.adjustContourBottom;
 
     // Periodically write the new potential for scf calculations 
     potentialWriteCounter++;

@@ -49,7 +49,8 @@ c
 c       2.d0 is the jacobian needed because we are integrating over sqrt(r)
         rhot(ir,1)=2.d0*(rhoup(ir)+(n_spin_pola-1)*rhodn(ir))/sqr(ir)**4
 c YingWai's check
-!        write(6,'(''ir,rhot = '',i8,f20.12)') ir, rhot(ir,1)
+!       write(6,'(''ir,rhot,rhoup,rhodn = '',i8,3(1x,f20.12))')
+!    &        ir, rhot(ir,1), rhoup(ir), rhodn(ir)
       enddo
       call interp(sqr(1),rhot(1,1),4,0.d0,rhot(0,1),drhot,.false.)
 c     ----------------------------------------------------------------
@@ -68,12 +69,15 @@ c     ----------------------------------------------------------------
 c     ----------------------------------------------------------------
       do ir=1,jmt
          vhart=two*(vrnew(ir)+rhot(jmt,2)-rhot(ir,2))
+!        write(6,'(''ir,vhart = '',i8,1x,f24.12)') ir, vhart
 ctest    vhart=two*(vrnew(ir)+rhot_rins-rhot(ir,2))
          vrnew(ir)=(vhart+vx(ir)-vmt1-vmt-vxout)*sqr(ir)*sqr(ir)
 !         if(iexch.ge.100)
 !     >   vrnew(ir)=-vrnew(ir)+sqr(ir)**2*(-vxout+
 !     >   epcorr(.5d0*rhot(ir,1),0.d0,sqr(ir)**2,0,alpgga,40.d0))
       enddo
+      write(6,'(''vmt1,vmt,vxout = '',3(1x,f24.12))')
+     &         vmt1,vmt,vxout
       if(mtasa.ge.2) then
       width=sqr(jmt)-sqr(jmt-1)
       sqrmt=sqrt(rins)
@@ -90,7 +94,9 @@ c use rhot as temp storage
       do ir=1,jmt
          rhot(ir,1)=2.d0*(vrold(ir)-vrnew(ir))**2
 c YingWai's check
-!         write(6,'(''ir,rhot = '',i8,f20.12)') ir, rhot(ir,1)
+!        write(6,'(''ir,rhot,vrold,vrnew = '',i8,3(1x,f20.12))')
+!    &    ir, rhot(ir,1),
+!    &    vrold(ir), vrnew(ir)
       enddo
 c     ----------------------------------------------------------------
       call newint(jmt+1,sqr,rhot(0,1),rhot(0,2),1)

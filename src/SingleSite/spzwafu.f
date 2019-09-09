@@ -81,10 +81,15 @@ c
 c
       call csbf(l+1,p,rs,fb,fn,fh)
 c
-      if(iabs(my)-(2*l+1)) 1,2,3
-    3 stop ' spzwafu: my is out of range!'
+      if(iabs(my) .gt. (2*l+1)) then
+        stop ' spzwafu: my is out of range!'
+      end if
+
+!     if(iabs(my)-(2*l+1)) 1,2,3
+!   3 stop ' spzwafu: my is out of range!'
 c
-    2 continue
+!   2 continue
+      if(iabs(my).eq.(2*l+1)) then
 
 !     write(6,*) sname,2,1
 c
@@ -163,7 +168,8 @@ c       write(6,'('' gpmt irr  '',2d15.8)') ff2*rs
 c
       return 
 c
-    1 continue
+!   1 continue
+      end if
 !     write(6,*) sname,1,1
       call dirmago2op(socsc,ce,l,my,vr,br,bopr,dx,xnot,rs,ns,
      >                g1,f1,gp1,iprpts)

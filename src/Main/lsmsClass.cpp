@@ -1035,7 +1035,10 @@ Real LSMS::scfEnergy(Real *eb)
     if (potentialShifter.vSpinShiftFlag)
       potentialShifter.resetPotentials(local);
 
-    rms = 0.5*(local.qrms[0]+local.qrms[1]);
+    rms = 0.0;
+    for(int i=0; i<local.num_local; i++)
+      rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
+    globalMax(comm, rms);
 
     if (potentialShifter.vSpinShiftFlag)
       lsms.totalEnergy -= eZeeman;
@@ -1060,6 +1063,8 @@ Real LSMS::scfEnergy(Real *eb)
     calculateCoreStates(comm,lsms,local);
 
 // check for convergence
+    converged = rms < lsms.rmsTolerance;
+    /*
     converged = true;
     for (int i=0; i<local.num_local; i++)
     {
@@ -1067,6 +1072,7 @@ Real LSMS::scfEnergy(Real *eb)
                 && (0.5*(local.qrms[0]+local.qrms[1])<lsms.rmsTolerance);
     }
     globalAnd(comm, converged);
+    */
 
 //    if(std::abs(energyDifference)<energyTolerance && rms<lsms.rmsTolerance)
 //      converged=true;

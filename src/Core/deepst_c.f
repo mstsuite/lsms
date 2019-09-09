@@ -55,6 +55,7 @@ c
       integer    invp
       integer    j
       integer    nmax
+      integer    ir
 c
       real*8     rg(iprpts)
       real*8     rf(iprpts)
@@ -94,6 +95,9 @@ c     ================================================================
       if(nws+ipdeq*2 .gt. iprpts) then
          write(6,'('' DEEPST::core cannot work:'',
      >   '' nws+ipdeq2.gt.iprpts'')')
+         write(6,'('' nws     = '',i6)') nws
+         write(6,'('' ipdeq*2 = '',i6)') ipdeq*2
+         write(6,'('' iprpts  = '',i6)') iprpts
 	 call fstop(sname)
       endif
 c
@@ -222,6 +226,12 @@ c
 c     ================================================================
 c     just in case the energy becomes zero
 c     ================================================================
+      do ir=1,nws
+        write(6,'(''ir,vr = '',i8,f20.12)') ir, rv(ir)
+      end do
+
+      write(6,'('' DEEPST:: nws = '',i4)') nws
+
       write(6,'('' DEEPST:: zero energy '',f5.2)')z
       write(6,'('' DEEPST:: n = '',i2)') nqn
       write(6,'('' DEEPST:: l = '',i2)') lqn
