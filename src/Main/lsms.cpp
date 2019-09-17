@@ -563,7 +563,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  long fomScale = calculateFomScale(comm, local);
+  long long fomScale = calculateFomScale(comm, local);
 
   if (comm.rank == 0)
   {

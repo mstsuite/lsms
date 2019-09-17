@@ -497,11 +497,11 @@ void globalAnd(LSMSCommunication &comm,bool &a)
 }
 
 
-long calculateFomScale(LSMSCommunication &comm, LocalTypeInfo &local)
+long long calculateFomScale(LSMSCommunication &comm, LocalTypeInfo &local)
 {
   // fomScale = \sum_#atoms (LIZ * (lmax+1)^2)^3
-  long fomLocal = 0;
-  long fom  = 0;
+  long long fomLocal = 0;
+  long long fom  = 0;
 
   for(int i=0; i<local.num_local; i++)
   {
@@ -509,7 +509,7 @@ long calculateFomScale(LSMSCommunication &comm, LocalTypeInfo &local)
     fomLocal += local.atom[i].nrmat*local.atom[i].nrmat*local.atom[i].nrmat;
   }
   // printf("fomLocal = %ld\n",fomLocal);
-  MPI_Allreduce(&fomLocal,&fom,1,MPI_LONG,MPI_SUM,comm.comm);
+  MPI_Allreduce(&fomLocal,&fom,1,MPI_LONG_LONG,MPI_SUM,comm.comm);
   // printf("fom = %ld\n",fom);
   return fom;
 }

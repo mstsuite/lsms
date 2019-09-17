@@ -92,6 +92,6 @@ void globalSum(LSMSCommunication &comm,T *a, int n)
 */
 }
 
-long calculateFomScale(LSMSCommunication &comm, LocalTypeInfo &local);
+long long calculateFomScale(LSMSCommunication &comm, LocalTypeInfo &local);
 
 #endif
