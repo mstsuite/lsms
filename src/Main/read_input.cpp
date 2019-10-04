@@ -417,8 +417,8 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     char h[80];
     if(luaGetStrN(L,"lsmsMode",h,80))
     {
-      if(strncmp(h,"main",80)) lsms.lsmsMode=LSMSMode::main;
-      else if(strncmp(h,"liz0",80)) lsms.lsmsMode=LSMSMode::liz0;
+      if(strncmp(h,"main",80)==0) lsms.lsmsMode=LSMSMode::main;
+      else if(strncmp(h,"liz0",80)==0) lsms.lsmsMode=LSMSMode::liz0;
       else
       {
         printf("Unknown lsmsMode: '%s'\n Defaulting to 'main'.\n");
