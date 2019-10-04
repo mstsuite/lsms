@@ -12,6 +12,7 @@
 #include "MultipleScattering.hpp"
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
+#include "Main/LSMSMode.hpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -93,9 +94,8 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &a
   for(int i=0; i<nrmat_ns*nrmat_ns; i++) m[i]=0.0;
   for(int i=0; i<nrmat_ns; i++) m(i,i)=1.0;
 
-/*
   // print first t matrix
-  if(lsms.global.iprint>=1)
+  if(lsms.lsmsMode == LSMSMode::liz0 && lsms.rank==0)
   {
     printf("first t Matrix:\n");
     for(int i=0; i<kkrsz_ns; i++)
@@ -103,20 +103,54 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &a
       {
         printf("%d %d %.8le %.8le\n",i,j,std::real(local.tmatStore(i+j*kkrsz_ns,0)),std::imag(local.tmatStore(i+j*kkrsz_ns,0)));
       }
+// write the tmatStore
+    FILE *of=fopen("tmat.dat","w");
+    fprintf(of,"# tmatStore file for buildkkrmat test:\n");
+    fprintf(of,"# line 4: num_store kkrsz Re(energy) Im(energy)\n");
+    fprintf(of,"# following numstore*kkrsz*kkrsz lines: storeidx i j Re(t_ij) Im(t_ij)\n");
+    fprintf(of,"%4d %4d %lg %lg\n", local.tmatStoreGlobalIdx.size(),kkrsz_ns,std::real(energy),std::imag(energy)); 
+    for(int idx=0; idx<local.tmatStoreGlobalIdx.size(); idx++)
+    {
+      for(int i=0; i<kkrsz_ns; i++)
+        for(int j=0; j<kkrsz_ns; j++)
+        {
+          fprintf(of,"%4d %4d %4d %.8le %.8le\n",
+                  idx,i,j,std::real(local.tmatStore(i+j*kkrsz_ns,idx)),
+                  std::imag(local.tmatStore(i+j*kkrsz_ns,idx)));
+        }
+    }
+
+    fclose(of);
 // write LIZ positions for first atom
-    FILE *of=fopen("LIZ_pos.h","w");
-    fprintf(of,"atom.numLIZ=%d;\n",atom.numLIZ);
-    fprintf(of,"atom.LIZPos.resize(3,atom.numLIZ);\n");
+//    of=fopen("LIZ_pos.h","w");
+//    fprintf(of,"atom.numLIZ=%d;\n",atom.numLIZ);
+//    fprintf(of,"atom.LIZPos.resize(3,atom.numLIZ);\n");
+//    for(int i=0; i<atom.numLIZ; i++)
+//    {
+//      fprintf(of,"atom.LIZPos(0,%d)=%lg;\n",i,atom.LIZPos(0,i));
+//      fprintf(of,"atom.LIZPos(1,%d)=%lg;\n",i,atom.LIZPos(1,i));
+//      fprintf(of,"atom.LIZPos(2,%d)=%lg;\n",i,atom.LIZPos(2,i));
+//    }
+//    fclose(of);
+
+    of=fopen("LIZ_pos.dat","w");
+    fprintf(of,"# LIZ file for buildkkrmat test:\n");
+    fprintf(of,"# line 4: LIZsize\n");
+    fprintf(of,"# following LIZsize line: i x_i y_i z_i idx_i lmax_i\n");
+    fprintf(of,"%d\n",atom.numLIZ);
     for(int i=0; i<atom.numLIZ; i++)
     {
-      fprintf(of,"atom.LIZPos(0,%d)=%lg;\n",i,atom.LIZPos(0,i));
-      fprintf(of,"atom.LIZPos(1,%d)=%lg;\n",i,atom.LIZPos(1,i));
-      fprintf(of,"atom.LIZPos(2,%d)=%lg;\n",i,atom.LIZPos(2,i));
+      fprintf(of,"%6d ",i);
+      fprintf(of,"%lg ",atom.LIZPos(0,i));
+      fprintf(of,"%lg ",atom.LIZPos(1,i));
+      fprintf(of,"%lg ",atom.LIZPos(2,i));
+      fprintf(of,"%4d ",atom.LIZStoreIdx[i];
+      fprintf(of,"%2d\n",atom.LIZlmax[i];
     }
     fclose(of);
+
     exit(0);
   }
-*/
 
 #ifdef WRITE_GIJ
   Matrix<Complex> Gij_full(nrmat_ns,nrmat_ns);

@@ -14,6 +14,7 @@
 
 #include "SystemParameters.hpp"
 #include "mixing.hpp"
+#include "LSMSMode.hpp"
 #include "LuaInterface/LuaSupport.hpp"
 #include "../Potential/PotentialShifter.hpp"
 
@@ -409,6 +410,22 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 
   lsms.temperature = 0.0;
   luaGetReal(L,"temperature",&lsms.temperature);
+
+  // read in calculation mode. Default: main
+  lsms.lsmsMode = LSMSMode::main;
+  {
+    char h[80];
+    if(luaGetStrN(L,"lsmsMode",h,80))
+    {
+      if(strncmp(h,"main",80)) lsms.lsmsMode=LSMSMode::main;
+      else if(strncmp(h,"liz0",80)) lsms.lsmsMode=LSMSMode::liz0;
+      else
+      {
+        printf("Unknown lsmsMode: '%s'\n Defaulting to 'main'.\n");
+        lsms.lsmsMode=LSMSMode::main;
+      }
+    }
+  }
 
 // c
 // c     ================================================================

@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "mixing.hpp"
+#include "LSMSMode.hpp"
 
 int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalParameters &crystal, MixingParameters &mix,
                  PotentialShifter &potentialShifter, AlloyMixingDesc& alloyDesc)
@@ -21,6 +22,7 @@ int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalPar
   fprintf(of,"pot_in_type=%d\n",lsms.pot_out_type);
   fprintf(of,"pot_out_type=%d\n",lsms.pot_out_type);
 
+  fprintf(of,"lsmsMode=\"%s\"\n",lsmsModeToString(lsms.lsmsMode));
   fprintf(of,"istop=\"main\"\n\n");
 
   fprintf(of,"nscf=%d\n", lsms.nscf);

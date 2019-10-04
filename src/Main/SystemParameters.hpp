@@ -7,6 +7,7 @@
 #include "Real.hpp"
 #include "Complex.hpp"
 #include "Matrix.hpp"
+#include "LSMSMode.hpp"
 
 #include "SingleSite/AtomData.hpp"
 
@@ -44,6 +45,8 @@ class LSMSSystemParameters {
 public:
   char systemid[80];
   char title[80];
+  LSMSMode lsmsMode;
+  int rank;
   char potential_file_in[128];
   char potential_file_out[128];
   int pot_in_type,pot_out_type;

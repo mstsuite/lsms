@@ -44,6 +44,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     int pos=0;
     MPI_Pack(lsms.systemid,80,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(lsms.title,80,MPI_CHAR,buf,s,&pos,comm.comm);
+    MPI_Pack(&lsms.lsmsMode,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(lsms.potential_file_in,128,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(lsms.potential_file_out,128,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.pot_in_type,1,MPI_INT,buf,s,&pos,comm.comm);
@@ -115,6 +116,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     int pos=0;
     MPI_Unpack(buf,s,&pos,lsms.systemid,80,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,lsms.title,80,MPI_CHAR,comm.comm);
+    MPI_Unpack(buf,s,&lsms.lsmsMode,1,MPI_INT,,comm.comm);
     MPI_Unpack(buf,s,&pos,lsms.potential_file_in,128,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,lsms.potential_file_out,128,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.pot_in_type,1,MPI_INT,comm.comm);
@@ -183,6 +185,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&mix.algorithm[0],mix.numQuantities,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&mix.mixingParameter[0],mix.numQuantities,MPI_DOUBLE,comm.comm);
   }
+  lsms.rank = comm.rank;
   MPI_Bcast(&crystal.position(0,0),3*crystal.num_atoms,MPI_DOUBLE,0,comm.comm);
   MPI_Bcast(&crystal.evecs(0,0),3*crystal.num_atoms,MPI_DOUBLE,0,comm.comm);
   MPI_Bcast(&crystal.type[0],crystal.num_atoms,MPI_INT,0,comm.comm);
