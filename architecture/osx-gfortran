@@ -23,13 +23,13 @@ endif
 export OMPI_CXX=g++-9
 
 ifdef USE_OPENMP
-  # export CXX=mpicxx -cxx=g++-9 -g -std=c++11 -fopenmp -O3 $(GPTL_OPT) $(OPT_DEFINES)
-  export CXX=mpicxx -g -std=c++11 -fopenmp -O3 $(GPTL_OPT) $(OPT_DEFINES)
+  # export CXX=mpicxx -cxx=g++-9 -g -std=c++14 -fopenmp -O3 $(GPTL_OPT) $(OPT_DEFINES)
+  export CXX=mpicxx -g -std=c++14 -fopenmp -O3 $(GPTL_OPT) $(OPT_DEFINES)
   export F77=gfortran -g -fopenmp -O3 $(GPTL_OPT)
 # export F77=gfortran -g -fopenmp -O3 -fcheck=all $(GPTL_OPT)
 else
-  # export CXX=mpicxx -cxx=g++-9 -g -O3 -std=c++11  $(OPT_DEFINES)
-  export CXX=mpicxx -g -O3 -std=c++11  $(OPT_DEFINES)
+  # export CXX=mpicxx -cxx=g++-9 -g -O3 -std=c++14  $(OPT_DEFINES)
+  export CXX=mpicxx -g -O3 -std=c++14  $(OPT_DEFINES)
   export F77=gfortran -g -O3
 # export F77=gfortran -g -O3 -fcheck=all
 endif
