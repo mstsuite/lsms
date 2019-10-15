@@ -144,8 +144,8 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &a
       fprintf(of,"%lg ",atom.LIZPos(0,i));
       fprintf(of,"%lg ",atom.LIZPos(1,i));
       fprintf(of,"%lg ",atom.LIZPos(2,i));
-      fprintf(of,"%4d ",atom.LIZStoreIdx[i];
-      fprintf(of,"%2d\n",atom.LIZlmax[i];
+      fprintf(of,"%4d ",atom.LIZStoreIdx[i]);
+      fprintf(of,"%2d\n",atom.LIZlmax[i]);
     }
     fclose(of);
 

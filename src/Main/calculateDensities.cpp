@@ -169,7 +169,9 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
       // atom.corden(ir,1) = atom.corden(ir,0) = 0.5*(atom.corden(ir,0) + atom.corden(ir,1));
       // atom.semcor(ir,1) = atom.semcor(ir,0) = 0.5*(atom.semcor(ir,0) + atom.semcor(ir,1));
     }
-    printf("forceZeroAtom: diff(rhonew up, down)=%lg\n",std::sqrt(diff));
+
+    // printf("forceZeroAtom: diff(rhonew up, down)=%lg\n",std::sqrt(diff));
+
     // atom.averageSpins();
   }
 
