@@ -25,6 +25,7 @@ constexpr const char* lsmsModeToString(LSMSMode e) noexcept
     MY_LSMSMODE_ENUM
   }
 #undef X
+  return "main";
 }
 
 #endif

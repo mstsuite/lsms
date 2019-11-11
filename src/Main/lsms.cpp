@@ -195,15 +195,35 @@ int main(int argc, char *argv[])
       default:
         printf("Performing Muffin-Tin (MT) calculation\n");
     }
+    fflush(stdout);
   }
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+#endif
  
   communicateParameters(comm, lsms, crystal, mix, alloyDesc);
   if (comm.rank != lsms.global.print_node)
     lsms.global.iprint = lsms.global.default_iprint;
   // printf("maxlmax=%d\n",lsms.maxlmax);
+  if(comm.rank == 0)
+  {
+    printf("communicated Parameters.\n");
+    fflush(stdout);
+  }
 
   local.setNumLocal(distributeTypes(crystal, comm));
   local.setGlobalId(comm.rank, crystal);
+
+  if(comm.rank == 0)
+  {
+    printf("set global ids.\n");
+    fflush(stdout);
+  }
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+#endif
 
   // set up exchange correlation functionals
   if (lsms.xcFunctional[0] == 1)         // use libxc functional
@@ -217,14 +237,22 @@ int main(int argc, char *argv[])
 
   double timeBuildLIZandCommList = MPI_Wtime();
   if (lsms.global.iprint >= 0)
+  {
     printf("building the LIZ and Communication lists [buildLIZandCommLists]\n");
+    fflush(stdout);
+  }
   buildLIZandCommLists(comm, lsms, crystal, local);
   timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
   if (lsms.global.iprint >= 0)
   {
     printf("time for buildLIZandCommLists [num_local=%d]: %lf sec\n",
            local.num_local, timeBuildLIZandCommList);
+    fflush(stdout);
   }
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+#endif
 
 // initialize the potential accelerators (GPU)
 // we need to know the max. size of the kkr matrix to invert: lsms.n_spin_cant*local.maxNrmat()
@@ -268,12 +296,39 @@ int main(int argc, char *argv[])
 //  initialAtomSetup(comm,lsms,crystal,local);
 
 // the next line is a hack for initialization of potentials from scratch to work.
+
+
+#ifdef LSMS_DEBUG
+  if(lsms.global.iprint >= 0)
+  {
+    printf("Entering the Voronoi construction BEFORE loading the potentials.\n");
+    fflush(stdout);
+  }
+  MPI_Barrier(comm.comm);
+#endif
+
   /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+
+#ifdef LSMS_DEBUG
+  if(lsms.global.iprint >= 0)
+  {
+    printf("Entering the LOADING of the potentials.\n");
+    fflush(stdout);
+  }
+  MPI_Barrier(comm.comm);
+#endif
 
   loadPotentials(comm, lsms, crystal, local);
 
-  if ( alloyDesc.size() > 0 ) 
+  if ( alloyDesc.size() > 0 )
+  {
+    if(lsms.global.iprint >= 0)
+    {
+      printf("Entering the LOADING of the alloy banks.\n");
+      fflush(stdout);
+    }
     loadAlloyBank(comm,lsms,alloyDesc,alloyBank); 
+  }
 
 // for testing purposes:
 //  std::vector<Matrix<Real> > vrs;
@@ -281,7 +336,20 @@ int main(int argc, char *argv[])
 //  for(int i=0; i<local.num_local; i++) vrs[i]=local.atom[i].vr;
 // -------------------------------------
 
+#ifdef LSMS_DEBUG
+  if(lsms.global.iprint >= 0)
+  {
+    printf("Entering the Voronoi construction AFTER loading the potentials.\n");
+    fflush(stdout);
+  }
+  MPI_Barrier(comm.comm);
+#endif
+
   setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+#endif
 
 // Generate new grids after new rmt is defined
   for (int i=0; i<local.num_local; i++)

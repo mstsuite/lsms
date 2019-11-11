@@ -23,7 +23,7 @@ export ADDITIONAL_TARGETS =
 # -ffast-math can give wrong results! So avoid -Ofast
 # export COMP_OPTIONS = -mcpu=power8 -Ofast
 
-export COMP_OPTIONS = -mcpu=power9 -mtune=power9 -O3 -g
+export COMP_OPTIONS = -mcpu=power9 -mtune=power9 -O3 -g -DLSMS_DEBUG
 
 ifdef USE_OPENMP
 # export LSMS_CXX=mpicxx $(COMP_OPTIONS) -std=c++14 -I$(BOOST_ROOT) $(USE_ACCELERATOR) $(OPT_DEFINES) -fopenmp
