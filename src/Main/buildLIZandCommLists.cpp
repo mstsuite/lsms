@@ -123,6 +123,7 @@ bool dSqrLess_LIZInfoType(const LIZInfoType &x, const LIZInfoType &y) {return x.
 void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
                           CrystalParameters &crystal, LocalTypeInfo &local)
 {
+  int numNodes = comm.size;
   std::vector<NodeIdxInfo> toList, fromList;
   std::vector<LIZInfoType> tempLIZ;
   tempLIZ.resize(4096);
