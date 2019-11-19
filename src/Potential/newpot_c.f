@@ -76,8 +76,8 @@ ctest    vhart=two*(vrnew(ir)+rhot_rins-rhot(ir,2))
 !     >   vrnew(ir)=-vrnew(ir)+sqr(ir)**2*(-vxout+
 !     >   epcorr(.5d0*rhot(ir,1),0.d0,sqr(ir)**2,0,alpgga,40.d0))
       enddo
-      write(6,'(''vmt1,vmt,vxout = '',3(1x,f24.12))')
-     &         vmt1,vmt,vxout
+!     write(6,'(''vmt1,vmt,vxout = '',3(1x,f24.12))')
+!    &         vmt1,vmt,vxout
       if(mtasa.ge.2) then
       width=sqr(jmt)-sqr(jmt-1)
       sqrmt=sqrt(rins)
