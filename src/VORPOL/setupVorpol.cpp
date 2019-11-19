@@ -38,6 +38,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
   {
     int lmax=2*local.atom[i].lmax;
     local.atom[i].rInscribed=-1.0;
+    local.atom[i].voronoi.rInscribedSphere=-1.0;
     local.atom[i].voronoi.wylm.resize((2*lmax+1)*(lmax+1),lsms.ngaussr,iprcrit-1);
     local.atom[i].voronoi.gwwylm.resize(lsms.ngaussr,iprcrit-1);
     local.atom[i].voronoi.grwylm.resize(lsms.ngaussr,iprcrit-1);
