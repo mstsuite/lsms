@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 
 // write out the magnetism and constraint info for each site
 void writeSingleEvec(FILE *f,int z, int i, Real posX, Real posY, Real posZ, AtomData &atom)
@@ -155,7 +156,7 @@ int readInfoEvec(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPara
         int local_id;
         communicateSingleAtomData(comm, crystal.types[i].node, comm.rank, local_id, pot_data,i);
         if(local_id!=crystal.types[i].local_id) printf("WARNING: local_id doesn't match in writePotentials!\n");
-        writeSingleEvec(outf,crystal.types[i].Z,i,
+        writeSingleLocalAtomData(outf,crystal.types[i].Z,i,
                         crystal.position(0,crystal.types[i].first_instance), // posX
                         crystal.position(1,crystal.types[i].first_instance), // posY
                         crystal.position(2,crystal.types[i].first_instance), // posZ
