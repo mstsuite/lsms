@@ -84,6 +84,8 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Pack(&lsms.rmsTolerance,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.zblockLUSize,1,MPI_INT,buf,s,&pos,comm.comm);
 
+    MPI_Pack(&lsms.global.iprpts,1,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack(&lsms.global.ipcore,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.global.iprint,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.global.print_node,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.global.default_iprint,1,MPI_INT,buf,s,&pos,comm.comm);
@@ -157,6 +159,8 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&lsms.rmsTolerance,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.zblockLUSize,1,MPI_INT,comm.comm);
 
+    MPI_Unpack(buf,s,&pos,&lsms.global.iprpts,1,MPI_INT,comm.comm);
+    MPI_Unpack(buf,s,&pos,&lsms.global.ipcore,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.global.iprint,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.global.print_node,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.global.default_iprint,1,MPI_INT,comm.comm);

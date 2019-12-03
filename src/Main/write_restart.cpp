@@ -33,6 +33,8 @@ int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalPar
   fprintf(of,"default_iprint=%d\n",lsms.global.default_iprint);
   fprintf(of,"iprint=%d\n\n",lsms.global.iprint);
 
+  fprintf(of,"iprpts=%d\n",lsms.global.iprpts);
+  fprintf(of,"ipcore=%d\n\n",lsms.global.ipcore);
   
   if(lsms.infoEvecFileIn[0]!=0)
     fprintf(of,"infoEvecFileIn=\"%s\"\n",lsms.infoEvecFileIn);

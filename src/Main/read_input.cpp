@@ -117,6 +117,8 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 // c     read in print level for a particular node and rest of the nodes.
 //       read(10,*    ) node_print,print_instr,nprint
 // c     write(6,'(3i5)') node_print,print_instr,nprint
+  luaGetInteger(L,"iprpts",&lsms.global.iprpts);
+  luaGetInteger(L,"ipcore",&lsms.global.ipcore);
   luaGetInteger(L,"print_node",&lsms.global.print_node);
   luaGetInteger(L,"default_iprint",&lsms.global.default_iprint);
   luaGetInteger(L,"iprint",&lsms.global.iprint);
