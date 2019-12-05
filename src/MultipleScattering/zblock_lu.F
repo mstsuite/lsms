@@ -1,7 +1,4 @@
-#if defined(ACCELERATOR_CULA)
-!#warning "Using CULA"
-#include "zblock_lu_CULA.F"
-#elif defined(ACCELERATOR_LIBSCI)
+#if defined(ACCELERATOR_LIBSCI)
 !#warning "Using LIBSCI"
 #include "zblock_lu_cray.f"
 #elif defined(ACCELERATOR_CUDA_C)
