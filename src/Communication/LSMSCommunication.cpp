@@ -91,6 +91,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Pack(&lsms.global.default_iprint,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.global.istop,32,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.global.GPUThreads,32,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack((int *)&lsms.global.linearSolver,32,MPI_INT,buf,s,&pos,comm.comm);
 
     MPI_Pack(&crystal.num_types,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&crystal.bravais(0,0),9,MPI_DOUBLE,buf,s,&pos,comm.comm);
@@ -166,6 +167,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&lsms.global.default_iprint,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.global.istop,32,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.global.GPUThreads,32,MPI_INT,comm.comm);
+    MPI_Unpack(buf,s,&pos,(int *)&lsms.global.linearSolver,32,MPI_INT,comm.comm);
 
     MPI_Unpack(buf,s,&pos,&crystal.num_types,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&crystal.bravais(0,0),9,MPI_DOUBLE,comm.comm);

@@ -17,6 +17,8 @@
 const int numFunctionalIndices=3;
 #include "Potential/libxcInterface.hpp"
 
+enum LinearSolver : int {defaultSolver = 0, oldSolver = 1, newSolver = 2};
+
 class LSMSGlobals {
 public:
   void setIstop(const char *c){strncpy(istop,c,32); for(int i=strlen(c); i<32; i++) istop[i]=' ';}
@@ -25,6 +27,7 @@ public:
   int iprint;
   int print_node,default_iprint;
   char istop[32];
+  LinearSolver linearSolver;
 
 // for GPU only
   int GPUThreads;

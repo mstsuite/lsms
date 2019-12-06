@@ -113,6 +113,9 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   char ctmp[32]; strncpy(ctmp,"main",32);
   luaGetStrN(L,"istop",ctmp,32); lsms.global.setIstop(ctmp);
 
+  lsms.global.linearSolver=defaultSolver;
+  luaGetInteger(L,"linearSolver",(int *)&lsms.global.linearSolver);
+
 // c     ================================================================
 // c     read in print level for a particular node and rest of the nodes.
 //       read(10,*    ) node_print,print_instr,nprint
@@ -423,7 +426,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       else if(strncmp(h,"liz0",80)==0) lsms.lsmsMode=LSMSMode::liz0;
       else
       {
-        printf("Unknown lsmsMode: '%s'\n Defaulting to 'main'.\n");
+        printf("Unknown lsmsMode: '%s'\n Defaulting to 'main'.\n",h);
         lsms.lsmsMode=LSMSMode::main;
       }
     }

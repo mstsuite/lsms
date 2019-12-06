@@ -464,7 +464,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       eventAttrib.message.ascii = "block_inv"; 
       nvtxRangePushEx(&eventAttrib);
 #endif
-      if(true)
+      if(lsms.global.linearSolver==1 || lsms.global.linearSolver==0)
         block_inv_(&m(0,0),vecs,&nrmat_ns,&nrmat_ns,&nrmat_ns,ipvt,
           blk_sz,&nblk,&delta(0,0),
           iwork,rwork,work1,&alg,idcol,&lsms.global.iprint);
