@@ -168,58 +168,45 @@ void solveTau00zblocklu(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<
   }
 
   int idcol[blk_sz[0]]; idcol[0]=0;
-  
+
+  // with m = [[A B][C D]], A: blk_sz[0] x blk_sz[0]
+  // calculate the Schur complement m/D of m with A set to zero,
+  // i.e. delta = B D^-1 C
   block_inv_(&m(0,0), vecs, &nrmat_ns, &nrmat_ns, &nrmat_ns, ipvt,
              blk_sz, &nblk, &delta(0,0),
              iwork, rwork, work1, &alg, idcol, &iprint);
 
 
   Matrix<Complex> wbig(blockSize, blockSize);
-//   c     setup unit matrix...............................................
-// c     ----------------------------------------------------------------
-//       call cmtruni(wbig,kkrsz_ns)
+// setup unit matrix...............................................
+// n.b. this is the top diagonal block of the kkr matrix m
+//      i.e. 1 - t_0 G_00, with G_ii == 0 this is just the unit matrix
+
   unitMatrix(wbig);
-//  zeroMatrix(wbig);
-// c     ----------------------------------------------------------------
+
 // c     get 1-delta and put it in wbig
-//      call zaxpy(mtxsize,cmone,delta,1,wbig,1)
+
   for(int i=0; i<blockSize; i++)
     for(int j=0; j<blockSize; j++)
       wbig(i,j) -= delta(i,j);
 //  c     ================================================================
 // c     create tau00 => {[1-t*G]**(-1)}*t : for central site only.......
 // c     ----------------------------------------------------------------
-//      call zgetrf(kkrsz_ns,kkrsz_ns,wbig,kkrsz_ns,ipvt,info)
+
   LAPACK::zgetrf_(&blockSize, &blockSize, &wbig(0,0), &blockSize, ipvt, &info);
-//      call zcopy(kkrsz_ns*kkrsz_ns,tmat,1,tau00,1)
+
   for(int i=0; i<blockSize; i++)
     for(int j=0; j<blockSize; j++)
       tau00(i,j) = tMatrices[0](i,j);
-//      call zgetrs('n',kkrsz_ns,kkrsz_ns,wbig,kkrsz_ns,ipvt,tau00,
-//     &           kkrsz_ns,info)
+
   LAPACK::zgetrs_("N", &blockSize, &blockSize, &wbig(0,0), &blockSize, ipvt, &tau00(0,0), &blockSize, &info);
 
-// c     ----------------------------------------------------------------
-// c  Redefine tau00 to be tau00-t
-// c  delta is 1-t*tau00^{-1} and is calculated in gettaucl
-// c  and then rotated into the local frame
-// c     call scale_tau00(tau00_g,kkrsz,kkrsz,lofk,n_spin_cant,
-// c    &                 kappa_rmt)
-
-/*  
-      call zgemm('n','n',kkrsz_ns,kkrsz_ns,kkrsz_ns,cone,
-     &           delta,kkrsz_ns,
-     >           tau00,kkrsz_ns,czero,
-     &           tau00_tmp,kkrsz_ns)
-*/
-
-// c     call inv_scale_tau00(tau00_tmp,kkrsz,kkrsz,lofk,n_spin_cant,
-// c    &                    kappa_rmt)
 }
 
 int main(int argc, char *argv[])
 {
   int matrixType, blockSize=18, numBlocks=113;
+  bool printMatrices=false;
   
   printf("Test of inversion routine for LSMS\n");
   if(argc<2)
@@ -266,10 +253,8 @@ int main(int argc, char *argv[])
   }
   
   Matrix<Complex> m(n, n);
+  
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
-  // add unit matrix
-  // for(int i=0; i<m.n_row(); i++)
-  //   m(i,i) = 1.0 + m(i,i);
   Matrix<Complex> tau00Reference(blockSize, blockSize);
   solveTau00Reference(tau00Reference, m, tMatrices, blockSize, numBlocks);
 
@@ -279,8 +264,11 @@ int main(int argc, char *argv[])
 
   Real d = matrixDistance(tau00Reference, tau00zblocklu);
   printf("d2 (t00Reference, tau00zblocklu) = %f\n", d);
-  printf("\ntau00Reference:\n"); writeMatrix(tau00Reference);
-  printf("\ntau00zblocklu:\n"); writeMatrix(tau00zblocklu);
-
+  if(printMatrices)
+  {
+    printf("\ntau00Reference:\n"); writeMatrix(tau00Reference);
+    printf("\ntau00zblocklu:\n"); writeMatrix(tau00zblocklu);
+  }
+  
   return 0;
 }
