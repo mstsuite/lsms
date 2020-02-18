@@ -10,6 +10,8 @@
 #include "Complex.hpp"
 #include "Matrix.hpp"
 #include <vector>
+#include <chrono>
+#include <ctime>
 
 extern "C"
 {
@@ -136,6 +138,35 @@ void solveTau00Reference(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector
       tau00(i,j) = tau(i,j);
 }
 
+void solveTau00zcgesv(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
+{
+  // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+  Matrix<Complex> tau(blockSize * numBlocks, blockSize);
+  Matrix<Complex> t(blockSize * numBlocks, blockSize);
+  
+  zeroMatrix(tau);
+  zeroMatrix(t);
+  // copy t[0] into the top part of tau
+  for(int i=0; i<blockSize; i++)
+    for(int j=0; j<blockSize; j++)
+      t(i,j) = tMatrices[0](i,j);
+
+  int n = blockSize * numBlocks;
+  int ipiv[n];
+  Matrix<Complex> work(n,blockSize);
+  std::vector<std::complex<float> > swork(n*(n+blockSize));
+  std::vector<double> rwork(n);
+  int info, iter;
+  LAPACK::zcgesv_(&n, &blockSize, &m(0,0), &n, ipiv, &t(0,0), &n, &tau(0,0), &n,
+                  &work(0,0), &swork[0], &rwork[0],
+                 &iter, &info);
+
+  // copy result into tau00
+  for(int i=0; i<blockSize; i++)
+    for(int j=0; j<blockSize; j++)
+      tau00(i,j) = tau(i,j);
+}
+
 void solveTau00zblocklu(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
 {
   int nrmat_ns = blockSize * numBlocks;
@@ -176,6 +207,67 @@ void solveTau00zblocklu(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<
              blk_sz, &nblk, &delta(0,0),
              iwork, rwork, work1, &alg, idcol, &iprint);
 
+
+  Matrix<Complex> wbig(blockSize, blockSize);
+// setup unit matrix...............................................
+// n.b. this is the top diagonal block of the kkr matrix m
+//      i.e. 1 - t_0 G_00, with G_ii == 0 this is just the unit matrix
+
+  unitMatrix(wbig);
+
+// c     get 1-delta and put it in wbig
+
+  for(int i=0; i<blockSize; i++)
+    for(int j=0; j<blockSize; j++)
+      wbig(i,j) -= delta(i,j);
+//  c     ================================================================
+// c     create tau00 => {[1-t*G]**(-1)}*t : for central site only.......
+// c     ----------------------------------------------------------------
+
+  LAPACK::zgetrf_(&blockSize, &blockSize, &wbig(0,0), &blockSize, ipvt, &info);
+
+  for(int i=0; i<blockSize; i++)
+    for(int j=0; j<blockSize; j++)
+      tau00(i,j) = tMatrices[0](i,j);
+
+  LAPACK::zgetrs_("N", &blockSize, &blockSize, &wbig(0,0), &blockSize, ipvt, &tau00(0,0), &blockSize, &info);
+
+}
+
+void block_inverse(Matrix<Complex> &a, int *blk_sz, int nblk, Matrix<Complex> &delta, int *ipvt, int *idcol);
+
+void solveTau00zblocklu_cpp(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
+{
+  int nrmat_ns = blockSize * numBlocks;
+  int ipvt[nrmat_ns];
+  int info;
+  int nblk = 3;
+  Matrix<Complex> delta(blockSize, blockSize);
+
+  int blk_sz[1000];
+
+  blk_sz[0]=blockSize;
+  if(nblk==1)
+    blk_sz[0]=nrmat_ns;
+  else if(nblk==2)
+    blk_sz[1]=nrmat_ns-blk_sz[0];
+  else if(nblk>2)
+  {
+    int min_sz=(nrmat_ns-blk_sz[0])/(nblk-1);
+    int rem=(nrmat_ns-blk_sz[0])%(nblk-1);
+    int i=1;
+    for(;i<=rem;i++)
+      blk_sz[i]=min_sz+1;
+    for(;i<nblk;i++)
+      blk_sz[i]=min_sz;
+  }
+
+  int idcol[blk_sz[0]]; idcol[0]=0;
+
+  // with m = [[A B][C D]], A: blk_sz[0] x blk_sz[0]
+  // calculate the Schur complement m/D of m with A set to zero,
+  // i.e. delta = B D^-1 C
+  block_inverse(m, blk_sz, nblk, delta, ipvt, idcol);
 
   Matrix<Complex> wbig(blockSize, blockSize);
 // setup unit matrix...............................................
@@ -256,14 +348,43 @@ int main(int argc, char *argv[])
   
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
   Matrix<Complex> tau00Reference(blockSize, blockSize);
+  auto startTimeReference = std::chrono::system_clock::now();
   solveTau00Reference(tau00Reference, m, tMatrices, blockSize, numBlocks);
+  auto endTimeReference = std::chrono::system_clock::now();
+  std::chrono::duration<double> timeReference = endTimeReference - startTimeReference;
 
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
   Matrix<Complex> tau00zblocklu(blockSize, blockSize);
+  auto startTimeZblocklu = std::chrono::system_clock::now();
   solveTau00zblocklu(tau00zblocklu, m, tMatrices, blockSize, numBlocks);
+  auto endTimeZblocklu = std::chrono::system_clock::now();
+  std::chrono::duration<double> timeZblocklu = endTimeZblocklu - startTimeZblocklu;
+
+  makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
+  Matrix<Complex> tau00zblocklu_cpp(blockSize, blockSize);
+  auto startTimeZblocklu_cpp = std::chrono::system_clock::now();
+  solveTau00zblocklu_cpp(tau00zblocklu_cpp, m, tMatrices, blockSize, numBlocks);
+  auto endTimeZblocklu_cpp = std::chrono::system_clock::now();
+  std::chrono::duration<double> timeZblocklu_cpp = endTimeZblocklu_cpp - startTimeZblocklu_cpp;
+
+  makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
+  Matrix<Complex> tau00zcgesv(blockSize, blockSize);
+  auto startTimeZcgesv = std::chrono::system_clock::now();
+  solveTau00zcgesv(tau00zcgesv, m, tMatrices, blockSize, numBlocks);
+  auto endTimeZcgesv = std::chrono::system_clock::now();
+  std::chrono::duration<double> timeZcgesv = endTimeZcgesv - startTimeZcgesv;
 
   Real d = matrixDistance(tau00Reference, tau00zblocklu);
   printf("d2 (t00Reference, tau00zblocklu) = %f\n", d);
+  d = matrixDistance(tau00Reference, tau00zblocklu_cpp);
+  printf("d2 (t00Reference, tau00zblocklu_cpp) = %f\n", d);
+  d = matrixDistance(tau00Reference, tau00zcgesv);
+  printf("d2 (t00Reference, tau00zcgesv) = %f\n", d);
+  
+  printf("t(Reference) = %fsec\n",timeReference.count());
+  printf("t(zblocklu)  = %fsec\n",timeZblocklu.count());
+  printf("t(zblocklu_cpp)  = %fsec\n",timeZblocklu_cpp.count());
+  printf("t(zcgesv)  = %fsec\n",timeZcgesv.count());
   if(printMatrices)
   {
     printf("\ntau00Reference:\n"); writeMatrix(tau00Reference);

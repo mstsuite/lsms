@@ -1,4 +1,4 @@
-OBJ = block_inverse_fortran.o zblock_lu_CPU.o
+OBJ = block_inverse_fortran.o block_inverse.o zblock_lu_cpp.o zblock_lu_CPU.o
 
 LIBS = -lgfortran -framework Accelerate
 
