@@ -2,7 +2,7 @@
 #include <mpi.h>
 #include "LSMSCommunication.hpp"
 
-// #define USE_ISEND
+#define USE_ISEND
 
 void initializeCommunication(LSMSCommunication &comm)
 {
