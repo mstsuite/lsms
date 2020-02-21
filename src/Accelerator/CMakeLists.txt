@@ -7,7 +7,7 @@ set(SRC
     fortran.c
 )
 
-if(CUDA_CXX)
+if(ENABLE_CUDA)
     list(APPEND SRC
         buildKKRMatrix_gpu.cu
         buildKKRMatrix_kernels.cu
@@ -37,3 +37,9 @@ target_include_directories(Accelerator PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
 )
+
+if(ENABLE_CUDA)
+    target_include_directories(Accelerator PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/Accelerator
+    )
+endif()

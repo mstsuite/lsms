@@ -5,7 +5,7 @@ if (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 	message(FATAL_ERROR "Please create a separate build directory and call CMake again")
 endif()
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.12)
 
 
 
@@ -39,9 +39,9 @@ endif()
 
 #RPATH
 if(UNIX AND NOT APPLE)
-	set(CMAKE_SKIP_BUILD_RPATH FALSE)
-	set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-	set(CMAKE_INSTALL_RPATH "$ORIGIN/lib/:$$ORIGIN/lib/")
+    set(CMAKE_SKIP_BUILD_RPATH FALSE)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN/lib/:$$ORIGIN/lib/")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -49,14 +49,35 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 99)
 
+# Options ----------------------------------------------------------------------
+option(ENABLE_OPENMP "Enable OpenMP" OFF)
+option(ENABLE_CUDA "Enable CUDA" OFF)
+
 # Dependencies -----------------------------------------------------------------
 find_package(MPI REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
+if(ENABLE_OPENMP)
+    find_package(OpenMP)
+endif()
+
+if(ENABLE_CUDA)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if(CMAKE_CUDA_COMPILER)
+        enable_language(CUDA)
+    else()
+        message(FATAL_ERROR "Could not find CUDA compiler")
+    endif()
+endif()
+
+# Lua
 find_package(Lua QUIET)
 if(NOT LUA_FOUND)
+    message(STATUS "Could not find Lua library")
+    message(STATUS "\tUsing build in Lua 5.3.5")
     include(ExternalProject)
     find_program(MAKE_EXE NAMES gmake nmake make)
     ExternalProject_Add(LUA

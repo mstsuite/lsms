@@ -42,6 +42,10 @@ target_link_libraries(MultipleScattering
         ${LAPACK_LIBRARIES}
 )
 
+if(ENABLE_OPENMP AND OpenMP_CXX_FOUND)
+    target_link_libraries(MultipleScattering PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 target_include_directories(MultipleScattering PRIVATE 
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
