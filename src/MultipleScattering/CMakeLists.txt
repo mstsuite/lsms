@@ -36,11 +36,15 @@ set(SRC
 add_library(MultipleScattering STATIC ${SRC})
 
 # Libraries --------------------------------------------------------------------
-target_link_libraries(MultipleScattering
-    PUBLIC
-        ${BLAS_LIBRARIES}
-        ${LAPACK_LIBRARIES}
-)
+if(USE_ESSL)
+    target_link_libraries(MultipleScattering PUBLIC ESSL)
+else()
+    target_link_libraries(MultipleScattering
+        PUBLIC
+            ${BLAS_LIBRARIES}
+            ${LAPACK_LIBRARIES}
+    )
+endif()
 
 if(ENABLE_OPENMP AND OpenMP_CXX_FOUND)
     target_link_libraries(MultipleScattering PUBLIC OpenMP::OpenMP_CXX)

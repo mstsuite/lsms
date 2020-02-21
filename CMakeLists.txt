@@ -6,8 +6,7 @@ if (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 endif()
 
 cmake_minimum_required(VERSION 3.12)
-
-
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 if (WIN32 AND (CMAKE_GENERATOR STREQUAL "Ninja"))
 	set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE})
@@ -52,12 +51,19 @@ set(CMAKE_C_STANDARD 99)
 # Options ----------------------------------------------------------------------
 option(ENABLE_OPENMP "Enable OpenMP" OFF)
 option(ENABLE_CUDA "Enable CUDA" OFF)
+option(USE_ESSL "Use ESSL library" OFF)
 
 # Dependencies -----------------------------------------------------------------
 find_package(MPI REQUIRED)
 find_package(HDF5 REQUIRED)
-find_package(BLAS REQUIRED)
-find_package(LAPACK REQUIRED)
+
+if(USE_ESSL)
+    find_package(ESSL REQUIRED)
+    set(ESSL_WORKAROUND True)
+elseif()
+    find_package(BLAS REQUIRED)
+    find_package(LAPACK REQUIRED)
+endif()
 
 if(ENABLE_OPENMP)
     find_package(OpenMP)

@@ -47,9 +47,9 @@ set(SRC
     stop_with_backtrace.cpp
 )
 
-#ifdef ESSL_WORKAROUND
-#  OBJ += essl_workaround.f
-#endif
+if(ESSL_WORKAROUND)
+    list(APPEND SRC essl_workaround.f)
+endif()
 
 # Target -----------------------------------------------------------------------
 add_library(Misc STATIC ${SRC})
