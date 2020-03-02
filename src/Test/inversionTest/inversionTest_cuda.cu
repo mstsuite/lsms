@@ -13,6 +13,9 @@
 #include <chrono>
 #include <ctime>
 
+#include <cuda_runtime.h>
+#include <cuComplex.h>
+#include <cublas_v2.h>
 
 class DeviceData
 {
@@ -35,11 +38,11 @@ void allocDeviceData(DeviceData &d, int blockSize, int numBlocks)
   cudaMalloc((void**)&d.tau, n*blockSize*sizeof(cuDoubleComplex));
   cudaMalloc((void**)&d.tau00, blockSize*blockSize*sizeof(cuDoubleComplex));
   cudaMalloc((void**)&d.tMatrixStore, blockSize*blockSize*numBlocks*sizeof(cuDoubleComplex));
-  tMatrices.resize(numBlocks);
+  d.tMatrices.resize(numBlocks);
   for(int i=0; i<numBlocks; i++)
-    tMatrices[i] = &tMatrixStore[blockSize * blockSize * i];
-  cudaMalloc((void**)&ipiv, n*sizeof(int));
-  cudaMalloc((void**)&info, sizeof(int));
+    d.tMatrices[i] = &d.tMatrixStore[blockSize * blockSize * i];
+  cudaMalloc((void**)&d.ipiv, n*sizeof(int));
+  cudaMalloc((void**)&d.info, sizeof(int));
 }
 
 void freeDeviceData(DeviceData &d)
@@ -55,7 +58,7 @@ void freeDeviceData(DeviceData &d)
 
 // #include "makegij_new.cpp"
 
-void usage(const char *name)
+void usage_cuda(const char *name)
 {
   printf("usage: %s <matrix type> [options]\n",name);
   printf("  matrix type: 1: 1-tG and G, t Hilbert matrices, options: <block size> <num blocks>\n");
@@ -70,7 +73,7 @@ void zeroMatrixCuda(T *devM, int lDim, int nCol)
 //  for(int i=0; i<m.n_row(); i++)
 //    for(int j=0; j<m.n_col(); j++)
 //      m(i,j) = 0.0;
-  cudaMemset(devM, 0, lDim*nCol*sizeof<T>);
+  cudaMemset(devM, 0, lDim*nCol*sizeof(T));
 }
 
 template <typename T>
@@ -84,12 +87,23 @@ __global__ void setDiagonalKernel(T *devM, int lDim, int nCol, T val)
 }
 
 template <typename T>
+__global__ void addDiagonalKernel(T *devM, int lDim, int nCol, T val)
+{
+  int i=blockIdx.x;
+  if(i<nCol)
+  {
+    devM[IDX(i, i, lDim)] = cuCadd(devM[IDX(i, i, lDim)], val);
+  }
+}
+
+template <typename T>
 void unitMatrixCuda(T *devM, int lDim, int nCol)
 {
-  zeroMatrixCuda(T, lDim, nCol);
+  zeroMatrixCuda(devM, lDim, nCol);
   setDiagonalKernel<<<nCol,1>>>(devM, lDim, nCol, 1.0);
 }
 
+/*
 Real matrixDistance(Matrix<Complex> &a, Matrix<Complex> &b)
 {
   Real d;
@@ -100,7 +114,7 @@ Real matrixDistance(Matrix<Complex> &a, Matrix<Complex> &b)
   
   return std::sqrt(d);
 }
-
+*/
 
 template <typename T>
 __global__ void makeHilbertMatrixKernel(T *devM, int lDim, int nCol)
@@ -110,6 +124,7 @@ __global__ void makeHilbertMatrixKernel(T *devM, int lDim, int nCol)
   {
     for(int j=0; j<nCol; j++)
       devM[IDX(i,j, lDim)] = 1.0/(Complex(i+j+1));
+  }
 }
 
 template <typename T>
@@ -124,7 +139,7 @@ __global__ void zeroDiagonalBlocksKernel(T *devM, int lDim, int nCol, int blockS
       int jj=jBlock*blockSize;
       for(int i=0; i<std::min(blockSize, nCol-ii); i++)
         for(int j=0; j<std::min(blockSize, nCol-jj); j++)
-          m[IDX(ii+i, jj+j, lDim)] = 0.0;
+          devM[IDX(ii+i, jj+j, lDim)] = 0.0;
     }
 }
 
@@ -134,65 +149,43 @@ void zeroDiagonalBlocksCuda(T *devM, int lDim, int nCol, int blockSize)
   zeroDiagonalBlocksKernel<<<nCol/blockSize,nCol/blockSize>>>(devM, lDim, nCol, blockSize);
 }
 
-// type 1 matrix:
-//
-void makeType1Matrix(Matrix<Complex> &m, Matrix<Complex> &G0, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
-{
-  int n = m.n_row();
-  Complex mone = -1.0;
-  Complex zero = 0.0;
-  // unitMatrix(m);
-  // loop over the blocks to build -tG
-  // m_ij <- t_i G_ij
-  for(int iBlock=0; iBlock<numBlocks; iBlock++)
-    for(int jBlock=0; jBlock<numBlocks; jBlock++)
-    {
-      // ZGEMM(TRANSA,TRANSB,M,N,K,ALPHA, A,LDA, B,LDB, BETA,C,LDC)
-      // C := alpha*op( A )*op( B ) + beta*C,
-      BLAS::zgemm_("N","N",&blockSize,&blockSize,&blockSize,&mone,
-             &tMatrices[iBlock](0,0), &blockSize,
-             &G0(iBlock*blockSize,jBlock*blockSize), &n,
-             &zero, &m(iBlock*blockSize,jBlock*blockSize), &n);
-    }
-  // add unit matrix
-  for(int i=0; i<m.n_row(); i++)
-    m(i,i) = 1.0 + m(i,i);
-}
-
 void makeType1MatrixGPU(cublasHandle_t cublasHandle, DeviceData &d, int blockSize, int numBlocks)
 {
   int n=blockSize*numBlocks;
-  cuDoubleComplex mone = -1.0;
-  cuDoubleComplex zero = 0.0;
+  cuDoubleComplex one = {1.0, 0.0};
+  cuDoubleComplex mone = {-1.0, 0.0};
+  cuDoubleComplex zero = {0.0, 0.0};
   std::vector<cuDoubleComplex *> ts(numBlocks*numBlocks);
   std::vector<cuDoubleComplex *> G0s(numBlocks*numBlocks);
   std::vector<cuDoubleComplex *> ms(numBlocks*numBlocks);
 
   for(int iBlock=0; iBlock<numBlocks; iBlock++)
+  {
     for(int jBlock=0; jBlock<numBlocks; jBlock++)
     {
-      ts[iBlock + jBlock*numBlocks] = &d.tMatrices[iBlock];
+      ts[iBlock + jBlock*numBlocks] = d.tMatrices[iBlock];
       G0s[iBlock + jBlock*numBlocks] = &d.G0[IDX(iBlock*blockSize,jBlock*blockSize,n)];
-      m[iBlock + jBlock*numBlocks] = &d.m[IDX(iBlock*blockSize,jBlock*blockSize,n)];
+      ms[iBlock + jBlock*numBlocks] = &d.m[IDX(iBlock*blockSize,jBlock*blockSize,n)];
     }
+  }
 
-  cublasZgemmBatched(cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, blockSize, blockSize, blockSize,
-                                  &mone,
-                                  const cuDoubleComplex *Aarray[], int lda,
-                                  const cuDoubleComplex *Barray[], int ldb,
-                                  const cuDoubleComplex *beta,
-                                  cuDoubleComplex *Carray[], int ldc, 
-                                  int batchCount)
+  cublasZgemmBatched(cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, blockSize, blockSize, blockSize, &mone,
+                                  &ts[0], blockSize,
+                                  &G0s[0], n,
+                                  &zero,
+                                  &ms[0], n, 
+                                  numBlocks*numBlocks);
+  addDiagonalKernel<<<n,1>>>(d.m, n, n, one);
 }
 
-void transferMatrixToGPU(Complex *devM, Matrix<Complex> &m)
+void transferMatrixToGPU(cuDoubleComplex *devM, Matrix<Complex> &m)
 {
-  cudaMemcpy(devM, &m(0,0), m.l_dim()*n_col()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
+  cudaMemcpy(devM, &m(0,0), m.l_dim()*m.n_col()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
 }
 
-void transferMatrixFromGPU(Matrix<Complex> &m, Complex *devM)
+void transferMatrixFromGPU(Matrix<Complex> &m, cuDoubleComplex *devM)
 {
-  cudaMemcpy(&m(0,0), devM,  m.l_dim()*n_col()*sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&m(0,0), devM,  m.l_dim()*m.n_col()*sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
 }
 
 __global__ void copyTMatrixToTau(cuDoubleComplex *tau, cuDoubleComplex *t, int blockSize, int numBlocks)
@@ -223,14 +216,14 @@ void solveTau00zgetrf_cublas(cublasHandle_t cublasHandle, DeviceData &d,
   // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
   cuDoubleComplex *Aarray[1], *Barray[1];
   
-  zeroMatrixGPU(d.tau);
+  zeroMatrixCuda(d.tau, blockSize*numBlocks, blockSize);
   copyTMatrixToTau<<<blockSize,1>>>(d.tau, d.tMatrices[0], blockSize, numBlocks);
 
   Barray[0] = d.tau;
   
   int n = blockSize * numBlocks;
   int *ipivArray, *infoArray;
-  cudaMalloc((void**)&ipiv, n * sizeof(int));
+  cudaMalloc((void**)&ipivArray, n * sizeof(int));
   cudaMalloc((void**)&infoArray, 1 * sizeof(int));
 
   cublasZgetrfBatched(cublasHandle, n, Aarray, n, ipivArray, infoArray, 1);  
