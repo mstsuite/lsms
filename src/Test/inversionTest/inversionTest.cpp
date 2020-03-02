@@ -13,6 +13,10 @@
 #include <chrono>
 #include <ctime>
 
+#ifdef ARCH_CUDA
+#include "inversionTest_cuda.hpp"
+#endif
+
 extern "C"
 {
     void block_inv_(Complex *a, Complex *vecs, int *lda, int *na, int *mp, int *ipvt, int *blk_sz, int *nblk, Complex *delta,
@@ -165,6 +169,7 @@ void solveTau00zgetrf(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Ma
       tau00(i,j) = tau(i,j);
 }
 
+#ifndef ARCH_IBM
 void solveTau00zcgesv(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
 {
   // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
@@ -193,6 +198,7 @@ void solveTau00zcgesv(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Ma
     for(int j=0; j<blockSize; j++)
       tau00(i,j) = tau(i,j);
 }
+#endif
 
 void solveTau00zblocklu(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
 {
@@ -326,6 +332,11 @@ int main(int argc, char *argv[])
 {
   int matrixType, blockSize=18, numBlocks=113;
   bool printMatrices=false;
+
+#ifdef ARCH_CUDA
+  cublasHandle_t cublasHandle;
+  initCuda(cublasHandle);
+#endif
   
   printf("Test of inversion routine for LSMS\n");
   if(argc<2)
@@ -334,6 +345,14 @@ int main(int argc, char *argv[])
     return 0;
   }
   matrixType = atoi(argv[1]);
+  if(argc>2)
+  {
+    blockSize = atoi(argv[2]);
+  }
+  if(argc>3)
+  {
+    numBlocks = atoi(argv[3]);
+  }
   int n = blockSize*numBlocks;
 
   printf("Matrix type      : %6d\n",matrixType);
@@ -345,6 +364,11 @@ int main(int argc, char *argv[])
   Matrix<Complex> G0(n, n);
   
   tMatrices.resize(numBlocks);
+
+#ifdef ARCH_CUDA
+  DeviceData devData;
+  allocDeviceData(devData, blockSize, numBlocks);
+#endif
 
   if(matrixType == 1)
   {
@@ -401,32 +425,65 @@ int main(int argc, char *argv[])
   auto endTimeZblocklu_cpp = std::chrono::system_clock::now();
   std::chrono::duration<double> timeZblocklu_cpp = endTimeZblocklu_cpp - startTimeZblocklu_cpp;
 
+#ifndef ARCH_IBM
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
   Matrix<Complex> tau00zcgesv(blockSize, blockSize);
   auto startTimeZcgesv = std::chrono::system_clock::now();
   solveTau00zcgesv(tau00zcgesv, m, tMatrices, blockSize, numBlocks);
   auto endTimeZcgesv = std::chrono::system_clock::now();
   std::chrono::duration<double> timeZcgesv = endTimeZcgesv - startTimeZcgesv;
+#endif
 
   Real d = matrixDistance(tau00Reference, tau00zblocklu);
   printf("d2 (t00Reference, tau00zblocklu) = %f\n", d);
   d = matrixDistance(tau00Reference, tau00zblocklu_cpp);
   printf("d2 (t00Reference, tau00zblocklu_cpp) = %f\n", d);
+#ifndef ARCH_IBM
   d = matrixDistance(tau00Reference, tau00zcgesv);
   printf("d2 (t00Reference, tau00zcgesv) = %f\n", d);
+#endif
   d = matrixDistance(tau00Reference, tau00zgetrf);
   printf("d2 (t00Reference, tau00zgetrf) = %f\n", d);
   
   printf("t(Reference) = %fsec\n",timeReference.count());
   printf("t(zblocklu)  = %fsec\n",timeZblocklu.count());
   printf("t(zblocklu_cpp)  = %fsec\n",timeZblocklu_cpp.count());
+#ifndef ARCH_IBM
   printf("t(zcgesv)  = %fsec\n",timeZcgesv.count());
+#endif
   printf("t(zgetrf)  = %fsec\n",timeZgetrf.count());
+
+#ifdef ARCH_CUDA
+  makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
+  Matrix<Complex> tau00zgetrf_cublas(blockSize, blockSize);
+  auto startTimeZgetrf_cublas_transfer = std::chrono::system_clock::now();
+  // printf("transfering Matrix to GPU\n");
+  transferMatrixToGPU(devData.m, m);
+  transferMatrixToGPU(devData.tMatrices[0], tMatrices[0]);
+  auto startTimeZgetrf_cublas = std::chrono::system_clock::now();
+  // printf("inverting Matrix\n");
+  solveTau00zgetrf_cublas(cublasHandle, devData, tau00zgetrf_cublas, blockSize, numBlocks);
+  auto endTimeZgetrf_cublas = std::chrono::system_clock::now();
+  std::chrono::duration<double> timeZgetrf_cublas = endTimeZgetrf_cublas - startTimeZgetrf_cublas;
+  std::chrono::duration<double> timeZgetrf_cublas_transfer = endTimeZgetrf_cublas - startTimeZgetrf_cublas_transfer;
+
+
+  printf("\nCUDA and cuBLAS:\n");
+  d = matrixDistance(tau00Reference, tau00zgetrf_cublas);
+  printf("d2 (t00Reference, tau00zgetrf_cublas) = %f\n", d);
+  printf("t(zgetrf_cublas)  = %fsec [%fsec]\n",timeZgetrf_cublas.count(), timeZgetrf_cublas_transfer.count());
+#endif
+
   if(printMatrices)
   {
     printf("\ntau00Reference:\n"); writeMatrix(tau00Reference);
     printf("\ntau00zblocklu:\n"); writeMatrix(tau00zblocklu);
   }
+
+#ifdef ARCH_CUDA
+  freeDeviceData(devData);
+  finalizeCuda(cublasHandle);
+#endif
   
   return 0;
 }

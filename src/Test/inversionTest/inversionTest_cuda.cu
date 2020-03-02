@@ -17,6 +17,9 @@
 #include <cuComplex.h>
 #include <cublas_v2.h>
 
+#include "inversionTest_cuda.hpp"
+
+/*
 class DeviceData
 {
 public:
@@ -29,6 +32,7 @@ public:
   int *ipiv;
   int *info;
 };
+*/
 
 void allocDeviceData(DeviceData &d, int blockSize, int numBlocks)
 {
@@ -215,23 +219,32 @@ void solveTau00zgetrf_cublas(cublasHandle_t cublasHandle, DeviceData &d,
 {
   // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
   cuDoubleComplex *Aarray[1], *Barray[1];
-  
+ 
+  // printf("zero Matrix\n"); 
   zeroMatrixCuda(d.tau, blockSize*numBlocks, blockSize);
+  // printf("copyTMatrixToTau\n");
   copyTMatrixToTau<<<blockSize,1>>>(d.tau, d.tMatrices[0], blockSize, numBlocks);
 
   Barray[0] = d.tau;
+
+  Aarray[0] = d.m;
   
   int n = blockSize * numBlocks;
-  int *ipivArray, *infoArray;
-  cudaMalloc((void**)&ipivArray, n * sizeof(int));
-  cudaMalloc((void**)&infoArray, 1 * sizeof(int));
+  int *ipivArray=d.ipiv;
+  int *infoArray=d.info;
+  int info;
 
-  cublasZgetrfBatched(cublasHandle, n, Aarray, n, ipivArray, infoArray, 1);  
+  // printf("cublasZgetrfBatched\n");
+  cublasZgetrfBatched(cublasHandle, n, Aarray, n, ipivArray, infoArray, 1);
+  // printf("cublasZgetrsBatched\n");
+
   cublasZgetrsBatched(cublasHandle, CUBLAS_OP_N, n, blockSize, Aarray, n, ipivArray,
-                      Barray, n, infoArray, 1);
+                      Barray, n, &info, 1);
 
   // copy result into tau00
+  // printf("copyTauToTau00\n");
   copyTauToTau00<<<blockSize,1>>>(d.tau00, d.tau, blockSize, numBlocks);
+  // printf("transferMatrixFromGPU\n");
   transferMatrixFromGPU(tau00, d.tau00);
 }
 
