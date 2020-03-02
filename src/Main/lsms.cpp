@@ -162,6 +162,10 @@ int main(int argc, char *argv[])
 #ifdef BUILDKKRMATRIX_GPU
     printf("Using GPU to build KKR matrix.\n");
 #endif
+#ifdef LSMS_NO_COLLECTIVES
+    printf("\nWARNING!!!\nCOLLECTIVE COMMUNICATION (ALLREDUCE etc.) ARE SKIPPED!\n");
+    printf("THIS IS FOR TESTING ONLY!\nRESULTS WILL BE WRONG!!!\n\n");
+#endif
     printf("Reading input file '%s'\n", inputFileName);
     fflush(stdout);
 
@@ -223,6 +227,9 @@ int main(int argc, char *argv[])
 
 #ifdef LSMS_DEBUG
   MPI_Barrier(comm.comm);
+// write the distribution of atoms
+  std::vector<int> atomsPerNode(comm.size);
+
 #endif
 
   // set up exchange correlation functionals
@@ -454,6 +461,7 @@ int main(int argc, char *argv[])
 
   double timeScfLoop = MPI_Wtime();
   double timeCalcChemPot = 0.0;
+  double timeCalcPotentialsAndMixing = 0.0;
 
   int iterationStart = 0;
   int potentialWriteCounter = 0;
@@ -489,6 +497,7 @@ int main(int argc, char *argv[])
       checkIfSpinHasFlipped(lsms, local.atom[i]);
     }
 
+    double dTimePM = MPI_Wtime();
     // Calculate charge densities, potentials, and total energy
     calculateAllLocalChargeDensities(lsms, local);
     calculateChargesPotential(comm, lsms, local, crystal, 0);
@@ -497,7 +506,9 @@ int main(int argc, char *argv[])
 
     // Mix charge density
     mixing -> updateChargeDensity(comm, lsms, local.atom);
- 
+    dTimePM = MPI_Wtime() - dTimePM;
+    timeCalcPotentialsAndMixing += dTimePM; 
+
     // Recalculate core states
     // - swap core state energies for different spin channels first if spin has flipped
     //   (from LSMS 1: lsms_main.f:2101-2116)
@@ -511,9 +522,12 @@ int main(int argc, char *argv[])
     }
     calculateCoreStates(comm, lsms, local);
 
+    dTimePM = MPI_Wtime();
     // If charge is mixed, recalculate potential and mix (need a flag for this from input)
     calculateChargesPotential(comm, lsms, local, crystal, 1);
     mixing -> updatePotential(comm, lsms, local.atom);
+    dTimePM = MPI_Wtime() - dTimePM;
+    timeCalcPotentialsAndMixing += dTimePM;
 
     // Real rms = 0.5 * (local.qrms[0] + local.qrms[1]);
     Real rms = 0.0;
@@ -644,6 +658,8 @@ int main(int argc, char *argv[])
     // printf(".../lsms.nscf = %lf sec\n", timeScfLoop / (double)lsms.nscf);
     printf("timeCalcChemPot[rank==0]/iteration = %lf sec\n", timeCalcChemPot / (double)iteration);
     // printf("timeCalcChemPot[rank==0]/lsms.nscf = %lf sec\n", timeCalcChemPot / (double)lsms.nscf);
+    printf("timeCalcPotentialsAndMixing[rank==0]/iteration = %lf sec\n",
+            timeCalcPotentialsAndMixing / (double)iteration);
     printf("timeBuildLIZandCommList[rank==0]: %lf sec\n",
            timeBuildLIZandCommList);
     // fom = [ \sum_#atoms (LIZ * (lmax+1)^2)^3 ] / time per iteration
