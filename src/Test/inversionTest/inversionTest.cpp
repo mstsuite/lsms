@@ -138,6 +138,33 @@ void solveTau00Reference(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector
       tau00(i,j) = tau(i,j);
 }
 
+void solveTau00zgetrf(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
+{
+  // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+  Matrix<Complex> tau(blockSize * numBlocks, blockSize);
+  
+  zeroMatrix(tau);
+  // copy t[0] into the top part of t
+  for(int i=0; i<blockSize; i++)
+    for(int j=0; j<blockSize; j++)
+      tau(i,j) = tMatrices[0](i,j);
+
+  int n = blockSize * numBlocks;
+  int ipiv[n];
+  Matrix<Complex> work(n,blockSize);
+  std::vector<std::complex<float> > swork(n*(n+blockSize));
+  std::vector<double> rwork(n);
+  int info, iter;
+
+  LAPACK::zgetrf_(&n, &n, &m(0,0), &n, &ipiv[0], &info);
+  LAPACK::zgetrs_("N", &n, &blockSize, &m(0,0), &n, &ipiv[0], &tau(0,0), &n, &info);
+
+  // copy result into tau00
+  for(int i=0; i<blockSize; i++)
+    for(int j=0; j<blockSize; j++)
+      tau00(i,j) = tau(i,j);
+}
+
 void solveTau00zcgesv(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
 {
   // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
@@ -146,7 +173,7 @@ void solveTau00zcgesv(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Ma
   
   zeroMatrix(tau);
   zeroMatrix(t);
-  // copy t[0] into the top part of tau
+  // copy t[0] into the top part of t
   for(int i=0; i<blockSize; i++)
     for(int j=0; j<blockSize; j++)
       t(i,j) = tMatrices[0](i,j);
@@ -354,6 +381,13 @@ int main(int argc, char *argv[])
   std::chrono::duration<double> timeReference = endTimeReference - startTimeReference;
 
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
+  Matrix<Complex> tau00zgetrf(blockSize, blockSize);
+  auto startTimeZgetrf = std::chrono::system_clock::now();
+  solveTau00zgetrf(tau00zgetrf, m, tMatrices, blockSize, numBlocks);
+  auto endTimeZgetrf = std::chrono::system_clock::now();
+  std::chrono::duration<double> timeZgetrf = endTimeZgetrf - startTimeZgetrf;
+  
+  makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
   Matrix<Complex> tau00zblocklu(blockSize, blockSize);
   auto startTimeZblocklu = std::chrono::system_clock::now();
   solveTau00zblocklu(tau00zblocklu, m, tMatrices, blockSize, numBlocks);
@@ -380,11 +414,14 @@ int main(int argc, char *argv[])
   printf("d2 (t00Reference, tau00zblocklu_cpp) = %f\n", d);
   d = matrixDistance(tau00Reference, tau00zcgesv);
   printf("d2 (t00Reference, tau00zcgesv) = %f\n", d);
+  d = matrixDistance(tau00Reference, tau00zgetrf);
+  printf("d2 (t00Reference, tau00zgetrf) = %f\n", d);
   
   printf("t(Reference) = %fsec\n",timeReference.count());
   printf("t(zblocklu)  = %fsec\n",timeZblocklu.count());
   printf("t(zblocklu_cpp)  = %fsec\n",timeZblocklu_cpp.count());
   printf("t(zcgesv)  = %fsec\n",timeZcgesv.count());
+  printf("t(zgetrf)  = %fsec\n",timeZgetrf.count());
   if(printMatrices)
   {
     printf("\ntau00Reference:\n"); writeMatrix(tau00Reference);
