@@ -261,7 +261,7 @@ void unitMatrix(Matrix<T> &m)
 
 void block_inverse_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int nblk, Matrix<Complex> &delta, int *ipvt, int *idcol, DeviceData &devD);
 
-void solveTau00zblocklu_cublas(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks, DeviceData &devData)
+void solveTau00zblocklu_cublas(cublasHandle_t handle, DeviceData &devData, Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
 {
   int nrmat_ns = blockSize * numBlocks;
   int ipvt[nrmat_ns];
@@ -292,7 +292,7 @@ void solveTau00zblocklu_cublas(Matrix<Complex> &tau00, Matrix<Complex> &m, std::
   // with m = [[A B][C D]], A: blk_sz[0] x blk_sz[0]
   // calculate the Schur complement m/D of m with A set to zero,
   // i.e. delta = B D^-1 C
-  block_inverse_cublas(m, blk_sz, nblk, delta, ipvt, idcol, devData);
+  block_inverse_cublas(handle, m, blk_sz, nblk, delta, ipvt, idcol, devData);
 
 
   Matrix<Complex> wbig(blockSize, blockSize);

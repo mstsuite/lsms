@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
   transferMatrixToGPU(devData.m, m);
   transferMatrixToGPU(devData.tMatrices[0], tMatrices[0]);
   auto startTimeZblocklu_cublas = std::chrono::system_clock::now();
-  solveTau00zblocklu_cublas(cublasHandle, devData, tau00zblocklu_cublas, blockSize, numBlocks);
+  solveTau00zblocklu_cublas(cublasHandle, devData, tau00zblocklu_cublas, m, tMatrices, blockSize, numBlocks);
   auto endTimeZblocklu_cublas = std::chrono::system_clock::now();
   std::chrono::duration<double> timeZblocklu_cublas = endTimeZblocklu_cublas - startTimeZblocklu_cublas;
   std::chrono::duration<double> timeZblocklu_cublas_transfer = endTimeZblocklu_cublas - startTimeZblocklu_cublas_transfer;

@@ -48,7 +48,7 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
             k=k-1;
             if(k!=i)
             {
-              cublasZcopy(handle, na-blk_sz[0], (cuDoubleComplex*)&a(blk_sz[0],i), 1, (cuDoubleComplex*)&a(blk_sz[0],k), 1);  // check k vs k-1 ?
+              cublasZcopy(handle, na-blk_sz[0], (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],i)], 1, (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],k)], 1);  // check k vs k-1 ?
             }
           }
         }
