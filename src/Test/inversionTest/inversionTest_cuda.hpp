@@ -40,6 +40,7 @@ void transferMatrixFromGPU(Matrix<Complex> &m, cuDoubleComplex *devM);
 
 void solveTau00zgetrf_cublas(cublasHandle_t cublasHandle, DeviceData &d,
                              Matrix<Complex> &tau00, int blockSize, int numBlocks);
+void solveTau00zblocklu_cublas(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks, DeviceData &devData);
 
 void initCuda(cublasHandle_t &cublasHandle);
 void finalizeCuda(cublasHandle_t &cublasHandle);

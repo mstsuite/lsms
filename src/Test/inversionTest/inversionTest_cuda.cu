@@ -248,18 +248,26 @@ void solveTau00zgetrf_cublas(cublasHandle_t cublasHandle, DeviceData &d,
   transferMatrixFromGPU(tau00, d.tau00);
 }
 
+template <typename T>
+void unitMatrix(Matrix<T> &m)
+{
+  for(int i=0; i<m.n_row(); i++)
+  {
+    for(int j=0;j<m.n_col(); j++)
+      m(i,j) = 0.0;
+    m(i,i) = 1.0;
+  }
+}
+
+void block_inverse_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int nblk, Matrix<Complex> &delta, int *ipvt, int *idcol, DeviceData &devD);
+
 void solveTau00zblocklu_cublas(Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks, DeviceData &devData)
 {
   int nrmat_ns = blockSize * numBlocks;
   int ipvt[nrmat_ns];
   int info;
-  int alg = 2, iprint = 0;
-  Complex vecs[42]; // dummy, not used for alg=2
   int nblk = 3;
   Matrix<Complex> delta(blockSize, blockSize);
-  int iwork[nrmat_ns];
-  Real rwork[nrmat_ns];
-  Complex work1[nrmat_ns];
 
   int blk_sz[1000];
 
@@ -284,7 +292,7 @@ void solveTau00zblocklu_cublas(Matrix<Complex> &tau00, Matrix<Complex> &m, std::
   // with m = [[A B][C D]], A: blk_sz[0] x blk_sz[0]
   // calculate the Schur complement m/D of m with A set to zero,
   // i.e. delta = B D^-1 C
-  block_innverse_cublas(m, blk_sz, nblk, delta, ipvt, idcol, devData);
+  block_inverse_cublas(m, blk_sz, nblk, delta, ipvt, idcol, devData);
 
 
   Matrix<Complex> wbig(blockSize, blockSize);
