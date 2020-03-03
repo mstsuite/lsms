@@ -457,21 +457,33 @@ int main(int argc, char *argv[])
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
   Matrix<Complex> tau00zgetrf_cublas(blockSize, blockSize);
   auto startTimeZgetrf_cublas_transfer = std::chrono::system_clock::now();
-  // printf("transfering Matrix to GPU\n");
   transferMatrixToGPU(devData.m, m);
   transferMatrixToGPU(devData.tMatrices[0], tMatrices[0]);
   auto startTimeZgetrf_cublas = std::chrono::system_clock::now();
-  // printf("inverting Matrix\n");
   solveTau00zgetrf_cublas(cublasHandle, devData, tau00zgetrf_cublas, blockSize, numBlocks);
   auto endTimeZgetrf_cublas = std::chrono::system_clock::now();
   std::chrono::duration<double> timeZgetrf_cublas = endTimeZgetrf_cublas - startTimeZgetrf_cublas;
   std::chrono::duration<double> timeZgetrf_cublas_transfer = endTimeZgetrf_cublas - startTimeZgetrf_cublas_transfer;
 
-
+  makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
+  Matrix<Complex> tau00zblocklu_cublas(blockSize, blockSize);
+  auto startTimeZblocklu_cublas_transfer = std::chrono::system_clock::now();
+  transferMatrixToGPU(devData.m, m);
+  transferMatrixToGPU(devData.tMatrices[0], tMatrices[0]);
+  auto startTimeZblocklu_cublas = std::chrono::system_clock::now();
+  solveTau00zblocklu_cublas(cublasHandle, devData, tau00zblocklu_cublas, blockSize, numBlocks);
+  auto endTimeZblocklu_cublas = std::chrono::system_clock::now();
+  std::chrono::duration<double> timeZblocklu_cublas = endTimeZblocklu_cublas - startTimeZblocklu_cublas;
+  std::chrono::duration<double> timeZblocklu_cublas_transfer = endTimeZblocklu_cublas - startTimeZblocklu_cublas_transfer;
+  
   printf("\nCUDA and cuBLAS:\n");
   d = matrixDistance(tau00Reference, tau00zgetrf_cublas);
   printf("d2 (t00Reference, tau00zgetrf_cublas) = %f\n", d);
   printf("t(zgetrf_cublas)  = %fsec [%fsec]\n",timeZgetrf_cublas.count(), timeZgetrf_cublas_transfer.count());
+
+  d = matrixDistance(tau00Reference, tau00zblocklu_cublas);
+  printf("d2 (t00Reference, tau00zblocklu_cublas) = %f\n", d);
+  printf("t(zblocklu_cublas)  = %fsec [%fsec]\n",timeZblocklu_cublas.count(), timeZblocklu_cublas_transfer.count());
 #endif
 
   if(printMatrices)
