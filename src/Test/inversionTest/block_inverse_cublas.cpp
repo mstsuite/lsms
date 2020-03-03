@@ -2,6 +2,8 @@
 #include "Complex.hpp"
 #include "Matrix.hpp"
 
+#include "inversionTest_cuda.hpp"
+
 int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int nblk, int *ipvt, int *idcol, DeviceData &devD);
 
 void block_inverse_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int nblk, Matrix<Complex> &delta, int *ipvt, int *idcol, DeviceData &devD)

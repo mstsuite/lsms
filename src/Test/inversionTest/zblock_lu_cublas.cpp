@@ -3,8 +3,10 @@
 
 #include <cuda_runtime.h>
 
-#include <Complex.hpp>
-#include <Matrix.hpp>
+#include "Complex.hpp"
+#include "Matrix.hpp"
+
+#include "inversionTest_cuda.hpp"
 
 #define IDX2C(i,j,ld) (((j)*(ld))+(i))
 
@@ -48,7 +50,8 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
             k=k-1;
             if(k!=i)
             {
-              cublasZcopy(handle, na-blk_sz[0], (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],i)], 1, (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],k)], 1);  // check k vs k-1 ?
+              cublasZcopy(handle, na-blk_sz[0], (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],i,lda)], 1,
+		  (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],k,lda)], 1);  // check k vs k-1 ?
             }
           }
         }
@@ -70,7 +73,7 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
 // invert the diagonal blk_sz(iblk) x blk_sz(iblk) block
           // aAddr= (cuDoubleComplex*) &a(ioff,ioff);
           aAddr= (cuDoubleComplex*) &devA[IDX2C(ioff,ioff,lda)];
-          cublasZgetrfBatched(handle, m, &aAddr, lda, devD.ipvt, devD.info, 1);
+          cublasZgetrfBatched(handle, m, &aAddr, lda, devD.ipiv, devD.info, 1);
           // cudaDeviceSynchronize();
           // zgetrf_(&m, &m, &a(ioff,ioff), &lda, ipvt, info); 
           if(*info!=0)
@@ -83,7 +86,8 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
           // bAddr = (cuDoubleComplex*) &a(ioff,0);
           aAddr = (cuDoubleComplex*) &devA[IDX2C(ioff,ioff,lda)];
           bAddr = (cuDoubleComplex*) &devA[IDX2C(ioff,0,lda)];
-          cublasZgetrsBatched(handle, CUBLAS_OP_N, m, ioff, (const cuDoubleComplex**)&aAddr, lda, devD.ipvt, &bAddr, lda, info, 1);
+          cublasZgetrsBatched(handle, CUBLAS_OP_N, m, ioff, (const cuDoubleComplex**)&aAddr, lda,
+	      devD.ipiv, &bAddr, lda, info, 1);
           // cudaDeviceSynchronize();
           // zgetrs_("n", &m, &ioff, &a(ioff,ioff), &lda, ipvt, &a(ioff,0), &lda, info);
           if(*info!=0)

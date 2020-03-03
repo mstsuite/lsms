@@ -1,5 +1,5 @@
 OBJ = block_inverse_fortran.o block_inverse.o zblock_lu_cpp.o zblock_lu_CPU.o
-OBJ_CUDA = inversionTest_cuda.o
+OBJ_CUDA = inversionTest_cuda.o block_inverse_cublas.o zblock_lu_cublas.o
 
 
 ifeq ($(ARCH),macos)
@@ -10,9 +10,9 @@ else
 ifeq ($(ARCH),ubuntu-cuda)
   LIBS = -L/usr/local/cuda/lib64 -lcudart -lcublas -L/usr/local/lib -lblas -llapack -lgfortran
   OBJ += $(OBJ_CUDA)
-  CXX = g++ -DARCH_CUDA
+  CXX = g++ -DARCH_CUDA -I/usr/local/cuda/include/
   F77 = gfortran
-  NVCC = nvcc -DARCH_CUDA
+  NVCC = nvcc -DARCH_CUDA -I/usr/local/cuda/include/
 else
 ifeq ($(ARCH),summit)
   LIBS = -L$(OLCF_CUDA_ROOT)/lib64 -lcudart -lcublas -L${OLCF_ESSL_ROOT}/lib64 -lessl -lgfortran

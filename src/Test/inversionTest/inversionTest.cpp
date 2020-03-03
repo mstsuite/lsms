@@ -435,15 +435,15 @@ int main(int argc, char *argv[])
 #endif
 
   Real d = matrixDistance(tau00Reference, tau00zblocklu);
-  printf("d2 (t00Reference, tau00zblocklu) = %f\n", d);
+  printf("d2 (t00Reference, tau00zblocklu) = %g\n", d);
   d = matrixDistance(tau00Reference, tau00zblocklu_cpp);
-  printf("d2 (t00Reference, tau00zblocklu_cpp) = %f\n", d);
+  printf("d2 (t00Reference, tau00zblocklu_cpp) = %g\n", d);
 #ifndef ARCH_IBM
   d = matrixDistance(tau00Reference, tau00zcgesv);
-  printf("d2 (t00Reference, tau00zcgesv) = %f\n", d);
+  printf("d2 (t00Reference, tau00zcgesv) = %g\n", d);
 #endif
   d = matrixDistance(tau00Reference, tau00zgetrf);
-  printf("d2 (t00Reference, tau00zgetrf) = %f\n", d);
+  printf("d2 (t00Reference, tau00zgetrf) = %g\n", d);
   
   printf("t(Reference) = %fsec\n",timeReference.count());
   printf("t(zblocklu)  = %fsec\n",timeZblocklu.count());
@@ -478,11 +478,11 @@ int main(int argc, char *argv[])
   
   printf("\nCUDA and cuBLAS:\n");
   d = matrixDistance(tau00Reference, tau00zgetrf_cublas);
-  printf("d2 (t00Reference, tau00zgetrf_cublas) = %f\n", d);
+  printf("d2 (t00Reference, tau00zgetrf_cublas) = %g\n", d);
   printf("t(zgetrf_cublas)  = %fsec [%fsec]\n",timeZgetrf_cublas.count(), timeZgetrf_cublas_transfer.count());
 
   d = matrixDistance(tau00Reference, tau00zblocklu_cublas);
-  printf("d2 (t00Reference, tau00zblocklu_cublas) = %f\n", d);
+  printf("d2 (t00Reference, tau00zblocklu_cublas) = %g\n", d);
   printf("t(zblocklu_cublas)  = %fsec [%fsec]\n",timeZblocklu_cublas.count(), timeZblocklu_cublas_transfer.count());
 #endif
 
