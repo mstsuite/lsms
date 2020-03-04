@@ -8,7 +8,7 @@ ifeq ($(ARCH),macos)
   F77 = gfortran
 else
 ifeq ($(ARCH),ubuntu-cuda)
-  LIBS = -L/usr/local/cuda/lib64 -lcudart -lcublas -L/usr/local/lib -lblas -llapack -lgfortran
+  LIBS = -L/usr/local/cuda/lib64 -lcudart -lcublas -lcusolver -L/usr/local/lib -lblas -llapack -lgfortran
   OBJ += $(OBJ_CUDA)
   CXX = g++ -DARCH_CUDA -I/usr/local/cuda/include/
   F77 = gfortran

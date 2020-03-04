@@ -14,6 +14,7 @@
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 #include <cublas_v2.h>
+#include <cusolverDn.h>
 
 class DeviceData
 {
@@ -21,14 +22,25 @@ public:
   std::vector<cuDoubleComplex *> tMatrices;
   cuDoubleComplex *tMatrixStore;
   cuDoubleComplex *tau;
+  cuDoubleComplex *t;
   cuDoubleComplex *tau00;
   cuDoubleComplex *m;
   cuDoubleComplex *G0;
   int *ipiv;
   int *info;
+  size_t workBytes;
+  void *work;
 };
 
-void allocDeviceData(DeviceData &d, int blockSize, int numBlocks);
+class DeviceHandles
+{
+public:
+  cublasHandle_t cublasHandle;
+  cusolverDnHandle_t cusolverDnHandle;
+};
+
+
+void allocDeviceData(DeviceHandles &deviceHandles, DeviceData &d, int blockSize, int numBlocks);
 void freeDeviceData(DeviceData &d);
 
 void usage_cuda(const char *name);
@@ -41,8 +53,17 @@ void transferMatrixFromGPU(Matrix<Complex> &m, cuDoubleComplex *devM);
 void solveTau00zgetrf_cublas(cublasHandle_t cublasHandle, DeviceData &d,
                              Matrix<Complex> &tau00, int blockSize, int numBlocks);
 void solveTau00zblocklu_cublas(cublasHandle_t cublasHandle, DeviceData &d, Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks);
+void solveTau00zzgesv_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceData, Matrix<Complex>
+    &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int
+    numBlocks);
 
-void initCuda(cublasHandle_t &cublasHandle);
-void finalizeCuda(cublasHandle_t &cublasHandle);
+void solveTau00zgetrf_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceData,
+    Matrix<Complex> &tau00, int blockSize, int numBlocks);
+
+void transferTest(DeviceHandles &deviceHandles, DeviceData &deviceData, Matrix<Complex> &tau00, int
+    blockSize, int numBlocks);
+
+void initCuda(DeviceHandles &deviceHandles);
+void finalizeCuda(DeviceHandles &deviceHandles);
 
 #endif

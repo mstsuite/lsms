@@ -16,6 +16,7 @@
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 #include <cublas_v2.h>
+#include <cusolverDn.h>
 
 #include "inversionTest_cuda.hpp"
 
@@ -34,12 +35,21 @@ public:
 };
 */
 
-void allocDeviceData(DeviceData &d, int blockSize, int numBlocks)
+/*
+class DeviceHandles
+{
+  cublasHandle_t cublasHandle;
+  cusolverDnHandle_t cusolverHandle;
+};
+*/
+
+void allocDeviceData(DeviceHandles &deviceHandles, DeviceData &d, int blockSize, int numBlocks)
 {
   int n=blockSize*numBlocks;
   cudaMalloc((void**)&d.m, n*n*sizeof(cuDoubleComplex));
   cudaMalloc((void**)&d.G0, n*n*sizeof(cuDoubleComplex));
   cudaMalloc((void**)&d.tau, n*blockSize*sizeof(cuDoubleComplex));
+  cudaMalloc((void**)&d.t, n*blockSize*sizeof(cuDoubleComplex));
   cudaMalloc((void**)&d.tau00, blockSize*blockSize*sizeof(cuDoubleComplex));
   cudaMalloc((void**)&d.tMatrixStore, blockSize*blockSize*numBlocks*sizeof(cuDoubleComplex));
   d.tMatrices.resize(numBlocks);
@@ -47,6 +57,15 @@ void allocDeviceData(DeviceData &d, int blockSize, int numBlocks)
     d.tMatrices[i] = &d.tMatrixStore[blockSize * blockSize * i];
   cudaMalloc((void**)&d.ipiv, n*sizeof(int));
   cudaMalloc((void**)&d.info, sizeof(int));
+
+  cusolverDnZZgesv_bufferSize(deviceHandles.cusolverDnHandle, n, blockSize,
+    d.m, n, d.ipiv, d.t, n, d.tau, n,
+    d.work, &d.workBytes);
+  int lWork;
+  cusolverDnZgetrf_bufferSize(deviceHandles.cusolverDnHandle, n, n,
+    d.m, n, &lWork);
+  cudaMalloc((void**)&d.work, std::max(d.workBytes*sizeof(cuDoubleComplex),
+	lWork*sizeof(cuDoubleComplex)));
 }
 
 void freeDeviceData(DeviceData &d)
@@ -58,6 +77,8 @@ void freeDeviceData(DeviceData &d)
   cudaFree(d.tMatrixStore);
   cudaFree(d.ipiv);
   cudaFree(d.info);
+  cudaFree(d.t);
+  cudaFree(d.work);
 }
 
 // #include "makegij_new.cpp"
@@ -321,14 +342,73 @@ void solveTau00zblocklu_cublas(cublasHandle_t handle, DeviceData &devData, Matri
 
 }
 
-void initCuda(cublasHandle_t &cublasHandle)
+void solveTau00zzgesv_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceData, Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
 {
-  cublasCreate(&cublasHandle);
+  // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+
+  zeroMatrixCuda(deviceData.tau, blockSize*numBlocks, blockSize);
+  zeroMatrixCuda(deviceData.t, blockSize*numBlocks, blockSize);
+  copyTMatrixToTau<<<blockSize,1>>>(deviceData.t, deviceData.tMatrices[0], blockSize, numBlocks);
+
+  int n = blockSize * numBlocks;
+  int info, iter;
+
+  cusolverStatus_t status = cusolverDnZZgesv(deviceHandles.cusolverDnHandle, n, blockSize,
+    deviceData.m, n, deviceData.ipiv, deviceData.t, n, deviceData.tau, n,
+    deviceData.work, deviceData.workBytes, &iter, deviceData.info);
+
+  if(status!=CUSOLVER_STATUS_SUCCESS)
+  {
+    printf("cusolverDnZZgesv returned %d\n",status);
+  }
+
+  copyTauToTau00<<<blockSize,1>>>(deviceData.tau00, deviceData.tau, blockSize, numBlocks);
+  transferMatrixFromGPU(tau00, deviceData.tau00);
 }
 
-void finalizeCuda(cublasHandle_t &cublasHandle)
+void solveTau00zgetrf_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceData,
+     Matrix<Complex> &tau00, int blockSize, int numBlocks)
 {
-  cublasDestroy(cublasHandle);
+  int n = blockSize * numBlocks;
+  // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+  Matrix<Complex> tau(blockSize * numBlocks, blockSize);
+
+  zeroMatrixCuda(deviceData.tau, n, blockSize);
+  copyTMatrixToTau<<<blockSize,1>>>(deviceData.tau, deviceData.tMatrices[0], blockSize, numBlocks);
+
+  cusolverDnZgetrf(deviceHandles.cusolverDnHandle, n, n, 
+           deviceData.m, n,
+           (cuDoubleComplex *)deviceData.work,
+           deviceData.ipiv,
+           deviceData.info );
+  // LAPACK::zgetrf_(&n, &n, &m(0,0), &n, &ipiv[0], &info);
+
+  cusolverDnZgetrs(deviceHandles.cusolverDnHandle, CUBLAS_OP_N, n, blockSize,
+      deviceData.m, n, deviceData.ipiv, deviceData.tau, n, deviceData.info);
+  // LAPACK::zgetrs_("N", &n, &blockSize, &m(0,0), &n, &ipiv[0], &tau(0,0), &n, &info);
+
+  // copy result into tau00
+  copyTauToTau00<<<blockSize,1>>>(deviceData.tau00, deviceData.tau, blockSize, numBlocks);
+}
+
+
+void transferTest(DeviceHandles &deviceHandles, DeviceData &deviceData, Matrix<Complex> &tau00, int blockSize, int numBlocks)
+{
+  copyTMatrixToTau<<<blockSize,1>>>(deviceData.t, deviceData.tMatrices[0], blockSize, numBlocks);
+  copyTauToTau00<<<blockSize,1>>>(deviceData.tau00, deviceData.t, blockSize, numBlocks);
+  transferMatrixFromGPU(tau00, deviceData.tau00);
+}
+
+void initCuda(DeviceHandles &dh)
+{
+  cublasCreate(&dh.cublasHandle);
+  cusolverDnCreate(&dh.cusolverDnHandle);
+}
+
+void finalizeCuda(DeviceHandles &dh)
+{
+  cusolverDnDestroy(dh.cusolverDnHandle);
+  cublasDestroy(dh.cublasHandle);
 }
 
 
