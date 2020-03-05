@@ -55,7 +55,7 @@ void unitMatrix(Matrix<T> &m)
 
 Real matrixDistance(Matrix<Complex> &a, Matrix<Complex> &b)
 {
-  Real d;
+  Real d=0.0;
 
   for(int i=0; i<a.n_col(); i++)
     for(int j=0; j<a.n_row(); j++)
@@ -69,6 +69,19 @@ void writeMatrix(Matrix<Complex> &a)
   for(int i=0; i<a.n_col(); i++)
     for(int j=0; j<a.n_row(); j++)
       printf("%d %d %f %f\n",i,j,a(i,j).real(), a(i,j).imag());
+}
+
+void writeMatrixDifference(Matrix<Complex> &a, Matrix<Complex> &b)
+{
+  for(int i=0; i<a.n_col(); i++)
+    for(int j=0; j<a.n_row(); j++)
+    {
+      if(a(i,j) != b(i,j))
+      {
+        printf("(%d,%d): (%f, %f) != (%f, %f)\n", i,j,
+               a(i,j).real(), a(i,j).imag(), b(i,j).real(), b(i,j).imag());
+      }
+    }
 }
 
 template <typename T>
@@ -539,18 +552,7 @@ int main(int argc, char *argv[])
   {
     // printf("\ntau00Reference:\n"); writeMatrix(tMatrices[0]); // writeMatrix(tau00Reference);
     // printf("\ntau00zzgesv_cusolver:\n"); writeMatrix(tau00zzgesv_cusolver);
-    for(int i=0; i<blockSize; i++)
-    {
-      for(int j=0; j<blockSize; j++)
-      {
-	if(tMatrices[0](i,j) != tau00(i,j))
-	{
-	  printf("(%d,%d): (%f, %f) != (%f, %f)\n", i,j,
-	      tMatrices[0](i,j).real(), tMatrices[0](i,j).imag(),
-	      tau00(i,j).real(), tau00(i,j).imag());
-	}
-      }
-    }
+    writeMatrixDifference(tau00Reference, tau00zgetrf_cusolver);
   }
 
 #ifdef ARCH_CUDA

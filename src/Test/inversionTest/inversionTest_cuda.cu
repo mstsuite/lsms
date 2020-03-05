@@ -389,6 +389,7 @@ void solveTau00zgetrf_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceD
 
   // copy result into tau00
   copyTauToTau00<<<blockSize,1>>>(deviceData.tau00, deviceData.tau, blockSize, numBlocks);
+  transferMatrixFromGPU(tau00, deviceData.tau00);
 }
 
 
