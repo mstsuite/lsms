@@ -58,14 +58,20 @@ void allocDeviceData(DeviceHandles &deviceHandles, DeviceData &d, int blockSize,
   cudaMalloc((void**)&d.ipiv, n*sizeof(int));
   cudaMalloc((void**)&d.info, sizeof(int));
 
-  cusolverDnZZgesv_bufferSize(deviceHandles.cusolverDnHandle, n, blockSize,
-    d.m, n, d.ipiv, d.t, n, d.tau, n,
-    d.work, &d.workBytes);
   int lWork;
   cusolverDnZgetrf_bufferSize(deviceHandles.cusolverDnHandle, n, n,
     d.m, n, &lWork);
-  cudaMalloc((void**)&d.work, std::max(d.workBytes*sizeof(cuDoubleComplex),
-	lWork*sizeof(cuDoubleComplex)));
+
+  d.workBytes = 0;
+#ifndef ARCH_IBM
+ cusolverDnZZgesv_bufferSize(deviceHandles.cusolverDnHandle, n, blockSize,
+    d.m, n, d.ipiv, d.t, n, d.tau, n,
+    d.work, &d.workBytes);
+#endif
+
+  d.workBytes = std::max(d.workBytes*sizeof(cuDoubleComplex),
+        lWork*sizeof(cuDoubleComplex));
+  cudaMalloc((void**)&d.work, d.workBytes);
 }
 
 void freeDeviceData(DeviceData &d)
@@ -342,6 +348,8 @@ void solveTau00zblocklu_cublas(cublasHandle_t handle, DeviceData &devData, Matri
 
 }
 
+
+#ifndef ARCH_IBM
 void solveTau00zzgesv_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceData, Matrix<Complex> &tau00, Matrix<Complex> &m, std::vector<Matrix<Complex> > &tMatrices, int blockSize, int numBlocks)
 {
   // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
@@ -365,6 +373,7 @@ void solveTau00zzgesv_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceD
   copyTauToTau00<<<blockSize,1>>>(deviceData.tau00, deviceData.tau, blockSize, numBlocks);
   transferMatrixFromGPU(tau00, deviceData.tau00);
 }
+#endif
 
 void solveTau00zgetrf_cusolver(DeviceHandles &deviceHandles, DeviceData &deviceData,
      Matrix<Complex> &tau00, int blockSize, int numBlocks)
