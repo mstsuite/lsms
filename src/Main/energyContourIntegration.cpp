@@ -259,7 +259,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   {
     if(local.atom[i].numLIZ>maxNumLIZ) maxNumLIZ=local.atom[i].numLIZ;
   }
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
   // initDStore(deviceStorage,maxkkrsz,lsms.n_spin_cant,maxNumLIZ,lsms.global.GPUThreads);
   deviceStorage->allocate(maxkkrsz,lsms.n_spin_cant,maxNumLIZ,lsms.global.GPUThreads);
 #endif

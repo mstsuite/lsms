@@ -21,7 +21,7 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
   int lda=a.l_dim();
   const cuDoubleComplex cone  = make_cuDoubleComplex( 1.0, 0.0);
   const cuDoubleComplex cmone = make_cuDoubleComplex(-1.0, 0.0);
-  cuDoubleComplex *aAddr, *bAddr;
+  cuDoubleComplex *aAddr[1], *bAddr[1];
   cublasStatus_t cublasStat;
   // total size of matrix = sum of block sizes
   int na=0;
@@ -72,8 +72,9 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
           joff=joff-n;
 // invert the diagonal blk_sz(iblk) x blk_sz(iblk) block
           // aAddr= (cuDoubleComplex*) &a(ioff,ioff);
-          aAddr= (cuDoubleComplex*) &devA[IDX2C(ioff,ioff,lda)];
-          cublasZgetrfBatched(handle, m, &aAddr, lda, devD.ipiv, devD.info, 1);
+          aAddr[0] = &devA[IDX2C(ioff,ioff,lda)];
+          // cublasZgetrfBatched(handle, m, &aAddr, lda, devD.ipiv, devD.info, 1);
+          cublasZgetrfBatched(handle, m, aAddr, lda, devD.ipiv, devD.info, 1);
           // cudaDeviceSynchronize();
           // zgetrf_(&m, &m, &a(ioff,ioff), &lda, ipvt, info); 
           if(*info!=0)
@@ -84,10 +85,10 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
 // blk_sz(iblk) x ioff
           // aAddr = (cuDoubleComplex*) &a(ioff,ioff);
           // bAddr = (cuDoubleComplex*) &a(ioff,0);
-          aAddr = (cuDoubleComplex*) &devA[IDX2C(ioff,ioff,lda)];
-          bAddr = (cuDoubleComplex*) &devA[IDX2C(ioff,0,lda)];
-          cublasZgetrsBatched(handle, CUBLAS_OP_N, m, ioff, (const cuDoubleComplex**)&aAddr, lda,
-	      devD.ipiv, &bAddr, lda, info, 1);
+          aAddr[0] =  &devA[IDX2C(ioff,ioff,lda)];
+          bAddr[0] = &devA[IDX2C(ioff,0,lda)];
+          cublasZgetrsBatched(handle, CUBLAS_OP_N, m, ioff, aAddr, lda,
+	      devD.ipiv, bAddr, lda, info, 1);
           // cudaDeviceSynchronize();
           // zgetrs_("n", &m, &ioff, &a(ioff,ioff), &lda, ipvt, &a(ioff,0), &lda, info);
           if(*info!=0)

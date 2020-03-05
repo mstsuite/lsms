@@ -471,6 +471,8 @@ int main(int argc, char *argv[])
 #ifdef ARCH_CUDA
   printf("\nCUDA and cuBLAS:\n");
 
+  if(false)
+  {
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
   Matrix<Complex> tau00zgetrf_cublas(blockSize, blockSize);
   auto startTimeZgetrf_cublas_transfer = std::chrono::system_clock::now();
@@ -484,7 +486,10 @@ int main(int argc, char *argv[])
   d = matrixDistance(tau00Reference, tau00zgetrf_cublas);
   printf("d2 (t00Reference, tau00zgetrf_cublas) = %g\n", d);
   printf("t(zgetrf_cublas)  = %fsec [%fsec]\n",timeZgetrf_cublas.count(), timeZgetrf_cublas_transfer.count());
+  }
 
+  if(false)
+  {
   makeType1Matrix(m, G0, tMatrices, blockSize, numBlocks);
   Matrix<Complex> tau00zblocklu_cublas(blockSize, blockSize);
   auto startTimeZblocklu_cublas_transfer = std::chrono::system_clock::now();
@@ -498,6 +503,7 @@ int main(int argc, char *argv[])
   d = matrixDistance(tau00Reference, tau00zblocklu_cublas);
   printf("d2 (t00Reference, tau00zblocklu_cublas) = %g\n", d);
   printf("t(zblocklu_cublas)  = %fsec [%fsec]\n",timeZblocklu_cublas.count(), timeZblocklu_cublas_transfer.count());
+  }
 
 // Summit doesn't have cuda 10.2 yet
 #ifndef ARCH_IBM

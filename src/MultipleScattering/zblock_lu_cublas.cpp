@@ -14,31 +14,48 @@
 extern "C" {
 void zgetrf_(int *m, int *n, Complex *a, int *lda, int *ipvt, int *info);
 void zgetrs_(const char *, int *m, int *ioff, Complex *a, int *lda, int *ipvt, Complex *b, int *ldb, int *info);
-void zgemm_(const char *, const char *, int *m, int *n, int *k, Complex *alpha, Complex *a, int *lda, Complex *b, int *ldb, Complex *beta, Complex *c, int *ldc);
+// void zgemm_(const char *, const char *, int *m, int *n, int *k, Complex *alpha, Complex *a, int *lda, Complex *b, int *ldb, Complex *beta, Complex *c, int *ldc);
 }
 
 // a: input matrix -> output in block 1 of a
 //
 // returns: k -- returns actual number of columns in the calculated inverse
 
-int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int nblk, int *ipvt, int *idcol)
+int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int nblk, int
+    *host_ipvt, int *idcol)
 {
   int k;
   int info[1];
+  cuDoubleComplex *aArrays[1];
   int lda=a.l_dim();
   const cuDoubleComplex cone  = make_cuDoubleComplex( 1.0, 0.0);
   const cuDoubleComplex cmone = make_cuDoubleComplex(-1.0, 0.0);
   cuDoubleComplex *aAddr, *bAddr;
   cublasStatus_t cublasStat;
+  cudaError_t cudaErr;
   // total size of matrix = sum of block sizes
   int na=0;
   for(int i=0; i<nblk; i++) na+=blk_sz[i];
 
   cuDoubleComplex *devA=(cuDoubleComplex *)DeviceStorage::getDevM();
+  int *ipvt=DeviceStorage::getDevIpvt();
 
 #ifndef BUILDKKRMATRIX_GPU
   // copy matrix to device 
-  cublasStat = cublasSetMatrix ( na, na, sizeof(cuDoubleComplex), &a(0,0), lda, devA, lda); 
+  /*
+  cublasStat = cublasSetMatrix ( na, na, sizeof(cuDoubleComplex), &a(0,0), lda, devA, lda);
+  if(cublasStat != 0)
+  {
+    printf("CublasSetMatrix Error in 'zblock_lu_cublas'. cublasStat=%d\n",cublasStat);
+    printf("  na=%d lda=%d  &a(0,0)=%zx devA=%zx\n",na,lda,&a(0,0),devA);
+  }
+  */
+  cudaErr = cudaMemcpy(devA, &a(0,0), na*na*sizeof(Complex), cudaMemcpyHostToDevice);
+  if(cudaErr != 0)
+  {
+    printf("cudaMemcpy Error in 'zblock_lu_cublas'. cudaErr=%d\n",cudaErr);
+    printf("  na=%d lda=%d  &a(0,0)=%zx devA=%zx\n",na,lda,&a(0,0),devA);
+  }
 #endif
 
 // printf("idcol[0]=%d\n",idcol[0]);
@@ -55,7 +72,9 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
             k=k-1;
             if(k!=i)
             {
-              cublasZcopy(handle, na-blk_sz[0], (cuDoubleComplex*)&a(blk_sz[0],i), 1, (cuDoubleComplex*)&a(blk_sz[0],k), 1);  // check k vs k-1 ?
+              // cublasZcopy(handle, na-blk_sz[0], (cuDoubleComplex*)&a(blk_sz[0],i), 1, (cuDoubleComplex*)&a(blk_sz[0],k), 1);  // check k vs k-1 ?
+	      cublasZcopy(handle, na-blk_sz[0], (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],i,lda)],
+		  1, (cuDoubleComplex*)&devA[IDX2C(blk_sz[0],k,lda)], 1);  // check k vs k-1 ?
             }
           }
         }
@@ -77,12 +96,19 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
 // invert the diagonal blk_sz(iblk) x blk_sz(iblk) block
           // aAddr= (cuDoubleComplex*) &a(ioff,ioff);
           aAddr= (cuDoubleComplex*) &devA[IDX2C(ioff,ioff,lda)];
-          cublasZgetrfBatched(handle, m, &aAddr, lda, ipvt, info, 1);
+          aArrays[0] = aAddr;
+          cublasStat = cublasZgetrfBatched(handle, m, aArrays, lda, ipvt, info, 1);
           // cudaDeviceSynchronize();
           // zgetrf_(&m, &m, &a(ioff,ioff), &lda, ipvt, info); 
-          if(*info!=0)
+          if(cublasStat != 0)
           {
-            printf("zgetrf info=%d  ioff=%d\n",*info,ioff);
+            printf("zgetrf cublasStatus = %d\n",cublasStat);
+          }
+          if(info[0]!=0)
+          {
+            printf("zgetrf info=%d  ioff=%d\n",info[0],ioff);
+            printf("  nblk=%d  iblk=%d  m=%d  lda=%d\n",nblk,iblk,m,lda);
+            printf("  aArrays[0] = %zx  IDX2C=%d\n",aArrays[0],IDX2C(ioff,ioff,lda));
           }
 // calculate the inverse of above multiplying the row block
 // blk_sz(iblk) x ioff

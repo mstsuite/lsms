@@ -85,9 +85,17 @@ public:
       }
       nThreads=_nThreads;
       int N=kkrsz_max*nspin*numLIZ;
+      // printf("DeviceStorage::alocate N=%d\n",N);
       for(int i=0;i<nThreads;i++)
       {
-        cudaMalloc((void**)&dev_m[i],N*N*sizeof(Complex));
+        cudaError_t err;
+        err = cudaMalloc((void**)&dev_m[i],N*N*sizeof(Complex));
+        if(err!=cudaSuccess)
+        {
+          printf("failed to allocate dev_m[%d], size=%d, err=%d\n",
+                i,N*N*sizeof(Complex),err);
+          exit(1);
+        }
         cudaMalloc((void**)&dev_ipvt[i],N*sizeof(int));
 #ifdef BUILDKKRMATRIX_GPU
         cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
@@ -97,6 +105,7 @@ public:
         cudaStreamCreate(&stream[i][1]);
         cudaEventCreateWithFlags(&event[i],cudaEventDisableTiming);
         cublasCreate(&cublas_h[i]);
+        // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
       }
       cudaCheckError();
       initialized=true;

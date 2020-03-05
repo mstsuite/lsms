@@ -370,7 +370,8 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 #if defined(ACCELERATOR_LIBSCI)
     nblk=2;
 #elif defined(ACCELERATOR_CUBLAS)
-    nblk=12;
+    // nblk=12;
+    nblk=4;
 #elif defined(ACCELERATOR_CUDA_C)
     int max_blk_sz=175;
     //assign blocks in a load balanced way
