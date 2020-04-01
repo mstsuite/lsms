@@ -5,7 +5,7 @@
 #include <cmath>
 #include "PhysicalConstants.hpp"
 
-#include "lapack.h"
+// #include "lapack.h"
 
 // #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/SingleSiteScattering.hpp"
@@ -13,6 +13,9 @@
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Main/LSMSMode.hpp"
+
+#include "linearSolvers.hpp"
+#include "tau00Postprocess.cpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -23,10 +26,6 @@ inline int omp_get_max_threads() {return 1;}
 inline int omp_get_num_threads() {return 1;}
 inline int omp_get_thread_num() {return 0;}
 #endif
-#endif
-
-#ifdef USE_NVTX
-#include <nvToolsExt.h>
 #endif
 
 #if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
@@ -59,16 +58,6 @@ void block_inverse(Matrix<Complex> &a, int *blk_sz, int nblk, Matrix<Complex> &d
 
 void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, int ispin, Complex energy, Complex prel, int iie, Matrix<Complex> &m)
 {
-#ifdef USE_NVTX
-  nvtxEventAttributes_t eventAttrib = {0}; 
-  eventAttrib.version = NVTX_VERSION; 
-  eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; 
-  eventAttrib.colorType = NVTX_COLOR_ARGB; 
-  eventAttrib.color = 0x00ff0000; 
-  eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; 
-  eventAttrib.message.ascii = "buildKKRMatrix"; 
-  nvtxRangePushEx(&eventAttrib);
-#endif
   Real rij[3];
 
   int lmax=lsms.maxlmax;
@@ -312,10 +301,6 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &a
   delete [] dlm;
   delete [] bgij;
   delete [] tmat_n;
-
-#ifdef USE_NVTX
-  nvtxRangePop();
-#endif
 }
 
 // calculateTauMatrix replaces gettaucl from LSMS_1. The communication is performed in calculateAllTauMatrices
@@ -327,24 +312,17 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, Complex energy, Complex prel,
                         Complex *tau00_l,Matrix<Complex> &m,int iie,
                         DeviceConstants &d_const, DeviceStorage *d_store)
- //                       void *d_const, void *d_store)
 #endif
 {
-#ifdef USE_NVTX
-  nvtxEventAttributes_t eventAttrib = {0}; 
-  eventAttrib.version = NVTX_VERSION; 
-  eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; 
-  eventAttrib.colorType = NVTX_COLOR_ARGB; 
-  eventAttrib.color = 0x000000ff; 
-  eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; 
-  eventAttrib.message.ascii = "calculateTauMatrix"; 
-  nvtxRangePushEx(&eventAttrib);
-#endif
-
+  const int defaultLinearSolver = MST_LINEAR_SOLVER_DEFAULT;
+  
   int nrmat_ns=lsms.n_spin_cant*atom.nrmat;
   int kkrsz_ns=lsms.n_spin_cant*atom.kkrsz;
 
-  // build the kkr matrix
+  Matrix<Complex> tau00(kkrsz_ns, kkrsz_ns);
+
+  // =======================================
+  // build the KKR matrix
   m.resize(nrmat_ns,nrmat_ns);
   
   double timeBuildKKRMatrix=MPI_Wtime();
@@ -359,7 +337,51 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 
   timeBuildKKRMatrix=MPI_Wtime()-timeBuildKKRMatrix;
   if(lsms.global.iprint>=1) printf("  timeBuildKKRMatrix=%lf\n",timeBuildKKRMatrix);
- 
+
+  int linearSolver = lsms.global.linearSolver;
+  if(linearSolver == 0) linearSolver = defaultLinearSolver;
+// use the new or old solvers?
+  if(linearSolver < 1000) // new solvers. Old solvers have numbers > 1000. different postpocessing required. 0 is the default solver, for the time being use the old LSMS_1.9 one
+  {
+    switch(linearSolver)
+    {
+    case MST_LINEAR_SOLVER_ZGESV:
+      solveTau00zgesv(lsms, local, atom, iie, m, tau00); break;
+    case MST_LINEAR_SOLVER_ZGETRF:
+      solveTau00zgetrf(lsms, local, atom, iie, m, tau00); break;
+    case MST_LINEAR_SOLVER_ZCGESV:
+      solveTau00zcgesv(lsms, local, atom, iie, m, tau00); break;
+    case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
+      solveTau00zblocklu_f77(lsms, local, atom, iie, m, tau00); break;
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
+      solveTau00zblocklu_cpp(lsms, local, atom, iie, m, tau00); break;
+#ifdef ACCELERATOR_CUBLAS
+    case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
+#endif
+#ifdef ACCELERATOR_CUSOLVER
+    case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
+    case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
+#endif
+#ifdef ACCELERATOR_HIP
+#endif
+    default:
+      printf("UNKNOWN LINEAR SOLVER (%d)!!!\n",linearSolver);
+      exit(1);
+    }
+    
+    double timePostproc=MPI_Wtime();
+    if(lsms.relativity!=full)
+    {
+      calculateTau00MinusT(lsms, local, atom, iie, tau00, tau00);
+      rotateTau00ToLocalFrameNonRelativistic(lsms, atom, tau00, tau00_l);
+    } else {
+      rotateTau00ToLocalFrameRelativistic(lsms, atom, tau00, tau00_l);
+    }
+    timePostproc=MPI_Wtime()-timePostproc;
+    if(lsms.global.iprint>=1) printf("  timePostproc=%lf\n",timePostproc);
+    
+  } else { // old solvers
   // if(!lsms.global.checkIstop("buildKKRMatrix"))
   {
 
@@ -451,29 +473,17 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     Complex *dev_m=get_dev_m_();
     clearM00(dev_m, blk_sz[0], nrmat_ns,get_stream_(0));
 #endif
-#if defined (ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI)
-#pragma omp critical
-#endif
     {
-#ifdef USE_NVTX
-      nvtxEventAttributes_t eventAttrib = {0}; 
-      eventAttrib.version = NVTX_VERSION; 
-      eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; 
-      eventAttrib.colorType = NVTX_COLOR_ARGB; 
-      eventAttrib.color = 0x0000ff00; 
-      eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; 
-      eventAttrib.message.ascii = "block_inv"; 
-      nvtxRangePushEx(&eventAttrib);
-#endif
-      if(lsms.global.linearSolver==1 || lsms.global.linearSolver==0)
+      if(linearSolver == MST_LINEAR_SOLVER_BLOCK_INVERSE_F77)
         block_inv_(&m(0,0),vecs,&nrmat_ns,&nrmat_ns,&nrmat_ns,ipvt,
           blk_sz,&nblk,&delta(0,0),
           iwork,rwork,work1,&alg,idcol,&lsms.global.iprint);
-      else
+      else if(linearSolver == MST_LINEAR_SOLVER_BLOCK_INVERSE_CPP)
         block_inverse(m, blk_sz, nblk, delta, ipvt, idcol);
-#ifdef USE_NVTX
-      nvtxRangePop();
-#endif
+      else {
+        printf("Unknown linear solver (%d)!!\n", linearSolver);
+        exit(2);
+      }
     }
 
     if(alg>2) free(vecs);
@@ -499,9 +509,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     delete [] work1;
     delete [] idcol;
   }
-#ifdef USE_NVTX
-  nvtxRangePop();
-#endif
+  } // end of old solvers
 }
 
 
@@ -512,9 +520,6 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
                              // std::vector<NonRelativisticSingleScattererSolution> &solution,
                              Matrix<Complex> &tau00_l)
 {
-#ifdef USE_NVTX
-  nvtxRangePushA("calculateAllTauMatrices");
-#endif
   Complex prel=std::sqrt(energy*(1.0+energy*c2inv));
   Complex pnrel=std::sqrt(energy);
 
@@ -622,8 +627,5 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
 
 #else
   m_dat=NULL;
-#endif
-#ifdef USE_NVTX
-  nvtxRangePop();
 #endif
 }

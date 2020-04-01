@@ -281,5 +281,16 @@ void gemm(const Matrix<T>& A, const Matrix<T>& B, Matrix<T>& C,
              &C(0,0),
              static_cast<int>(C.l_dim()));
 }
+
+template <typename T>
+void unitMatrix(Matrix<T> &m)
+{
+  for(int i=0; i<m.n_row(); i++)
+  {
+    for(int j=0;j<m.n_col(); j++)
+      m(i,j) = 0.0;
+    m(i,i) = 1.0;
+  }
+}
 	  
 #endif
