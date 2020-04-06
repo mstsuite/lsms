@@ -17,7 +17,6 @@
 const int numFunctionalIndices=3;
 #include "Potential/libxcInterface.hpp"
 
-enum LinearSolver : int {defaultSolver = 0, oldSolver = 1, newSolver = 2};
 
 class LSMSGlobals {
 public:
@@ -27,7 +26,7 @@ public:
   int iprint;
   int print_node,default_iprint;
   char istop[32];
-  LinearSolver linearSolver;
+  unsigned int linearSolver; // use only least significant 2 bytes, the next bytes might be used for other solvers / kernel selection
 
 // for GPU only
   int GPUThreads;

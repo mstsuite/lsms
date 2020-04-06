@@ -3,7 +3,7 @@
 #include <string>
 #include "SystemParameters.hpp"
 #include "Potential/getXCName.hpp"
-
+#include "MultipleScattering/linearSolvers.hpp"
 const char *potentialTypeName[]=
 {
   "HDF5 (LSMS_1 format)",
@@ -20,7 +20,8 @@ void printLSMSGlobals(FILE *f,LSMSSystemParameters &lsms)
   fprintf(f,"  default_iprint=%d\n",lsms.global.default_iprint);
   fprintf(f,"  istop=%32s\n",lsms.global.istop);
   if(lsms.zblockLUSize>0) fprintf(f,"  zblockLUSize=%d\n",lsms.zblockLUSize);
-  fprintf(f,"  linearSolver=%d\n",lsms.global.linearSolver);
+  fprintf(f,"  linearSolver=%d \"%s\"\n",lsms.global.linearSolver,
+            linearSolverName(lsms.global.linearSolver).c_str());
 }
 
 void printLSMSSystemParameters(FILE *f,LSMSSystemParameters &lsms)

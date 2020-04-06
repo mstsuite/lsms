@@ -113,7 +113,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   char ctmp[32]; strncpy(ctmp,"main",32);
   luaGetStrN(L,"istop",ctmp,32); lsms.global.setIstop(ctmp);
 
-  lsms.global.linearSolver=defaultSolver;
+  lsms.global.linearSolver=0;
   luaGetInteger(L,"linearSolver",(int *)&lsms.global.linearSolver);
 
 // c     ================================================================

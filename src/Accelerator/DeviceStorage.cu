@@ -13,6 +13,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#include <cusolverDn.h>
 #include <iostream>
 
 #ifdef _OPENMP
@@ -65,8 +66,10 @@ class DeviceStorage {
 private:
   static int nThreads;
   static Complex *dev_m[MAX_THREADS], *dev_bgij[MAX_THREADS], *dev_tmat_n[MAX_THREADS];
+  stativ Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS];
   static int *dev_ipvt[MAX_THREADS];
   static cublasHandle_t cublas_h[MAX_THREADS];
+  static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];
   static cudaEvent_t event[MAX_THREADS];
   static cudaStream_t stream[MAX_THREADS][2];
   static DeviceMatrix<Complex> dev_tmat_store;
@@ -101,10 +104,13 @@ public:
         cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
         cudaMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
 #endif
+        cudaMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
+        cudaMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
         cudaStreamCreate(&stream[i][0]);
         cudaStreamCreate(&stream[i][1]);
         cudaEventCreateWithFlags(&event[i],cudaEventDisableTiming);
         cublasCreate(&cublas_h[i]);
+        cusolverDnCreate(&cusolverDnHandle[i]);
         // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
       }
       cudaCheckError();
@@ -141,10 +147,13 @@ public:
   static Complex* getDevBGij() { if(!initialized) {printf("DeviceStorage not initialized\n"); exit(1);}
                                  return dev_bgij[omp_get_thread_num()]; } 
   static Complex* getDevTmatN() { return dev_tmat_n[omp_get_thread_num()]; } 
+  static Complex* getDevTau() { return dev_tau[omp_get_thread_num()]; }
+  static Complex* getDevTau00() { return dev_tau00[omp_get_thread_num()]; }
   static int* getDevIpvt() { return dev_ipvt[omp_get_thread_num()]; } 
   static cudaStream_t getStream(int i) { return stream[omp_get_thread_num()][i]; }
   static cudaEvent_t getEvent() { return event[omp_get_thread_num()]; }
   static cublasHandle_t getCublasHandle() { return cublas_h[omp_get_thread_num()]; }
+  static cusolverDnHandle_t getCusolverDnHandle() { return cusolverDnHandle[omp_get_thread_num()]; }
   static DeviceMatrix<Complex>* getDevTmatStore() { return &dev_tmat_store; }
 };
 
