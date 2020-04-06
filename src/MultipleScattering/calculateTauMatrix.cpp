@@ -322,7 +322,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   int kkrsz_ns=lsms.n_spin_cant*atom.kkrsz;
 
   Matrix<Complex> tau00(kkrsz_ns, kkrsz_ns);
-  Complex *devM;
+  Complex *devM, *devT0;
 
   // =======================================
   // build the KKR matrix
@@ -346,13 +346,15 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
   case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
     break;
-#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_CUSOLVER)
+#if defined(ACCELERATOR_CUDA_C)
   case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
   case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
   case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
   case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
-    devM = get_dev_m_();
+    devM = deviceStorage->getDevM();
     transferMatrixToGPUCuda(devM, m);
+    devT0 = deviceStorage->getDevT0();
+    transferT0MatrixToGPUCuda(devT0, lsms, local, atom, iie);
     break;
 #endif
 #ifdef ACCELERATOR_HIP
@@ -372,19 +374,26 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       solveTau00zgesv(lsms, local, atom, iie, m, tau00); break;
     case MST_LINEAR_SOLVER_ZGETRF:
       solveTau00zgetrf(lsms, local, atom, iie, m, tau00); break;
+#ifndef ARCH_IBM
     case MST_LINEAR_SOLVER_ZCGESV:
       solveTau00zcgesv(lsms, local, atom, iie, m, tau00); break;
+#endif
     case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
       solveTau00zblocklu_f77(lsms, local, atom, iie, m, tau00); break;
     case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
       solveTau00zblocklu_cpp(lsms, local, atom, iie, m, tau00); break;
-#ifdef ACCELERATOR_CUBLAS
+#ifdef ACCELERATOR_CUDA_C
     case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
+      solveTau00zgetrf_cublas(lsms, local, *deviceStorage, atom, devT0, devM, tau00); break;
     case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
-#endif
-#ifdef ACCELERATOR_CUSOLVER
+      printf("MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS (%d) not implemented!!!\n",linearSolver);
+      exit(1); break;
+#ifndef ARCH_IBM
     case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
+      solveTau00zzgesv_cusolver(lsms, local, *deviceStorage, atom, devT0, devM, tau00); break;
+#endif
     case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
+      solveTau00zgetrf_cusolver(lsms, local, *deviceStorage, atom, devT0, devM, tau00); break;
 #endif
 #ifdef ACCELERATOR_HIP
 #endif

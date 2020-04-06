@@ -62,6 +62,12 @@ __global__ void zeroDiagonalBlocksKernelCuda(T *devM, int lDim, int nCol, int bl
     }
 }
 
+void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie)
+{
+  int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz;
+  cudaMemcpy(devT0, &local.tmatStore(iie*local.blkSizeTmatStore,atom.LIZStoreIdx[0]),
+             kkrsz_ns*kkrsz_ns*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
+}
 
 void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m)
 {
@@ -115,7 +121,7 @@ void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, D
   Aarray[0] = (cuDoubleComplex *)devM;
   
   int *ipivArray=d.getDevIpvt();
-  int *infoArray=d.info;
+  int infoArray[1]; // d.getDevInfo();
   int info;
 
   // printf("cublasZgetrfBatched\n");
@@ -127,7 +133,7 @@ void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, D
 
   // copy result into tau00
   // printf("copyTauToTau00\n");
-  copyTauToTau00Cuda<<<kkrsz_ns,1>>>(devTau00, devTau, kkrzs_ns, nrmat_ns);
+  copyTauToTau00Cuda<<<kkrsz_ns,1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);
   // printf("transferMatrixFromGPU\n");
   transferMatrixFromGPUCuda(tau00, devTau00);
 }
@@ -141,28 +147,29 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz; // size of t00 block
   // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
 
-  cuDoubleComplex *devTau = d.getDevTau();
-  cuDoubleComplex *devTau00 = d.getDevTau00();
+  cuDoubleComplex *devTau = (cuDoubleComplex *)d.getDevTau();
+  cuDoubleComplex *devTau00 = (cuDoubleComplex *)d.getDevTau00();
   cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
   int *devIpiv = d.getDevIpvt();
+  int devInfo[1]; // d.getDevInfo();
   
   zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
   zeroMatrixCuda(deviceData.t, nrmat_ns, kkrsz_ns);
-  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(deviceData.t, tMatrix], kkrsz_ns, nrmat_ns);
+  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(deviceData.t, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
 
-  int info, iter;
+  int iter;
 
   cusolverStatus_t status = cusolverDnZZgesv(cusolverDnHandle, nrmat_ns, kkrsz_ns,
                                              devM, nrmat_ns, devIpiv, deviceData.t, nrmat_ns, devTau, nrmat_ns,
-                                             devWork, d.getDevWorkBytes(), &iter, deviceData.info);
+                                             devWork, d.getDevWorkBytes(), &iter, devInfo);
 
   if(status!=CUSOLVER_STATUS_SUCCESS)
   {
     printf("cusolverDnZZgesv returned %d\n",status);
   }
 
-  copyTauToTau00Cuda<<<kkrsz_ns,1>>>(deviceData.tau00, deviceData.tau, kkrsz_ns, nrmat_ns);
-  transferMatrixFromGPU(tau00, deviceData.tau00);
+  copyTauToTau00Cuda<<<kkrsz_ns,1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);
+  transferMatrixFromGPUCuda(tau00, devTau00);
 }
 #endif
 
@@ -181,14 +188,14 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   int devInfo[1]; // d.getDevInfo();
 
   zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
-  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devTau, tMatrix, kkrsz_ns, nrmat_ns);
+  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devTau, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
 
   cusolverDnZgetrf(cusolverDnHandle, nrmat_ns, nrmat_ns, 
-                   devM, nrmat_ns, devWork, devIpiv,
+                   (cuDoubleComplex *)devM, nrmat_ns, devWork, devIpiv,
                    devInfo );
 
   cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, kkrsz_ns,
-                   devM, nrmat_ns, devIpiv, devTau, nrmat_ns, devInfo);
+                   (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devTau, nrmat_ns, devInfo);
 
   // copy result into tau00
   copyTauToTau00Cuda<<<kkrsz_ns,1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);

@@ -27,6 +27,8 @@ inline int omp_get_thread_num() {return 0;}
 #endif
 #endif
 
+#include "DeviceStorage.hpp"
+
 // #include "cuda_error.h"
 #include "cudaCheckError.hpp"
 
@@ -61,12 +63,13 @@ Complex* get_host_m_(const int &max_nrmat_ns) {
   return m_v; 
 }
 
+/*
 static const int MAX_THREADS=16;
 class DeviceStorage {
 private:
   static int nThreads;
   static Complex *dev_m[MAX_THREADS], *dev_bgij[MAX_THREADS], *dev_tmat_n[MAX_THREADS];
-  stativ Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS];
+  static Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS];
   static int *dev_ipvt[MAX_THREADS];
   static cublasHandle_t cublas_h[MAX_THREADS];
   static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];
@@ -77,7 +80,9 @@ private:
   static DeviceMatrix<Complex> dev_tmat_store;
   static bool initialized;
 public:
-  static int allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads)
+*/
+
+  int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads)
   {
     if(!initialized)
     {
@@ -108,6 +113,7 @@ public:
 #endif
         cudaMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
         cudaMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
+        cudaMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
         cudaStreamCreate(&stream[i][0]);
         cudaStreamCreate(&stream[i][1]);
         cudaEventCreateWithFlags(&event[i],cudaEventDisableTiming);
@@ -116,11 +122,11 @@ public:
 
 	int lWork;
 	cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
-				    dev_m[i], N, &lWork);
+				    (cuDoubleComplex *)dev_m[i], N, &lWork);
 	dev_workBytes[i] = 0;
 #ifndef ARCH_IBM
 	cusolverDnZZgesv_bufferSize(cusolverDnHandle[i], N, 2*kkrsz_max,
-				    dev_m[i], N, dev_ipvt[i], dev_tau[i], N, dev_tau[i], N,
+				    (cuDoubleComplex *)dev_m[i], N, dev_ipvt[i], (cuDoubleComplex *)dev_tau[i], N, (cuDoubleComplex *)dev_tau[i], N,
 				    dev_work[i], &dev_workBytes[i]);
 #endif
 
@@ -135,7 +141,7 @@ public:
     return 0;
   }
   
-  static void free()
+  void DeviceStorage::free()
   {
     if(initialized) {
    //     printf("*************************************MEMORY IS BEING FREED\n");
@@ -149,6 +155,7 @@ public:
         cudaFree(dev_tmat_n[i]);
 #endif
 	cudaFree(dev_work[i]);
+        cudaFree(dev_t0[i]);
         cudaStreamDestroy(stream[i][0]);
         cudaStreamDestroy(stream[i][1]);
         cudaEventDestroy(event[i]);
@@ -160,6 +167,7 @@ public:
     }
   }
 
+/*
   static Complex* getDevM() { return dev_m[omp_get_thread_num()]; } 
   static Complex* getDevBGij() { if(!initialized) {printf("DeviceStorage not initialized\n"); exit(1);}
                                  return dev_bgij[omp_get_thread_num()]; } 
@@ -175,11 +183,17 @@ public:
   static void *getDevWork() {  return dev_work[omp_get_thread_num()]; }
   static DeviceMatrix<Complex>* getDevTmatStore() { return &dev_tmat_store; }
 };
+*/
 
 bool DeviceStorage::initialized = false;
 Complex *DeviceStorage::dev_m[MAX_THREADS], *DeviceStorage::dev_bgij[MAX_THREADS], *DeviceStorage::dev_tmat_n[MAX_THREADS];
+Complex *DeviceStorage::dev_tau[MAX_THREADS], *DeviceStorage::dev_tau00[MAX_THREADS];
+Complex *DeviceStorage::dev_t0[MAX_THREADS];
+void *DeviceStorage::dev_work[MAX_THREADS];
+int DeviceStorage::dev_workBytes[MAX_THREADS];
 int *DeviceStorage::dev_ipvt[MAX_THREADS];
 cublasHandle_t DeviceStorage::cublas_h[MAX_THREADS];
+cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
 cudaEvent_t DeviceStorage::event[MAX_THREADS];
 cudaStream_t DeviceStorage::stream[MAX_THREADS][2];
 DeviceMatrix<Complex> DeviceStorage::dev_tmat_store;
