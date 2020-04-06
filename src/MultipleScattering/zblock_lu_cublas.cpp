@@ -11,11 +11,11 @@
 
 #define IDX2C(i,j,ld) (((j)*(ld))+(i))
 
-extern "C" {
-void zgetrf_(int *m, int *n, Complex *a, int *lda, int *ipvt, int *info);
-void zgetrs_(const char *, int *m, int *ioff, Complex *a, int *lda, int *ipvt, Complex *b, int *ldb, int *info);
+// extern "C" {
+// void zgetrf_(int *m, int *n, Complex *a, int *lda, int *ipvt, int *info);
+// void zgetrs_(const char *, int *m, int *ioff, Complex *a, int *lda, int *ipvt, Complex *b, int *ldb, int *info);
 // void zgemm_(const char *, const char *, int *m, int *n, int *k, Complex *alpha, Complex *a, int *lda, Complex *b, int *ldb, Complex *beta, Complex *c, int *ldc);
-}
+// }
 
 // a: input matrix -> output in block 1 of a
 //

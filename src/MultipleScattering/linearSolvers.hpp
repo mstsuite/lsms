@@ -11,6 +11,10 @@
 
 #include "MultipleScattering.hpp"
 
+#ifdef ACCELERATOR_CUDA_C
+#include "Accelerator/DeviceStorage.hpp"
+#endif
+
 #define MST_LINEAR_SOLVER_MASK    0x0000ffff
 #define MST_BUILD_KKR_MATRIX_MASK 0x000f0000
 
@@ -41,6 +45,13 @@ void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local, At
 #define MST_LINEAR_SOLVER_ZZGESV_CUSOLVER 0x12
 #define MST_LINEAR_SOLVER_ZGETRF_CUSOLVER 0x13
 // #endif
+#ifdef ACCELERATOR_CUDA_C
+void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m);
+void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM);
+void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+#endif
 
 #ifdef ACCELERATOR_HIP
 #endif

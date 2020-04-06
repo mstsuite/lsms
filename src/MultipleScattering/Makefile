@@ -3,6 +3,10 @@ OBJ = calculateTauMatrix.o linearSolvers_CPU.o makegij_c.o setgij.o block_invers
       int_zz_zj.o mdosms_c.o mgreen_c.o green_function_rel.o write_kkrmat.o relmtrx.o gfill.o gafill.o \
       magnet.o magnetic_dens.o new_dens.o block_inverse.o zblock_lu_cpp.o zblock_lu_cublas.o
 
+ifdef CUDA_CXX
+OBJ += linearSolvers_CUDA.o
+endif
+
 all: libMultipleScattering.a
 
 clean:
@@ -19,6 +23,11 @@ clean:
 
 %.o : %.f90
 	$(F77) -c -o $@ $<
+
+ifdef CUDA_CXX
+%.o : %.cu
+	$(CUDA_CXX) $(INC_PATH) -c -o $@ $<
+endif
 
 libMultipleScattering.a : $(OBJ)
 	$(AR) -r libMultipleScattering.a $(OBJ) 

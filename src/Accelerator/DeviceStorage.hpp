@@ -35,7 +35,7 @@ class DeviceStorage {
 private:
   static int nThreads;
   static Complex *dev_m[MAX_THREADS], *dev_bgij[MAX_THREADS], *dev_tmat_n[MAX_THREADS];
-  static Complex *dev_tau[MAX_THREADS], Complex *dev_tau00[MAX_THREADS];
+  static Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS];
   static int *dev_ipvt[MAX_THREADS];
   static cublasHandle_t cublas_h[MAX_THREADS];
   static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];  
