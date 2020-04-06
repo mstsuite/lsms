@@ -72,6 +72,8 @@ private:
   static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];
   static cudaEvent_t event[MAX_THREADS];
   static cudaStream_t stream[MAX_THREADS][2];
+  static int dev_workBytes[MAX_THREADS];
+  static void *dev_work[MAX_THREADS];
   static DeviceMatrix<Complex> dev_tmat_store;
   static bool initialized;
 public:
@@ -111,6 +113,20 @@ public:
         cudaEventCreateWithFlags(&event[i],cudaEventDisableTiming);
         cublasCreate(&cublas_h[i]);
         cusolverDnCreate(&cusolverDnHandle[i]);
+
+	int lWork;
+	cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
+				    dev_m[i], N, &lWork);
+	dev_workBytes[i] = 0;
+#ifndef ARCH_IBM
+	cusolverDnZZgesv_bufferSize(cusolverDnHandle[i], N, 2*kkrsz_max,
+				    dev_m[i], N, dev_ipvt[i], dev_tau[i], N, dev_tau[i], N,
+				    dev_work[i], &dev_workBytes[i]);
+#endif
+
+	dev_workBytes[i] = std::max(dev_workBytes[i]*sizeof(cuDoubleComplex),
+				    lWork*sizeof(cuDoubleComplex));
+	cudaMalloc((void**)&dev_work[i], dev_workBytes[i]);
         // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
       }
       cudaCheckError();
@@ -132,6 +148,7 @@ public:
         cudaFree(dev_bgij[i]);
         cudaFree(dev_tmat_n[i]);
 #endif
+	cudaFree(dev_work[i]);
         cudaStreamDestroy(stream[i][0]);
         cudaStreamDestroy(stream[i][1]);
         cudaEventDestroy(event[i]);
@@ -154,6 +171,8 @@ public:
   static cudaEvent_t getEvent() { return event[omp_get_thread_num()]; }
   static cublasHandle_t getCublasHandle() { return cublas_h[omp_get_thread_num()]; }
   static cusolverDnHandle_t getCusolverDnHandle() { return cusolverDnHandle[omp_get_thread_num()]; }
+  static int getDevWorkBytes() { return dev_workBytes[omp_get_thread_num()]; }
+  static void *getDevWork() {  return dev_work[omp_get_thread_num()]; }
   static DeviceMatrix<Complex>* getDevTmatStore() { return &dev_tmat_store; }
 };
 

@@ -143,6 +143,8 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 
   cuDoubleComplex *devTau = d.getDevTau();
   cuDoubleComplex *devTau00 = d.getDevTau00();
+  cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
+  int *devIpiv = d.getDevIpvt();
   
   zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
   zeroMatrixCuda(deviceData.t, nrmat_ns, kkrsz_ns);
@@ -151,8 +153,8 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   int info, iter;
 
   cusolverStatus_t status = cusolverDnZZgesv(cusolverDnHandle, nrmat_ns, kkrsz_ns,
-                                             devM, nrmat_ns, deviceData.ipiv, deviceData.t, nrmat_ns, deviceData.tau, nrmat_ns,
-    deviceData.work, deviceData.workBytes, &iter, deviceData.info);
+                                             devM, nrmat_ns, devIpiv, deviceData.t, nrmat_ns, devTau, nrmat_ns,
+                                             devWork, d.getDevWorkBytes(), &iter, deviceData.info);
 
   if(status!=CUSOLVER_STATUS_SUCCESS)
   {
@@ -171,20 +173,24 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
   int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz; // size of t00 block
   // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+  cuDoubleComplex *devTau = (cuDoubleComplex *)d.getDevTau();
+  cuDoubleComplex *devTau00 = (cuDoubleComplex *)d.getDevTau00();
+  cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
 
-  zeroMatrixCuda(deviceData.tau, nrmat_ns, kkrsz_ns);
-  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(deviceData.tau, tMatrix, kkrsz_ns, nrmat_ns);
+  int *devIpiv=d.getDevIpvt();
+  int devInfo[1]; // d.getDevInfo();
+
+  zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
+  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devTau, tMatrix, kkrsz_ns, nrmat_ns);
 
   cusolverDnZgetrf(cusolverDnHandle, nrmat_ns, nrmat_ns, 
-                   devM, nrmat_ns,
-           (cuDoubleComplex *)deviceData.work,
-           deviceData.ipiv,
-           deviceData.info );
+                   devM, nrmat_ns, devWork, devIpiv,
+                   devInfo );
 
   cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, kkrsz_ns,
-      devM, nrmat_ns, deviceData.ipiv, deviceData.tau, nrmat_ns, deviceData.info);
+                   devM, nrmat_ns, devIpiv, devTau, nrmat_ns, devInfo);
 
   // copy result into tau00
-  copyTauToTau00Cuda<<<kkrsz_ns,1>>>(deviceData.tau00, deviceData.tau, kkrsz_ns, nrmat_ns);
-  transferMatrixFromGPUCuda(tau00, deviceData.tau00);
+  copyTauToTau00Cuda<<<kkrsz_ns,1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);
+  transferMatrixFromGPUCuda(tau00, devTau00);
 }
