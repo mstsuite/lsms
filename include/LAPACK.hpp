@@ -37,6 +37,8 @@ namespace LAPACK {
   extern "C" int  zgetrs_(const char * trans, int* n, int* nrhs, std::complex<double>* A, int* LDA, int* IPIV, std::complex<double>* B, int *LDB, int* INFO);
 
   extern "C" int  dgetri_(int* N, double* A, int* LDA, int* IPIV,  double* WORK, int* LWORK, int* INFO);
+  extern "C" void zgetri_(int *n, Complex *a, int *lda,int *ipvt, Complex *w, int *lw,
+               int *info);
 
 // ============================================================================
   inline void GESV(int ma,int mb,float* a,int lda,int* pivot,

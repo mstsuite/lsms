@@ -4,7 +4,7 @@
 #include <cmath>
 #include "PhysicalConstants.hpp"
 
-#include "lapack.h"
+// #include "lapack.h"
 
 // #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/SingleSiteScattering.hpp"
@@ -54,11 +54,11 @@ void solveSingleScatterers(LSMSSystemParameters &lsms, LocalTypeInfo &local,
       Complex *pmat_m_ptr=&local.atom[i].pmat_m[iie](0,0);
       BLAS::zcopy_(&kkrszsqr,&solution[i].tmat_l(0,0,0),&one,pmat,&one);
       BLAS::zcopy_(&kkrszsqr,&solution[i].tmat_l(0,0,1),&one,pmat_m_ptr,&one);
-      zgetrf_(&kkrsz,&kkrsz,pmat_m_ptr,&kkrsz,ipvt,&info);
-      zgetri_(&kkrsz,pmat_m_ptr,&kkrsz,ipvt,wbig,&kkrszsqr,&info);
+      LAPACK::zgetrf_(&kkrsz,&kkrsz,pmat_m_ptr,&kkrsz,ipvt,&info);
+      LAPACK::zgetri_(&kkrsz,pmat_m_ptr,&kkrsz,ipvt,wbig,&kkrszsqr,&info);
 //    -------------------------------------------------------------
-      zgetrf_(&kkrsz,&kkrsz,pmat,&kkrsz,ipvt,&info);
-      zgetri_(&kkrsz,pmat,&kkrsz,ipvt,wbig,&kkrszsqr,&info);
+      LAPACK::zgetrf_(&kkrsz,&kkrsz,pmat,&kkrsz,ipvt,&info);
+      LAPACK::zgetri_(&kkrsz,pmat,&kkrsz,ipvt,wbig,&kkrszsqr,&info);
 
       for(int j=0; j<kkrszsqr; j++) pmat_m_ptr[j]-=pmat[j];
 
