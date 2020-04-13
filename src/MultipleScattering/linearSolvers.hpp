@@ -15,15 +15,20 @@
 #include "Accelerator/DeviceStorage.hpp"
 #endif
 
-#define MST_LINEAR_SOLVER_MASK    0x0000ffff
-#define MST_BUILD_KKR_MATRIX_MASK 0x000f0000
+#define MST_LINEAR_SOLVER_MASK    0x00000fff
+#define MST_BUILD_KKR_MATRIX_MASK 0x0000f000
 
-#ifndef MST_LINEAR_SOLVER_DEFAULT
-#define MST_LINEAR_SOLVER_DEFAULT 0x8000
+#ifndef MST_BUILD_KKR_MATRIX_DEFAULT
+#define MST_BUILD_KKR_MATRIX_DEFAULT 0x1000
 #endif
 
-#define MST_BUILD_KKR_MATRIX_CPU         0x10000
-#define MST_BUILD_KKR_MATRIX_ACCELERATOR 0x20000
+#ifndef MST_LINEAR_SOLVER_DEFAULT
+#define MST_LINEAR_SOLVER_DEFAULT 0x800
+#endif
+
+#define MST_BUILD_KKR_MATRIX_F77         0x1000
+#define MST_BUILD_KKR_MATRIX_CPP         0x2000
+#define MST_BUILD_KKR_MATRIX_ACCELERATOR 0x3000
 
 #define MST_LINEAR_SOLVER_ZGESV 1
 void solveTau00zgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00);
@@ -58,10 +63,10 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 #ifdef ACCELERATOR_HIP
 #endif
 
-#define MST_LINEAR_SOLVER_BLOCK_INVERSE_F77 0x8000
-#define MST_LINEAR_SOLVER_BLOCK_INVERSE_CPP 0x8001
+#define MST_LINEAR_SOLVER_BLOCK_INVERSE_F77 0xf00
+#define MST_LINEAR_SOLVER_BLOCK_INVERSE_CPP 0xf01
 // #ifdef ACCELERATOR_CUDA_C
-#define MST_LINEAR_SOLVER_BLOCK_INVERSE_CUDA 0x8010
+#define MST_LINEAR_SOLVER_BLOCK_INVERSE_CUDA 0xf10
 // #endif
 
 inline std::string linearSolverName(unsigned int solverId)
