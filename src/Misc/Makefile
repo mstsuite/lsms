@@ -7,6 +7,7 @@ OBJ = zeroout.o fstop.o newint.o fit.o interp.o trltog.o spin_trafo.o fitpot.o r
       bulirsch_stoer.o mod_midpoint.o \
       bulirschStoerIntegrator.o \
       calculateGauntCoeficients.o \
+      Coeficients.o \
       associatedLegendreFunction.o \
       readLastLine.o stop_with_backtrace.o
 
