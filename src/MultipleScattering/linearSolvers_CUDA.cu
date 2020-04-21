@@ -151,13 +151,13 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   cuDoubleComplex *devTau00 = (cuDoubleComplex *)d.getDevTau00();
   cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
 
-  cuDoubleComplex *devT = (cuDoubleComplax *)d.getDevT();
+  cuDoubleComplex *devT = (cuDoubleComplex *)d.getDevT();
 
   int *devIpiv = d.getDevIpvt();
   int devInfo[1]; // d.getDevInfo();
   
   zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
-  zeroMatrixCuda(deviceData.t, nrmat_ns, kkrsz_ns);
+  zeroMatrixCuda(devT, nrmat_ns, kkrsz_ns);
   copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devT, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
 
   int iter;
