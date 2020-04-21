@@ -71,7 +71,7 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 
 inline std::string linearSolverName(unsigned int solverId)
 {
-  solverId = solverId & 0xffff;
+  solverId = solverId & 0xfff;
   std::string name("");
   char idstr[12];
   if(solverId == 0)
@@ -79,7 +79,7 @@ inline std::string linearSolverName(unsigned int solverId)
       solverId = MST_LINEAR_SOLVER_DEFAULT;
       name = "default solver: ";
     }
-  snprintf(idstr, 10, " (0x%04x)", solverId);
+  snprintf(idstr, 10, " (0x%03x)", solverId);
   switch(solverId)
     {
     case MST_LINEAR_SOLVER_ZGESV: name += "CPU zgesv"; break;
