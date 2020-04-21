@@ -35,7 +35,7 @@ class DeviceStorage {
 private:
   static int nThreads;
   static Complex *dev_m[MAX_THREADS], *dev_bgij[MAX_THREADS], *dev_tmat_n[MAX_THREADS];
-  static Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS], *dev_t0[MAX_THREADS];
+  static Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS], *dev_t0[MAX_THREADS], *dev_t[MAX_THREADS];
   static int *dev_ipvt[MAX_THREADS];
   static cublasHandle_t cublas_h[MAX_THREADS];
   static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];  
@@ -55,6 +55,7 @@ public:
   static Complex* getDevTmatN() { return dev_tmat_n[omp_get_thread_num()]; } 
   static Complex* getDevTau() { return dev_tau[omp_get_thread_num()]; }
   static Complex* getDevTau00() { return dev_tau00[omp_get_thread_num()]; }
+  static Complex* getDevT() { return dev_t[omp_get_thread_num()]; }
   static Complex* getDevT0() { return dev_t0[omp_get_thread_num()]; }
   static int* getDevIpvt() { return dev_ipvt[omp_get_thread_num()]; } 
   static cudaStream_t getStream(int i) { return stream[omp_get_thread_num()][i]; }

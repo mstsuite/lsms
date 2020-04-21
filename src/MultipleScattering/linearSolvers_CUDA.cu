@@ -150,17 +150,20 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   cuDoubleComplex *devTau = (cuDoubleComplex *)d.getDevTau();
   cuDoubleComplex *devTau00 = (cuDoubleComplex *)d.getDevTau00();
   cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
+
+  cuDoubleComplex *devT = (cuDoubleComplax *)d.getDevT();
+
   int *devIpiv = d.getDevIpvt();
   int devInfo[1]; // d.getDevInfo();
   
   zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
   zeroMatrixCuda(deviceData.t, nrmat_ns, kkrsz_ns);
-  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(deviceData.t, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
+  copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devT, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
 
   int iter;
 
   cusolverStatus_t status = cusolverDnZZgesv(cusolverDnHandle, nrmat_ns, kkrsz_ns,
-                                             devM, nrmat_ns, devIpiv, deviceData.t, nrmat_ns, devTau, nrmat_ns,
+                                             devM, nrmat_ns, devIpiv, devT, nrmat_ns, devTau, nrmat_ns,
                                              devWork, d.getDevWorkBytes(), &iter, devInfo);
 
   if(status!=CUSOLVER_STATUS_SUCCESS)

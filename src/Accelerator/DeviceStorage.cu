@@ -113,6 +113,7 @@ public:
 #endif
         cudaMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
         cudaMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
+        cudaMalloc((void**)&dev_t[i], 4*N*kkrsz_max*sizeof(Complex));
         cudaMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
         cudaStreamCreate(&stream[i][0]);
         cudaStreamCreate(&stream[i][1]);
@@ -189,6 +190,7 @@ bool DeviceStorage::initialized = false;
 Complex *DeviceStorage::dev_m[MAX_THREADS], *DeviceStorage::dev_bgij[MAX_THREADS], *DeviceStorage::dev_tmat_n[MAX_THREADS];
 Complex *DeviceStorage::dev_tau[MAX_THREADS], *DeviceStorage::dev_tau00[MAX_THREADS];
 Complex *DeviceStorage::dev_t0[MAX_THREADS];
+Complex *DeviceStorage::dev_t[MAX_THREADS];
 void *DeviceStorage::dev_work[MAX_THREADS];
 int DeviceStorage::dev_workBytes[MAX_THREADS];
 int *DeviceStorage::dev_ipvt[MAX_THREADS];
