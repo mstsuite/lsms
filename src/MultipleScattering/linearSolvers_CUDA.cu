@@ -163,7 +163,7 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   int iter;
 
   cusolverStatus_t status = cusolverDnZZgesv(cusolverDnHandle, nrmat_ns, kkrsz_ns,
-                                             devM, nrmat_ns, devIpiv, devT, nrmat_ns, devTau, nrmat_ns,
+                                             (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devT, nrmat_ns, devTau, nrmat_ns,
                                              devWork, d.getDevWorkBytes(), &iter, devInfo);
 
   if(status!=CUSOLVER_STATUS_SUCCESS)
