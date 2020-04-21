@@ -315,8 +315,11 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 #endif
 {
   const unsigned int defaultLinearSolver = MST_LINEAR_SOLVER_DEFAULT;
-  unsigned int linearSolver = lsms.global.linearSolver & 0xffff; // only use two least significant bytes
+  unsigned int linearSolver = lsms.global.linearSolver & MST_LINEAR_SOLVER_MASK; // only use 12 least significant bits
   if(linearSolver == 0) linearSolver = defaultLinearSolver;
+
+  unsigned int buildKKRMatrixKernel = lsms.global.linearSolver & MST_BUILD_KKR_MATRIX_MASK;
+  if(buildKKRMatrixKernel == 0) buildKKRMatrixKernel = MST_BUILD_KKR_MATRIX_DEFAULT;
   
   int nrmat_ns=lsms.n_spin_cant*atom.nrmat;
   int kkrsz_ns=lsms.n_spin_cant*atom.kkrsz;
@@ -330,43 +333,61 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   
   double timeBuildKKRMatrix=MPI_Wtime();
 
+  switch(buildKKRMatrixKernel)
+  {
+    case MST_BUILD_KKR_MATRIX_F77:
 #ifdef BUILDKKRMATRIX_GPU
-  buildKKRMatrix_gpu(lsms, local, atom, ispin, energy, prel, iie, m, d_const);
+      buildKKRMatrix_gpu(lsms, local, atom, ispin, energy, prel, iie, m, d_const);
 #else
-  buildKKRMatrix(lsms, local, atom, ispin, energy, prel, iie, m);
+      buildKKRMatrix(lsms, local, atom, ispin, energy, prel, iie, m);
 #endif
+      break;
+  case MST_BUILD_KKR_MATRIX_CPP:
+  default:
+    printf("UNKNOWN KKR MARIX BUILD KERNEL (%x)!!!\n",buildKKRMatrixKernel);
+    exit(1);
+  }
 
   // make sure that the kkr matrix m is in the right place in memory
-  // built on CPU:
-  switch(linearSolver)
+  switch(buildKKRMatrixKernel)
   {
-  case MST_LINEAR_SOLVER_ZGESV:
-  case MST_LINEAR_SOLVER_ZGETRF:
-  case MST_LINEAR_SOLVER_ZCGESV:
-  case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
-  case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
-    break;
+  case MST_BUILD_KKR_MATRIX_F77:
+  case MST_BUILD_KKR_MATRIX_CPP:
+  // built on CPU:
+    switch(linearSolver)
+    {
+    case MST_LINEAR_SOLVER_ZGESV:
+    case MST_LINEAR_SOLVER_ZGETRF:
+    case MST_LINEAR_SOLVER_ZCGESV:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
+      break;
 #if defined(ACCELERATOR_CUDA_C)
-  case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
-  case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
-  case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
-  case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
-    devM = deviceStorage->getDevM();
-    transferMatrixToGPUCuda(devM, m);
-    devT0 = deviceStorage->getDevT0();
-    transferT0MatrixToGPUCuda(devT0, lsms, local, atom, iie);
-    break;
+    case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
+    case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
+    case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
+      devM = deviceStorage->getDevM();
+      transferMatrixToGPUCuda(devM, m);
+      devT0 = deviceStorage->getDevT0();
+      transferT0MatrixToGPUCuda(devT0, lsms, local, atom, iie);
+      break;
 #endif
 #ifdef ACCELERATOR_HIP
 #endif
-  default: break; // do nothing. We are using the CPU matrix
+    default: break; // do nothing. We are using the CPU matrix
+    } break;
+    
+  default:
+    printf("UNKNOWN KKR MARIX BUILD KERNEL (%x)!!!\n",buildKKRMatrixKernel);
+    exit(1);
   }
 
   timeBuildKKRMatrix=MPI_Wtime()-timeBuildKKRMatrix;
   if(lsms.global.iprint>=1) printf("  timeBuildKKRMatrix=%lf\n",timeBuildKKRMatrix);
 
 // use the new or old solvers?
-  if(linearSolver < 0x8000) // new solvers. Old solvers have numbers > 0x8000. different postpocessing required. 0 is the default solver, for the time being use the old LSMS_1.9 one
+  if(linearSolver < MST_LINEAR_SOLVER_BLOCK_INVERSE_F77) // new solvers. Old solvers have numbers > 0x8000. different postpocessing required. 0 is the default solver, for the time being use the old LSMS_1.9 one
   {
     switch(linearSolver)
     {
