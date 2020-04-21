@@ -75,7 +75,7 @@ private:
   static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];
   static cudaEvent_t event[MAX_THREADS];
   static cudaStream_t stream[MAX_THREADS][2];
-  static int dev_workBytes[MAX_THREADS];
+  static size_t dev_workBytes[MAX_THREADS];
   static void *dev_work[MAX_THREADS];
   static DeviceMatrix<Complex> dev_tmat_store;
   static bool initialized;
@@ -180,7 +180,7 @@ public:
   static cudaEvent_t getEvent() { return event[omp_get_thread_num()]; }
   static cublasHandle_t getCublasHandle() { return cublas_h[omp_get_thread_num()]; }
   static cusolverDnHandle_t getCusolverDnHandle() { return cusolverDnHandle[omp_get_thread_num()]; }
-  static int getDevWorkBytes() { return dev_workBytes[omp_get_thread_num()]; }
+  static size_t getDevWorkBytes() { return dev_workBytes[omp_get_thread_num()]; }
   static void *getDevWork() {  return dev_work[omp_get_thread_num()]; }
   static DeviceMatrix<Complex>* getDevTmatStore() { return &dev_tmat_store; }
 };
@@ -192,7 +192,7 @@ Complex *DeviceStorage::dev_tau[MAX_THREADS], *DeviceStorage::dev_tau00[MAX_THRE
 Complex *DeviceStorage::dev_t0[MAX_THREADS];
 Complex *DeviceStorage::dev_t[MAX_THREADS];
 void *DeviceStorage::dev_work[MAX_THREADS];
-int DeviceStorage::dev_workBytes[MAX_THREADS];
+size_t DeviceStorage::dev_workBytes[MAX_THREADS];
 int *DeviceStorage::dev_ipvt[MAX_THREADS];
 cublasHandle_t DeviceStorage::cublas_h[MAX_THREADS];
 cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
