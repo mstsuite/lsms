@@ -8,6 +8,12 @@
 #include "Matrix.hpp"
 #include <vector>
 
+#include "Accelerator/DeviceStorage.hpp"
+#include <cuda_runtime.h>
+#include <cuComplex.h>
+#include <cublas_v2.h>
+#include <cusolverDn.h>
+
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 
 template <typename T>
