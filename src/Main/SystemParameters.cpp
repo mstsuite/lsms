@@ -4,6 +4,7 @@
 #include "SystemParameters.hpp"
 #include "Potential/getXCName.hpp"
 #include "MultipleScattering/linearSolvers.hpp"
+#include "MultipleScattering/buildKKRMatrix.hpp"
 const char *potentialTypeName[]=
 {
   "HDF5 (LSMS_1 format)",
@@ -22,6 +23,8 @@ void printLSMSGlobals(FILE *f,LSMSSystemParameters &lsms)
   if(lsms.zblockLUSize>0) fprintf(f,"  zblockLUSize=%d\n",lsms.zblockLUSize);
   fprintf(f,"  linearSolver=%d \"%s\"\n",lsms.global.linearSolver,
             linearSolverName(lsms.global.linearSolver).c_str());
+  fprintf(f,"  buildKKRMatrix=%d \"%s\"\n",lsms.global.linearSolver,
+            buildKKRMatrixName(lsms.global.linearSolver).c_str());
 }
 
 void printLSMSSystemParameters(FILE *f,LSMSSystemParameters &lsms)

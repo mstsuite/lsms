@@ -6,6 +6,8 @@
 #include "Main/SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 
+void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, Complex energy, Complex prel, int iie, Matrix<Complex> &m);
+
 void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms, LocalTypeInfo &local,
                              std::vector<Matrix<Real> > &vr, Complex energy,
                              int iie,

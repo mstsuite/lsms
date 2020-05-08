@@ -15,6 +15,7 @@
 #include "Main/LSMSMode.hpp"
 
 #include "linearSolvers.hpp"
+#include "buildKKRMatrix.hpp"
 #include "tau00Postprocess.cpp"
 
 #ifdef _OPENMP
@@ -155,22 +156,22 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
     ncst=0;
 // build local t_mat:
     int im=0;
-    if(lsms.n_spin_pola == lsms.n_spin_cant) // non polarzed or spin canted
+    if(lsms.n_spin_pola == lsms.n_spin_cant) // non polarized or spin canted
     {
       for(int js=0; js<lsms.n_spin_cant; js++)
-	{
-	  int jsm = kkrsz*kkrsz_ns*js;
-	  for(int j=0; j<kkr1; j++)
-	    {
-	      for(int is=0; is<lsms.n_spin_cant; is++)
-		{
-		  int jm=jsm+kkrsz_ns*j+kkrsz*is;
-		  int one=1;
-		  BLAS::zcopy_(&kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
-		  im+=kkr1;
-		}
-	    }
-	}
+      {
+        int jsm = kkrsz*kkrsz_ns*js;
+        for(int j=0; j<kkr1; j++)
+        {
+          for(int is=0; is<lsms.n_spin_cant; is++)
+          {
+            int jm=jsm+kkrsz_ns*j+kkrsz*is;
+            int one=1;
+            BLAS::zcopy_(&kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
+            im+=kkr1;
+          }
+        }
+      }
     } else { // spin polarized colinear version for ispin
       int jsm = kkrsz*kkrsz*ispin; // copy spin up or down?
       for(int j=0; j<kkr1; j++)
@@ -221,6 +222,14 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
         if(lsms.relativity==full) nrel_rel=1;
         setgij_(gij,bgij,&kkr1,&kkr1_ns,&kkr2,&kkr2_ns,
                 &lsms.n_spin_cant,&nrel_rel,&psq,&energy);
+
+        if((ir1==1 && ir2==0) || (ir1==10 && ir2==0))
+        {
+          printf("ORIG: ir1=%d, ir2=%d: bgij[0] = %g + %gi; gij[0] = %g + %gi\n",
+                 ir1, ir2, bgij[0].real(), bgij[0].imag(), gij[0].real(), gij[0].imag());
+          printf("    rij = %g %g %g;  prel=%g + %gi\n", rij[0],  rij[1], rij[2], prel.real(), prel.imag());
+          printf("    kkr1 = %d; kkr2 = %d; kkrsz = %d\n", kkr1, kkr2, kkrsz);
+        }
 #ifdef WRITE_GIJ
         for(int ii=nrst; ii<nrst+kkr1_ns; ii++)
           for(int jj=ncst; jj<ncst+kkr2_ns; jj++)
@@ -343,6 +352,8 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 #endif
       break;
   case MST_BUILD_KKR_MATRIX_CPP:
+    buildKKRMatrixCPU(lsms, local, atom, iie, energy, prel, m);
+    break;
   default:
     printf("UNKNOWN KKR MARIX BUILD KERNEL (%x)!!!\n",buildKKRMatrixKernel);
     exit(1);

@@ -71,7 +71,7 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 
 inline std::string linearSolverName(unsigned int solverId)
 {
-  solverId = solverId & 0xfff;
+  solverId = solverId & MST_LINEAR_SOLVER_MASK;
   std::string name("");
   char idstr[12];
   if(solverId == 0)
