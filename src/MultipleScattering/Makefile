@@ -1,4 +1,6 @@
-OBJ = calculateTauMatrix.o linearSolvers_CPU.o makegij_c.o setgij.o block_inverse_fortran.o zblock_lu.o wasinv.o zmar1.o wasinv_p.o \
+OBJ = calculateTauMatrix.o \
+      buildKKRMatrix_CPU.o linearSolvers_CPU.o \
+      makegij_c.o setgij.o block_inverse_fortran.o zblock_lu.o wasinv.o zmar1.o wasinv_p.o \
       zuqmx.o zutfx.o zucpx.o zaxpby.o zrandn.o tau_inv_postproc.o trgtol.o green_function.o gf_local.o \
       int_zz_zj.o mdosms_c.o mgreen_c.o green_function_rel.o write_kkrmat.o relmtrx.o gfill.o gafill.o \
       magnet.o magnetic_dens.o new_dens.o block_inverse.o zblock_lu_cpp.o zblock_lu_cublas.o
