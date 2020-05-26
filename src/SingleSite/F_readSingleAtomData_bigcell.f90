@@ -51,8 +51,9 @@
 !     >      ib,n_spin1,header
       do is=1,nspin
          read(funit,'(1a80)')jtitle
-         read(funit,'(f5.0,17x,f12.5,f5.0,e20.13)') &
-     &        ztotss,alat,zcorss,efermi
+!         read(funit,'(f5.0,17x,f12.5,f5.0,e20.13)') &
+!              &        ztotss,alat,zcorss,efermi
+         read(funit,*) ztotss,alat,zcorss,efermi
 !        write(6,'('' SWVDAT:: mynod,ib,is,ztss,zcss,jtitle:'',
 !    >            3i5,2f5.0,a40)') mynod,ib,is,ztss,zcss,jtitle
          read(funit,'(17x,2e20.13,i5)') xstart,xmt,jmt
