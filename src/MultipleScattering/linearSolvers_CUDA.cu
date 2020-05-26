@@ -28,7 +28,7 @@ void zeroMatrixCuda(T *devM, int lDim, int nCol)
 template <typename T>
 __global__ void setDiagonalKernelCuda(T *devM, int lDim, int nCol, T val)
 {
-  int i=blockIdx.x;
+  int i=blockIdx.x*blockDim.x + threadIdx.x;
   if(i<nCol)
   {
     devM[IDX(i, i, lDim)] = val;
@@ -38,7 +38,7 @@ __global__ void setDiagonalKernelCuda(T *devM, int lDim, int nCol, T val)
 template <typename T>
 __global__ void addDiagonalKernelCuda(T *devM, int lDim, int nCol, T val)
 {
-  int i=blockIdx.x;
+  int i=blockIdx.x*blockDim.x + threadIdx.x;
   if(i<nCol)
   {
     devM[IDX(i, i, lDim)] = cuCadd(devM[IDX(i, i, lDim)], val);
@@ -55,8 +55,8 @@ void unitMatrixCuda(T *devM, int lDim, int nCol)
 template <typename T>
 __global__ void zeroDiagonalBlocksKernelCuda(T *devM, int lDim, int nCol, int blockSize)
 {
-  int iBlock = blockIdx.x;
-  int jBlock = blockIdx.y;
+  int iBlock = blockIdx.x*blockDim.x + threadIdx.x;
+  int jBlock = blockIdx.y*blockDim.y + threadIdx.y;
   if(iBlock<nCol/blockSize)
     if(jBlock<nCol/blockSize)
     {
@@ -87,7 +87,7 @@ void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM)
 
 __global__ void copyTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, int kkrsz, int nrmat)
 {
-  int i = blockIdx.x;
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
   if(i < kkrsz)
   {
     for(int j=0; j<kkrsz; j++)
@@ -97,7 +97,7 @@ __global__ void copyTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, i
 
 __global__ void copyTauToTau00Cuda(cuDoubleComplex *tau00, cuDoubleComplex *tau, int kkrsz, int nrmat)
 {
-  int i = blockIdx.x;
+  int i = blockIdx.x*blockDim.x + threadIdx.x;
   if(i < kkrsz)
   {
     for(int j=0; j<kkrsz; j++)
