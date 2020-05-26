@@ -223,13 +223,13 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
         setgij_(gij,bgij,&kkr1,&kkr1_ns,&kkr2,&kkr2_ns,
                 &lsms.n_spin_cant,&nrel_rel,&psq,&energy);
 
-        if((ir1==1 && ir2==0) || (ir1==10 && ir2==0))
-        {
-          printf("ORIG: ir1=%d, ir2=%d: bgij[0] = %g + %gi; gij[0] = %g + %gi\n",
-                 ir1, ir2, bgij[0].real(), bgij[0].imag(), gij[0].real(), gij[0].imag());
-          printf("    rij = %g %g %g;  prel=%g + %gi\n", rij[0],  rij[1], rij[2], prel.real(), prel.imag());
-          printf("    kkr1 = %d; kkr2 = %d; kkrsz = %d\n", kkr1, kkr2, kkrsz);
-        }
+//        if((ir1==1 && ir2==0) || (ir1==10 && ir2==0))
+//        {
+//          printf("ORIG: ir1=%d, ir2=%d: bgij[0] = %g + %gi; gij[0] = %g + %gi\n",
+//                 ir1, ir2, bgij[0].real(), bgij[0].imag(), gij[0].real(), gij[0].imag());
+//          printf("    rij = %g %g %g;  prel=%g + %gi\n", rij[0],  rij[1], rij[2], prel.real(), prel.imag());
+//          printf("    kkr1 = %d; kkr2 = %d; kkrsz = %d\n", kkr1, kkr2, kkrsz);
+//        }
 #ifdef WRITE_GIJ
         for(int ii=nrst; ii<nrst+kkr1_ns; ii++)
           for(int jj=ncst; jj<ncst+kkr2_ns; jj++)
@@ -354,6 +354,13 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   case MST_BUILD_KKR_MATRIX_CPP:
     buildKKRMatrixCPU(lsms, local, atom, iie, energy, prel, m);
     break;
+#if defined(ACCELERATOR_CUDA_C)
+  case MST_BUILD_KKR_MATRIX_CUDA:
+    devM = deviceStorage->getDevM();
+    buildKKRMatrixCuda(lsms, local, atom, iie, energy, prel,
+                       devM);
+    break;
+#endif
   default:
     printf("UNKNOWN KKR MARIX BUILD KERNEL (%x)!!!\n",buildKKRMatrixKernel);
     exit(1);
@@ -388,7 +395,32 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 #endif
     default: break; // do nothing. We are using the CPU matrix
     } break;
-    
+#if defined(ACCELERATOR_CUDA_C)
+  case MST_BUILD_KKR_MATRIX_CUDA:
+    // built on GPU:
+    switch(linearSolver)
+    {
+    case MST_LINEAR_SOLVER_ZGESV:
+    case MST_LINEAR_SOLVER_ZGETRF:
+    case MST_LINEAR_SOLVER_ZCGESV:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
+      transferMatrixFromGPUCuda(m, devM);
+      break;
+#if defined(ACCELERATOR_CUDA_C)
+    case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
+    case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
+    case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
+      devT0 = deviceStorage->getDevT0();
+      transferT0MatrixToGPUCuda(devT0, lsms, local, atom, iie);
+      break;
+#endif
+#ifdef ACCELERATOR_HIP
+#endif
+    default: break; // do nothing. We are using the GPU matrix
+    } break;
+#endif
   default:
     printf("UNKNOWN KKR MARIX BUILD KERNEL (%x)!!!\n",buildKKRMatrixKernel);
     exit(1);
