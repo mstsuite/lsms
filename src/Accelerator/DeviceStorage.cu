@@ -107,8 +107,15 @@ public:
           exit(1);
         }
         cudaMalloc((void**)&dev_ipvt[i],N*sizeof(int));
+	err = cudaMalloc((void**)&dev_bgij[i],N*N*sizeof(Complex));
+        if(err!=cudaSuccess)
+        {
+          printf("failed to allocate dev_bgij[%d], size=%d, err=%d\n",
+                i,N*N*sizeof(Complex),err);
+          exit(1);
+        }
 #ifdef BUILDKKRMATRIX_GPU
-        cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
+        // cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
         cudaMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
 #endif
         cudaMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
@@ -202,6 +209,40 @@ DeviceMatrix<Complex> DeviceStorage::dev_tmat_store;
 int DeviceStorage::nThreads=1;
 bool initialized;
 
+// Device Atom
+int DeviceAtomCuda::allocate(int _lmax, int _nspin, int _numLIZ)
+{
+  if(allocated) free();
+  allocated = true;
+  numLIZ = _numLIZ;
+  cudaMalloc((void**)&LIZPos,numLIZ*3*sizeof(Real));
+  cudaMalloc((void**)&LIZlmax,numLIZ*sizeof(int));
+  cudaMalloc((void**)&LIZStoreIdx,numLIZ*sizeof(int));
+  
+  return 0;
+}
+
+void DeviceAtomCuda::free()
+{
+  if(allocated)
+  {
+    cudaFree(LIZPos);
+    cudaFree(LIZlmax);
+    cudaFree(LIZStoreIdx);
+  }
+  allocated = false;
+}
+
+void DeviceAtomCuda::copyFromAtom(Atom &atom)
+{
+  if(!allocated)
+  {
+    allocate(atom.lmax, atom.nspin, atom.numLIZ);
+  }
+  cudaMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), cudaMemcpyHostToDevice);
+  cudaMemcpy(LIZPos, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
+}
 
 /****************Fortran Interfaces*********************/
 extern "C"

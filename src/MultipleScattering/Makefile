@@ -6,7 +6,7 @@ OBJ = calculateTauMatrix.o \
       magnet.o magnetic_dens.o new_dens.o block_inverse.o zblock_lu_cpp.o zblock_lu_cublas.o
 
 ifdef CUDA_CXX
-OBJ += linearSolvers_CUDA.o
+OBJ += linearSolvers_CUDA.o buildKKRMatrix_CUDA.o
 endif
 
 all: libMultipleScattering.a

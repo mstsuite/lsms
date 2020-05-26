@@ -73,4 +73,31 @@ void *allocateDStore(void);
 void freeDStore(void * d_store);
 int initDStore(void * d_store,int kkrsz_max, int nspin, int numLIZ, int nthreads);
 
+class DeviceAtomCuda {
+public:
+  Real *LIZPos;
+  int *LIZlmax;
+  int *LIZStoreIdx;
+  int numLIZ;
+  
+  int allocate(int lmax, int nspin, int _numLIZ);
+  void copyFromAtom(Atom &atom);
+  void free();
+};
+
+
+class DeviceConstants {
+  public:
+//  DeviceConstants() { }
+//  ~DeviceConstants() { }
+  int *lofk;
+  int *mofk;
+  Complex *ilp1;
+  DeviceMatrix<Complex> illp;
+  DeviceArray3d<Real> cgnt;
+
+  int allocate();
+  void free();
+};
+
 #endif
