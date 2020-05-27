@@ -1,6 +1,7 @@
 
 OBJ       = accelerator_initialize.o accelerator_finalize.o accelerator_interface.o Accelerator.o \
-            buildKKRMatrix_kernel_gpu.o buildKKRMatrix_gpu.o  zblock_lu_cuda_c.o fortran.o inverse.o DeviceStorage.o 
+            zblock_lu_cuda_c.o fortran.o inverse.o DeviceStorage.o 
+#            buildKKRMatrix_kernel_gpu.o buildKKRMatrix_gpu.o  zblock_lu_cuda_c.o fortran.o inverse.o DeviceStorage.o 
 
 all: libAccelerator.a
 

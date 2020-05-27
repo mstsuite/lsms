@@ -41,7 +41,7 @@ inline double omp_get_wtime() {return 0.0;}
 //#define TRANSFER
 //#define CHECK
 
-#include "buildKKRMatrix_gpu.hpp"
+// #include "buildKKRMatrix_gpu.hpp"
 
 using namespace std;
 

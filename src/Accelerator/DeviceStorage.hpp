@@ -6,6 +6,8 @@
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 
+#include "SingleSite/AtomData.hpp"
+
 #ifdef _OPENMP
 #include <omp.h>
 #else
@@ -75,13 +77,14 @@ int initDStore(void * d_store,int kkrsz_max, int nspin, int numLIZ, int nthreads
 
 class DeviceAtomCuda {
 public:
+  bool allocated;
   Real *LIZPos;
   int *LIZlmax;
   int *LIZStoreIdx;
   int numLIZ;
   
   int allocate(int lmax, int nspin, int _numLIZ);
-  void copyFromAtom(Atom &atom);
+  void copyFromAtom(AtomData &atom);
   void free();
 };
 
@@ -93,8 +96,10 @@ class DeviceConstants {
   int *lofk;
   int *mofk;
   Complex *ilp1;
-  DeviceMatrix<Complex> illp;
-  DeviceArray3d<Real> cgnt;
+  // DeviceMatrix<Complex> illp;
+  Complex* illp;
+  // DeviceArray3d<Real> cgnt;
+  Real* cgnt;
 
   int allocate();
   void free();

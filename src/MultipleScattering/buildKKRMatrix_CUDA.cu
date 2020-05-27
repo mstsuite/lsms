@@ -20,24 +20,26 @@
 // Fortran layout for matrix
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 
+/*
+
 __device__
 inline void calculateHankelCuda(cuDoubleComplex prel, double r, int lend, cuDoubleComplex *hfn)
 {
   if(threadIdx.x == 0)
   {
-    const cuDoubleComplex sqrtm1(0.0, 1.0);
-    cuDoubleComplex z=prel*r;
-    hfn[0]=-sqrtm1;
+    const cuDoubleComplex sqrtm1 = make_cuDoubleComplex(0.0, 1.0);
+    cuDoubleComplex z=prel*make_cuDoubleComplex(r,0.0);
+    hfn[0]=make_cuDoubleComplex(0.0, -1.0); //-sqrtm1;
     hfn[1]=-1.0-sqrtm1/z;
     for(int l=1; l<lend; l++)
     {
       hfn[l+1]=(2.0*l+1)*hfn[l]/z - hfn[l-1];
     }
-  /*
-c             l+1
-c     hfn = -i   *h (k*R  )*sqrt(E)
-c                  l    ij
-*/
+
+//             l+1
+//     hfn = -i   *h (k*R  )*sqrt(E)
+//                  l    ij
+
     z=std::exp(sqrtm1*z)/rmag;
     for(int l=0; l<=lend;l++)
     {
@@ -230,14 +232,14 @@ void buildBGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk,
 //      {
       int l2=lofk[lm2];
       int m2=mofk[lm2];
-        /*
-          ==========================================================
-          l2-l1
-          illp(lm2,lm1) = i
-
-          perform sum over l3 with gaunt # ......................
-          ==========================================================
-        */
+        
+//          ==========================================================
+//          l2-l1
+//          illp(lm2,lm1) = i
+//
+//          perform sum over l3 with gaunt # ......................
+//          ==========================================================
+        
       int m3=m2-m1;
       int llow=std::max(std::abs(m3),std::abs(l1-l2));
       if(std::abs(prel)==0.0) llow=l1+l2;
@@ -324,17 +326,15 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
                      // &bgijSmall(0, 0), &kkrsz_ns, &czero,
                      &m(iOffset, jOffset), &nrmat_ns);
         
-        /*
-        for(int i=0; i<kkr1_ns; i++)
-          for(int j=0; j<kkr2_ns; j++)
-          {
-            m(iOffset + i, jOffset + j) = 0.0;
-            for(int k=0; k<kkr1_ns ; k++)
-              m(iOffset + i, jOffset + j) -= tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
-                // bgij(iOffset + k, jOffset + j);
-                bgijSmall(k, j);
-          }
-        */
+//        for(int i=0; i<kkr1_ns; i++)
+//          for(int j=0; j<kkr2_ns; j++)
+//          {
+//            m(iOffset + i, jOffset + j) = 0.0;
+//            for(int k=0; k<kkr1_ns ; k++)
+//              m(iOffset + i, jOffset + j) -= tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
+//                // bgij(iOffset + k, jOffset + j);
+//                bgijSmall(k, j);
+//          }
         
       }
     }
@@ -387,27 +387,31 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
                      // &bgijSmall(0, 0), &kkrsz_ns, &czero,
                      &m(iOffset, jOffset), &nrmat_ns);
         
-        /*
-        for(int i=0; i<kkr1_ns; i++)
-          for(int j=0; j<kkr2_ns; j++)
-          {
-            m(iOffset + i, jOffset + j) = 0.0;
-            for(int k=0; k<kkr1_ns ; k++)
-              m(iOffset + i, jOffset + j) -= tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
-                // bgij(iOffset + k, jOffset + j);
-                bgijSmall(k, j);
-          }
-        */
+        
+//        for(int i=0; i<kkr1_ns; i++)
+//          for(int j=0; j<kkr2_ns; j++)
+//          {
+//            m(iOffset + i, jOffset + j) = 0.0;
+//            for(int k=0; k<kkr1_ns ; k++)
+//              m(iOffset + i, jOffset + j) -= tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
+//                // bgij(iOffset + k, jOffset + j);
+//                bgijSmall(k, j);
+//          }
         
       }
     }
   }
 }
 
+*/
+
 void buildKKRMatrixCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel,
                        Complex *devM)
 {
   // decide between identical lmax and different lmax:
+
+  printf("buildKKRMatrixCuda not finished yet!\n");
+  exit(1);
   
   bool lmaxIdentical = true;
 
@@ -425,9 +429,9 @@ void buildKKRMatrixCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   if(lmaxIdentical)
   {
     // printf("lmax identical in buildKKRMatrix\n");
-    buildKKRMatrixLMaxIdenticalCuda(lsms, local, atom, iie, energy, prel, m);
+//    buildKKRMatrixLMaxIdenticalCuda(lsms, local, atom, iie, energy, prel, devM);
   } else {
     // printf("lmax not identical in buildKKRMatrix\n");
-     buildKKRMatrixLMaxDifferentCuda(lsms, local, atom, iie, energy, prel, m);
+//     buildKKRMatrixLMaxDifferentCuda(lsms, local, atom, iie, energy, prel, devM);
   }
 }

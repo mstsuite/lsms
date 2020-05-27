@@ -405,7 +405,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     case MST_LINEAR_SOLVER_ZCGESV:
     case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
     case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
-      transferMatrixFromGPUCuda(m, devM);
+      transferMatrixFromGPUCuda(m, (cuDoubleComplex *)devM);
       break;
 #if defined(ACCELERATOR_CUDA_C)
     case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:

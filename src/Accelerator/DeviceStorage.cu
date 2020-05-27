@@ -233,7 +233,7 @@ void DeviceAtomCuda::free()
   allocated = false;
 }
 
-void DeviceAtomCuda::copyFromAtom(Atom &atom)
+void DeviceAtomCuda::copyFromAtom(AtomData &atom)
 {
   if(!allocated)
   {
