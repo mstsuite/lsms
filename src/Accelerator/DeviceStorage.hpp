@@ -7,6 +7,9 @@
 #include <cusolverDn.h>
 
 #include "SingleSite/AtomData.hpp"
+#include "Misc/Indices.hpp"
+#include "Misc/Coeficients.hpp"
+
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -45,7 +48,11 @@ private:
   static cudaStream_t stream[MAX_THREADS][2];
   static size_t dev_workBytes[MAX_THREADS];
   static void *dev_work[MAX_THREADS];
-  static DeviceMatrix<Complex> dev_tmat_store;
+  // static DeviceMatrix<Complex> dev_tmat_store;
+  static Complex *devTmatStore;
+  static size_t tmatStoreSize;
+  static int blkSizeTmatStore;
+  static int tmatStoreLDim;
   static bool initialized;
 public:
   int allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads);
@@ -66,7 +73,13 @@ public:
   static cusolverDnHandle_t getCusolverDnHandle() { return cusolverDnHandle[omp_get_thread_num()]; }
   static size_t getDevWorkBytes() { return dev_workBytes[omp_get_thread_num()]; }
   static void *getDevWork() {  return dev_work[omp_get_thread_num()]; }
-  static DeviceMatrix<Complex>* getDevTmatStore() { return &dev_tmat_store; }
+//  static DeviceMatrix<Complex>* getDevTmatStore() { return &dev_tmat_store; }
+  static Complex* getDevTmatStore() { return devTmatStore; }
+  static int getBlkSizeTmatStore() { return blkSizeTmatStore; }
+  static int getTmatStoreLDim() { return tmatStoreLDim; }
+
+  int copyTmatStoreToDevice(Matrix<Complex> &tmatStore, int blkSize);
+
 };
 
 DeviceMatrix<Complex>* get_dev_tmat_store();
@@ -93,15 +106,17 @@ class DeviceConstants {
   public:
 //  DeviceConstants() { }
 //  ~DeviceConstants() { }
-  int *lofk;
-  int *mofk;
-  Complex *ilp1;
-  // DeviceMatrix<Complex> illp;
-  Complex* illp;
-  // DeviceArray3d<Real> cgnt;
-  Real* cgnt;
+  static int *lofk;
+  static int *mofk;
+  static cuDoubleComplex *ilp1;
+  // DeviceMatrix<Complex> illp(ndlj, ndlj);
+  static cuDoubleComplex* illp;
+  static int ndlj_illp;
+  // DeviceArray3d<Real> cgnt(lmax+1,ndlj,ndlj);
+  static Real* cgnt;
+  static int ndlj_cgnt, lmaxp1_cgnt;
 
-  int allocate();
+  int allocate(AngularMomentumIndices &am, GauntCoeficients &c, IFactors &ifact);
   void free();
 };
 

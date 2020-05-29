@@ -60,6 +60,7 @@ IFactors iFactors;
 #include "Accelerator/DeviceStorage.hpp"
 // void * deviceStorage;
 DeviceStorage *deviceStorage;
+DeviceConstants deviceConstants;
 #endif
 #ifdef BUILDKKRMATRIX_GPU
 #include "Accelerator/buildKKRMatrix_gpu.hpp"
@@ -241,6 +242,10 @@ int main(int argc, char *argv[])
 
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
   iFactors.init(lsms, crystal.maxlmax);
+
+#if defined(ACCELERATOR_CUDA_C)
+  deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
+#endif
 
   double timeBuildLIZandCommList = MPI_Wtime();
   if (lsms.global.iprint >= 0)

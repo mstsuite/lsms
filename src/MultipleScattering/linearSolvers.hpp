@@ -58,6 +58,47 @@ void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, Local
 void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
 void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
 void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+
+#define IDX(i, j, lDim) (((j)*(lDim))+(i))
+
+#ifdef __CUDACC__
+template <typename T>
+void zeroMatrixCuda(T *devM, int lDim, int nCol)
+{
+//  for(int i=0; i<m.n_row(); i++)
+//    for(int j=0; j<m.n_col(); j++)
+//      m(i,j) = 0.0;
+  cudaMemset(devM, 0, lDim*nCol*sizeof(T));
+}
+
+template <typename T>
+__global__ void setDiagonalKernelCuda(T *devM, int lDim, int nCol, T val)
+{
+  int i=blockIdx.x*blockDim.x + threadIdx.x;
+  if(i<nCol)
+  {
+    devM[IDX(i, i, lDim)] = val;
+  }
+}
+
+template <typename T>
+__global__ void addDiagonalKernelCuda(T *devM, int lDim, int nCol, T val)
+{
+  int i=blockIdx.x*blockDim.x + threadIdx.x;
+  if(i<nCol)
+  {
+    devM[IDX(i, i, lDim)] = cuCadd(devM[IDX(i, i, lDim)], val);
+  }
+}
+
+template <typename T>
+void unitMatrixCuda(T *devM, int lDim, int nCol)
+{
+  zeroMatrixCuda(devM, lDim, nCol);
+  setDiagonalKernelCuda<<<nCol,1>>>(devM, lDim, nCol, T(1.0));
+}
+#endif
+
 #endif
 
 #ifdef ACCELERATOR_HIP
