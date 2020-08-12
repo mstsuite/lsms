@@ -50,6 +50,11 @@ void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local, At
 #define MST_LINEAR_SOLVER_ZZGESV_CUSOLVER 0x12
 #define MST_LINEAR_SOLVER_ZGETRF_CUSOLVER 0x13
 // #endif
+
+// #ifdef ACCELERATOR_HIP
+#define MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER 0x20
+// #endif
+
 #ifdef ACCELERATOR_CUDA_C
 void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m);
 void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM);
@@ -61,6 +66,7 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 #endif
 
 #ifdef ACCELERATOR_HIP
+void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
 #endif
 
 #define MST_LINEAR_SOLVER_BLOCK_INVERSE_F77 0xf00
@@ -87,13 +93,18 @@ inline std::string linearSolverName(unsigned int solverId)
     case MST_LINEAR_SOLVER_ZCGESV: name += "CPU zcgesv"; break;
     case MST_LINEAR_SOLVER_ZBLOCKLU_F77: name += "CPU zblocklu f77"; break;
     case MST_LINEAR_SOLVER_ZBLOCKLU_CPP: name += "CPU zblocklu c++"; break;
+      
     case MST_LINEAR_SOLVER_ZGETRF_CUBLAS: name += "CUBLAS zgetrf"; break;
     case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS: name += "CUBLAS zblocklu"; break;
     case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER: name += "CUSOLVER zzgesv"; break;
     case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER: name += "CUSOLVER zgetrf"; break;
+      
+    case MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER: name += "ROCSOLVER zgetrf"; break;
+      
     case MST_LINEAR_SOLVER_BLOCK_INVERSE_F77: name += "block inverse f77"; break;
     case MST_LINEAR_SOLVER_BLOCK_INVERSE_CPP: name += "block inverse c++"; break;
     case MST_LINEAR_SOLVER_BLOCK_INVERSE_CUDA: name += "block inverse cuda"; break;
+    
     default: name += "unknwon solver";
     }
   name += idstr;
