@@ -9,10 +9,10 @@
 #include <vector>
 
 #include "Accelerator/DeviceStorage.hpp"
-#include <cuda_runtime.h>
-#include <cuComplex.h>
-#include <cublas_v2.h>
-#include <cusolverDn.h>
+#include <hip_runtime.h>
+#include <hip_complex.h>
+#include <hipblas.h>
+#include <rocsolver.h>
 
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 

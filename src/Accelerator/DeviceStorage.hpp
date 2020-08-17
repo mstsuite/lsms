@@ -1,3 +1,5 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
 #ifndef LSMS_DEVICE_STORAGE_HPP
 #define LSMS_DEVICE_STORAGE_HPP
 
@@ -39,10 +41,15 @@ private:
   static Complex *dev_m[MAX_THREADS], *dev_bgij[MAX_THREADS], *dev_tmat_n[MAX_THREADS];
   static Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS], *dev_t0[MAX_THREADS], *dev_t[MAX_THREADS];
   static int *dev_ipvt[MAX_THREADS];
+#if defined(ACCELERATOR_CUDA_C)
   static cublasHandle_t cublas_h[MAX_THREADS];
   static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];  
   static cudaEvent_t event[MAX_THREADS];
   static cudaStream_t stream[MAX_THREADS][2];
+#endif
+#if defined (ACCELERATOR_HIP)
+  static rocblas_handle rocblas_h[MAX_THREADS];
+#endif
   static size_t dev_workBytes[MAX_THREADS];
   static void *dev_work[MAX_THREADS];
   static DeviceMatrix<Complex> dev_tmat_store;
@@ -59,11 +66,16 @@ public:
   static Complex* getDevTau00() { return dev_tau00[omp_get_thread_num()]; }
   static Complex* getDevT() { return dev_t[omp_get_thread_num()]; }
   static Complex* getDevT0() { return dev_t0[omp_get_thread_num()]; }
-  static int* getDevIpvt() { return dev_ipvt[omp_get_thread_num()]; } 
+  static int* getDevIpvt() { return dev_ipvt[omp_get_thread_num()]; }
+#if defined (ACCELERATOR_CUDA_C)
   static cudaStream_t getStream(int i) { return stream[omp_get_thread_num()][i]; }
   static cudaEvent_t getEvent() { return event[omp_get_thread_num()]; }
   static cublasHandle_t getCublasHandle() { return cublas_h[omp_get_thread_num()]; }
   static cusolverDnHandle_t getCusolverDnHandle() { return cusolverDnHandle[omp_get_thread_num()]; }
+#endif
+#if defined(ACCELERATOR_HIP)
+  static rocblas_handle getRocBlasHandle() { return rocblas_h[omp_get_thread_num()]; }
+#endif
   static size_t getDevWorkBytes() { return dev_workBytes[omp_get_thread_num()]; }
   static void *getDevWork() {  return dev_work[omp_get_thread_num()]; }
   static DeviceMatrix<Complex>* getDevTmatStore() { return &dev_tmat_store; }
