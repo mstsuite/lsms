@@ -44,7 +44,7 @@
       __inline__ DeviceMatrix<T> &operator=(Matrix<T>& mat) {
         //TODO BACK TO ASYNC
         copy_async(mat,0);
-        hipCheckError();
+        deviceCheckError();
         return *this;
       }
 
@@ -97,8 +97,8 @@
         if(num_bytes>0) {
           free();
           owner=this;
-          deviceMalloc(&data,num_bytes);
-          hipCheckError();
+          deviceMalloc((void **)&data,num_bytes);
+          deviceCheckError();
         }
         else {      // DANGEROUS!! Might cause memory leak!
           owner = 0;
