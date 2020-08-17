@@ -15,10 +15,10 @@ inline cudaError_t deviceMalloc (void** devPtr, size_t size )
   {return cudaMalloc (devPtr, size);}
 
 inline cudaError_t deviceFree (void* devPtr)
-  {return cudaFree)devPtr);}
+{return cudaFree(devPtr);}
 
 inline cudaError_t deviceMemcpy (void* dst, const void* src, size_t count, cudaMemcpyKind kind)
-  {​return cudaMemcpy ( dst, src, count, kind);}
+  {​return cudaMemcpy(dst, src, count, kind);}
 
 ​inline cudaError_t deviceMemcpyAsync (void* dst, const void* src, size_t count, cudaMemcpyKind kind, cudaStream_t stream = 0)
   {​return cudaMemcpyAsync (dst, src, count, kind, stream);}
@@ -33,10 +33,10 @@ inline hipError_t deviceMalloc (void** devPtr, size_t size )
   {return hipMalloc (devPtr, size);}
 
 inline cudaError_t deviceFree (void* devPtr)
-  {return hipFree{devPtr);}
+  {return hipFree(devPtr);}
 
 inline hipError_t deviceMemcpy (void* dst, const void* src, size_t count, hipMemcpyKind kind)
-  {​return cudaMemcpy ( dst, src, count, kind);}
+  {​return cudaMemcpy(dst, src, count, kind);}
 
 inline hipError_t deviceMemcpyAsync (void* dst, const void* src, size_t count, hipMemcpyKind kind, hipStream_t stream = 0)
   {​return hipMemcpyAsync (dst, src, count, kind, stream);}
