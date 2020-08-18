@@ -30,7 +30,7 @@ inline int omp_get_thread_num() {return 0;}
 #include "DeviceStorage.hpp"
 
 // #include "cuda_error.h"
-#include "cudaCheckError.hpp"
+#include "deviceCheckError.hpp"
 
 using namespace std;
 
@@ -143,7 +143,7 @@ public:
 	cudaMalloc((void**)&dev_work[i], dev_workBytes[i]);
         // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
       }
-      cudaCheckError();
+      deviceCheckError();
       initialized=true;
     }
     return 0;
@@ -170,7 +170,7 @@ public:
         cublasDestroy(cublas_h[i]);
       }
       dev_tmat_store.clear();
-      cudaCheckError();
+      deviceCheckError();
       initialized=false;
     }
   }

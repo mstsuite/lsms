@@ -5,8 +5,16 @@
 
 #include "Real.hpp"
 #include "Complex.hpp"
+
+#if defined(ACCELERATOR_CUDA_C)
 #include <cublas_v2.h>
 #include <cusolverDn.h>
+#endif
+
+#if defined(ACCELERATOR_HIP)
+#include <hip/hip_runtime_api.h> 
+#include <rocsolver.h>
+#endif
 
 #include "SingleSite/AtomData.hpp"
 

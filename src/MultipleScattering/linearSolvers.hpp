@@ -11,7 +11,7 @@
 
 #include "MultipleScattering.hpp"
 
-#ifdef ACCELERATOR_CUDA_C
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
 #endif
 
