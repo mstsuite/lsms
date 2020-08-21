@@ -6,7 +6,7 @@
 #include <cuda_runtime.h>
 #endif
 #if defined(ACCELERATOR_HIP)
-#include <hip_runtime.h>
+#include <hip/hip_runtime.h>
 #endif
 
 void acceleratorInitialize(int sz, int nthreads)

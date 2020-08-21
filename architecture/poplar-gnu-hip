@@ -1,0 +1,51 @@
+export USE_OPENMP=1
+# export USE_LIBXC=1
+# define HAS_BACKTRACE if glibc backtrace functionality is available
+# export HAS_BACKTRACE=1
+ export USE_ACCELERATOR = -DACCELERATOR_HIP
+# export USE_ACCELERATOR =
+
+export LIBS += 
+export ADD_LIBS += -L/usr/local/lib -L$(HDF5DIR) -lhdf5 -llapack -lblas \
+                   -lgfortran
+
+export INC_PATH += -I$(HDF5INCLUDE) -I$(ROCM_PATH)/include
+
+# export BOOST_ROOT=$(TOP_DIR)
+
+
+# ifdef USE_OPENMP
+#  export CXX=mpicxx -g -std=c++14 -fopenmp -O3  $(USE_ACCELERATOR) $(OPT_DEFINES)
+#  export F77=gfortran -g -fopenmp -O3 
+## export F77=gfortran -g -fopenmp -O3 -fcheck=all 
+# else
+#  export CXX=mpicxx -g -O3 -std=c++14  $(USE_ACCELERATOR) $(OPT_DEFINES)
+#  export F77=gfortran -g -O3
+## export F77=gfortran -g -O3 -fcheck=all
+# endif
+
+ifdef USE_OPENMP
+# export LSMS_CXX=mpicxx $(COMP_OPTIONS) -std=c++14 $(USE_ACCELERATOR) $(OPT_DEFINES) -fopenmp
+export LSMS_CXX=mpicxx -cxx="hipcc -fgpu-rdc --amdgpu-target=gfx906,gfx908" $(COMP_OPTIONS) -std=c++14 $(USE_ACCELERATOR) $(OPT_DEFINES) -fopenmp
+# export CC=mpicc  $(COMP_OPTIONS) $(USE_ACCELERATOR) $(OPT_DEFINES) -fopenmp
+# export F77=mpif77  $(COMP_OPTIONS) $(USE_ACCELERATOR) -fopenmp
+export F77=gfortran  $(COMP_OPTIONS) $(USE_ACCELERATOR) -fopenmp
+export HIP_CXX=hipcc --amdgpu-target=gfx906,gfx908 $(USE_ACCELERATOR) -std=c++14 -fopenmp
+# export CUDA_CXX=nvcc -arch=sm_60 -I $(MPI_ROOT)/include $(USE_ACCELERATOR) -std=c++14 -Xcompiler -fopenmp 
+else
+export LSMS_CXX=mpicxx -cxx="hipcc -fgpu-rdc --amdgpu-target=gfx906,gfx908" $(COMP_OPTIONS) -std=c++14 $(USE_ACCELERATOR) $(OPT_DEFINES)
+# export CC=mpicc  $(COMP_OPTIONS) $(USE_ACCELERATOR) $(OPT_DEFINES)
+# export F77=mpif77 $(COMP_OPTIONS) $(USE_ACCELERATOR)
+export F77=gfortran $(COMP_OPTIONS) $(USE_ACCELERATOR)
+export HIP_CXX=hipcc --amdgpu-target=gfx906,gfx908 $(USE_ACCELERATOR) -std=c++14
+# export CUDA_CXX=nvcc -arch=sm_60 -I $(MPI_ROOT)/include -std=c++14 $(USE_ACCELERATOR)
+endif
+
+export CXX=$(LSMS_CXX)
+
+# JSON++ requires flex and bison (version>=2.4)
+export FLEX=flex
+export BISON=/usr/local/opt/bison/bin/bison
+
+export LUACXX = $(CXX)
+export CC = hipcc -fgpu-rdc --amdgpu-target=gfx906,gfx908

@@ -33,6 +33,7 @@ inline int omp_get_thread_num() {return 0;}
 
 template <class T> class DeviceMatrix;
 
+#if defined(ACCELERATOR_CUDA_C)
 extern "C" Complex* get_dev_m_();
 extern "C" Complex* get_dev_bgij_();
 extern "C" Complex* get_dev_tmat_n_();
@@ -41,6 +42,7 @@ extern "C" cudaStream_t get_stream_(const int &id);
 extern "C" cublasHandle_t get_cublas_handle_();
 extern "C" cudaEvent_t get_cuda_event_();
 extern "C" Complex* get_host_m_(const int &max_nrmat_ns);
+#endif
 
 static const int MAX_THREADS=16;
 class DeviceStorage {
