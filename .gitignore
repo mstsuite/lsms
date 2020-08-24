@@ -9,6 +9,8 @@ rewl-lsms
 
 lua
 luac
+lua-5.2.4/include
+lua-5.2.4/man
 
 *.aux
 *.log
