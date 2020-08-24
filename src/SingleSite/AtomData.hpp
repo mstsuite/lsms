@@ -180,12 +180,15 @@ public:
       for(int i=0; i<vr.l_dim(); i++)
 	vr(i,1) = vr(i,0);
       for(int i=0; i<rhotot.l_dim(); i++)
-	rhotot(i,1) = rhotot(i,0);
+      {
+	rhotot(i,1) = rhotot(i,0) = 0.5*rhotot(i,0);
+      }
       for(int i=0; i<vrNew.l_dim(); i++)
 	vrNew(i,1) = vrNew(i,0);
       for(int i=0; i<rhoNew.l_dim(); i++)
-	rhoNew(i,1) = rhoNew(i,0);
-      
+      {
+	rhoNew(i,1) = rhoNew(i,0) = 0.5*rhoNew(i,0);
+      }
       for(int i=0; i<exchangeCorrelationPotential.l_dim(); i++)
 	exchangeCorrelationPotential(i,1) = exchangeCorrelationPotential(i,0);
       for(int i=0; i<exchangeCorrelationEnergy.l_dim(); i++)
@@ -204,9 +207,11 @@ public:
 
       ecorv[1] = ecorv[0]; esemv[1] = esemv[0];
       for(int i=0; i<corden.l_dim(); i++)
-	corden(i,1) = corden(i,0);
+      {
+	corden(i,1) = corden(i,0) = 0.5*corden(i,0);
+      }
       for(int i=0; i<semcor.l_dim(); i++)
-	semcor(i,1) = semcor(i,0);
+	semcor(i,1) = semcor(i,0) = 0.5*semcor(i,0);
       
       nspin = 2;
     }
