@@ -325,7 +325,7 @@ WL1dEvecGenerator<RNG>::WL1dEvecGenerator(int num_spins, int num_instances, int 
   // * seed_seq is a sequence needed for generating random number seeds for different walkers
   // * initialized with system time here, but will be overridden if seed is provided in input file
   // * initialization from input file is recommended
-  std::seed_seq seq {time(nullptr)};
+  time_t seed = time(nullptr);
 
   n_spins = num_spins;
   n_walkers = num_instances;
@@ -520,7 +520,7 @@ WL1dEvecGenerator<RNG>::WL1dEvecGenerator(int num_spins, int num_instances, int 
       else if(label=="globalUpdate.omega") globalUpdate.omega=atof(it->child->text);
       else if(label=="seed") {
         //rng.seed(atoi(it->child->text));
-        seq = {atoi(it->child->text)};
+        seed = atoi(it->child->text);
       }
       else if(label=="accept") accept=atol(it->child->text);
       else if(label=="acceptSinceLastChange") acceptSinceLastChange=atol(it->child->text);
@@ -738,6 +738,7 @@ WL1dEvecGenerator<RNG>::WL1dEvecGenerator(int num_spins, int num_instances, int 
   // Seeding random number generators
   std::vector<unsigned> rngSeed(numWindows * numInstancesPerWindow);
   //std::vector<unsigned> rngSeed(n_walkers + 2);
+  std::seed_seq seq {seed};
   seq.generate(rngSeed.begin(), rngSeed.end());
   rng.seed(rngSeed[walkerID]);
 

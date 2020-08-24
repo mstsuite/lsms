@@ -1,0 +1,24 @@
+export USE_OPENMP=1
+# export USE_LIBXC=1
+# define HAS_BACKTRACE if glibc backtrace functionality is available
+# export HAS_BACKTRACE=1
+
+export LIBS += 
+export ADD_LIBS += -L$(HDF5DIR) -lhdf5
+export INC_PATH += -I$(HDF5INCLUDE)
+
+# export BOOST_ROOT=$(TOP_DIR)
+
+export CXX=CC -g -Ofast -std=c++14 $(OPT_DEFINES)
+export F77=ftn
+
+ifdef USE_OPENMP
+  export CXX += -fopenmp
+  export F77 += -fopenmp
+endif
+
+# JSON++ requires flex and bison (version>=2.4)
+export FLEX=flex
+export BISON=/usr/local/opt/bison/bin/bison
+
+export LUACXX = $(CXX)
