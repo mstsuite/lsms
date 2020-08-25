@@ -227,7 +227,8 @@ c     ================================================================
   6   continue
       enew=en+de
       if(enew.lt.0.0d+00) go to 7
-      de=de+0.5d+00
+!ywg  de=de+0.5d+00
+      de=de*0.5d+00
       val=val*0.5d+00
       if (val.gt.tol) go to 6
 c
