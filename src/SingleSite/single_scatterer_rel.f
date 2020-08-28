@@ -15,13 +15,17 @@ c         gz,fz   - big and small component of regular radial solution * r
 c         nuz - no. of (kap',my') components for (kap,my)
 c         indz - selects (kap',my') for (kap,my)
 c
-      implicit real*8 (a-h,o-z)
+!     implicit real*8 (a-h,o-z)
+      implicit none
 c
 !     include '../param.h'
 !      include 'atom_param.h'
+      integer lmax,kmymax,idpot,iflag,iprpts,ns
+      real*8 v0,vr,br,bopr,dx,rs,socsc
+
+      integer nuzp
       parameter (nuzp=2)
 c
-      integer idpot
       character*32 sname
       character*32 istop
 
@@ -39,8 +43,12 @@ c
       complex*16 fb(0:lmax+1),fn(0:lmax+1),fh(0:lmax+1)
       complex*16 fb1(0:lmax+1),fn1(0:lmax+1),fh1(0:lmax+1)
       complex*16 ce,psq,p,cevac,psqvac,pvac,sk,dk,xk,react,sqrtm1
+      integer nuz,indz
       dimension nuz(kmymax),indz(nuzp,kmymax)
       data sqrtm1/(0.d0,1.d0)/
+
+      integer i,j,k,l,my,kapmy,kapmy1,kapmy2,lb
+      integer kap,kap1,kap2,kmax
 
       parameter(sname='single_scatterer_rel')
 c

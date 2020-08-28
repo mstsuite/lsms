@@ -2,11 +2,22 @@
      >                 ba11,ba12,ba22,bb11,bb22,iprpts)
 c=====================
 c
-      implicit real*8 (a-h,o-z)
+!     implicit real*8 (a-h,o-z)
+      implicit none
 !     include '../param.h'                 
 !     include 'atom_param.h'
       include '../Misc/cgc.h'
 c
+      integer l,my,n,iprpts
+      real*8 bspr,bopr
+      real*8 ba11,ba12,ba22,bb11,bb22
+
+      integer i,kap1,kap2,kapb1,kapb2
+      integer kap1my,kap2my,kapb1my,kapb2my
+      real*8 br
+      real*8 ca11_u,ca11_d,ca22_u,ca22_d,ca12_u,ca12_d
+      real*8 cb11_u,cb11_d,cb22_u,cb22_d
+
       dimension bspr(iprpts),bopr(iprpts,2)
       dimension ba11(iprpts),ba12(iprpts),ba22(iprpts)
       dimension bb11(iprpts),bb22(iprpts),br(iprpts,2)

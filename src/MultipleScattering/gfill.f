@@ -121,7 +121,7 @@ c
       end if
 
 
-      do 10 kmy1=1,98
+      do 11 kmy1=1,98
         c1d=u1(kmy1)
         c1u=u2(kmy1)
         kap1=kapdex(kmy1)
@@ -176,6 +176,7 @@ c
         end if
 c
   10  continue 
+  11  continue
 c 
       do kmy1=1,72
         kap1=kapdex(kmy1)
