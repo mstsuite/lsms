@@ -144,7 +144,8 @@ c     ================================================================
          elim=-z*z/(0.75d+00*nqn*nqn)
       else
          elim=(rv(1)+lll/r(1))/r(1)
-         do j=2,iprpts
+! meis: change to correspond to MST2         do j=2,iprpts
+         do j=2,nws
             elim=min((rv(j)+lll/r(j))/r(j),elim)
 	 enddo
       endif

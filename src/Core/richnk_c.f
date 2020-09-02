@@ -60,8 +60,9 @@ c
 c        =============================================================
 c        power-series for j if abs(x) is smaller than 0.9. trouble!!!
 c        =============================================================
-         write(6,'('' trouble in richnk: small argument'')')
-         call fstop('richnk')
+! commented out in MST2
+!     write(6,'('' trouble in richnk: small argument'')')
+!         call fstop('richnk')
       endif
 c
       return
