@@ -66,6 +66,10 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 #endif
 
 #ifdef ACCELERATOR_HIP
+void transferMatrixToGPUHip(Complex *devM, Matrix<Complex> &m);
+void transferMatrixFromGPUHip(Matrix<Complex> &m, hipDoubleComplex *devM);
+void transferT0MatrixToGPUHip(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie);
+
 void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
 #endif
 

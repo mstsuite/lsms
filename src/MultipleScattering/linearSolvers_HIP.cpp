@@ -80,7 +80,7 @@ void transferMatrixToGPUHip(Complex *devM, Matrix<Complex> &m)
   hipMemcpy(devM, &m(0,0), m.l_dim()*m.n_col()*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
 }
 
-void transferMatrixFromGPUHip(Matrix<Complex> &m, cuDoubleComplex *devM)
+void transferMatrixFromGPUHip(Matrix<Complex> &m, hipDoubleComplex *devM)
 {
   hipMemcpy(&m(0,0), devM,  m.l_dim()*m.n_col()*sizeof(hipDoubleComplex), hipMemcpyDeviceToHost);
 }
