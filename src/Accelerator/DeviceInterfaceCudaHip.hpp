@@ -10,6 +10,7 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <cublas_v2.h>
 
 typedef cuDoubleComplex deviceDoubleComplex;
 
@@ -19,7 +20,7 @@ typedef cudaStream_t deviceStream_t;
 typedef cudaError_t deviceError_t;
 typedef cudaEvent_t deviceEvent_t;
 
-const auto deviceSuccess = cudeSuccess;
+const auto deviceSuccess = cudaSuccess;
 
 inline deviceError_t deviceMalloc (void** devPtr, size_t size )
   {return cudaMalloc (devPtr, size);}
