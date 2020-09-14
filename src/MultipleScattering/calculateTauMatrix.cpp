@@ -392,6 +392,12 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       break;
 #endif
 #ifdef ACCELERATOR_HIP
+    case MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER:
+      devM = deviceStorage->getDevM();
+      transferMatrixToGPUHip(devM, m);
+      devT0 = deviceStorage->getDevT0();
+      transferT0MatrixToGPUHip(devT0, lsms, local, atom, iie);
+      break;
 #endif
     default: break; // do nothing. We are using the CPU matrix
     } break;
@@ -460,6 +466,8 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       solveTau00zgetrf_cusolver(lsms, local, *deviceStorage, atom, devT0, devM, tau00); break;
 #endif
 #ifdef ACCELERATOR_HIP
+    case MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER:
+      solveTau00zgetrf_rocsolver(lsms, local, *deviceStorage, atom, devT0, devM, tau00); break;
 #endif
     default:
       printf("UNKNOWN LINEAR SOLVER (%d)!!!\n",linearSolver);
