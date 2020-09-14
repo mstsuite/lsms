@@ -7,39 +7,106 @@
 #endif
 
 #if defined(ACCELERATOR_CUDA_C)
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+typedef cuDoubleComplex deviceDoubleComplex;
+
 const auto deviceMemcpyHostToDevice = cudaMemcpyHostToDevice;
 
 typedef cudaStream_t deviceStream_t;
+typedef cudaError_t deviceError_t;
+typedef cudaEvent_t deviceEvent_t;
 
-inline cudaError_t deviceMalloc (void** devPtr, size_t size )
+const auto deviceSuccess = cudeSuccess;
+
+inline deviceError_t deviceMalloc (void** devPtr, size_t size )
   {return cudaMalloc (devPtr, size);}
 
-inline cudaError_t deviceFree (void* devPtr)
+inline deviceError_t deviceFree (void* devPtr)
 {return cudaFree(devPtr);}
 
-inline cudaError_t deviceMemcpy (void* dst, const void* src, size_t count, cudaMemcpyKind kind)
+inline deviceError_t deviceMallocHost (void** devPtr, size_t size )
+  {return cudaMallocHost (devPtr, size);}
+
+inline deviceError_t deviceFreeHost (void* devPtr)
+{return cudaFreeHost(devPtr);}
+
+inline deviceError_t deviceMemcpy (void* dst, const void* src, size_t count, cudaMemcpyKind kind)
   {return cudaMemcpy(dst, src, count, kind);}
 
-inline cudaError_t deviceMemcpyAsync (void* dst, const void* src, size_t count, cudaMemcpyKind kind, cudaStream_t stream = 0)
+inline deviceError_t deviceMemcpyAsync (void* dst, const void* src, size_t count, cudaMemcpyKind kind, cudaStream_t stream = 0)
   {return cudaMemcpyAsync (dst, src, count, kind, stream);}
+
+const auto deviceEventDefault = cudaEventDefault;
+const auto deviceEventBlockingSync = cudaEventBlockingSync;
+const auto deviceEventDisableTiming = cudaEventDisableTiming;
+const auto deviceEventInterprocess = cudaEventInterprocess;
+
+inline deviceError_t deviceEventCreateWithFlags(cudaEvent_t *e, unsigned f)
+  {return cudaEventCreateWithFlags(e, f);}
+
+inline deviceError_t deviceEventDestroy(cudaEvent_t e)
+  {return cudaEventDestroy(e);}
+
+inline deviceError_t deviceStreamCreate(cudaStream_t *stream)
+  {return cudaStreamCreate(stream);}
+
+inline deviceError_t deviceStreamDestroy(cudaStream_t stream)
+  {return cudaStreamDestroy(stream);}
 
 #endif
 #if defined(ACCELERATOR_HIP)
+
+#include <hip/hip_runtime.h>
+#include <hip/hip_complex.h>
+#include <hipblas.h>
+
+typedef hipDoubleComplex deviceDoubleComplex;
+
 const auto deviceMemcpyHostToDevice = hipMemcpyHostToDevice;
 
 typedef hipStream_t deviceStream_t;
+typedef hipError_t deviceError_t;
+typedef hipEvent_t deviceEvent_t;
 
-inline hipError_t deviceMalloc (void** devPtr, size_t size )
+const auto deviceSuccess = hipSuccess;
+
+inline deviceError_t deviceMalloc (void** devPtr, size_t size )
   {return hipMalloc (devPtr, size);}
 
-inline cudaError_t deviceFree (void* devPtr)
+inline deviceError_t deviceMallocHost (void** devPtr, size_t size )
+  {return hipHostMalloc(devPtr, size, 0); /* hipMallocHost (devPtr, size); */ }
+
+inline deviceError_t deviceFree (void* devPtr)
   {return hipFree(devPtr);}
 
-inline hipError_t deviceMemcpy (void* dst, const void* src, size_t count, hipMemcpyKind kind)
-  {return cudaMemcpy(dst, src, count, kind);}
+inline deviceError_t deviceFreeHost (void* devPtr)
+  {return hipHostFree(devPtr); /* hipFreeHost(devPtr); */ }
 
-inline hipError_t deviceMemcpyAsync (void* dst, const void* src, size_t count, hipMemcpyKind kind, hipStream_t stream = 0)
+inline deviceError_t deviceMemcpy (void* dst, const void* src, size_t count, hipMemcpyKind kind)
+  {return hipMemcpy(dst, src, count, kind);}
+
+inline deviceError_t deviceMemcpyAsync (void* dst, const void* src, size_t count, hipMemcpyKind kind, hipStream_t stream = 0)
   {return hipMemcpyAsync (dst, src, count, kind, stream);}
+
+const auto deviceEventDefault = hipEventDefault;
+const auto deviceEventBlockingSync = hipEventBlockingSync;
+const auto deviceEventDisableTiming = hipEventDisableTiming;
+const auto deviceEventInterprocess = hipEventInterprocess;
+
+inline deviceError_t deviceEventCreateWithFlags(hipEvent_t *e, unsigned f)
+  {return hipEventCreateWithFlags(e, f);}
+
+inline deviceError_t deviceEventDestroy(hipEvent_t e)
+  {return hipEventDestroy(e);}
+
+inline deviceError_t deviceStreamCreate(hipStream_t *stream)
+  {return hipStreamCreate(stream);}	
+
+inline deviceError_t deviceStreamDestroy(hipStream_t stream)
+  {return hipStreamDestroy(stream);}	
 
 #endif
 

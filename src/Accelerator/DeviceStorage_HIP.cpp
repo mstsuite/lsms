@@ -10,10 +10,7 @@
 #include "DeviceVector.hpp"
 #include "Main/SystemParameters.hpp"
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cublas_v2.h>
-#include <cusolverDn.h>
+#include <hip/hip_runtime.h>
 #include <iostream>
 
 #ifdef _OPENMP
@@ -40,20 +37,20 @@ extern "C"
 Complex* get_host_m_(const int &max_nrmat_ns) {
   static Complex * m_v=0;
   static int cur_size=0;
-  static cudaError_t pinned;
+  static deviceError_t pinned;
 
   if(cur_size<max_nrmat_ns) {
 
     //release previously allocated memory
     if(m_v!=0) {
-      if(pinned) cudaFreeHost(m_v);
+      if(pinned) deviceFreeHost(m_v);
       else free(m_v);
     }
 
     //allocate new memory
-    pinned = cudaMallocHost((void**)&m_v,max_nrmat_ns*max_nrmat_ns*sizeof(Complex)*omp_get_max_threads());
+    pinned = deviceMallocHost((void**)&m_v,max_nrmat_ns*max_nrmat_ns*sizeof(Complex)*omp_get_max_threads());
 
-    if ( pinned != cudaSuccess )
+    if ( pinned != deviceSuccess )
     {
       fprintf(stderr, "Matrix not pinned\n");
       m_v = (Complex*)malloc(max_nrmat_ns*max_nrmat_ns*sizeof(Complex)*omp_get_max_threads());
@@ -98,17 +95,17 @@ public:
       // printf("DeviceStorage::alocate N=%d\n",N);
       for(int i=0;i<nThreads;i++)
       {
-        cudaError_t err;
-        err = cudaMalloc((void**)&dev_m[i],N*N*sizeof(Complex));
-        if(err!=cudaSuccess)
+        deviceError_t err;
+        err = deviceMalloc((void**)&dev_m[i],N*N*sizeof(Complex));
+        if(err!=deviceSuccess)
         {
           printf("failed to allocate dev_m[%d], size=%d, err=%d\n",
                 i,N*N*sizeof(Complex),err);
           exit(1);
         }
-        cudaMalloc((void**)&dev_ipvt[i],N*sizeof(int));
-	err = cudaMalloc((void**)&dev_bgij[i],N*N*sizeof(Complex));
-        if(err!=cudaSuccess)
+        deviceMalloc((void**)&dev_ipvt[i],N*sizeof(int));
+	err = deviceMalloc((void**)&dev_bgij[i],N*N*sizeof(Complex));
+        if(err!=deviceSuccess)
         {
           printf("failed to allocate dev_bgij[%d], size=%d, err=%d\n",
                 i,N*N*sizeof(Complex),err);
@@ -116,31 +113,31 @@ public:
         }
 #ifdef BUILDKKRMATRIX_GPU
         // cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
-        cudaMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
+        deviceMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
 #endif
-        cudaMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
-        cudaMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
-        cudaMalloc((void**)&dev_t[i], 4*N*kkrsz_max*sizeof(Complex));
-        cudaMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
-        cudaStreamCreate(&stream[i][0]);
-        cudaStreamCreate(&stream[i][1]);
-        cudaEventCreateWithFlags(&event[i],cudaEventDisableTiming);
-        cublasCreate(&cublas_h[i]);
-        cusolverDnCreate(&cusolverDnHandle[i]);
+        deviceMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
+        deviceMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
+        deviceMalloc((void**)&dev_t[i], 4*N*kkrsz_max*sizeof(Complex));
+        deviceMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
+        deviceStreamCreate(&stream[i][0]);
+        deviceStreamCreate(&stream[i][1]);
+        deviceEventCreateWithFlags(&event[i],deviceEventDisableTiming);
+        hipblasCreate(&hipblas_h[i]);
+        // cusolverDnCreate(&cusolverDnHandle[i]);
 
-	int lWork;
-	cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
-				    (cuDoubleComplex *)dev_m[i], N, &lWork);
+	int lWork = 0;
+	// cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
+	//			    (cuDoubleComplex *)dev_m[i], N, &lWork);
 	dev_workBytes[i] = 0;
 #ifndef ARCH_IBM
-	cusolverDnZZgesv_bufferSize(cusolverDnHandle[i], N, 2*kkrsz_max,
-				    (cuDoubleComplex *)dev_m[i], N, dev_ipvt[i], (cuDoubleComplex *)dev_tau[i], N, (cuDoubleComplex *)dev_tau[i], N,
-				    dev_work[i], &dev_workBytes[i]);
+	// cusolverDnZZgesv_bufferSize(cusolverDnHandle[i], N, 2*kkrsz_max,
+	//			    (cuDoubleComplex *)dev_m[i], N, dev_ipvt[i], (cuDoubleComplex *)dev_tau[i], N, (cuDoubleComplex *)dev_tau[i], N,
+	//			    dev_work[i], &dev_workBytes[i]);
 #endif
 
-	dev_workBytes[i] = std::max(dev_workBytes[i]*sizeof(cuDoubleComplex),
-				    lWork*sizeof(cuDoubleComplex));
-	cudaMalloc((void**)&dev_work[i], dev_workBytes[i]);
+	dev_workBytes[i] = std::max(dev_workBytes[i]*sizeof(deviceDoubleComplex),
+				    lWork*sizeof(deviceDoubleComplex));
+	deviceMalloc((void**)&dev_work[i], dev_workBytes[i]);
         // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
       }
       deviceCheckError();
@@ -156,18 +153,18 @@ public:
       // for(int i=0;i<omp_get_max_threads();i++)
       for(int i=0; i<nThreads; i++)
       {
-        cudaFree(dev_m[i]);
-        cudaFree(dev_ipvt[i]);
+        deviceFree(dev_m[i]);
+        deviceFree(dev_ipvt[i]);
 #ifdef BUILDKKRMATRIX_GPU
-        cudaFree(dev_bgij[i]);
-        cudaFree(dev_tmat_n[i]);
+        deviceFree(dev_bgij[i]);
+        deviceFree(dev_tmat_n[i]);
 #endif
-	cudaFree(dev_work[i]);
-        cudaFree(dev_t0[i]);
-        cudaStreamDestroy(stream[i][0]);
-        cudaStreamDestroy(stream[i][1]);
-        cudaEventDestroy(event[i]);
-        cublasDestroy(cublas_h[i]);
+	deviceFree(dev_work[i]);
+        deviceFree(dev_t0[i]);
+        deviceStreamDestroy(stream[i][0]);
+        deviceStreamDestroy(stream[i][1]);
+        deviceEventDestroy(event[i]);
+        hipblasDestroy(hipblas_h[i]);
       }
       dev_tmat_store.clear();
       deviceCheckError();
@@ -201,10 +198,10 @@ Complex *DeviceStorage::dev_t[MAX_THREADS];
 void *DeviceStorage::dev_work[MAX_THREADS];
 size_t DeviceStorage::dev_workBytes[MAX_THREADS];
 int *DeviceStorage::dev_ipvt[MAX_THREADS];
-cublasHandle_t DeviceStorage::cublas_h[MAX_THREADS];
-cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
-cudaEvent_t DeviceStorage::event[MAX_THREADS];
-cudaStream_t DeviceStorage::stream[MAX_THREADS][2];
+hipblasHandle_t DeviceStorage::hipblas_h[MAX_THREADS];
+// cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
+deviceEvent_t DeviceStorage::event[MAX_THREADS];
+deviceStream_t DeviceStorage::stream[MAX_THREADS][2];
 DeviceMatrix<Complex> DeviceStorage::dev_tmat_store;
 int DeviceStorage::nThreads=1;
 bool initialized;
@@ -215,9 +212,9 @@ int DeviceAtomCuda::allocate(int _lmax, int _nspin, int _numLIZ)
   if(allocated) free();
   allocated = true;
   numLIZ = _numLIZ;
-  cudaMalloc((void**)&LIZPos,numLIZ*3*sizeof(Real));
-  cudaMalloc((void**)&LIZlmax,numLIZ*sizeof(int));
-  cudaMalloc((void**)&LIZStoreIdx,numLIZ*sizeof(int));
+  deviceMalloc((void**)&LIZPos,numLIZ*3*sizeof(Real));
+  deviceMalloc((void**)&LIZlmax,numLIZ*sizeof(int));
+  deviceMalloc((void**)&LIZStoreIdx,numLIZ*sizeof(int));
   
   return 0;
 }
@@ -226,9 +223,9 @@ void DeviceAtomCuda::free()
 {
   if(allocated)
   {
-    cudaFree(LIZPos);
-    cudaFree(LIZlmax);
-    cudaFree(LIZStoreIdx);
+    deviceFree(LIZPos);
+    deviceFree(LIZlmax);
+    deviceFree(LIZStoreIdx);
   }
   allocated = false;
 }
@@ -239,12 +236,13 @@ void DeviceAtomCuda::copyFromAtom(AtomData &atom)
   {
     allocate(atom.lmax, atom.nspin, atom.numLIZ);
   }
-  cudaMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), cudaMemcpyHostToDevice);
-  cudaMemcpy(LIZPos, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
-  cudaMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
+  deviceMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), deviceMemcpyHostToDevice);
+  deviceMemcpy(LIZPos, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
+  deviceMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
 }
 
 /****************Fortran Interfaces*********************/
+/*
 extern "C"
 Complex* get_dev_m_() {
   return DeviceStorage::getDevM();
@@ -280,6 +278,7 @@ extern "C"
 cudaEvent_t get_cuda_event_() {
   return DeviceStorage::getEvent();
 }
+*/
 /********************************************************/
 
 DeviceMatrix<Complex>* get_dev_tmat_store() {

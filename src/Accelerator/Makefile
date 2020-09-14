@@ -39,7 +39,11 @@ DeviceStorage.o:  DeviceStorage.cu
 ifdef CUDA_CXX
 	$(CUDA_CXX) -c DeviceStorage.cu $(INC_PATH) -I. $(OPT)
 else
+ifdef HIP_CXX
+	$(HIP_CXX) -o DeviceStorage.o -c DeviceStorage_HIP.cpp $(INC_PATH) -I. $(OPT)
+else
 	touch DeviceStorage.o
+endif
 endif
 
 inverse.o:  inverse.cu inverse.h operations.h

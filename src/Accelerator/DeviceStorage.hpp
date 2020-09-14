@@ -16,6 +16,8 @@
 #include <rocsolver.h>
 #endif
 
+#include "DeviceInterfaceCudaHip.hpp"
+
 #include "SingleSite/AtomData.hpp"
 
 #ifdef _OPENMP
@@ -54,12 +56,16 @@ private:
 #if defined(ACCELERATOR_CUDA_C)
   static cublasHandle_t cublas_h[MAX_THREADS];
   static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];  
-  static cudaEvent_t event[MAX_THREADS];
-  static cudaStream_t stream[MAX_THREADS][2];
+  // static cudaEvent_t event[MAX_THREADS];
+  // static cudaStream_t stream[MAX_THREADS][2];
 #endif
 #if defined (ACCELERATOR_HIP)
-  static rocblas_handle rocblas_h[MAX_THREADS];
+  static hipblasHandle_t hipblas_h[MAX_THREADS];
 #endif
+
+  static deviceEvent_t event[MAX_THREADS];
+  static deviceStream_t stream [MAX_THREADS][2];
+
   static size_t dev_workBytes[MAX_THREADS];
   static void *dev_work[MAX_THREADS];
   static DeviceMatrix<Complex> dev_tmat_store;
@@ -84,7 +90,7 @@ public:
   static cusolverDnHandle_t getCusolverDnHandle() { return cusolverDnHandle[omp_get_thread_num()]; }
 #endif
 #if defined(ACCELERATOR_HIP)
-  static rocblas_handle getRocBlasHandle() { return rocblas_h[omp_get_thread_num()]; }
+  static hipblasHandle_t getHipBlasHandle() { return hipblas_h[omp_get_thread_num()]; }
 #endif
   static size_t getDevWorkBytes() { return dev_workBytes[omp_get_thread_num()]; }
   static void *getDevWork() {  return dev_work[omp_get_thread_num()]; }

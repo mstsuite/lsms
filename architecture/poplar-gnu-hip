@@ -6,7 +6,9 @@ export USE_OPENMP=1
 # export USE_ACCELERATOR =
 
 export LIBS += 
-export ADD_LIBS += -L/usr/local/lib -L$(HDF5DIR) -lhdf5 -llapack -lblas \
+# export ADD_LIBS += -L/usr/local/lib -L$(HDF5DIR) -lhdf5 -L$(CRAY_LIBSCI_PREFIX)/lib -lsci_cray \
+#                    -lgfortran
+export ADD_LIBS += -L/usr/local/lib -L$(HDF5DIR) -lhdf5 -L$(CRAY_LIBSCI_PREFIX)/lib -llapack -lblas \
                    -lgfortran
 
 export INC_PATH += -I$(HDF5INCLUDE) -I$(ROCM_PATH)/include
@@ -30,15 +32,15 @@ export LSMS_CXX=mpicxx -cxx="hipcc -fgpu-rdc --amdgpu-target=gfx906,gfx908" $(CO
 # export CC=mpicc  $(COMP_OPTIONS) $(USE_ACCELERATOR) $(OPT_DEFINES) -fopenmp
 # export F77=mpif77  $(COMP_OPTIONS) $(USE_ACCELERATOR) -fopenmp
 export F77=gfortran  $(COMP_OPTIONS) $(USE_ACCELERATOR) -fopenmp
-export HIP_CXX=hipcc --amdgpu-target=gfx906,gfx908 $(USE_ACCELERATOR) -std=c++14 -fopenmp
-# export CUDA_CXX=nvcc -arch=sm_60 -I $(MPI_ROOT)/include $(USE_ACCELERATOR) -std=c++14 -Xcompiler -fopenmp 
+export HIP_CXX=$(LSMS_CXX)
+# export HIP_CXX=hipcc --amdgpu-target=gfx906,gfx908 $(USE_ACCELERATOR) -std=c++14 -fopenmp
 else
 export LSMS_CXX=mpicxx -cxx="hipcc -fgpu-rdc --amdgpu-target=gfx906,gfx908" $(COMP_OPTIONS) -std=c++14 $(USE_ACCELERATOR) $(OPT_DEFINES)
 # export CC=mpicc  $(COMP_OPTIONS) $(USE_ACCELERATOR) $(OPT_DEFINES)
 # export F77=mpif77 $(COMP_OPTIONS) $(USE_ACCELERATOR)
 export F77=gfortran $(COMP_OPTIONS) $(USE_ACCELERATOR)
-export HIP_CXX=hipcc --amdgpu-target=gfx906,gfx908 $(USE_ACCELERATOR) -std=c++14
-# export CUDA_CXX=nvcc -arch=sm_60 -I $(MPI_ROOT)/include -std=c++14 $(USE_ACCELERATOR)
+export HIP_CXX=$(LSMS_CXX)
+# export HIP_CXX=hipcc --amdgpu-target=gfx906,gfx908 $(USE_ACCELERATOR) -std=c++14
 endif
 
 export CXX=$(LSMS_CXX)
