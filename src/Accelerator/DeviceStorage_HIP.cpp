@@ -206,8 +206,10 @@ DeviceMatrix<Complex> DeviceStorage::dev_tmat_store;
 int DeviceStorage::nThreads=1;
 bool initialized;
 
+std::vector<DeviceAtom> deviceAtoms;
+
 // Device Atom
-int DeviceAtomCuda::allocate(int _lmax, int _nspin, int _numLIZ)
+int DeviceAtom::allocate(int _lmax, int _nspin, int _numLIZ)
 {
   if(allocated) free();
   allocated = true;
@@ -219,7 +221,7 @@ int DeviceAtomCuda::allocate(int _lmax, int _nspin, int _numLIZ)
   return 0;
 }
 
-void DeviceAtomCuda::free()
+void DeviceAtom::free()
 {
   if(allocated)
   {
@@ -230,7 +232,7 @@ void DeviceAtomCuda::free()
   allocated = false;
 }
 
-void DeviceAtomCuda::copyFromAtom(AtomData &atom)
+void DeviceAtom::copyFromAtom(AtomData &atom)
 {
   if(!allocated)
   {
