@@ -52,6 +52,7 @@ void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local, At
 // #endif
 
 // #ifdef ACCELERATOR_HIP
+#define MST_LINEAR_SOLVER_ZGETRF_HIPBLAS 0x20
 #define MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER 0x20
 // #endif
 

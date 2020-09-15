@@ -46,7 +46,7 @@ SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
 IFactors iFactors;
 
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
 // void *deviceStorage;
 DeviceStorage *deviceStorage;
@@ -174,7 +174,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
 
   acceleratorInitialize(lsms.n_spin_cant * local.maxNrmat(), lsms.global.GPUThreads);
   local.tmatStore.pinMemory();
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // deviceStorage = allocateDStore();
   deviceStorage = new DeviceStorage;
 #endif
@@ -278,7 +278,7 @@ LSMS::~LSMS()
   // for (int i=0; i<local.num_local; i++)
   //   freeDConst(deviceConstants[i]);
 #endif
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // freeDStore(deviceStorage);
   delete deviceStorage;
 #endif

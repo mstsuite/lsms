@@ -5,7 +5,7 @@ export USE_OPENMP=1
 export USE_ACCELERATOR = -DACCELERATOR_HIP
 
 export LIBS += 
-export ADD_LIBS += -L$(HDF5DIR) -lhdf5 -L$(MPI_HOME)/lib -lmpi -L$(CRAYLIBS_X86_64) -L$(GCC_X86_64)/lib64 -L$(CRAY_LIBSCI_PREFIX_DIR)/lib -lsci_cray -lcraymath -lcraymp -lu -lcsup -lf -lfi -lmodules
+export ADD_LIBS += -L$(HDF5DIR) -lhdf5 -L$(MPI_HOME)/lib -lmpi -L$(CRAYLIBS_X86_64) -L$(GCC_X86_64)/lib64 -L$(CRAY_LIBSCI_PREFIX_DIR)/lib -lsci_cray -lcraymath -lcraymp -lu -lcsup -lf -lfi -lmodules -L$(ROCM_PATH)/lib -lhipblas -lrocsolver
 export INC_PATH += -I$(HDF5INCLUDE) -I$(ROCM_PATH)/include
 
 # export BOOST_ROOT=$(TOP_DIR)

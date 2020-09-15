@@ -29,8 +29,8 @@ inline int omp_get_thread_num() {return 0;}
 #endif
 #endif
 
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
-#include <cuda_runtime.h>
+#if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+// #include <cuda_runtime.h>
 #include "Accelerator/DeviceStorage.hpp"
 // extern void * deviceStorage;
 extern DeviceStorage *deviceStorage;

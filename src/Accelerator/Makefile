@@ -35,7 +35,7 @@ else
 	touch zblock_lu_cuda_c.o
 endif
 
-DeviceStorage.o:  DeviceStorage.cu
+DeviceStorage.o:  DeviceStorage.cu DeviceStorage_HIP.cpp
 ifdef CUDA_CXX
 	$(CUDA_CXX) -c DeviceStorage.cu $(INC_PATH) -I. $(OPT)
 else

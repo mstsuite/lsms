@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "Accelerator/DeviceStorage.hpp"
-#include <hip_runtime.h>
-#include <hip_complex.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_complex.h>
 #include <hipblas.h>
 #include <rocsolver.h>
 
@@ -187,7 +187,7 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
                                Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00)
 {
-  cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
+  // cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
   rocblas_handle rocblasHandle = DeviceStorage::getRocBlasHandle();
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
   int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz; // size of t00 block
@@ -207,13 +207,13 @@ void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local
 //                   devInfo );
 
   rocsolver_zgetrf(rocblasHandle, nrmat_ns, nrmat_ns,
-                   (hipDoubleComplex *)devM, nrmat_ns, devIpiv, devInfo);
+                   (rocblas_double_complex*)devM, nrmat_ns, devIpiv, devInfo);
 
 //  cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, kkrsz_ns,
 //                   (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devTau, nrmat_ns, devInfo);
 
-  rocsolver_zgetrs(rocblas_handle handle, const rocblas_operation trans, nrmat_ns, kkrsz_ns,
-                   (hipDoubleComplex *)devM, nrmat_ns, devIpiv, devTau, nrmat_ns);
+  rocsolver_zgetrs(rocblasHandle, rocblas_operation_none, nrmat_ns, kkrsz_ns,
+                   (rocblas_double_complex*)devM, nrmat_ns, devIpiv, (rocblas_double_complex*)devTau, nrmat_ns);
 
   // copy result into tau00
   copyTauToTau00Hip<<<kkrsz_ns,1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);

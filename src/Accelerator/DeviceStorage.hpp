@@ -7,6 +7,7 @@
 #include "Complex.hpp"
 
 #if defined(ACCELERATOR_CUDA_C)
+#include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 #endif
@@ -91,6 +92,7 @@ public:
 #endif
 #if defined(ACCELERATOR_HIP)
   static hipblasHandle_t getHipBlasHandle() { return hipblas_h[omp_get_thread_num()]; }
+  static rocblas_handle getRocBlasHandle() { return (rocblas_handle)hipblas_h[omp_get_thread_num()]; }
 #endif
   static size_t getDevWorkBytes() { return dev_workBytes[omp_get_thread_num()]; }
   static void *getDevWork() {  return dev_work[omp_get_thread_num()]; }
