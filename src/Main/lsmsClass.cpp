@@ -50,6 +50,7 @@ IFactors iFactors;
 #include "Accelerator/DeviceStorage.hpp"
 // void *deviceStorage;
 DeviceStorage *deviceStorage;
+DeviceConstants deviceConstants;
 #endif
 
 #ifdef BUILDKKRMATRIX_GPU
@@ -170,7 +171,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
   iFactors.init(lsms, crystal.maxlmax);
 
-#if defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
 #endif
 

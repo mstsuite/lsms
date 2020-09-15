@@ -171,7 +171,7 @@ public:
       }
       // dev_tmat_store.clear();
       cudaFree(devTmatStore);
-      cudaCheckError();
+      deviceCheckError();
       initialized=false;
     }
   }
