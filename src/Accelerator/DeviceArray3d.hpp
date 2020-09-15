@@ -1,6 +1,8 @@
 #ifndef LSMS_DEVICE_ARRAY3D_HPP
 #define LSMS_DEVICE_ARRAY3D_HPP
 
+#include "DeviceInterfaceCudaHip.hpp"
+
 #include "Array3d.hpp"
 
   template <class T>
@@ -68,10 +70,10 @@
           }
           else { nRow=0; nCol=0; nSlice=0; lDim1=0; lDim2=0; lDim12=0; data=0; }
         }
-        cudaMemcpy(data,&a[0],num_bytes,cudaMemcpyHostToDevice);
+        deviceMemcpy(data,&a[0],num_bytes,deviceMemcpyHostToDevice);
       }
       
-      __inline__ void copy_async(Array3d<T> &a, cudaStream_t s) {
+      __inline__ void copy_async(Array3d<T> &a, deviceStream_t s) {
         size_type curSize=lDim12*nSlice;
         nRow=a.n_row(); nCol=a.n_col(); nSlice=a.n_slice(); lDim1=a.l_dim1(); lDim2=a.l_dim2(); lDim12=lDim1*lDim2; 
         size_type num_bytes=sizeof(T)*lDim12*nSlice;
@@ -82,7 +84,7 @@
           }
           else { nRow=0; nCol=0; nSlice=0; lDim1=0; lDim2=0; lDim12=0; data=0; }
         }
-        cudaMemcpyAsync(data,&a[0],num_bytes,cudaMemcpyHostToDevice,s);
+        deviceMemcpyAsync(data,&a[0],num_bytes,deviceMemcpyHostToDevice,s);
       }
 
     private:
@@ -94,8 +96,8 @@
         if(num_bytes>0) {
           free();
           owner=this;
-          cudaMalloc(&data,num_bytes);
-          cudaCheckError();
+          deviceMalloc(&data,num_bytes);
+          deviceCheckError();
         }
         else {      // DANGEROUS!! Might cause memory leak!
           nRow = 0;
@@ -110,7 +112,7 @@
       }
       __inline__ void free() {
         if(owner==this && data!=0) {
-          cudaFree(data);
+          deviceFree(data);
           owner=0;
           data=0;
         }

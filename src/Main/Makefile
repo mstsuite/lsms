@@ -6,6 +6,8 @@ else
   gptl_def=
 endif
 
+LINKER ?= $(CXX)
+
 LSMS_OBJ = SystemParameters.o read_input.o PotentialIO.o buildLIZandCommLists.o \
            energyContourIntegration.o solveSingleScatterers.o \
            calculateDensities.o calculateChemPot.o checkConsistency.o \
@@ -20,23 +22,23 @@ clean:
                       rewl-lsms $(TOP_DIR)/bin/rewl-lsms\
 		      zblock_lu_driver
 
-zblock_lu_driver: zblock_lu_cuda_driver.cpp libLSMS.a
-	$(CXX) -fopenmp -UBUILDKKRMATRIX_GPU $(INC_PATH) -DNO_HDF5 -o zblock_lu_driver zblock_lu_cuda_driver.cpp libLSMS.a $(LIB_DIR) -L../Accelerator -lAccelerator $(ADD_LIBS)
+zblock_lu_driver: zblock_lu_cuda_driver.o libLSMS.a
+	$(LINKER) -fopenmp -UBUILDKKRMATRIX_GPU $(INC_PATH) -DNO_HDF5 -o zblock_lu_driver zblock_lu_cuda_driver.o libLSMS.a $(LIB_DIR) -L../Accelerator -lAccelerator $(ADD_LIBS)
 
-lsms: lsms.cpp libLSMS.a
-	$(CXX) $(INC_PATH) $(gptl_def) -o lsms lsms.cpp libLSMS.a $(LIBS) $(ADD_LIBS)
+lsms: lsms.o libLSMS.a
+	$(LINKER) $(INC_PATH) $(gptl_def) -o lsms lsms.o -L. -lLSMS $(LIBS) $(ADD_LIBS)
 	cp lsms $(TOP_DIR)/bin
 
-lsms_inter: lsms_inter.cpp
-	$(CXX) $(INC_PATH) -o lsms_inter lsms_inter.cpp $(LIBS)
+lsms_inter: lsms_inter.o
+	$(LINKER) $(INC_PATH) -o lsms_inter lsms_inter.o $(LIBS)
 	cp lsms_inter $(TOP_DIR)/bin
 
-wl-lsms: wl_lsms.cpp libLSMS.a
-	$(CXX) $(INC_PATH) -o wl-lsms wl_lsms.cpp libLSMS.a $(LIBS) $(ADD_LIBS)
+wl-lsms: wl_lsms.o libLSMS.a
+	$(LINKER) $(INC_PATH) -o wl-lsms wl_lsms.o -L. -lLSMS $(LIBS) $(ADD_LIBS)
 	cp wl-lsms $(TOP_DIR)/bin
 
-rewl-lsms: rewl_lsms.cpp libLSMS.a
-	$(CXX) $(INC_PATH) -o rewl-lsms rewl_lsms.cpp libLSMS.a $(LIBS) $(ADD_LIBS)
+rewl-lsms: rewl_lsms.o libLSMS.a
+	$(LINKER) $(INC_PATH) -o rewl-lsms rewl_lsms.o -L. -lLSMS $(LIBS) $(ADD_LIBS)
 	cp rewl-lsms $(TOP_DIR)/bin
 
 %.o : %.cpp

@@ -73,7 +73,7 @@ void calculateDensities(LSMSSystemParameters &lsms, int iatom, int is, int ie, i
         for(int ir=0; ir<green.l_dim1(); ir++)
         {
           Real r2inv=1.0/(atom.r_mesh[ir]*atom.r_mesh[ir]);
-          atom.greenlast(ir,isq)=std::imag(green(ir,isq,iatom));
+          atom.greenlast(ir,isq)=std::imag(green(ir,isq,iatom)) * r2inv;
         }
       }
     }

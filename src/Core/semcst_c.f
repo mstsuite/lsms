@@ -144,7 +144,8 @@ c     ================================================================
          elim=-z*z/(0.75d+00*nqn*nqn)
       else
          elim=(rv(1)+lll/r(1))/r(1)
-         do j=2,iprpts
+! meis: change to correspond to MST2         do j=2,iprpts
+         do j=2,nws
             elim=min((rv(j)+lll/r(j))/r(j),elim)
 	 enddo
       endif
@@ -227,7 +228,8 @@ c     ================================================================
   6   continue
       enew=en+de
       if(enew.lt.0.0d+00) go to 7
-      de=de+0.5d+00
+!ywg  de=de+0.5d+00
+      de=de*0.5d+00
       val=val*0.5d+00
       if (val.gt.tol) go to 6
 c

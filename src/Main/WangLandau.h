@@ -1483,6 +1483,8 @@ MoveChoice_t WL1dEvecGenerator<RNG>::selectMoveType(bool isSpinSim, bool isOccSi
     return SpinMove;
   if( isOccSim )
     return OccupancyMove;
+
+  return SpinMove;
 }
 
 template<class RNG>

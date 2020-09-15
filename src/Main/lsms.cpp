@@ -56,7 +56,7 @@ SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
 IFactors iFactors;
 
-#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
 // void * deviceStorage;
 DeviceStorage *deviceStorage;
@@ -219,7 +219,11 @@ int main(int argc, char *argv[])
 
   local.setNumLocal(distributeTypes(crystal, comm));
   local.setGlobalId(comm.rank, crystal);
-
+     
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceAtoms.resize(local.num_local);
+#endif
+     
   if(comm.rank == 0)
   {
     printf("set global ids.\n");
@@ -272,7 +276,7 @@ int main(int argc, char *argv[])
 
   acceleratorInitialize(lsms.n_spin_cant*local.maxNrmat(), lsms.global.GPUThreads);
   local.tmatStore.pinMemory();
-#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // deviceStorage = allocateDStore();
   deviceStorage = new DeviceStorage;
 #endif
@@ -692,7 +696,7 @@ int main(int argc, char *argv[])
   // for(int i=0; i<local.num_local; i++) freeDConst(deviceConstants[i]);
 #endif
 
-#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // freeDStore(deviceStorage);
   delete deviceStorage;
 #endif

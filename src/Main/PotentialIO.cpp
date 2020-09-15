@@ -156,6 +156,10 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
     {
       local.atom[i].rmt=local.atom[i].rInscribed;
     }
+    if(lsms.mtasa == 1)
+    {
+      local.atom[i].jmt = local.atom[i].jws;
+    }
 // define potential past old grid as constant
     for(int is=0; is<lsms.n_spin_pola; is++)
     {

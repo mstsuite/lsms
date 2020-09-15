@@ -46,11 +46,21 @@ SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
 IFactors iFactors;
 
-#if defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
 // void *deviceStorage;
 DeviceStorage *deviceStorage;
-DeviceConstants deviceConstants;
+#endif
+
+#ifdef BUILDKKRMATRIX_GPU
+// void *allocateDStore(void);
+// void freeDStore(void *);
+// void *allocateDConst(void);
+// void freeDConst(void *);
+#include "Accelerator/buildKKRMatrix_gpu.hpp"
+
+std::vector<DeviceConstants> deviceConstants;
+//std::vector<void *> deviceConstants;
 #endif
 
 void initLSMSLuaInterface(lua_State *L);
@@ -146,6 +156,10 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   globalMax(comm, max_num_local);
   local.setGlobalId(comm.rank, crystal);
 
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceAtoms.resize(local.num_local);
+#endif
+
   // set up exchange correlation functionals
   if(lsms.xcFunctional[0] == 1)  // libxc functional
     lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
@@ -169,9 +183,13 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
 
   acceleratorInitialize(lsms.n_spin_cant * local.maxNrmat(), lsms.global.GPUThreads);
   local.tmatStore.pinMemory();
-#if defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // deviceStorage = allocateDStore();
   deviceStorage = new DeviceStorage;
+#endif
+#ifdef BUILDKKRMATRIX_GPU
+  deviceConstants.resize(local.num_local);
+  // for(int i=0; i<local.num_local; i++) deviceConstants[i] = allocateDConst();
 #endif
 
   for(int i=0; i<local.num_local; i++)
@@ -269,11 +287,13 @@ LSMS::~LSMS()
   // for (int i=0; i<local.num_local; i++)
   //   freeDConst(deviceConstants[i]);
 #endif
-#if defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // freeDStore(deviceStorage);
   delete deviceStorage;
 #endif
-
+#ifdef BUILDKKRMATRIX_GPU
+  deviceConstants.clear();
+#endif
   acceleratorFinalize();
   // finalizeCommunication();
 }

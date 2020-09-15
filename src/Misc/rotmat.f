@@ -21,15 +21,16 @@
       jdim=2*lmax+2
 !
       fac(1)=1.d0
-      do 10 i=1,jdim+1
-   10    fac(i+1)=fac(i)*i
+      do i=1,jdim+1
+        fac(i+1)=fac(i)*i
+      end do
       f1=dcmplx(lm(1),-lm(4))
       f2=dconjg(f1)
       f3=dcmplx(lm(3),-lm(2))
       f4=dconjg(f3)
       ij=iabs(ij0)
       do 60 in=1,ij
-         do 60 im=1,ij
+         do 61 im=1,ij
          km=max0(1,in-im+1)
          kx=min0(ij-im+1,in)
          d(in,im)=(0.d0,0.d0)
@@ -55,10 +56,13 @@
          if (ij0.lt.0.and.isign(1,ig).ne.1) d(in,im)=-d(in,im)
          if (dabs(dreal(d(in,im))).lt.1.d-14) d(in,im)=dcmplx(0.d0, 
      &   dimag(d(in,im)))
-   60    if (dabs(dimag(d(in,im))).lt.1.d-14) d(in,im)=dreal(d(in,im))
+         if (dabs(dimag(d(in,im))).lt.1.d-14) d(in,im)=dreal(d(in,im))
+   61    continue
+   60    continue
       c=(0.d0,0.d0)
-      do 70 i=1,ij
-   70    c=c+d(i,i)
+      do i=1,ij
+        c=c+d(i,i)
+      end do
       if (dabs(dimag(c)).gt.1.d-10) then
         write(*,*) "Error in rotmat |imag(c)| = ",dabs(dimag(c))
         stop

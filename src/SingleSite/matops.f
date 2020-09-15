@@ -5,9 +5,11 @@ c    x=y
 c
       complex*16 x(ndim,ndim),y(ndim,ndim)
 c
-      do 1 i=1,n
-      do 1 j=1,n
-    1 x(i,j)=y(i,j)
+      do i=1,n
+      do j=1,n
+        x(i,j)=y(i,j)
+      end do
+      end do
       return
       end
       subroutine replt(x,y,n,ndim)
@@ -17,9 +19,11 @@ c    x=y^T
 c
       complex*16 x(ndim,ndim),y(ndim,ndim)
 c
-      do 1 i=1,n
-      do 1 j=1,n
-    1 x(i,j)=y(j,i)
+      do i=1,n
+      do j=1,n
+        x(i,j)=y(j,i)
+      end do
+      end do
       return
       end
       subroutine replrel(x,y,n,ndim)
@@ -36,13 +40,14 @@ c
      *          3,3,3,3,3,3,3,3,3,3,3,3,3,3,
      *          4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4/
 c
-      do 1 i=1,n
+      do i=1,n
         li=ldex(i)
-      do 1 j=1,n
+      do j=1,n
         lj=ldex(j)
         x(i,j)=dconjg(y(j,i))
         if(mod(iabs(li-lj),2).eq.1) x(i,j)=-x(i,j)
-    1 continue
+      end do
+      end do
       return
       end
       subroutine compmat(x,y,n,ndim,tol,ic)
@@ -82,9 +87,11 @@ c    x=x+y
 c
       complex*16 x(ndim,ndim),y(ndim,ndim)
 c
-      do 1 i=1,n
-      do 1 j=1,n
-    1 x(i,j)=x(i,j)+y(i,j)
+      do i=1,n
+      do j=1,n
+        x(i,j)=x(i,j)+y(i,j)
+      end do
+      end do
       return
       end
       subroutine addmat1(a,b,c,n,ndim)
@@ -94,9 +101,11 @@ c    c=a+b
 c
       complex*16 a(ndim,ndim),b(ndim,ndim),c(ndim,ndim)
 c
-      do 1 i=1,n
-      do 1 j=1,n
-    1 c(i,j)=a(i,j)+b(i,j)
+      do i=1,n
+      do j=1,n
+        c(i,j)=a(i,j)+b(i,j)
+      end do
+      end do
       return
       end
       subroutine submat(x,y,n,ndim)
@@ -106,9 +115,11 @@ c    x=x-y
 c
       complex*16 x(ndim,ndim),y(ndim,ndim)
 c
-      do 1 i=1,n
-      do 1 j=1,n
-    1 x(i,j)=x(i,j)-y(i,j)
+      do i=1,n
+      do j=1,n
+        x(i,j)=x(i,j)-y(i,j)
+      end do
+      end do
       return
       end
       subroutine submat1(a,b,c,n,ndim)
@@ -118,9 +129,11 @@ c    c=a-b
 c
       complex*16 a(ndim,ndim),b(ndim,ndim),c(ndim,ndim)
 c
-      do 1 i=1,n
-      do 1 j=1,n
-    1 c(i,j)=a(i,j)-b(i,j)
+      do i=1,n
+      do j=1,n
+        c(i,j)=a(i,j)-b(i,j)
+      end do
+      end do
       return
       end
       subroutine symmat(x,n,ndim)
@@ -130,10 +143,12 @@ c    x -> 1/2*(x+xT)
 c
       complex*16 x(ndim,ndim)
 c
-      do 1 i=1,n
-      do 1 j=i+1,n
-      x(i,j)=0.5d0*(x(i,j)+x(j,i))
-    1 x(j,i)=x(i,j)
+      do i=1,n
+      do j=i+1,n
+        x(i,j)=0.5d0*(x(i,j)+x(j,i))
+        x(j,i)=x(i,j)
+      end do
+      end do
       return
       end
       subroutine doubmt(amat,bmat,ndim,ndimp)
@@ -213,29 +228,33 @@ c
 c
 c     left product
 c
-      do 20 i=1,ndi1
-      do 20 j=1,ndi2
+      do i=1,ndi1
+      do j=1,ndi2
 c
       x= (0.0d0,0.0d0)
 c
-      do 10 k=1,ndi1
-   10 x = x + b(k,j)*u(i,k)
+      do k=1,ndi1
+        x = x + b(k,j)*u(i,k)
+      end do
 c
       c(i,j)=x
-   20 continue
+      end do
+      end do
 c
 c     right product
 c
-      do 40 i=1,ndi1
-      do 40 j=1,ndi2
+      do i=1,ndi1
+      do j=1,ndi2
 c
       x = (0.d0,0.0d0)
 c
-      do 30 k=1,ndi2
-   30 x = x + ust(k,j)*c(i,k)
+      do k=1,ndi2
+        x = x + ust(k,j)*c(i,k)
+      end do
 c
       b(i,j)=x
-   40 continue
+      end do
+      end do
 c
       return
       end
@@ -253,29 +272,33 @@ c
 c
 c     left product
 c
-      do 20 i=1,ndi1
-      do 20 j=1,ndi2
+      do i=1,ndi1
+      do j=1,ndi2
 c
       x= (0.0d0,0.0d0)
 c
-      do 10 k=1,ndi1
-   10 x = x + b(k,j)*u(i,k)
+      do k=1,ndi1
+        x = x + b(k,j)*u(i,k)
+      end do
 c
       c(i,j)=x
-   20 continue
+      end do
+      end do
 c
 c     right product
 c
-      do 40 i=1,ndi1
-      do 40 j=1,ndi2
+      do i=1,ndi1
+      do j=1,ndi2
 c
       x = (0.d0,0.0d0)
 c
-      do 30 k=1,ndi2
-   30 x = x + ust(k,j)*c(i,k)
+      do k=1,ndi2
+        x = x + ust(k,j)*c(i,k)
+      end do
 c
       b1(i,j)=x
-   40 continue
+      end do
+      end do
 c
       return
       end
@@ -296,11 +319,13 @@ c
       end do
 c
       write(nper,*) ' real part'
-      do 1 i=1,n
-   1  write(nper,10) (dreal(mat1(i,j)),j=1,m)
+      do i=1,n
+        write(nper,10) (dreal(mat1(i,j)),j=1,m)
+      end do
       write(nper,*) ' imaginary part'
-      do 2 i=1,n
-   2  write(nper,10) (dimag(mat1(i,j)),j=1,m)
+      do i=1,n
+        write(nper,10) (dimag(mat1(i,j)),j=1,m)
+      end do
 c
   10  format(9(1pd14.6))
 c
@@ -312,12 +337,13 @@ c=======================
       complex*16 mat(ndim,ndim)
 c
       do j=1,m
-      do 1 i=1,n
+      do i=1,n
         r1=dreal(mat(i,j))
         r2=dimag(mat(i,j))
-        if(dabs(r1).lt.tol.and.dabs(r2).lt.tol) goto 1 
+        if(dabs(r1).ge.tol.or.dabs(r2).ge.tol) then 
         write(nper,'(2i4,5x,1pd20.10,1pd20.10)') i,j,r1,r2
-   1  continue
+        end if
+      end do
       end do
 c
       return

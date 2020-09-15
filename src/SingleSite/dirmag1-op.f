@@ -1,7 +1,8 @@
       subroutine dirmago1op(socsc,e,l,my,vr,bspr,bopr,
      >                    dx,xnot,rs,ns,g,f,gp,iprpts)
 c
-      implicit real*8(a-h,o-z)
+!     implicit real*8(a-h,o-z)
+      implicit none
 !     include '../param.h'
 !     include 'atom_param.h'
 c
@@ -15,12 +16,21 @@ c     *                                                         *
 c     * my=+/-(l+1/2), kap=-l-1  case!!!                        *
 c     ***********************************************************
 c
-      integer iprpts
+      integer iprpts,l,my,ns
+      real*8 socsc,vr,bspr,bopr,dx,xnot,rs
       complex*16 e,p,q,pp,qp
       complex*16 pn,qn,k1,k2,k3,k4,m1,m2,m3,m4
       complex*16 psum,qsum,p0,q0,p1,q1,ppnp1,qpnp1
       complex*16 g,gp,f
 c
+      real*8 x,xk,xkap,xl,vrnp1,vrc,vrmid,vrn
+      real*8 r,rn,rmid,u,rnp1,facl,hoc,test
+      real*8 ba11,ba12,ba22,bb11,bb22
+      real*8 bb22c,bb22n,bb22np1,bb22mid
+      real*8 ba22c,ba22n,ba22np1,ba22mid
+      real*8 c,cin,dkoef1,dkoef2,dx2
+      integer n,nit,nitmax,imode
+
       dimension vr(iprpts),bspr(iprpts),bopr(iprpts,2)
       dimension ba11(iprpts),ba12(iprpts)
       dimension ba22(iprpts),bb11(iprpts),bb22(iprpts)

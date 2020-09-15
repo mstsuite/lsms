@@ -47,7 +47,7 @@ c
       integer    kqn
       integer    nitmax
       integer    nws
-      integer    nlast
+      integer    nlast,nnmax
       integer    iter
       integer    imm
       integer    nodes
@@ -141,7 +141,8 @@ c     ================================================================
          elim=-z*z/(0.75d0*nqn*nqn)
       else
          elim=(rv(1)+lll/r(1))/r(1)
-         do j=2,nlast
+!ywg     do j=2,nlast
+         do j=2,nws
             elim=min((rv(j)+lll/r(j))/r(j),elim)
          enddo
       endif
@@ -219,18 +220,23 @@ c     ================================================================
  5    enew=en+de
 
       if(enew.lt.0.0d0) go to 6
-      de=de+0.5d0
+!meis      de=de+0.5d0
+      de=de*0.5d0
       val=val*0.5d0
       if (val.gt.tol) go to 5
 c
 c     ================================================================
 c     just in case the energy becomes zero
 c     ================================================================
-      do ir=1,nws
+      nnmax = max(nws,nlast)
+      do ir=1,nnmax
         write(6,'(''ir,vr = '',i8,f20.12)') ir, rv(ir)
       end do
 
       write(6,'('' DEEPST:: nws = '',i4)') nws
+      write(6,'('' DEEPST:: nlast = '',i4)') nlast
+      write(6,'('' DEEPST:: iprpts = '',i4)') iprpts
+      write(6,'('' DEEPST:: nmax = '',i4)') nmax
 
       write(6,'('' DEEPST:: zero energy '',f5.2)')z
       write(6,'('' DEEPST:: n = '',i2)') nqn
