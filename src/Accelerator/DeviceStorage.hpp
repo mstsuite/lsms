@@ -105,7 +105,7 @@ void *allocateDStore(void);
 void freeDStore(void * d_store);
 int initDStore(void * d_store,int kkrsz_max, int nspin, int numLIZ, int nthreads);
 
-class DeviceAtomCuda {
+class DeviceAtom {
 public:
   bool allocated;
   Real *LIZPos;
@@ -118,6 +118,7 @@ public:
   void free();
 };
 
+extern std::vector<DeviceAtom> deviceAtoms;
 
 class DeviceConstants {
   public:
