@@ -218,7 +218,11 @@ int main(int argc, char *argv[])
 
   local.setNumLocal(distributeTypes(crystal, comm));
   local.setGlobalId(comm.rank, crystal);
-
+     
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceAtoms.resize(local.num_local);
+#endif
+     
   if(comm.rank == 0)
   {
     printf("set global ids.\n");
