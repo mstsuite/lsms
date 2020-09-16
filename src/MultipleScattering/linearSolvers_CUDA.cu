@@ -14,6 +14,7 @@
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 
+/*
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 
 template <typename T>
@@ -51,6 +52,8 @@ void unitMatrixCuda(T *devM, int lDim, int nCol)
   zeroMatrixCuda(devM, lDim, nCol);
   setDiagonalKernelCuda<<<nCol,1>>>(devM, lDim, nCol, 1.0);
 }
+
+*/
 
 template <typename T>
 __global__ void zeroDiagonalBlocksKernelCuda(T *devM, int lDim, int nCol, int blockSize)

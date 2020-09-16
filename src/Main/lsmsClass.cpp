@@ -50,6 +50,7 @@ IFactors iFactors;
 #include "Accelerator/DeviceStorage.hpp"
 // void *deviceStorage;
 DeviceStorage *deviceStorage;
+DeviceConstants deviceConstants;
 #endif
 
 #ifdef BUILDKKRMATRIX_GPU
@@ -156,6 +157,10 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   globalMax(comm, max_num_local);
   local.setGlobalId(comm.rank, crystal);
 
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceAtoms.resize(local.num_local);
+#endif
+
   // set up exchange correlation functionals
   if(lsms.xcFunctional[0] == 1)  // libxc functional
     lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
@@ -166,6 +171,11 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
   iFactors.init(lsms, crystal.maxlmax);
 
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
+#endif
+
+  
   buildLIZandCommLists(comm, lsms, crystal, local);
 
   // initialize the potential accelerators (GPU)

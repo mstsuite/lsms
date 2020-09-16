@@ -26,7 +26,8 @@ void buildKKRMatrixCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDat
                     Matrix<Complex> &m);
 #define MST_BUILD_KKR_MATRIX_CUDA 0x3000
 #ifdef ACCELERATOR_CUDA_C
-void buildKKRMatrixCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel, Complex *devM);
+void buildKKRMatrixCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, DeviceStorage &d,
+                        DeviceAtom &devAtom, int ispin, int iie, Complex energy, Complex prel, Complex *devM);
 #endif
 
 #ifdef ACCELERATOR_HIP

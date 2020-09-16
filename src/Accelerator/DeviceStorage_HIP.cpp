@@ -166,7 +166,8 @@ public:
         deviceEventDestroy(event[i]);
         hipblasDestroy(hipblas_h[i]);
       }
-      dev_tmat_store.clear();
+      // dev_tmat_store.clear();
+      deviceFree(devTmatStore);
       deviceCheckError();
       initialized=false;
     }
@@ -190,6 +191,27 @@ public:
 };
 */
 
+int DeviceStorage::copyTmatStoreToDevice(Matrix<Complex> &tmatStore,
+    int blkSize)
+{ 
+  if((tmatStoreSize > 0) && (tmatStoreSize < tmatStore.size()))
+  { 
+    deviceFree(devTmatStore);
+    tmatStoreSize = 0;
+  }
+  if(tmatStoreSize == 0)
+  { 
+    deviceMalloc((void **)&devTmatStore, tmatStore.size()*sizeof(Complex));
+    tmatStoreSize = tmatStore.size();
+  }
+  deviceMemcpy(devTmatStore, &tmatStore(0,0),
+    tmatStore.size()*sizeof(Complex), deviceMemcpyHostToDevice);
+  blkSizeTmatStore = blkSize;
+  tmatStoreLDim = tmatStore.l_dim();
+
+  return 0;
+}
+
 bool DeviceStorage::initialized = false;
 Complex *DeviceStorage::dev_m[MAX_THREADS], *DeviceStorage::dev_bgij[MAX_THREADS], *DeviceStorage::dev_tmat_n[MAX_THREADS];
 Complex *DeviceStorage::dev_tau[MAX_THREADS], *DeviceStorage::dev_tau00[MAX_THREADS];
@@ -202,12 +224,18 @@ hipblasHandle_t DeviceStorage::hipblas_h[MAX_THREADS];
 // cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
 deviceEvent_t DeviceStorage::event[MAX_THREADS];
 deviceStream_t DeviceStorage::stream[MAX_THREADS][2];
-DeviceMatrix<Complex> DeviceStorage::dev_tmat_store;
+// DeviceMatrix<Complex> DeviceStorage::dev_tmat_store;
+Complex *DeviceStorage::devTmatStore;
+size_t DeviceStorage::tmatStoreSize = 0;
+int DeviceStorage::blkSizeTmatStore = 0;
+int DeviceStorage::tmatStoreLDim = 0;
 int DeviceStorage::nThreads=1;
 bool initialized;
 
+std::vector<DeviceAtom> deviceAtoms;
+
 // Device Atom
-int DeviceAtomCuda::allocate(int _lmax, int _nspin, int _numLIZ)
+int DeviceAtom::allocate(int _lmax, int _nspin, int _numLIZ)
 {
   if(allocated) free();
   allocated = true;
@@ -219,7 +247,7 @@ int DeviceAtomCuda::allocate(int _lmax, int _nspin, int _numLIZ)
   return 0;
 }
 
-void DeviceAtomCuda::free()
+void DeviceAtom::free()
 {
   if(allocated)
   {
@@ -230,7 +258,7 @@ void DeviceAtomCuda::free()
   allocated = false;
 }
 
-void DeviceAtomCuda::copyFromAtom(AtomData &atom)
+void DeviceAtom::copyFromAtom(AtomData &atom)
 {
   if(!allocated)
   {
@@ -239,6 +267,46 @@ void DeviceAtomCuda::copyFromAtom(AtomData &atom)
   deviceMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), deviceMemcpyHostToDevice);
   deviceMemcpy(LIZPos, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
   deviceMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
+}
+
+int *DeviceConstants::lofk;
+int *DeviceConstants::mofk;
+deviceDoubleComplex *DeviceConstants::ilp1;
+// DeviceMatrix<Complex> illp(ndlj, ndlj);
+deviceDoubleComplex* DeviceConstants::illp;
+int DeviceConstants::ndlj_illp;
+// DeviceArray3d<Real> cgnt(lmax+1,ndlj,ndlj);
+Real* DeviceConstants::cgnt;
+int DeviceConstants::ndlj_cgnt, DeviceConstants::lmaxp1_cgnt;
+
+int DeviceConstants::allocate(AngularMomentumIndices &am, GauntCoeficients &c, IFactors &ifactors)
+{
+  ndlj_illp = ifactors.illp.l_dim();
+  lmaxp1_cgnt = c.cgnt.l_dim1();
+  ndlj_cgnt = c.cgnt.l_dim2();
+
+  deviceMalloc((void**)&lofk, am.lofk.size()*sizeof(int));
+  deviceMalloc((void**)&mofk, am.mofk.size()*sizeof(int));
+  deviceMalloc((void**)&ilp1, ifactors.ilp1.size()*sizeof(deviceDoubleComplex));
+  deviceMalloc((void**)&illp, ifactors.illp.size()*sizeof(deviceDoubleComplex));
+  deviceMalloc((void**)&cgnt, c.cgnt.size()*sizeof(double));
+
+  deviceMemcpy(lofk, &am.lofk[0], am.lofk.size()*sizeof(int), deviceMemcpyHostToDevice);
+  deviceMemcpy(mofk, &am.mofk[0], am.mofk.size()*sizeof(int), deviceMemcpyHostToDevice);
+  deviceMemcpy(ilp1, &ifactors.ilp1[0], ifactors.ilp1.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
+  deviceMemcpy(illp, &ifactors.illp[0], ifactors.illp.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
+  deviceMemcpy(cgnt, &c.cgnt[0], c.cgnt.size()*sizeof(double), deviceMemcpyHostToDevice);
+
+  return 0;
+}
+
+void DeviceConstants::free()
+{
+  deviceFree(lofk);
+  deviceFree(mofk);
+  deviceFree(ilp1);
+  deviceFree(illp);
+  deviceFree(cgnt);
 }
 
 /****************Fortran Interfaces*********************/
@@ -281,9 +349,9 @@ cudaEvent_t get_cuda_event_() {
 */
 /********************************************************/
 
-DeviceMatrix<Complex>* get_dev_tmat_store() {
-  return DeviceStorage::getDevTmatStore();
-}
+// DeviceMatrix<Complex>* get_dev_tmat_store() {
+//   return DeviceStorage::getDevTmatStore();
+// }
 
 void *allocateDStore(void)
 {
@@ -301,7 +369,7 @@ int initDStore(void * d_store,int kkrsz_max, int nspin, int numLIZ, int nthreads
   return (*static_cast<DeviceStorage*>(d_store)).allocate(kkrsz_max,nspin,numLIZ,nthreads);
 }
 
-void copyTmatStoreToDevice(LocalTypeInfo &local) {
-  DeviceMatrix<Complex> &d_tmat_store=*get_dev_tmat_store();
-  d_tmat_store.copy_async(local.tmatStore,0);
-}
+// void copyTmatStoreToDevice(LocalTypeInfo &local) {
+//   DeviceMatrix<Complex> &d_tmat_store=*get_dev_tmat_store();
+//   d_tmat_store.copy_async(local.tmatStore,0);
+// }

@@ -17,7 +17,7 @@
 #include <nvToolsExt.h>
 #endif
 
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 void copyTmatStoreToDevice(LocalTypeInfo &local);
 #ifdef BUILDKKRMATRIX_GPU
 #include "Accelerator/buildKKRMatrix_gpu.hpp"
@@ -25,7 +25,7 @@ extern std::vector<DeviceConstants> deviceConstants;
 // extern std::vector<void *> deviceConstants;
 // extern void * deviceStorage;
 #endif
-//#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+//#if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
 extern DeviceStorage *deviceStorage;
 #endif
@@ -197,6 +197,13 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
     u_sigma_u_(&local.atom[i].ubr[0],&local.atom[i].ubrd[0],
                &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0]);
   }
+
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  for(int i=0; i<local.num_local; i++)
+  {
+    deviceAtoms[i].copyFromAtom(local.atom[i]);
+  }
+#endif
   // Real e_top;
   // e_top=lsms.energyContour.etop;
   // if(lsms.energyContour.etop==0.0) etop=lsms.chempot;
@@ -259,7 +266,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   {
     if(local.atom[i].numLIZ>maxNumLIZ) maxNumLIZ=local.atom[i].numLIZ;
   }
-#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) ||  defined(ACCELERATOR_HIP)
   // initDStore(deviceStorage,maxkkrsz,lsms.n_spin_cant,maxNumLIZ,lsms.global.GPUThreads);
   deviceStorage->allocate(maxkkrsz,lsms.n_spin_cant,maxNumLIZ,lsms.global.GPUThreads);
 #endif

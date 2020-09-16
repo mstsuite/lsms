@@ -57,7 +57,8 @@ void block_inverse(Matrix<Complex> &a, int *blk_sz, int nblk, Matrix<Complex> &d
 // #define SYNTHETIC_MATRIX
 // #define WRITE_GIJ
 
-void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, Complex energy, Complex prel, int iie, Matrix<Complex> &m)
+void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom,
+                    int ispin, Complex energy, Complex prel, int iie, Matrix<Complex> &m)
 {
   Real rij[3];
 
@@ -315,12 +316,14 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
 // calculateTauMatrix replaces gettaucl from LSMS_1. The communication is performed in calculateAllTauMatrices
 // and the t matrices are in tmatStore, replacing vbig in gettaucl.
 #ifndef BUILDKKRMATRIX_GPU
-void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, Complex energy, Complex prel,
+void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int localAtomIndex,
+                        int ispin, Complex energy, Complex prel,
                         Complex *tau00_l,Matrix<Complex> &m,int iie)
 #else
-  void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, Complex energy, Complex prel,
-                        Complex *tau00_l,Matrix<Complex> &m,int iie,
-                        DeviceConstants &d_const, DeviceStorage *d_store)
+  void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int localAtomIndex,
+                          int ispin, Complex energy, Complex prel,
+                          Complex *tau00_l,Matrix<Complex> &m,int iie,
+                          DeviceConstants &d_const, DeviceStorage *d_store)
 #endif
 {
   const unsigned int defaultLinearSolver = MST_LINEAR_SOLVER_DEFAULT;
@@ -338,8 +341,9 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 
   // =======================================
   // build the KKR matrix
+  // =======================================
   m.resize(nrmat_ns,nrmat_ns);
-  
+
   double timeBuildKKRMatrix=MPI_Wtime();
 
   switch(buildKKRMatrixKernel)
@@ -357,7 +361,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 #if defined(ACCELERATOR_CUDA_C)
   case MST_BUILD_KKR_MATRIX_CUDA:
     devM = deviceStorage->getDevM();
-    buildKKRMatrixCuda(lsms, local, atom, iie, energy, prel,
+    buildKKRMatrixCuda(lsms, local, atom, *deviceStorage, deviceAtoms[localAtomIndex], ispin, iie, energy, prel,
                        devM);
     break;
 #endif
@@ -366,7 +370,9 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     exit(1);
   }
 
+  // -----------------------------------------------------------------------
   // make sure that the kkr matrix m is in the right place in memory
+  // -----------------------------------------------------------------------
   switch(buildKKRMatrixKernel)
   {
   case MST_BUILD_KKR_MATRIX_F77:
@@ -413,7 +419,6 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
       transferMatrixFromGPUCuda(m, (cuDoubleComplex *)devM);
       break;
-#if defined(ACCELERATOR_CUDA_C)
     case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
     case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
     case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
@@ -421,7 +426,6 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       devT0 = deviceStorage->getDevT0();
       transferT0MatrixToGPUCuda(devT0, lsms, local, atom, iie);
       break;
-#endif
 #ifdef ACCELERATOR_HIP
 #endif
     default: break; // do nothing. We are using the GPU matrix
@@ -677,7 +681,7 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
             shared(lsms,local,energy,prel,tau00_l,max_nrmat_ns,m_dat,deviceConstants,deviceStorage) \
             firstprivate(iie) num_threads(lsms.global.GPUThreads)
 #else
-#if (defined ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
 #pragma omp parallel for default(none) \
             shared(lsms,local,energy,prel,tau00_l,max_nrmat_ns,m_dat,deviceStorage) \
             firstprivate(iie) num_threads(lsms.global.GPUThreads)
@@ -697,14 +701,14 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
 #endif
     double timeCalcTauMat=MPI_Wtime();
 #ifndef BUILDKKRMATRIX_GPU
-    calculateTauMatrix(lsms,local,local.atom[i], 0, energy,prel,&tau00_l(0,i),m,iie);
+    calculateTauMatrix(lsms,local,local.atom[i], i, 0, energy,prel,&tau00_l(0,i),m,iie);
     if(lsms.n_spin_pola != lsms.n_spin_cant) // spin polarized second spin
-      calculateTauMatrix(lsms,local,local.atom[i], 1, energy,prel,&tau00_l(0,i+local.num_local),m,iie);
+      calculateTauMatrix(lsms,local,local.atom[i], i, 1, energy,prel,&tau00_l(0,i+local.num_local),m,iie);
 #else
-    calculateTauMatrix(lsms,local,local.atom[i], 0, energy,prel,&tau00_l(0,i),m,iie,
+    calculateTauMatrix(lsms,local,local.atom[i], i, 0, energy,prel,&tau00_l(0,i),m,iie,
                        deviceConstants[i], deviceStorage);
     if(lsms.n_spin_pola != lsms.n_spin_cant) // spin polarized second spin
-      calculateTauMatrix(lsms,local,local.atom[i], 1, energy,prel,&tau00_l(0,i+local.num_local),m,iie,
+      calculateTauMatrix(lsms,local,local.atom[i], i, 1, energy,prel,&tau00_l(0,i+local.num_local),m,iie,
 			 deviceConstants[i], deviceStorage);
 #endif
     timeCalcTauMat=MPI_Wtime()-timeCalcTauMat;
