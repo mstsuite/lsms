@@ -47,6 +47,8 @@ extern "C" int* get_dev_ipvt_();
 extern "C" cudaStream_t get_stream_(const int &id);
 extern "C" cublasHandle_t get_cublas_handle_();
 extern "C" cudaEvent_t get_cuda_event_();
+#endif
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 extern "C" Complex* get_host_m_(const int &max_nrmat_ns);
 #endif
 

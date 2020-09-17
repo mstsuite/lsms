@@ -649,8 +649,8 @@ int main(int argc, char *argv[])
         
       char *wl_inf = NULL;
       char *wl_outf = NULL;
-      if (gWL_in_name) wl_inf = gWL_in_name;
-      if (gWL_out_name) wl_outf = gWL_out_name;
+      if (gWL_in_name[0] != 0) wl_inf = gWL_in_name;
+      if (gWL_out_name[0] != 0) wl_outf = gWL_out_name;
         
       PotentialShifter potentialShifter;
       EvecGenerator *generator;
