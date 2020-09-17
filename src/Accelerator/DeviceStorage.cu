@@ -107,6 +107,7 @@ public:
           exit(1);
         }
         cudaMalloc((void**)&dev_ipvt[i],N*sizeof(int));
+        cudaMalloc((void**)&dev_info[i],nThreads*sizeof(int));
 	err = cudaMalloc((void**)&dev_bgij[i],N*N*sizeof(Complex));
         if(err!=cudaSuccess)
         {
@@ -158,6 +159,7 @@ public:
       {
         cudaFree(dev_m[i]);
         cudaFree(dev_ipvt[i]);
+        cudaFree(dev_info[i]);
 #ifdef BUILDKKRMATRIX_GPU
         cudaFree(dev_bgij[i]);
         cudaFree(dev_tmat_n[i]);
@@ -223,6 +225,7 @@ Complex *DeviceStorage::dev_t[MAX_THREADS];
 void *DeviceStorage::dev_work[MAX_THREADS];
 size_t DeviceStorage::dev_workBytes[MAX_THREADS];
 int *DeviceStorage::dev_ipvt[MAX_THREADS];
+int *DeviceStorage::dev_info[MAX_THREADS];
 cublasHandle_t DeviceStorage::cublas_h[MAX_THREADS];
 cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
 cudaEvent_t DeviceStorage::event[MAX_THREADS];

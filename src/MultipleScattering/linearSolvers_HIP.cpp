@@ -197,8 +197,10 @@ void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local
   hipDoubleComplex *devWork = (hipDoubleComplex *)d.getDevWork();
 
   int *devIpiv=d.getDevIpvt();
-  int devInfo[1]; // d.getDevInfo();
+  int *devInfo=d.getDevInfo();
 
+  // printf("LSMS solveTau00zgetrf_rocsolver: entering\n");
+  // fflush(stdout);
   zeroMatrixHip(devTau, nrmat_ns, kkrsz_ns);
   copyTMatrixToTauHip<<<kkrsz_ns,1>>>(devTau, (hipDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
 
@@ -206,16 +208,24 @@ void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local
 //                   (cuDoubleComplex *)devM, nrmat_ns, devWork, devIpiv,
 //                   devInfo );
 
+  // printf("LSMS solveTau00zgetrf_rocsolver: before zgetrf\n");
+  // fflush(stdout);
   rocsolver_zgetrf(rocblasHandle, nrmat_ns, nrmat_ns,
                    (rocblas_double_complex*)devM, nrmat_ns, devIpiv, devInfo);
 
 //  cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, kkrsz_ns,
 //                   (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devTau, nrmat_ns, devInfo);
 
+  //  printf("LSMS solveTau00zgetrf_rocsolver: before zgetrs\n");
+  // fflush(stdout);
   rocsolver_zgetrs(rocblasHandle, rocblas_operation_none, nrmat_ns, kkrsz_ns,
                    (rocblas_double_complex*)devM, nrmat_ns, devIpiv, (rocblas_double_complex*)devTau, nrmat_ns);
 
   // copy result into tau00
+  // printf("LSMS solveTau00zgetrf_rocsolver: copy result into tau00\n");
+  // fflush(stdout);
   copyTauToTau00Hip<<<kkrsz_ns,1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);
   transferMatrixFromGPUHip(tau00, devTau00);
+  // printf("LSMS solveTau00zgetrf_rocsolver: leaving\n");
+  //  fflush(stdout);
 }

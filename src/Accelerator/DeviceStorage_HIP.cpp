@@ -96,26 +96,27 @@ public:
       for(int i=0;i<nThreads;i++)
       {
         deviceError_t err;
-        err = deviceMalloc((void**)&dev_m[i],N*N*sizeof(Complex));
+        err = deviceMalloc((void**)&dev_m[i],(size_t)N*(size_t)N*sizeof(Complex));
         if(err!=deviceSuccess)
         {
-          printf("failed to allocate dev_m[%d], size=%d, err=%d\n",
-                i,N*N*sizeof(Complex),err);
+          printf("failed to allocate dev_m[%d], size=%zu, err=%d\n",
+                i,(size_t)N*(size_t)N*sizeof(Complex),err);
           exit(1);
         }
-        deviceMalloc((void**)&dev_ipvt[i],N*sizeof(int));
-	err = deviceMalloc((void**)&dev_bgij[i],N*N*sizeof(Complex));
+        deviceMalloc((void**)&dev_ipvt[i],(size_t)N*sizeof(int));
+	deviceMalloc((void**)&dev_info[i],(size_t)nThreads*sizeof(int));
+	err = deviceMalloc((void**)&dev_bgij[i],(size_t)N*(size_t)N*sizeof(Complex));
         if(err!=deviceSuccess)
         {
-          printf("failed to allocate dev_bgij[%d], size=%d, err=%d\n",
-                i,N*N*sizeof(Complex),err);
+          printf("failed to allocate dev_bgij[%d], size=%zu, err=%d\n",
+                i,(size_t)N*(size_t)N*sizeof(Complex),err);
           exit(1);
         }
 #ifdef BUILDKKRMATRIX_GPU
         // cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
         deviceMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
 #endif
-        deviceMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
+        deviceMalloc((void**)&dev_tau[i], 4*(size_t)N*kkrsz_max*sizeof(Complex));
         deviceMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
         deviceMalloc((void**)&dev_t[i], 4*N*kkrsz_max*sizeof(Complex));
         deviceMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
@@ -155,6 +156,7 @@ public:
       {
         deviceFree(dev_m[i]);
         deviceFree(dev_ipvt[i]);
+        deviceFree(dev_info[i]);
 #ifdef BUILDKKRMATRIX_GPU
         deviceFree(dev_bgij[i]);
         deviceFree(dev_tmat_n[i]);
@@ -220,6 +222,7 @@ Complex *DeviceStorage::dev_t[MAX_THREADS];
 void *DeviceStorage::dev_work[MAX_THREADS];
 size_t DeviceStorage::dev_workBytes[MAX_THREADS];
 int *DeviceStorage::dev_ipvt[MAX_THREADS];
+int *DeviceStorage::dev_info[MAX_THREADS];
 hipblasHandle_t DeviceStorage::hipblas_h[MAX_THREADS];
 // cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
 deviceEvent_t DeviceStorage::event[MAX_THREADS];
