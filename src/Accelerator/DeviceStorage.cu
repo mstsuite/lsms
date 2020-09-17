@@ -302,6 +302,8 @@ int DeviceConstants::allocate(AngularMomentumIndices &am, GauntCoeficients &c, I
   cudaMemcpy(ilp1, &ifactors.ilp1[0], ifactors.ilp1.size()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
   cudaMemcpy(illp, &ifactors.illp[0], ifactors.illp.size()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
   cudaMemcpy(cgnt, &c.cgnt[0], c.cgnt.size()*sizeof(double), cudaMemcpyHostToDevice);
+
+  return 0;
 }
 
 void DeviceConstants::free()
