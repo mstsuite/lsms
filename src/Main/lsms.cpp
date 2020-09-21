@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
   iFactors.init(lsms, crystal.maxlmax);
 
-#if defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
 #endif
 
