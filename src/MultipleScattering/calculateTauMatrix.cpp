@@ -99,7 +99,7 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
     fprintf(of,"# tmatStore file for buildkkrmat test:\n");
     fprintf(of,"# line 4: num_store kkrsz Re(energy) Im(energy)\n");
     fprintf(of,"# following numstore*kkrsz*kkrsz lines: storeidx i j Re(t_ij) Im(t_ij)\n");
-    fprintf(of,"%4d %4d %lg %lg\n", local.tmatStoreGlobalIdx.size(),kkrsz_ns,std::real(energy),std::imag(energy)); 
+    fprintf(of,"%4zu %4d %lg %lg\n", local.tmatStoreGlobalIdx.size(),kkrsz_ns,std::real(energy),std::imag(energy)); 
     for(int idx=0; idx<local.tmatStoreGlobalIdx.size(); idx++)
     {
       for(int i=0; i<kkrsz_ns; i++)
@@ -671,6 +671,7 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
   Complex *m_dat=NULL;
 #if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   m_dat=get_host_m_(max_nrmat_ns);
+  printf("m_dat = %p\n",m_dat);
 #else
   m_dat=NULL;
 #endif

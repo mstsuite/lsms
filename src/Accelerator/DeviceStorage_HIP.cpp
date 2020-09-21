@@ -39,6 +39,21 @@ Complex* get_host_m_(const int &max_nrmat_ns) {
   static int cur_size=0;
   static deviceError_t pinned;
 
+  /*
+  if(cur_size<max_nrmat_ns) {
+
+    //release previously allocated memory
+    if(m_v!=0) {
+      free(m_v);
+    }
+
+      fprintf(stderr, "Matrix not pinned\n");
+      m_v = (Complex*)malloc(max_nrmat_ns*max_nrmat_ns*sizeof(Complex)*omp_get_max_threads());
+    cur_size=max_nrmat_ns;
+  }
+  */
+
+
   if(cur_size<max_nrmat_ns) {
 
     //release previously allocated memory
@@ -57,6 +72,7 @@ Complex* get_host_m_(const int &max_nrmat_ns) {
     }
     cur_size=max_nrmat_ns;
   }
+
   return m_v; 
 }
 

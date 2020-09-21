@@ -14,6 +14,7 @@
 #include <hipblas.h>
 #include <rocsolver.h>
 
+/*
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 
 template <typename T>
@@ -51,6 +52,7 @@ void unitMatrixHip(T *devM, int lDim, int nCol)
   zeroMatrixHip(devM, lDim, nCol);
   setDiagonalKernelHip<<<nCol,1>>>(devM, lDim, nCol, 1.0);
 }
+*/
 
 template <typename T>
 __global__ void zeroDiagonalBlocksKernelHip(T *devM, int lDim, int nCol, int blockSize)

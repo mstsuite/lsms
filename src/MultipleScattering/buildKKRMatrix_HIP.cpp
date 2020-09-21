@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "Accelerator/DeviceStorage.hpp"
-#include <hip_runtime.h>
-#include <hip_complex.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_complex.h>
 #include <hipblas.h>
 #include <rocsolver.h>
 
@@ -20,8 +20,15 @@
 // and systems with potential different lmax on different atoms and l steps
 
 // Fortran layout for matrix
-// #define IDX(i, j, lDim) (((j)*(lDim))+(i))
+#define IDX(i, j, lDim) (((j)*(lDim))+(i))
 #define IDX3(i, j, k, lDim, mDim) (((k)*(lDim)*(mDim)) + ((j)*(lDim)) + (i))
+
+__device__ __inline__
+deviceDoubleComplex complexExp(deviceDoubleComplex z)
+{
+  double mExp=exp(hipCreal(z));
+  return make_hipDoubleComplex(mExp*cos(hipCimag(z)), mExp*sin(hipCimag(z)));
+}
 
 __device__
 inline void calculateHankelHip(deviceDoubleComplex prel, double r, int lend, deviceDoubleComplex *ilp1, deviceDoubleComplex *hfn)
@@ -30,7 +37,7 @@ inline void calculateHankelHip(deviceDoubleComplex prel, double r, int lend, dev
   {
     const deviceDoubleComplex sqrtm1 = make_hipDoubleComplex(0.0, 1.0);
     deviceDoubleComplex z=prel*make_hipDoubleComplex(r,0.0);
-    hfn[0]=make_cuDoubleComplex(0.0, -1.0); //-sqrtm1;
+    hfn[0]=make_hipDoubleComplex(0.0, -1.0); //-sqrtm1;
     hfn[1]=-1.0-sqrtm1/z;
     for(int l=1; l<lend; l++)
     {
@@ -41,7 +48,7 @@ inline void calculateHankelHip(deviceDoubleComplex prel, double r, int lend, dev
 //     hfn = -i   *h (k*R  )*sqrt(E)
 //                  l    ij
 
-    z=exp(sqrtm1*z)/r;
+    z=complexExp(sqrtm1*z)/r;
     for(int l=0; l<=lend;l++)
     {
       hfn[l]=-hfn[l]*z*ilp1[l]; 
@@ -247,8 +254,8 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
       {
         m1m = -m1m;
         deviceDoubleComplex fac = plm[ll+m] * make_hipDoubleComplex(cosmp[m],sinmp[m]);
-        dlm[j-m] = hfn[l]*m1m*fac;
-        dlm[j+m] = hfn[l]*cuConj(fac);
+        dlm[j-m] = hfn[l] * m1m * fac;
+        dlm[j+m] = hfn[l] * hipConj(fac);
       }
     }
 //     ================================================================
@@ -262,7 +269,7 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
     {
       int lm2 = ij % kkri;
       int lm1 = ij / kkri;
-      devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] = make_deviceDoubleComplex(0.0, 0.0);
+      devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] = make_hipDoubleComplex(0.0, 0.0);
       // bgij(iOffset + lm2, jOffset + lm1) = 0.0;
       // }
     
@@ -366,7 +373,7 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
 {
   int ir1 = blockIdx.x;
   int ir2 = blockIdx.y;
-  extern deviceDoubleComplex __shared__ *tmat_n;
+  deviceDoubleComplex __shared__ *tmat_n;
   int iOffset = offsets[ir1];
   int jOffset = offsets[ir2];
 
@@ -490,7 +497,7 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   }
 }
 
-/*
+
 void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, int iie,
                         Complex *tMatrix, Complex *devM)
 {
@@ -612,14 +619,14 @@ void buildKKRMatrixLMaxDifferentHip(LSMSSystemParameters &lsms, LocalTypeInfo &l
                                                                 (deviceDoubleComplex *)devBgij, (deviceDoubleComplex *)devM);
 }
 
-
-void buildKKRMatrixCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel,
-                       Complex *devM)
+void buildKKRMatrixHip(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom,
+                        DeviceStorage &devStorage, DeviceAtom &devAtom, int ispin,
+                        int iie, Complex energy, Complex prel, Complex *devM)
 {
   // decide between identical lmax and different lmax:
 
-  printf("buildKKRMatrixCuda not finished yet!\n");
-  exit(1);
+  // printf("buildKKRMatrixHip not finished yet!\n");
+  // exit(1);
   
   bool lmaxIdentical = true;
 
@@ -637,10 +644,15 @@ void buildKKRMatrixCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   if(lmaxIdentical)
   {
     // printf("lmax identical in buildKKRMatrix\n");
-//    buildKKRMatrixLMaxIdenticalCuda(lsms, local, atom, iie, energy, prel, devM);
+
+    // buildKKRMatrixLMaxIdenticalHip(lsms, local, atom, devStorage, devAtom, ispin,
+    //                                iie, energy, prel, devM);
+    buildKKRMatrixLMaxDifferentHip(lsms, local, atom, devStorage, devAtom, ispin,
+                                    iie, energy, prel, devM);
   } else {
     // printf("lmax not identical in buildKKRMatrix\n");
-//     buildKKRMatrixLMaxDifferentCuda(lsms, local, atom, iie, energy, prel, devM);
+    buildKKRMatrixLMaxDifferentHip(lsms, local, atom, devStorage, devAtom, ispin,
+                                    iie, energy, prel, devM);
   }
-  buildKKRMatrixLMaxDifferentHIP(lsms, local, atom, iie, energy, prel, devM);
 }
+

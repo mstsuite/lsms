@@ -10,7 +10,7 @@ OBJ += linearSolvers_CUDA.o buildKKRMatrix_CUDA.o
 endif
 
 ifdef HIP_CXX
-OBJ += linearSolvers_HIP.o
+OBJ += linearSolvers_HIP.o buildKKRMatrix_HIP.o
 endif
 
 all: libMultipleScattering.a
@@ -37,6 +37,9 @@ endif
 
 ifdef HIP_CXX
 linearSolvers_HIP.o : linearSolvers_HIP.cpp
+	$(HIP_CXX) $(INC_PATH) -c -o $@ $<
+
+buildKKRMatrix_HIP.o: buildKKRMatrix_HIP.cpp
 	$(HIP_CXX) $(INC_PATH) -c -o $@ $<
 endif
 

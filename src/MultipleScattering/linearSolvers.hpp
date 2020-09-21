@@ -113,6 +113,47 @@ void transferMatrixFromGPUHip(Matrix<Complex> &m, hipDoubleComplex *devM);
 void transferT0MatrixToGPUHip(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie);
 
 void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+
+#define IDX(i, j, lDim) (((j)*(lDim))+(i))
+
+#ifdef __HIPCC__
+template <typename T>
+void zeroMatrixHip(T *devM, int lDim, int nCol)
+{
+//  for(int i=0; i<m.n_row(); i++)
+//    for(int j=0; j<m.n_col(); j++)
+//      m(i,j) = 0.0;
+  hipMemset(devM, 0, lDim*nCol*sizeof(T));
+}
+
+template <typename T>
+__global__ void setDiagonalKernelHip(T *devM, int lDim, int nCol, T val)
+{
+  int i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  if(i<nCol)
+  {
+    devM[IDX(i, i, lDim)] = val;
+  }
+}
+
+template <typename T>
+__global__ void addDiagonalKernelHip(T *devM, int lDim, int nCol, T val)
+{
+  int i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  if(i<nCol)
+  {
+    devM[IDX(i, i, lDim)] = hipCadd(devM[IDX(i, i, lDim)], val);
+  }
+}
+
+template <typename T>
+void unitMatrixHip(T *devM, int lDim, int nCol)
+{
+  zeroMatrixHip(devM, lDim, nCol);
+  setDiagonalKernelHip<<<nCol,1>>>(devM, lDim, nCol, T(1.0));
+}
+#endif
+
 #endif
 
 #define MST_LINEAR_SOLVER_BLOCK_INVERSE_F77 0xf00
