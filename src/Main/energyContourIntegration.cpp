@@ -352,6 +352,18 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 #ifdef BUILDKKRMATRIX_GPU
   copyTmatStoreToDevice(local);
 #endif
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  extern DeviceStorage *deviceStorage;
+  unsigned int buildKKRMatrixKernel = lsms.global.linearSolver & MST_BUILD_KKR_MATRIX_MASK;
+  if(buildKKRMatrixKernel == 0) buildKKRMatrixKernel = MST_BUILD_KKR_MATRIX_DEFAULT;
+  if(buildKKRMatrixKernel == MST_BUILD_KKR_MATRIX_ACCELERATOR)
+  {
+    deviceStorage->copyTmatStoreToDevice(local.tmatStore, local.blkSizeTmatStore);
+    for(int i=0; i<local.num_local; i++)
+      deviceAtom[i].copyFromAtom(local.atom[i]);
+  }
+#endif
+  
 
   for(int ie=eGroupIdx[ig]; ie<eGroupIdx[ig+1]; ie++)
   {

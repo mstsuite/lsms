@@ -413,70 +413,82 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
   }
 }
 
-
-/*
-void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, int iie,
-                                     Complex energy, Complex prel,
-                                     Complex *tMatrix, Complex *devM)
+void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom,
+                                     DeviceStorage &d, DeviceAtom &devAtom, int ispin,
+                                     int iie, Complex energy, Complex prel, Complex *devM)
 {
-  cublasHandle_t cublasHandle = DeviceStorage::getCublasHandle();
+  hipblasHandle_t hipblasHandle = DeviceStorage::getHipBlasHandle();
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
   int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz; // size of t00 block
+  bool fullRelativity = false;
+  if(lsms.relativity == full) fullRelativity = true;
 
-  Complex cmone = Complex(-1.0,0.0);
-  Complex czero=0.0;
+  // Complex cmone = Complex(-1.0,0.0);
+  // Complex czero=0.0;
 
   Complex *devBgij = d.getDevBGij();
   // Matrix<Complex> bgijSmall(kkrsz_ns, kkrsz_ns);
 
-  unitMatrixCuda<Complex>(devM, nrmat_ns, nrmat_ns);
-  zeroMatrixCuda(devBgij, nrmat_ns, nrmat_ns);
+  deviceDoubleComplex hipEnergy = make_hipDoubleComplex(energy.real(), energy.imag());
+  deviceDoubleComplex hipPrel = make_hipDoubleComplex(prel.real(), prel.imag());
+  
+  unitMatrixHip<Complex>(devM, nrmat_ns, nrmat_ns);
+  zeroMatrixHip(devBgij, nrmat_ns, nrmat_ns);
 
 // calculate Bgij
 // reuse ipvt for offsets
   int *devOffsets = d.getDevIpvt();
   
-  std::vector<int> offsets(atom.numLIZ);
-  for(int ir = 0; ir < atom.numLIZ; ir++)
+  std::vector<int> offsets(devAtom.numLIZ);
+  for(int ir = 0; ir < devAtom.numLIZ; ir++)
     offsets[ir] = ir * kkrsz_ns;
 
-  cudaMemcpy(devOffsets, &offsets[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
+  deviceMemcpy(devOffsets, &offsets[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
 
   size_t hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset;
-  size_t smSize = sharedMemoryBGijCuda(lsms, &hfnOffset, &sinmpOffset, &cosmpOffset,
+  size_t smSize = sharedMemoryBGijHip(lsms, &hfnOffset, &sinmpOffset, &cosmpOffset,
                                        &plmOffset, &dlmOffset);
-  int treads = 256;
-  dim3 blocks = dim3(atom.numLIZ,atom.numLIZ,1);
-  buildBGijCudaKernel<<<blocks,treads,smSize>>>(devAtom.LIZPos, devAtom.LIZlmax,
-                                                devConstants.lofk, devConstants.mofk,
+  int threads = 256;
+  dim3 blocks = dim3(devAtom.numLIZ, devAtom.numLIZ,1);
+  buildGijHipKernel<<<blocks,threads,smSize>>>(devAtom.LIZPos, devAtom.LIZlmax,
+                                                DeviceConstants::lofk, DeviceConstants::mofk, DeviceConstants::ilp1, DeviceConstants::illp, DeviceConstants::cgnt,
+                                                DeviceConstants::ndlj_illp, DeviceConstants::lmaxp1_cgnt, DeviceConstants::ndlj_cgnt,
                                                 hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset,
-                                                energy, prel, devOffsets, devBgij);
-  
+                                                cuEnergy, cuPrel,
+                                                devOffsets, nrmat_ns, (deviceDoubleComplex *)devBgij);
+
+  setBGijHip<<<blocks, threads>>>(fullRelativity, lsms.n_spin_cant, devAtom.LIZlmax,
+                                   devOffsets, nrmat_ns, (deviceDoubleComplex *)devBgij);
+
+
+  smSize = kkrsz_ns*kkrsz_ns*sizeof(deviceDoubleComplex);
+  buildKKRMatrixMultiplyKernelHip<<<blocks, threads, smSize>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
+                                                                kkrsz_ns, ispin, lsms.n_spin_pola, lsms.n_spin_cant,
+                                                                iie, d.getBlkSizeTmatStore(), d.getTmatStoreLDim(),
+                                                                (deviceDoubleComplex *)d.getDevTmatStore(), nrmat_ns,
+                                                                (deviceDoubleComplex *)devBgij, (deviceDoubleComplex *)devM);
+  /* 
   // loop over the LIZ blocks
-  for(int ir1 = 0; ir1 < atom.numLIZ; ir1++)
+  for(int ir1 = 0; ir1 < devAtom.numLIZ; ir1++)
   {
     int iOffset = ir1 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!!
-    for(int ir2 = 0; ir2 < atom.numLIZ; ir2++)
+    for(int ir2 = 0; ir2 < devAtom.numLIZ; ir2++)
     {
       if(ir1 != ir2)
       {
         int jOffset = ir2 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!!
-        Real rij[3];
-        int lmax1 = atom.LIZlmax[ir1];
-        int lmax2 = atom.LIZlmax[ir2];
+        int lmax1 = devAtom.LIZlmax[ir1];
+        int lmax2 = devAtom.LIZlmax[ir2];
         int kkr1=(lmax1+1)*(lmax1+1);
         int kkr2=(lmax2+1)*(lmax2+1);
         int kkr1_ns = kkr1 * lsms.n_spin_cant;
         int kkr2_ns = kkr2 * lsms.n_spin_cant;
-        rij[0]=atom.LIZPos(0,ir1)-atom.LIZPos(0,ir2);
-        rij[1]=atom.LIZPos(1,ir1)-atom.LIZPos(1,ir2);
-        rij[2]=atom.LIZPos(2,ir1)-atom.LIZPos(2,ir2);
         
-        buildBGijCuda(lsms, atom, ir1, ir2, rij, energy, prel, iOffset, jOffset, bgij);
+        // buildBGijCuda(lsms, atom, ir1, ir2, rij, energy, prel, iOffset, jOffset, bgij);
         // buildBGijCPU(lsms, atom, ir1, ir2, rij, energy, prel, 0, 0, bgijSmall);
              
         BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
-                     &local.tmatStore(iie*local.blkSizeTmatStore, atom.LIZStoreIdx[ir1]), &kkr1_ns,
+                     &local.tmatStore(iie*local.blkSizeTmatStore, devAtom.LIZStoreIdx[ir1]), &kkr1_ns,
                      // &tmat_n(0, 0), &kkr1_ns,
                      &bgij(iOffset, jOffset), &nrmat_ns, &czero,
                      // &bgijSmall(0, 0), &kkrsz_ns, &czero,
@@ -495,72 +507,8 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
       }
     }
   }
+  */
 }
-
-
-void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, int iie,
-                        Complex *tMatrix, Complex *devM)
-{
-  cublasHandle_t cublasHandle = DeviceStorage::getCublasHandle();
-  int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
-  int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz; // size of t00 block
-
-  Complex cmone = Complex(-1.0,0.0);
-  Complex czero=0.0;
-
-  Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
-  Matrix<Complex> bgijSmall(kkrsz_ns, kkrsz_ns);
-  
-  m = 0.0; bgij = 0.0;
-  for(int i=0; i<nrmat_ns; i++) m(i,i)=1.0;
-
-  // loop over the LIZ blocks
-  for(int ir1 = 0; ir1 < atom.numLIZ; ir1++)
-  {
-    int iOffset = ir1 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!!
-    for(int ir2 = 0; ir2 < atom.numLIZ; ir2++)
-    {
-      if(ir1 != ir2)
-      {
-        int jOffset = ir2 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!!
-        Real rij[3];
-        int lmax1 = atom.LIZlmax[ir1];
-        int lmax2 = atom.LIZlmax[ir2];
-        int kkr1=(lmax1+1)*(lmax1+1);
-        int kkr2=(lmax2+1)*(lmax2+1);
-        int kkr1_ns = kkr1 * lsms.n_spin_cant;
-        int kkr2_ns = kkr2 * lsms.n_spin_cant;
-        rij[0]=atom.LIZPos(0,ir1)-atom.LIZPos(0,ir2);
-        rij[1]=atom.LIZPos(1,ir1)-atom.LIZPos(1,ir2);
-        rij[2]=atom.LIZPos(2,ir1)-atom.LIZPos(2,ir2);
-        
-        buildBGijCuda(lsms, atom, ir1, ir2, rij, energy, prel, iOffset, jOffset, bgij);
-        // buildBGijCPU(lsms, atom, ir1, ir2, rij, energy, prel, 0, 0, bgijSmall);
-             
-        BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
-                     &local.tmatStore(iie*local.blkSizeTmatStore, atom.LIZStoreIdx[ir1]), &kkr1_ns,
-                     // &tmat_n(0, 0), &kkr1_ns,
-                     &bgij(iOffset, jOffset), &nrmat_ns, &czero,
-                     // &bgijSmall(0, 0), &kkrsz_ns, &czero,
-                     &m(iOffset, jOffset), &nrmat_ns);
-        
-        
-//        for(int i=0; i<kkr1_ns; i++)
-//          for(int j=0; j<kkr2_ns; j++)
-//          {
-//            m(iOffset + i, jOffset + j) = 0.0;
-//            for(int k=0; k<kkr1_ns ; k++)
-//              m(iOffset + i, jOffset + j) -= tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
-//                // bgij(iOffset + k, jOffset + j);
-//                bgijSmall(k, j);
-//          }
-        
-      }
-    }
-  }
-}
-
-*/
 
 void buildKKRMatrixLMaxDifferentHip(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom,
                                      DeviceStorage &d, DeviceAtom &devAtom, int ispin,

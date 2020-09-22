@@ -359,9 +359,16 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     buildKKRMatrixCPU(lsms, local, atom, iie, energy, prel, m);
     break;
 #if defined(ACCELERATOR_CUDA_C)
-  case MST_BUILD_KKR_MATRIX_CUDA:
+  case MST_BUILD_KKR_MATRIX_ACCELERATOR:
     devM = deviceStorage->getDevM();
     buildKKRMatrixCuda(lsms, local, atom, *deviceStorage, deviceAtoms[localAtomIndex], ispin, iie, energy, prel,
+                       devM);
+    break;
+#endif
+#if defined(ACCELERATOR_HIP)
+  case MST_BUILD_KKR_MATRIX_ACCELERATOR:
+    devM = deviceStorage->getDevM();
+    buildKKRMatrixHip(lsms, local, atom, *deviceStorage, deviceAtoms[localAtomIndex], ispin, iie, energy, prel,
                        devM);
     break;
 #endif

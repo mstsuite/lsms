@@ -129,7 +129,8 @@ public:
   int *LIZlmax;
   int *LIZStoreIdx;
   int numLIZ;
-  
+ 
+  DeviceAtom(void) : allocated(false) {} 
   int allocate(int lmax, int nspin, int _numLIZ);
   void copyFromAtom(AtomData &atom);
   void free();
