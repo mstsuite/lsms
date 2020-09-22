@@ -12,6 +12,7 @@
 #include "EnergyContourIntegration.hpp"
 #include "Misc/Coeficients.hpp"
 #include "calculateDensities.hpp"
+#include "MultipleScattering/linearSolvers.hpp"
 // #include <omp.h>
 #ifdef USE_NVTX
 #include <nvToolsExt.h>
@@ -360,7 +361,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   {
     deviceStorage->copyTmatStoreToDevice(local.tmatStore, local.blkSizeTmatStore);
     for(int i=0; i<local.num_local; i++)
-      deviceAtom[i].copyFromAtom(local.atom[i]);
+      deviceAtoms[i].copyFromAtom(local.atom[i]);
   }
 #endif
   

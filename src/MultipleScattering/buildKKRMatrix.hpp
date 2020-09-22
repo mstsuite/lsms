@@ -31,7 +31,8 @@ void buildKKRMatrixCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 #endif
 
 #ifdef ACCELERATOR_HIP
-void buildKKRMatrixHIP(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel);
+void buildKKRMatrixHip(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, DeviceStorage &d,
+                       DeviceAtom &devAtom, int ispin, int iie, Complex energy, Complex prel, Complex *devM);
 #endif
 
 inline std::string buildKKRMatrixName(unsigned int buildKKRMatrixId)

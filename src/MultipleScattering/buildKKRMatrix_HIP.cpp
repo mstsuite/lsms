@@ -454,7 +454,7 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms, LocalTypeInfo &l
                                                 DeviceConstants::lofk, DeviceConstants::mofk, DeviceConstants::ilp1, DeviceConstants::illp, DeviceConstants::cgnt,
                                                 DeviceConstants::ndlj_illp, DeviceConstants::lmaxp1_cgnt, DeviceConstants::ndlj_cgnt,
                                                 hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset,
-                                                cuEnergy, cuPrel,
+                                                hipEnergy, hipPrel,
                                                 devOffsets, nrmat_ns, (deviceDoubleComplex *)devBgij);
 
   setBGijHip<<<blocks, threads>>>(fullRelativity, lsms.n_spin_cant, devAtom.LIZlmax,
