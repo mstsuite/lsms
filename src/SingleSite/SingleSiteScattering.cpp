@@ -110,7 +110,7 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
    Real soscal =1.0;
    Real v0 = 0.0;
    int ir = atom.jws; // +1;
-   // if(lsms.mtasa==0) ir=atom.jmt+1;
+    if(lsms.mtasa==0) ir=atom.jmt+1;
    if(atom.ztotss<0.5) vacuumId=0;
    single_scatterer_rel_(&energy, &psq, &atom.lmax, &kmymax,
                          &vacuumId, &v0,

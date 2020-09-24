@@ -35,6 +35,8 @@ c
       integer    ndeep
       integer    kappa
       integer    ipdeq
+
+      integer    nnorm
 c
       real*8     ecore(numc)
       real*8     r(iprpts),rtmp(0:iprpts)
@@ -113,6 +115,7 @@ c     ================================================================
       ecorv=zero
       ndeep=0
       do i=1,numc
+         nnorm = last
          fac1=(3-n_spin_pola)*abs(kc(i))
          ndeep=ndeep+fac1
 ! if(solver.eq.1) then
@@ -127,6 +130,7 @@ c        when core state energy >-10 then treat as semi-core..........
 c        =============================================================
 c08/04/95if( ecore(i) .ge. -ten ) then
          if(ndeep.gt.ndeepz)then
+            nnorm = last2
 c           ----------------------------------------------------------
             call semcst(nc(i),lc(i),kc(i),ecore(i),
      >                  rv,r,f(1),h,z,c,nitmax,tol,jmt,jws,last2,iter,
@@ -147,12 +151,14 @@ c     normalize the wavefunctions
 c     ================================================================
       f(0)=0.d0
       rtmp(0)=0.d0
-      do j=1,last2
+! meis 4Sep20      do j=1,last2
+      do j=1,nnorm
 	rtmp(j)=sqrt(r(j))
 	f(j)=f(j)/r(j)
       enddo
 c     ----------------------------------------------------------------
-      call newint(last2+1,rtmp,f,qmp,3)
+! meis 4Sep20      call newint(last2+1,rtmp,f,qmp,3)
+      call newint(nnorm+1,rtmp,f,qmp,3)
 c     ----------------------------------------------------------------
       gnrm=1.d0/(two*qmp(last2))
       do j=1,last2
@@ -164,7 +170,8 @@ c     ----------------------------------------------------------------
             enddo
             esemv=esemv+ecore(i)*fac1
 	 else
-            do j=1,last2
+            do j=1,last
+! meis 4Sep20             do j=1,last2
                corden(j)= corden(j) + fac1*f(j)
             enddo
             ecorv=ecorv+ecore(i)*fac1
