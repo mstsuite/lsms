@@ -43,7 +43,7 @@ bravais[2]={0,a,0}
 bravais[3]={0,0,a}
 
 -- site_default={lmax=3,rLIZ=12.5,rsteps={89.5,91.5,93.2,99.9},atom="Fe",Z=26,Zc=10,Zs=8,Zv=8,rad=2}
-site_default={lmax=3,rLIZ=8.5,rsteps={89.5,91.5,93.2,99.9},atom="Fe",Z=26,Zc=10,Zs=8,Zv=8,rad=2,pot_in_idx=0}
+site_default={lmax=3,rLIZ=8.5,rsteps={89.5,91.5,93.2,99.9},atom="W",Z=74, Zc=46, Zs= 22, Zv= 6, rad=2,pot_in_idx=0}
 -- site_default={lmax=3,rLIZ=5.0,rsteps={89.5,91.5,93.2,99.9},atom="Fe",Z=26,Zc=10,Zs=8,Zv=8,rad=2}
 -- site_default={lmax=3,rLIZ=0.1,rsteps={89.5,91.5,93.2,99.9},atom="Fe",Z=26,Zc=10,Zs=8,Zv=8,rad=2}
 
