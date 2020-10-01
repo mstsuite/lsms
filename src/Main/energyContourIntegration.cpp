@@ -199,12 +199,15 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0]);
   }
 
+/*
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   for(int i=0; i<local.num_local; i++)
   {
     deviceAtoms[i].copyFromAtom(local.atom[i]);
   }
 #endif
+*/
+
   // Real e_top;
   // e_top=lsms.energyContour.etop;
   // if(lsms.energyContour.etop==0.0) etop=lsms.chempot;
@@ -359,6 +362,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   if(buildKKRMatrixKernel == 0) buildKKRMatrixKernel = MST_BUILD_KKR_MATRIX_DEFAULT;
   if(buildKKRMatrixKernel == MST_BUILD_KKR_MATRIX_ACCELERATOR)
   {
+    if(lsms.global.iprint>=0) printf("copying atom data to accelerator\n");
     deviceStorage->copyTmatStoreToDevice(local.tmatStore, local.blkSizeTmatStore);
     for(int i=0; i<local.num_local; i++)
       deviceAtoms[i].copyFromAtom(local.atom[i]);

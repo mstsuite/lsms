@@ -271,7 +271,7 @@ void DeviceAtom::copyFromAtom(AtomData &atom)
     allocate(atom.lmax, atom.nspin, atom.numLIZ);
   }
   cudaMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), cudaMemcpyHostToDevice);
-  cudaMemcpy(LIZPos, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(LIZlmax, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
   cudaMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), cudaMemcpyHostToDevice);
 }
 

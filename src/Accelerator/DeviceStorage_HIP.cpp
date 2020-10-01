@@ -284,7 +284,7 @@ void DeviceAtom::copyFromAtom(AtomData &atom)
     allocate(atom.lmax, atom.nspin, atom.numLIZ);
   }
   deviceMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), deviceMemcpyHostToDevice);
-  deviceMemcpy(LIZPos, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
+  deviceMemcpy(LIZlmax, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
   deviceMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
 }
 
