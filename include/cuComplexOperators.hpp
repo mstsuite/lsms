@@ -59,6 +59,6 @@ inline cuDoubleComplex operator-(cuDoubleComplex a)
 
 __device__
 inline cuDoubleComplex exp(cuDoubleComplex a)
-{ return make_cuDoubleComplex(a.x * cos(a.y), a.x * sin(a.y)); }
+{ return make_cuDoubleComplex(exp(a.x) * cos(a.y), exp(a.x) * sin(a.y)); }
 
 #endif
