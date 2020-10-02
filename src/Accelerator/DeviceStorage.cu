@@ -236,7 +236,7 @@ size_t DeviceStorage::tmatStoreSize = 0;
 int DeviceStorage::blkSizeTmatStore = 0;
 int DeviceStorage::tmatStoreLDim = 0;
 int DeviceStorage::nThreads=1;
-bool initialized;
+bool initialized = false;
 
 std::vector<DeviceAtom> deviceAtoms;
 

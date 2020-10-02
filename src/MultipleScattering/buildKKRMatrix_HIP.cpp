@@ -393,11 +393,11 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
 //                     // &bgijSmall(0, 0), &kkrsz_ns, &czero,
 //                     &m(iOffset, jOffset), &nrmat_ns);
         
-//    for(int i=0; i<kkr1_ns; i++)
-//      for(int j=0; j<kkr2_ns; j++)
-    buildTmatNHip(ispin, n_spin_pola, n_spin_cant, iie, blkSizeTmatStore, tmatStoreLDim,
-                   kkr1, kkr2, LIZStoreIdx[ir1], devTmatStore, kkrsz_ns, tmat_n);
+//    buildTmatNHip(ispin, n_spin_pola, n_spin_cant, iie, blkSizeTmatStore, tmatStoreLDim,
+//                   kkr1, kkr2, LIZStoreIdx[ir1], devTmatStore, kkrsz_ns, tmat_n);
     
+    tmat_n = &devTmatStore[IDX(iie*blkSizeTmatStore, LIZStoreIdx[ir1], tmatStoreLDim)];
+
     for(int ij=hipThreadIdx_x; ij < kkr1_ns*kkr2_ns; ij += hipBlockDim_x)
     {
       int i = ij % kkr1_ns;
@@ -406,7 +406,7 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
       devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = make_hipDoubleComplex(0.0,0.0);
       for(int k=0; k<kkr1_ns ; k++)
         devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] -
-          tmat_n[IDX(i,j,kkrsz_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
+          tmat_n[IDX(i,k,kkrsz_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
           devBgij[IDX(iOffset + k, jOffset + j, nrmat_ns)];
     }
     

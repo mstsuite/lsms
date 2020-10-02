@@ -20,6 +20,8 @@
 // we might want to distinguish between systems where all lmax (and consequently kkrsz_ns) are the same
 // and systems with potential different lmax on different atoms and l steps
 
+// #define COMPARE_ORIGINAL 1
+
 // Fortran layout for matrix
 // #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 #define IDX3(i, j, k, lDim, mDim) (((k)*(lDim)*(mDim)) + ((j)*(lDim)) + (i))
@@ -30,22 +32,22 @@ inline void calculateHankelCuda(cuDoubleComplex prel, double r, int lend, cuDoub
   if(threadIdx.x == 0)
   {
     const cuDoubleComplex sqrtm1 = make_cuDoubleComplex(0.0, 1.0);
-    cuDoubleComplex z=prel*make_cuDoubleComplex(r,0.0);
-    hfn[0]=make_cuDoubleComplex(0.0, -1.0); //-sqrtm1;
-    hfn[1]=-1.0-sqrtm1/z;
+    cuDoubleComplex z = prel * make_cuDoubleComplex(r,0.0);
+    hfn[0] = make_cuDoubleComplex(0.0, -1.0); //-sqrtm1;
+    hfn[1] = -1.0 - sqrtm1/z;
     for(int l=1; l<lend; l++)
     {
-      hfn[l+1]=(2.0*l+1)*hfn[l]/z - hfn[l-1];
+      hfn[l+1] = ((2.0*l+1.0) * hfn[l]/z) - hfn[l-1];
     }
 
 //             l+1
 //     hfn = -i   *h (k*R  )*sqrt(E)
 //                  l    ij
 
-    z=exp(sqrtm1*z)/r;
-    for(int l=0; l<=lend;l++)
+    z = exp(sqrtm1*z)/r;
+    for(int l=0; l<=lend; l++)
     {
-      hfn[l]=-hfn[l]*z*ilp1[l]; 
+      hfn[l] = ((-hfn[l]) * z) * ilp1[l]; 
     }
   }
 //  __syncthreads();
@@ -155,7 +157,11 @@ void setBGijCuda(bool fullRelativity, int n_spin_cant, int *LIZlmax,
     {
       int i = ij % kkri;
       int j = ij / kkri;
-
+/*
+    for(int i=0; i<kkri; i++)
+      for(int j=0; j<kkrj; j++)
+      {
+*/
       devBgij[IDX(iOffset + kkri + i, jOffset        + j, nrmat_ns)] = make_cuDoubleComplex(0.0, 0.0); // bgij(iOffset + i, jOffset + j);
       devBgij[IDX(iOffset        + i, jOffset + kkrj + j, nrmat_ns)] = make_cuDoubleComplex(0.0, 0.0); // bgij(iOffset + i, jOqffset + j);
       devBgij[IDX(iOffset + kkri + i, jOffset + kkrj + j, nrmat_ns)] = devBgij[IDX(iOffset + i, jOffset + j, nrmat_ns)];
@@ -180,7 +186,11 @@ __global__
 void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoubleComplex *ilp1, cuDoubleComplex *illp, Real *cgnt,
                         int ndlj_illp, int lmaxp1_cgnt, int ndlj_cgnt,
                          size_t hfnOffset, size_t sinmpOffset, size_t cosmpOffset, size_t plmOffset, size_t dlmOffset,
+#if !defined(COMPARE_ORIGINAL)
                          cuDoubleComplex energy, cuDoubleComplex prel, int *offsets, size_t nrmat_ns, cuDoubleComplex *devBgij)
+#else
+                          cuDoubleComplex energy, cuDoubleComplex prel, int *offsets, size_t nrmat_ns, cuDoubleComplex *devBgij, char *testSM)
+#endif
 //  void buildBGijCPU(LSMSSystemParameters &lsms, AtomData &atom, int ir1, int ir2, Real *rij,
 //                  Complex energy, Complex prel, int iOffset, int jOffset, Matrix<Complex> &bgij)
 {
@@ -210,6 +220,15 @@ void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoub
     Real *plm = (Real *) (sharedMemory + plmOffset);
     // Complex dlm[lsms.angularMomentumIndices.ndlj];
     cuDoubleComplex *dlm = (cuDoubleComplex *) (sharedMemory + dlmOffset);
+
+#if defined(COMPARE_ORIGINAL)
+    cuDoubleComplex *testHfn = (cuDoubleComplex *) (testSM + hfnOffset);
+    Real *testSinmp = (Real *) (testSM + sinmpOffset);
+    Real *testCosmp = (Real *) (testSM + cosmpOffset);
+    Real *testPlm = (Real *) (testSM + plmOffset);
+    cuDoubleComplex *testDlm = (cuDoubleComplex *) (testSM + dlmOffset);
+#endif
+
     Real r = std::sqrt(rij[0]*rij[0] + rij[1]*rij[1] + rij[2]*rij[2]);
     int lmax1 = LIZlmax[ir1];
     int lmax2 = LIZlmax[ir2];
@@ -252,6 +271,20 @@ void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoub
         dlm[j+m] = hfn[l]*cuConj(fac);
       }
     }
+    __syncthreads();
+
+#if defined(COMPARE_ORIGINAL)
+    if(ir1 == 0 && ir2 == 1 && threadIdx.x == 0)
+    {
+      for(int l = 0; l<=lend; l++)
+      {
+        testHfn[l] = hfn[l];
+        testSinmp[l] = sinmp[l];
+        testCosmp[l] = cosmp[l];
+      }
+    }
+#endif
+
 //     ================================================================
 //     calculate g(R_ij)...............................................
   // for(int i=0; i<kkri*kkrj; i++) gij[i]=0.0;
@@ -386,12 +419,18 @@ void buildKKRMatrixMultiplyKernelCuda(int *LIZlmax, int *LIZStoreIdx, int *offse
 //                     &bgij(iOffset, jOffset), &nrmat_ns, &czero,
 //                     // &bgijSmall(0, 0), &kkrsz_ns, &czero,
 //                     &m(iOffset, jOffset), &nrmat_ns);
+
+    for(int j=0; j<kkr2_ns; j++)
+    {
+    }
         
 //    for(int i=0; i<kkr1_ns; i++)
 //      for(int j=0; j<kkr2_ns; j++)
-    buildTmatNCuda(ispin, n_spin_pola, n_spin_cant, iie, blkSizeTmatStore, tmatStoreLDim,
-                   kkr1, kkr2, LIZStoreIdx[ir1], devTmatStore, kkrsz_ns, tmat_n);
-    
+//    buildTmatNCuda(ispin, n_spin_pola, n_spin_cant, iie, blkSizeTmatStore, tmatStoreLDim,
+//                   kkr1, kkr2, LIZStoreIdx[ir1], devTmatStore, kkrsz_ns, tmat_n);
+
+    tmat_n = &devTmatStore[IDX(iie*blkSizeTmatStore, LIZStoreIdx[ir1], tmatStoreLDim)];    
+
     for(int ij=threadIdx.x; ij < kkr1_ns*kkr2_ns; ij += blockDim.x)
     {
       int i = ij % kkr1_ns;
@@ -400,7 +439,7 @@ void buildKKRMatrixMultiplyKernelCuda(int *LIZlmax, int *LIZStoreIdx, int *offse
       devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = make_cuDoubleComplex(0.0,0.0);
       for(int k=0; k<kkr1_ns ; k++)
         devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] -
-          tmat_n[IDX(i,j,kkrsz_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
+          tmat_n[IDX(i,k,kkr1_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
           devBgij[IDX(iOffset + k, jOffset + j, nrmat_ns)];
     }
     
@@ -443,18 +482,63 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   size_t hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset;
   size_t smSize = sharedMemoryBGijCuda(lsms, &hfnOffset, &sinmpOffset, &cosmpOffset,
                                        &plmOffset, &dlmOffset);
-  int threads = 256;
+#ifdef COMPARE_ORIGINAL
+  char *devTestSM;
+  cudaMalloc(&devTestSM, smSize);
+#endif
+  // int threads = 256;
+  int threads = 1;
   dim3 blocks = dim3(devAtom.numLIZ, devAtom.numLIZ,1);
   buildGijCudaKernel<<<blocks,threads,smSize>>>(devAtom.LIZPos, devAtom.LIZlmax,
                                                 DeviceConstants::lofk, DeviceConstants::mofk, DeviceConstants::ilp1, DeviceConstants::illp, DeviceConstants::cgnt,
                                                 DeviceConstants::ndlj_illp, DeviceConstants::lmaxp1_cgnt, DeviceConstants::ndlj_cgnt,
                                                 hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset,
                                                 cuEnergy, cuPrel,
+#if !defined(COMPARE_ORIGINAL)
                                                 devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij);
+#else
+                                                devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij, devTestSM);
+#endif
+
+  setBGijCuda<<<blocks, threads>>>(fullRelativity, lsms.n_spin_cant, devAtom.LIZlmax,
+                                   devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij);
 
 #ifdef COMPARE_ORIGINAL
+  Matrix<Real> testLIZPos(3,atom.numLIZ);
   Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
-  cudaMemcpy(devBgij, &bgij[0], nrmat_ns*nrmat_ns*sizeof(Complex), cudaMemcpyDeviceToHost);
+  Complex testIlp1[2*lsms.maxlmax + 1];
+  cudaMemcpy(&bgij[0], devBgij, nrmat_ns*nrmat_ns*sizeof(Complex), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&testLIZPos[0], devAtom.LIZPos, 3*atom.numLIZ*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&testIlp1[0], DeviceConstants::ilp1, (2*lsms.maxlmax + 1)*sizeof(Complex), cudaMemcpyDeviceToHost);  
+
+  for(int l=0; l<2*lsms.maxlmax; l++)
+  {
+    printf("l=%d : ilp1 [%g + %gi] | DeviceConstats::ilp1 [%g + %gi]\n",l,IFactors::ilp1[l].real(),IFactors::ilp1[l].imag(), testIlp1[l].real(), testIlp1[l].imag());
+  }
+
+  Complex testHfn[2*lsms.maxlmax + 1];
+  Real testSinmp[2*lsms.maxlmax + 1];
+  Real testCosmp[2*lsms.maxlmax + 1];
+  // Real plm[((lsms.maxlmax+1) * (lsms.maxlmax+2)) / 2];
+  Real testPlm[lsms.angularMomentumIndices.ndlm];
+  Complex testDlm[lsms.angularMomentumIndices.ndlj];
+  cudaMemcpy(testHfn, devTestSM + hfnOffset, (2*lsms.maxlmax + 1)*sizeof(Complex), cudaMemcpyDeviceToHost);
+  cudaMemcpy(testSinmp, devTestSM + sinmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(testCosmp, devTestSM + cosmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(testPlm, devTestSM + plmOffset, lsms.angularMomentumIndices.ndlm*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(testDlm, devTestSM + dlmOffset, lsms.angularMomentumIndices.ndlj*sizeof(Complex), cudaMemcpyDeviceToHost);
+
+  for(int i = 0; i < atom.numLIZ; i++)
+  {
+    if(atom.LIZPos(0,i) != testLIZPos(0,i) ||
+       atom.LIZPos(1,i) != testLIZPos(1,i) ||
+       atom.LIZPos(2,i) != testLIZPos(2,i))
+    {
+      printf("atom.LIZPos(*,%d) [%lf,%lf,%lf] != devAtom.LIZPos(*,%d) [%lf,%lf,%lf]\n",
+             i,atom.LIZPos(0,i),atom.LIZPos(1,i),atom.LIZPos(2,i),
+             i,testLIZPos(0,i),testLIZPos(1,i),testLIZPos(2,i));
+    }
+  }
   // loop over the LIZ blocks
   Complex hfn[2*lsms.maxlmax + 1];
   Real sinmp[2*lsms.maxlmax + 1];
@@ -462,15 +546,21 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   // Real plm[((lsms.maxlmax+1) * (lsms.maxlmax+2)) / 2];
   Real plm[lsms.angularMomentumIndices.ndlm];
   Complex dlm[lsms.angularMomentumIndices.ndlj];
+  Real rij[3];
+  Real pi4=4.0*2.0*std::asin(1.0);
   for(int ir1 = 0; ir1 < atom.numLIZ; ir1++)
   {
     int iOffset = ir1 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!!
     for(int ir2 = 0; ir2 < atom.numLIZ; ir2++)
     {
+      int jOffset = ir2 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!
       int lmax1 = atom.LIZlmax[ir1];
       int lmax2 = atom.LIZlmax[ir2];
       int kkri=(lmax1+1)*(lmax1+1);
       int kkrj=(lmax2+1)*(lmax2+1);
+      rij[0]=atom.LIZPos(0,ir1)-atom.LIZPos(0,ir2);
+      rij[1]=atom.LIZPos(1,ir1)-atom.LIZPos(1,ir2);
+      rij[2]=atom.LIZPos(2,ir1)-atom.LIZPos(2,ir2);
       if(ir1 != ir2)
       {
         int kkr1 = kkri;
@@ -489,6 +579,20 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
                  &iFactors.ilp1[0],&iFactors.illp(0,0),
                  &hfn[0],&dlm[0],&gijTest(0,0),
                  &pi4,&lsms.global.iprint,lsms.global.istop,32);
+
+        if(ir1 == 0 && ir2 == 1)
+        {
+          for(int l=0; l<=atom.LIZlmax[ir1]+atom.LIZlmax[ir2]; l++)
+          {
+            if(sinmp[l] != testSinmp[l])
+              printf("sinmp[%d] (%g) != testSinmp[%d] (%g)\n", l, sinmp[l], l, testSinmp[l]);
+            if(cosmp[l] != testCosmp[l])
+              printf("cosmp[%d] (%g) != testCosmp[%d] (%g)\n", l, cosmp[l], l, testCosmp[l]);
+            if(hfn[l] != testHfn[l])
+              printf("hfn[%d] (%g + %gi) != testHfn[%d] (%g + %gi)\n", l, hfn[l].real(), hfn[l].imag(), l, testHfn[l].real(), testHfn[l].imag());
+          }
+        }
+
         int idx=0;
         for(int i=0; i<kkri; i++)
           for(int j=0; j<kkrj; j++)
@@ -501,17 +605,79 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
                      i, j, gijTest(i,j).real(), gijTest(i,j).imag());
               exitCompare = true;
             }
+            if(bgij(iOffset + kkri + i, jOffset + kkrj + j) != gijTest(i,j))
+              // if(bgij[idx] != gijTest[idx])
+            {
+              printf("buildBGijCPU : bgij(%d + %d, %d + %d) [%g + %gi] != gijTest(%d, %d) [%g + %gi]\n",
+                     iOffset, i+kkri, jOffset, j+kkrj, bgij(iOffset + kkri + i, jOffset + kkrj + j).real(), bgij(iOffset + kkri + i, jOffset + kkrj + j).imag(),
+                     i, j, gijTest(i,j).real(), gijTest(i,j).imag());
+              exitCompare = true;
+            }
+            if(bgij(iOffset + kkri + i, jOffset + j) != 0.0) //gijTest(i+kkri,j))
+              // if(bgij[idx] != gijTest[idx])
+            {
+              printf("buildBGijCPU : bgij(%d + %d, %d + %d) [%g + %gi] != 0.0\n",
+                     iOffset, i+kkri, jOffset, j, bgij(iOffset + kkri + i, jOffset + j).real(), bgij(iOffset + kkri + i, jOffset + j).imag());
+              exitCompare = true;
+            }
+            if(bgij(iOffset + i, jOffset + kkrj + j) != 0.0) //gijTest(i,j+kkrj))
+              // if(bgij[idx] != gijTest[idx])
+            {
+              printf("buildBGijCPU : bgij(%d + %d, %d + %d) [%g + %gi] != 0.0\n",
+                     iOffset, i, jOffset, j+kkrj, bgij(iOffset + i, jOffset + kkrj + j).real(), bgij(iOffset + i, jOffset + kkrj + j).imag());
+              exitCompare = true;
+            }
             idx++;
           }
         if(exitCompare) exit(1);
       }
     }
   }
+
+/*
+  Complex psq=prel*prel;
+  for(int ir1 = 0; ir1 < atom.numLIZ; ir1++)
+  {
+    int iOffset = ir1 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!!
+    for(int ir2 = 0; ir2 < atom.numLIZ; ir2++)
+    {
+      int jOffset = ir2 * kkrsz_ns; // this assumes that there are NO lStep reductions of lmax!!
+      int lmax1 = atom.LIZlmax[ir1];
+      int lmax2 = atom.LIZlmax[ir2];
+      int kkr1=(lmax1+1)*(lmax1+1);
+      int kkr2=(lmax2+1)*(lmax2+1);
+      int kkr1_ns = 2*kkr1;
+      int kkr2_ns = 2*kkr2;
+      int nrel_rel=0;
+      if(lsms.relativity==full) nrel_rel=1;
+      setgij_(&gijTest(0,0),&bgijTest(0,0),&kkr1,&kkr1_ns,&kkr2,&kkr2_ns,
+              &lsms.n_spin_cant,&nrel_rel,&psq,&energy);
+  idx=0;
+  for(int i=0; i<2*kkri; i++)
+    for(int j=0; j<2*kkrj; j++)
+    {
+      // if(bgij(iOffset + i, jOffset + j) != bgijTest(i,j))
+      if(bgij[idx] != bgijTest[idx])
+      {
+        printf("buildBGijCPU  [idx=%d]: bgij(%d + %d, %d + %d) [%g + %gi] != bgijTest(%d, %d) [%g + %gi]\n", idx,
+               iOffset, i, jOffset, j, bgij(iOffset + i, jOffset + j).real(), bgij(iOffset + i, jOffset + j).imag(),
+               i, j, bgijTest(i,j).real(), bgijTest(i,j).imag());
+        exitCompare = true;
+      }
+      idx++;
+    }
+  if(exitCompare) exit(1);
+
+  if((ir1==1 && ir2==0) || (ir1==10 && ir2==0))
+  {
+    printf("ir1=%d, ir2=%d: bgij(0,0) = %g + %gi; bgijTest(0,0) = %g + %gi\n",
+           ir1, ir2, bgij(0,0).real(), bgij(0,0).imag(), bgijTest(0,0).real(), bgijTest(0,0).imag());
+    printf("    rij = %g %g %g;  prel=%g + %gi\n", rij[0],  rij[1], rij[2], prel.real(), prel.imag());
+    printf("    kkr1 = %d; kkr2 = %d; kkrsz = %d\n", kkr1, kkr2, kkrsz);
+  }
+*/
+
 #endif
-
-  setBGijCuda<<<blocks, threads>>>(fullRelativity, lsms.n_spin_cant, devAtom.LIZlmax,
-                                   devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij);
-
 
   smSize = kkrsz_ns*kkrsz_ns*sizeof(cuDoubleComplex);
   buildKKRMatrixMultiplyKernelCuda<<<blocks, threads, smSize>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
@@ -597,6 +763,10 @@ void buildKKRMatrixLMaxDifferentCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   size_t hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset;
   size_t smSize = sharedMemoryBGijCuda(lsms, &hfnOffset, &sinmpOffset, &cosmpOffset,
                                        &plmOffset, &dlmOffset);
+#ifdef COMPARE_ORIGINAL
+  char *devTestSM;
+  cudaMalloc(&devTestSM, smSize);
+#endif
   int threads = 256;
   dim3 blocks = dim3(devAtom.numLIZ, devAtom.numLIZ,1);
   buildGijCudaKernel<<<blocks,threads,smSize>>>(devAtom.LIZPos, devAtom.LIZlmax,
@@ -604,8 +774,11 @@ void buildKKRMatrixLMaxDifferentCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
                                                 DeviceConstants::ndlj_illp, DeviceConstants::lmaxp1_cgnt, DeviceConstants::ndlj_cgnt,
                                                 hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset,
                                                 cuEnergy, cuPrel,
+#if !defined(COMPARE_ORIGINAL)
                                                 devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij);
-
+#else
+                                                devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij, devTestSM);
+#endif
   setBGijCuda<<<blocks, threads>>>(fullRelativity, lsms.n_spin_cant, devAtom.LIZlmax,
                                    devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij);
 

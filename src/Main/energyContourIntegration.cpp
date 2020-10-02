@@ -19,14 +19,15 @@
 #endif
 
 #if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
-void copyTmatStoreToDevice(LocalTypeInfo &local);
+// void copyTmatStoreToDevice(LocalTypeInfo &local);
+
 #ifdef BUILDKKRMATRIX_GPU
 #include "Accelerator/buildKKRMatrix_gpu.hpp"
 extern std::vector<DeviceConstants> deviceConstants;
 // extern std::vector<void *> deviceConstants;
 // extern void * deviceStorage;
 #endif
-//#if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+
 #include "Accelerator/DeviceStorage.hpp"
 extern DeviceStorage *deviceStorage;
 #endif
