@@ -36,22 +36,22 @@ inline void calculateHankelHip(deviceDoubleComplex prel, double r, int lend, dev
   if(hipThreadIdx_x == 0)
   {
     const deviceDoubleComplex sqrtm1 = make_hipDoubleComplex(0.0, 1.0);
-    deviceDoubleComplex z=prel*make_hipDoubleComplex(r,0.0);
-    hfn[0]=make_hipDoubleComplex(0.0, -1.0); //-sqrtm1;
-    hfn[1]=-1.0-sqrtm1/z;
+    deviceDoubleComplex z = prel*make_hipDoubleComplex(r,0.0);
+    hfn[0] = make_hipDoubleComplex(0.0, -1.0); //-sqrtm1;
+    hfn[1]= -1.0 - sqrtm1/z;
     for(int l=1; l<lend; l++)
     {
-      hfn[l+1]=(2.0*l+1)*hfn[l]/z - hfn[l-1];
+      hfn[l+1] = ((2.0*l+1.0) * hfn[l]/z) - hfn[l-1];
     }
 
 //             l+1
 //     hfn = -i   *h (k*R  )*sqrt(E)
 //                  l    ij
 
-    z=complexExp(sqrtm1*z)/r;
+    z = complexExp(sqrtm1*z)/r;
     for(int l=0; l<=lend;l++)
     {
-      hfn[l]=-hfn[l]*z*ilp1[l]; 
+      hfn[l] = ((-hfn[l]) * z) * ilp1[l]; 
     }
   }
 //  __syncthreads();
@@ -406,7 +406,7 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
       devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = make_hipDoubleComplex(0.0,0.0);
       for(int k=0; k<kkr1_ns ; k++)
         devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] -
-          tmat_n[IDX(i,k,kkrsz_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
+          tmat_n[IDX(i,k,kkr1_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
           devBgij[IDX(iOffset + k, jOffset + j, nrmat_ns)];
     }
     
@@ -448,7 +448,7 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms, LocalTypeInfo &l
   size_t hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset;
   size_t smSize = sharedMemoryBGijHip(lsms, &hfnOffset, &sinmpOffset, &cosmpOffset,
                                        &plmOffset, &dlmOffset);
-  int threads = 256;
+  int threads = 1;
   dim3 blocks = dim3(devAtom.numLIZ, devAtom.numLIZ,1);
   buildGijHipKernel<<<blocks,threads,smSize>>>(devAtom.LIZPos, devAtom.LIZlmax,
                                                 DeviceConstants::lofk, DeviceConstants::mofk, DeviceConstants::ilp1, DeviceConstants::illp, DeviceConstants::cgnt,
