@@ -415,7 +415,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     default: break; // do nothing. We are using the CPU matrix
     } break;
 #if defined(ACCELERATOR_CUDA_C)
-  case MST_BUILD_KKR_MATRIX_CUDA:
+  case MST_BUILD_KKR_MATRIX_ACCELERATOR:
     // built on GPU:
     switch(linearSolver)
     {
@@ -434,6 +434,37 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       transferT0MatrixToGPUCuda(devT0, lsms, local, atom, iie);
       break;
 #ifdef ACCELERATOR_HIP
+    case MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER:
+      printf("MIXING HIP AND CUDA KERNELS (%x)!!!\n",buildKKRMatrixKernel);
+    exit(1);
+#endif
+    default: break; // do nothing. We are using the GPU matrix
+    } break;
+#endif
+#if defined(ACCELERATOR_HIP)
+  case MST_BUILD_KKR_MATRIX_ACCELERATOR:
+    // built on GPU:
+    switch(linearSolver)
+    {
+    case MST_LINEAR_SOLVER_ZGESV:
+    case MST_LINEAR_SOLVER_ZGETRF:
+    case MST_LINEAR_SOLVER_ZCGESV:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_F77:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CPP:
+      transferMatrixFromGPUHip(m, (deviceDoubleComplex *)devM);
+      break;
+    case MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER:
+      devT0 = deviceStorage->getDevT0();
+      transferT0MatrixToGPUHip(devT0, lsms, local, atom, iie);
+      break;
+#ifdef ACCELERATOR_CUDA_C
+    case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
+    case MST_LINEAR_SOLVER_ZBLOCKLU_CUBLAS:
+    case MST_LINEAR_SOLVER_ZZGESV_CUSOLVER:
+    case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
+      printf("MIXING HIP AND CUDA KERNELS (%x)!!!\n",buildKKRMatrixKernel);
+      exit(1);
+      break; 
 #endif
     default: break; // do nothing. We are using the GPU matrix
     } break;
