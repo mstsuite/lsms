@@ -19,7 +19,8 @@ inline int omp_get_thread_num() {return 0;}
 #include "cudaCheckError.hpp"
 #include "cudaDoubleComplex.hpp"
 #include <assert.h>
-#include <lapack.h>
+#include <LAPACK.hpp>
+//#include <lapack.h>
 //#include <mpi.h>
 
 extern "C" int zmatinv_prep1_ (void **a, void **b, int *n, int *lda, cudaStream_t thisstream);
@@ -242,10 +243,10 @@ void zblock_lu_cuda_c_ ( std::complex<double> *a, int *lda, int *blk_sz, int *nb
         
         int info;
         //zgetrf on host
-        zgetrf_(&m, &m, hostAdiag, &m, hostIPVT, &info);
+        LAPACK::zgetrf_(&m, &m, hostAdiag, &m, hostIPVT, &info);
 
         //zgetri on host
-        zgetri_(&m, hostAdiag, &m, hostIPVT, (Complex*)work, &lwork, &info);
+        LAPACK::zgetri_(&m, hostAdiag, &m, hostIPVT, (Complex*)work, &lwork, &info);
         
         flops += m * m * m;
 
