@@ -360,7 +360,24 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     break;
 #if defined(ACCELERATOR_CUDA_C)
   case MST_BUILD_KKR_MATRIX_ACCELERATOR:
+/*
+  {
+// test 
+//  Matrix<Real> testLIZPos(3,atom.numLIZ);
+//  Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
+  Complex testIlp1[2*lsms.maxlmax + 1];
+//  cudaMemcpy(&bgij[0], devBgij, nrmat_ns*nrmat_ns*sizeof(Complex), cudaMemcpyDeviceToHost);
+//  cudaMemcpy(&testLIZPos[0], devAtom.LIZPos, 3*atom.numLIZ*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&testIlp1[0], DeviceConstants::ilp1, (2*lsms.maxlmax + 1)*sizeof(Complex), cudaMemcpyDeviceToHost);  
+  printf("calculateTauMatrix:\n");
+  for(int l=0; l<2*lsms.maxlmax; l++)
+  {
+    printf("l=%d : ilp1 [%g + %gi] | DeviceConstats::ilp1 [%g + %gi]\n",l,IFactors::ilp1[l].real(),IFactors::ilp1[l].imag(), testIlp1[l].real(), testIlp1[l].imag());
+  }
+  }
+*/
     devM = deviceStorage->getDevM();
+    // printf("entering buildKKRMatrixCuda:\n");
     buildKKRMatrixCuda(lsms, local, atom, *deviceStorage, deviceAtoms[localAtomIndex], ispin, iie, energy, prel,
                        devM);
     break;
@@ -709,7 +726,7 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
   Complex *m_dat=NULL;
 #if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   m_dat=get_host_m_(max_nrmat_ns);
-  printf("m_dat = %p\n",m_dat);
+//  printf("m_dat = %p\n",m_dat);
 #else
   m_dat=NULL;
 #endif

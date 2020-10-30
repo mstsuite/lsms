@@ -27,7 +27,8 @@
 #define IDX3(i, j, k, lDim, mDim) (((k)*(lDim)*(mDim)) + ((j)*(lDim)) + (i))
 
 __device__
-inline void calculateHankelCuda(cuDoubleComplex prel, double r, int lend, cuDoubleComplex *ilp1, cuDoubleComplex *hfn)
+__inline__
+void calculateHankelCuda(cuDoubleComplex prel, double r, int lend, cuDoubleComplex *ilp1, cuDoubleComplex *hfn)
 {
   if(threadIdx.x == 0)
   {
@@ -54,7 +55,8 @@ inline void calculateHankelCuda(cuDoubleComplex prel, double r, int lend, cuDoub
 }
 
 __device__
-inline void calculateSinCosPowersCuda(Real *rij, int lend, Real *sinmp, Real *cosmp)
+__inline__
+void calculateSinCosPowersCuda(Real *rij, int lend, Real *sinmp, Real *cosmp)
 {
   const Real ptol = 1.0e-6;
   Real pmag = std::sqrt(rij[0]*rij[0]+rij[1]*rij[1]);
@@ -75,10 +77,13 @@ inline void calculateSinCosPowersCuda(Real *rij, int lend, Real *sinmp, Real *co
   }
 }
 
-__device__ __inline__ int plmIdxDev(int l, int m)
-{ return l*(l+1)/2+m; }
+// __device__ __inline__ int plmIdxDev(int l, int m)
+// { return l*(l+1)/2+m; }
+
+#define PLM_IDX(l,m) (((l)*((l)+1))/2 + (m))
 
 __device__
+__inline__
 void associatedLegendreFunctionNormalizedCuda(Real x, int lmax, Real *Plm)
 {
   const Real pi = std::acos(-1.0);
@@ -93,9 +98,9 @@ void associatedLegendreFunctionNormalizedCuda(Real x, int lmax, Real *Plm)
   for(int m=1; m<=lmax; m++)
   {
     // \bar{P}_{mm} = - \sqrt{\frac{2m+1}{2m}} y \bar{P}_{m-1, m-1}
-    Plm[plmIdxDev(m,m)] = - std::sqrt(Real(2*m+1)/Real(2*m)) * y * Plm[plmIdxDev(m-1,m-1)];
+    Plm[PLM_IDX(m,m)] = - std::sqrt(Real(2*m+1)/Real(2*m)) * y * Plm[PLM_IDX(m-1,m-1)];
     // \bar{P}_{mm-1} = \sqrt{2 m + 1} x \bar{P}_{m-1, m-1}
-    Plm[plmIdxDev(m,m-1)] = std::sqrt(Real(2*m+1)) * x * Plm[plmIdxDev(m-1,m-1)]; 
+    Plm[PLM_IDX(m,m-1)] = std::sqrt(Real(2*m+1)) * x * Plm[PLM_IDX(m-1,m-1)]; 
   }
 
   for(int m=0; m<lmax; m++)
@@ -107,9 +112,30 @@ void associatedLegendreFunctionNormalizedCuda(Real x, int lmax, Real *Plm)
       // b_{lm} = \sqrt{\frac{(l -1)^2 - m^2}{4 (l-1)^2 -1}}
       Real a_lm = std::sqrt(Real(4*l*l-1)/Real(l*l - m*m));
       Real b_lm = std::sqrt(Real((l-1)*(l-1) - m*m)/Real(4*(l-1)*(l-1)-1));
-      Plm[plmIdxDev(l,m)] = a_lm * (x * Plm[plmIdxDev(l-1,m)] - b_lm * Plm[plmIdxDev(l-2,m)]);
+      Plm[PLM_IDX(l,m)] = a_lm * (x * Plm[PLM_IDX(l-1,m)] - b_lm * Plm[PLM_IDX(l-2,m)]);
     }
   }
+}
+
+__device__
+__inline__
+cuDoubleComplex dlmFunction(cuDoubleComplex *hfn, double *cosmp, double *sinmp, double *plm, int l, int m)
+{
+  int mAbs = abs(m);
+
+  cuDoubleComplex dlm = hfn[l]*plm[PLM_IDX(l,mAbs)];
+  if(m==0) return dlm;
+
+  if(m<0)
+  {
+    dlm = dlm * make_cuDoubleComplex(cosmp[mAbs],sinmp[mAbs]);
+    if(mAbs & 0x01 != 0) // m is odd
+      dlm = -dlm;
+  } else {
+    dlm = dlm * make_cuDoubleComplex(cosmp[mAbs],-sinmp[mAbs]);
+  }
+
+  return dlm;
 }
 
 
@@ -130,8 +156,8 @@ size_t sharedMemoryBGijCuda(LSMSSystemParameters &lsms, size_t *hfnOffset, size_
   *plmOffset = size;
   size += sizeof(double) * (lsms.angularMomentumIndices.ndlm);
 
-  *dlmOffset = size;
-  size += sizeof(cuDoubleComplex) * (lsms.angularMomentumIndices.ndlj);
+//  *dlmOffset = size;
+//  size += sizeof(cuDoubleComplex) * (lsms.angularMomentumIndices.ndlj);
   
   return size;
 }
@@ -219,7 +245,7 @@ void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoub
     // Real plm[lsms.angularMomentumIndices.ndlm];
     Real *plm = (Real *) (sharedMemory + plmOffset);
     // Complex dlm[lsms.angularMomentumIndices.ndlj];
-    cuDoubleComplex *dlm = (cuDoubleComplex *) (sharedMemory + dlmOffset);
+    // cuDoubleComplex *dlm = (cuDoubleComplex *) (sharedMemory + dlmOffset);
 
 #if defined(COMPARE_ORIGINAL)
     cuDoubleComplex *testHfn = (cuDoubleComplex *) (testSM + hfnOffset);
@@ -238,12 +264,13 @@ void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoub
 
     Real pi4=4.0*2.0*std::asin(1.0);
     Real cosTheta = rij[2]/r;
-  
+ 
     if(threadIdx.x == 0)
     {
       calculateHankelCuda(prel, r, lend, ilp1, hfn);
 
       associatedLegendreFunctionNormalizedCuda(cosTheta, lend, plm);
+
       // for associatedLegendreFunctionNormalized all clm[i] == 1.0
       // for(int j=0;j<ndlm_local;j++)
       //   plm[j]=clm[j]*plm[j];
@@ -253,25 +280,36 @@ void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoub
       calculateSinCosPowersCuda(rij, lend, sinmp, cosmp);
     }
     __syncthreads();
-  
+
+/*
     // can be parallel
-    int j=0;
-    for(int l = threadIdx.x; l<=lend; l += blockDim.x)
+    int j;
+    int ll;
+//    for(int l = threadIdx.x; l<=lend; l += blockDim.x)
+    if(threadIdx.x == 0)
     {
-      int ll = l*(l+1);
-      j = ll;
-      ll = ll/2;
-      Real m1m = 1.0;
-      dlm[j] = hfn[l]*plm[ll];
-      for(int m=1; m<=l; m++)
+      for(int l = 0; l<=lend; l++)
       {
-        m1m = -m1m;
-        cuDoubleComplex fac = plm[ll+m] * make_cuDoubleComplex(cosmp[m],sinmp[m]);
-        dlm[j-m] = hfn[l]*m1m*fac;
-        dlm[j+m] = hfn[l]*cuConj(fac);
+        // int ll = l*(l+1);
+        // j = ll;
+        // ll = ll/2;
+        j = l*(l+1);
+        ll = j/2;
+        double m1m = 1.0;
+        dlm[j] = hfn[l]*plm[ll];
+
+        for(int m=1; m<=l; m++)
+        {
+          m1m = -m1m;
+          cuDoubleComplex fac = plm[ll+m] * make_cuDoubleComplex(cosmp[m],sinmp[m]);
+          dlm[j-m] = hfn[l]*m1m*fac;
+          dlm[j+m] = hfn[l]*cuConj(fac);
+        }
+
       }
     }
     __syncthreads();
+*/
 
 #if defined(COMPARE_ORIGINAL)
     if(ir1 == 0 && ir2 == 1 && threadIdx.x == 0)
@@ -327,16 +365,14 @@ void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoub
         int j=l3*(l3+1)+m3;
         // gij[lm2+lm1*kkri] = gij[lm2+lm1*kkri]+cgnt(l3/2,lm1,lm2)*dlm[j];
         devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] =  devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)]
-          + cgnt[IDX3(l3/2,lm1,lm2,lmaxp1_cgnt,ndlj_cgnt)]*dlm[j];
+          + cgnt[IDX3(l3/2,lm1,lm2,lmaxp1_cgnt,ndlj_cgnt)]
+          * dlmFunction(hfn, cosmp, sinmp, plm, l3, m3); //dlm[j];
       }
       // gij[lm2+lm1*kkri]=pi4*illp(lm2,lm1)*gij[lm2+lm1*kkri];
       devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] = devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)]
         * pi4 * illp[IDX(lm2, lm1, ndlj_illp)];
     }
-
-  // might do this as a seperate kernel
-  //  __syncthreads();
-  //  setBGijCuda(fullRelativity, n_spin_cant, LIZlmax, ir1, ir2, iOffset, jOffset, nrmat_ns, devBgij);
+  
   }
 }
 
@@ -400,7 +436,8 @@ void buildKKRMatrixMultiplyKernelCuda(int *LIZlmax, int *LIZStoreIdx, int *offse
 {
   int ir1 = blockIdx.x;
   int ir2 = blockIdx.y;
-  extern cuDoubleComplex __shared__ *tmat_n;
+//  extern cuDoubleComplex __shared__ *tmat_n;
+  cuDoubleComplex *tmat_n;
   int iOffset = offsets[ir1];
   int jOffset = offsets[ir2];
 
@@ -483,8 +520,28 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   size_t smSize = sharedMemoryBGijCuda(lsms, &hfnOffset, &sinmpOffset, &cosmpOffset,
                                        &plmOffset, &dlmOffset);
 #ifdef COMPARE_ORIGINAL
+  printf("smSize = %zu\n", smSize);
+  printf("  hfnOffset = %zu\n", hfnOffset);
+  printf("  sinmpOffset = %zu\n", sinmpOffset);
+  printf("  cosmpOffset = %zu\n", cosmpOffset);
+  printf("  plmOffset = %zu\n", plmOffset);
+  printf("  dlmOffset = %zu\n", dlmOffset);
   char *devTestSM;
   cudaMalloc(&devTestSM, smSize);
+    {
+// test 
+//  Matrix<Real> testLIZPos(3,atom.numLIZ);
+//  Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
+  Complex testIlp1[2*lsms.maxlmax + 1];
+//  cudaMemcpy(&bgij[0], devBgij, nrmat_ns*nrmat_ns*sizeof(Complex), cudaMemcpyDeviceToHost);
+//  cudaMemcpy(&testLIZPos[0], devAtom.LIZPos, 3*atom.numLIZ*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&testIlp1[0], DeviceConstants::ilp1, (2*lsms.maxlmax + 1)*sizeof(Complex), cudaMemcpyDeviceToHost);
+  printf("in calculateTauMatrix: before buildGijCudaKernel:\n");
+  for(int l=0; l<2*lsms.maxlmax; l++)
+  {
+    printf("l=%d : ilp1 [%g + %gi] | DeviceConstats::ilp1 [%g + %gi]\n",l,IFactors::ilp1[l].real(),IFactors::ilp1[l].imag(), testIlp1[l].real(), testIlp1[l].imag());
+  }
+  }
 #endif
   // int threads = 256;
   int threads = 1;
@@ -498,12 +555,28 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
                                                 devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij);
 #else
                                                 devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij, devTestSM);
+
+    {
+// test 
+//  Matrix<Real> testLIZPos(3,atom.numLIZ);
+//  Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
+  Complex testIlp1[2*lsms.maxlmax + 1];
+//  cudaMemcpy(&bgij[0], devBgij, nrmat_ns*nrmat_ns*sizeof(Complex), cudaMemcpyDeviceToHost);
+//  cudaMemcpy(&testLIZPos[0], devAtom.LIZPos, 3*atom.numLIZ*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&testIlp1[0], DeviceConstants::ilp1, (2*lsms.maxlmax + 1)*sizeof(Complex), cudaMemcpyDeviceToHost);
+  printf("in calculateTauMatrix: before setBGijCuda:\n");
+  for(int l=0; l<2*lsms.maxlmax; l++)
+  {
+    printf("l=%d : ilp1 [%g + %gi] | DeviceConstats::ilp1 [%g + %gi]\n",l,IFactors::ilp1[l].real(),IFactors::ilp1[l].imag(), testIlp1[l].real(), testIlp1[l].imag());
+  }
+  }
 #endif
 
   setBGijCuda<<<blocks, threads>>>(fullRelativity, lsms.n_spin_cant, devAtom.LIZlmax,
                                    devOffsets, nrmat_ns, (cuDoubleComplex *)devBgij);
 
 #ifdef COMPARE_ORIGINAL
+  bool exitCompare = false;
   Matrix<Real> testLIZPos(3,atom.numLIZ);
   Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
   Complex testIlp1[2*lsms.maxlmax + 1];
@@ -565,7 +638,6 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
       {
         int kkr1 = kkri;
         int kkr2 = kkrj;
-        bool exitCompare = false;
         Matrix<Complex> gijTest(kkr1,kkr2);
         Matrix<Complex> bgijTest(2*kkr1, 2*kkr2);
         int lmax=lsms.maxlmax;
@@ -629,7 +701,6 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
             }
             idx++;
           }
-        if(exitCompare) exit(1);
       }
     }
   }
@@ -666,7 +737,6 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
       }
       idx++;
     }
-  if(exitCompare) exit(1);
 
   if((ir1==1 && ir2==0) || (ir1==10 && ir2==0))
   {
@@ -680,7 +750,11 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
 #endif
 
   smSize = kkrsz_ns*kkrsz_ns*sizeof(cuDoubleComplex);
-  buildKKRMatrixMultiplyKernelCuda<<<blocks, threads, smSize>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
+  threads = 1;
+  // printf("buildKKRMatrixMultiplyKernelCuda: smSize=%zu\n",smSize);
+  // note that the shared memory requiremets of the present implementation is too large for lmax>3
+  // buildKKRMatrixMultiplyKernelCuda<<<blocks, threads, smSize>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
+  buildKKRMatrixMultiplyKernelCuda<<<blocks, threads>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
                                                                 kkrsz_ns, ispin, lsms.n_spin_pola, lsms.n_spin_cant,
                                                                 iie, d.getBlkSizeTmatStore(), d.getTmatStoreLDim(),
                                                                 (cuDoubleComplex *)d.getDevTmatStore(), nrmat_ns,
@@ -726,6 +800,30 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
     }
   }
   */
+#ifdef COMPARE_ORIGINAL
+  Matrix<Complex> mCPU(nrmat_ns,nrmat_ns);
+  Matrix<Complex> mGPU(nrmat_ns,nrmat_ns);
+
+  cudaMemcpy(&mGPU(0,0), devM, nrmat_ns*nrmat_ns*sizeof(Complex), cudaMemcpyDeviceToHost);
+  buildKKRMatrixCPU(lsms, local, atom, iie, energy, prel, mCPU);
+
+  for(int i=0; i<nrmat_ns; i++)
+    for(int j=0; j<nrmat_ns; j++)
+        {
+            if(mCPU(i,j) != mGPU(i,j))
+              // if(bgij[idx] != gijTest[idx])
+            {
+              printf("buildBGijCPU : mCPU(%d, %d) [%g + %gi] != mGPU(%d, %d) [%g + %gi]\n",
+                     i, j, mCPU(i, j).real(), mCPU(i, j).imag(),
+                     i, j, mGPU(i,j).real(), mGPU(i,j).imag());
+              exitCompare = true;
+            }
+        }
+
+  if(exitCompare)
+    exit(1);
+#endif
+
 }
 void buildKKRMatrixLMaxDifferentCuda(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom,
                                      DeviceStorage &d, DeviceAtom &devAtom, int ispin,
