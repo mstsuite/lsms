@@ -543,8 +543,8 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   }
   }
 #endif
-  // int threads = 256;
-  int threads = 1;
+  int threads = 256;
+  // int threads = 1;
   dim3 blocks = dim3(devAtom.numLIZ, devAtom.numLIZ,1);
   buildGijCudaKernel<<<blocks,threads,smSize>>>(devAtom.LIZPos, devAtom.LIZlmax,
                                                 DeviceConstants::lofk, DeviceConstants::mofk, DeviceConstants::ilp1, DeviceConstants::illp, DeviceConstants::cgnt,
@@ -750,7 +750,8 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
 #endif
 
   smSize = kkrsz_ns*kkrsz_ns*sizeof(cuDoubleComplex);
-  threads = 1;
+  threads = 256;
+  // threads = 1;
   // printf("buildKKRMatrixMultiplyKernelCuda: smSize=%zu\n",smSize);
   // note that the shared memory requiremets of the present implementation is too large for lmax>3
   // buildKKRMatrixMultiplyKernelCuda<<<blocks, threads, smSize>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
