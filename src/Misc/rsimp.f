@@ -13,12 +13,14 @@ c
       np=irn-isw
       s=f(1)*r(1)+f(np)*r(np)
       nl=np-1
-      do 5 i=2,nl,2
-    5 s=s+4.d0*f(i)*r(i)
+      do i=2,nl,2
+        s=s+4.d0*f(i)*r(i)
+      end do
       nl=nl-1
       if(nl.lt.3) goto 15
-      do 10 i=3,nl,2
-   10 s=s+2.d0*f(i)*r(i)
+      do i=3,nl,2
+        s=s+2.d0*f(i)*r(i)
+      end do
    15 s=s*dx/3.d0
       if(isw.eq.1) goto 30
       rsimp=s
