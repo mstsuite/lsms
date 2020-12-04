@@ -9,6 +9,7 @@ export ADD_LIBS +=  -L$(OLCF_HDF5_ROOT)/lib -lhdf5 -lgfortran
 # export ADD_LIBS += $(FPMPI_POST_LINK_OPTS) -L$(CULA_LIB_PATH_64) $(CRAY_CUDA_POST_LINK_OPTS) -lcublas -lcula_core -lcula_lapack -lcula_lapack_fortran
 
 export ESSL_WORKAROUND=1
+export OPT_DEFINES = -DARCH_IBM
 
 export INC_PATH += 
 # -I $(HDF5_INCLUDE_OPTS)
