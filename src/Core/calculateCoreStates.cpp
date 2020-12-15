@@ -28,13 +28,17 @@ void calculateCoreStates(LSMSCommunication &comm, LSMSSystemParameters &lsms, Lo
   {
     if(local.atom[i].numc>0)
     {
-      etopcor=std::max(local.atom[i].ec(local.atom[i].numc-1,0),etopcor);
-      if(local.atom[i].nspin>1) etopcor=std::max(local.atom[i].ec(local.atom[i].numc-1,1),etopcor);
+      for(int ic=0; ic<local.atom[i].numc; ic++)
+        etopcor=std::max(local.atom[i].ec(ic,0),etopcor);
+      if(local.atom[i].nspin>1) for(int ic=0; ic<local.atom[i].numc; ic++)
+        etopcor=std::max(local.atom[i].ec(ic,1),etopcor);
     }
   }
   globalMax(comm,etopcor);
 
   lsms.largestCorestate=etopcor;
+  if(lsms.global.iprint>=0)
+    printf("Maximal Core State = %gRy\n",lsms.largestCorestate);
 /*
       if(etopcor+0.1d0 .gt. ebot) then
          write(6,'('' GETCOR: etopcor+0.1 .gt. ebot'',2d12.5)')
