@@ -160,7 +160,8 @@ c     ----------------------------------------------------------------
 ! meis 4Sep20      call newint(last2+1,rtmp,f,qmp,3)
       call newint(nnorm+1,rtmp,f,qmp,3)
 c     ----------------------------------------------------------------
-      gnrm=1.d0/(two*qmp(last2))
+!      gnrm=1.d0/(two*qmp(last2))
+      gnrm=1.d0/(two*qmp(nnorm))
       do j=1,last2
          f(j)=f(j)*gnrm*r(j)
       enddo    
