@@ -167,6 +167,7 @@ public:
     nc.resize(ncs,2);
     lc.resize(ncs,2);
     kc.resize(ncs,2);
+    coreStateType.resize(ncs,2);
   }
 
   void changeNspin(int nspinNew)
@@ -507,6 +508,8 @@ public:
   Real ecorv[2], esemv[2];
   Matrix<Real> corden, semcor;
   Real qcpsc_mt, qcpsc_ws, mcpsc_mt, mcpsc_ws;
+  Matrix<char> coreStateType;
+  int movedToValence[2];
 
 // Constraint data
   enum {None, Direction, Moment} constraintType;

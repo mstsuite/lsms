@@ -1,25 +1,40 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "Main/SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 #include "CoreStates.hpp"
+
+const bool useNewGetCoreStates =  false;
 
 void calculateCoreStates(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local)
 {
   for(int i=0; i<local.num_local; i++)
   {
     // dprintf("-- LSMS %d: Calculating core levels for local atom %d.\n", comm.rank, i);
-    int local_iprpts=local.atom[i].vr.l_dim();
-    int local_ipcore=local.atom[i].ec.l_dim();
     if(lsms.global.iprint>=0) printf("\ncalculateCoreState %d.%d\n",comm.rank,i);
-    getcor_(&lsms.n_spin_pola,&lsms.mtasa,
-            &local.atom[i].jmt,&local.atom[i].jws,&local.atom[i].r_mesh[0],&local.atom[i].h,&local.atom[i].xstart,
-            &local.atom[i].vr(0,0),
-            &local.atom[i].numc,&local.atom[i].nc(0,0),&local.atom[i].lc(0,0),&local.atom[i].kc(0,0),&local.atom[i].ec(0,0),
-            &local.atom[i].ztotss,&local.atom[i].zsemss,&local.atom[i].zcorss,
-            &local.atom[i].ecorv[0],&local.atom[i].esemv[0],&local.atom[i].corden(0,0),&local.atom[i].semcor(0,0),
-            &lsms.nrelc,
-            &local.atom[i].qcpsc_mt,&local.atom[i].qcpsc_ws,&local.atom[i].mcpsc_mt,&local.atom[i].mcpsc_ws,
-            &local_iprpts,&local_ipcore,
-            &lsms.global.iprint,lsms.global.istop,32);
+    if(useNewGetCoreStates)
+    {
+      getCoreStates(lsms, local.atom[i]);
+    } else {
+      int local_iprpts=local.atom[i].vr.l_dim();
+      int local_ipcore=local.atom[i].ec.l_dim();
+
+      getcor_(&lsms.n_spin_pola,&lsms.mtasa,
+	      &local.atom[i].jmt,&local.atom[i].jws,&local.atom[i].r_mesh[0],&local.atom[i].h,&local.atom[i].xstart,
+	      &local.atom[i].vr(0,0),
+	      &local.atom[i].numc,&local.atom[i].nc(0,0),&local.atom[i].lc(0,0),&local.atom[i].kc(0,0),&local.atom[i].ec(0,0),
+	      &local.atom[i].ztotss,&local.atom[i].zsemss,&local.atom[i].zcorss,
+	      &local.atom[i].ecorv[0],&local.atom[i].esemv[0],&local.atom[i].corden(0,0),&local.atom[i].semcor(0,0),
+	      &lsms.nrelc,
+	      &local.atom[i].qcpsc_mt,&local.atom[i].qcpsc_ws,&local.atom[i].mcpsc_mt,&local.atom[i].mcpsc_ws,
+	      &local_iprpts,&local_ipcore,
+	      &lsms.global.iprint,lsms.global.istop,32);
+      local.atom[i].movedToValence[0] = local.atom[i].movedToValence[1] = 0;
+      for(int j=0; j<local.atom[i].numc; j++)
+	{
+	  local.atom[i].coreStateType(j, 0) = 'C';
+	  local.atom[i].coreStateType(j, 1) = 'C';
+	}
+    }
   }
 
 // calculate the global maximum of ec:

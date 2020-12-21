@@ -209,6 +209,14 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 #endif
 */
 
+  if(lsms.largestCorestate>lsms.energyContour.ebot)
+  {
+    if(lsms.global.iprint>=0)
+      printf("WARNING: Largest Core-State [%g] > Energy Contour Bottom [%g]\n",
+             lsms.largestCorestate, lsms.energyContour.ebot);
+    
+  }
+  
   // Real e_top;
   // e_top=lsms.energyContour.etop;
   // if(lsms.energyContour.etop==0.0) etop=lsms.chempot;

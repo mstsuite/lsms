@@ -1,5 +1,5 @@
 OBJ = getcor_c.o calculateCoreStates.o corslv_c.o deepst_c.o semcst_c.o \
-      inws_c.o outws_c.o inwhnk_c.o invals_c.o richnk_c.o
+      inws_c.o outws_c.o inwhnk_c.o invals_c.o richnk_c.o coreSolver.o
 #      inws_c.o outws_c.o inwhnk_c.o invals_c.o richnk_c.o srcore.o se.o \
 #      deepst_c_check.o
 

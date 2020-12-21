@@ -1,10 +1,16 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_CORESTATES_H
 #define LSMS_CORESTATES_H
 
 #include "Main/SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 
+class CoreStates {
+public:
+  
+};
 
+void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom);
 void calculateCoreStates(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local);
 void calculateCoreStates(LSMSCommunication &comm, LSMSSystemParameters &lsms, AlloyAtomBank &alloyBank);
 
