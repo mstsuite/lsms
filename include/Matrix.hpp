@@ -15,6 +15,8 @@
 #include <typeinfo>
 // #include "PSIMAGAssert.h"
 
+#include "Complex.hpp"
+
 #ifdef BUILDKKRMATRIX_GPU
 #include <cuda_runtime.h>
 #endif

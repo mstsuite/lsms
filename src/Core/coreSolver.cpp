@@ -63,7 +63,7 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
 
 
   
-  Real c = cphot * std::pow(10.0, lsms..nrelc);
+  Real c = cphot * std::pow(10.0, lsms.nrelc);
   
   if(lsms.mtasa != 0)
     last2 = atom.jws;
@@ -77,8 +77,9 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
   atom.movedToValence[0] = atom.movedToValence[1] = 0;
 
   if(atom.numc <= 0) return;
-  int local_iprpts=local.atom[i].vr.l_dim();
+  int local_iprpts=atom.vr.l_dim();
   std::vector<Real> f(local_iprpts+1);
+  std::vector<Real> rtmp(local_iprpts+2);
   std::vector<Real> qmp(local_iprpts+2);
   
   for(int is=0; is<lsms.n_spin_pola; is++)
@@ -97,7 +98,7 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
 	nnorm = last;
 
 	deepst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
-                &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, c,
+                &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, &c,
                 &nitmax, &tol, &atom.jws, &last, &iter, &local_iprpts, &ipdeq);
 	/*
 c        -------------------------------------------------------------
@@ -110,7 +111,7 @@ c        -------------------------------------------------------------
       } else {
 	nnorm = last2;
         semcst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
-                &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, c,
+                &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, &c,
                 &nitmax, &tol, &atom.jmt, &atom.jws, &last2, &iter, &local_iprpts, &ipdeq);
 	/*
 c           ----------------------------------------------------------
@@ -120,13 +121,13 @@ c           ----------------------------------------------------------
 c           ----------------------------------------------------------
 	 */
 	atom.coreStateType(ic, is) = 'S'; // semi core state
-	if(atom.ecore(ic, is) >= lsms.lsms.energyContour.ebot)
+	if(atom.ec(ic, is) >= lsms.energyContour.ebot)
 	  atom.coreStateType(ic, is) = 'V'; // shallow core state -> move to valence
       }
         
       f[0] = 0.0;
       rtmp[0] = 0.0;
-      for(j = 1; j<nnorm; j++)
+      for(int j = 1; j<nnorm; j++)
       {
 	rtmp[j] = std::sqrt(atom.r_mesh[j-1]);
 	f[j] = f[j]/atom.r_mesh[j-1];
@@ -135,9 +136,9 @@ c           ----------------------------------------------------------
       int nnp1 = nnorm+1;
       int three = 3;
       newint_(&nnp1, &rtmp[0], &f[0], &qmp[0], &three);
-      gnrm = 1.0 / (2.0 * qmp[nnorm]);
+      Real gnrm = 1.0 / (2.0 * qmp[nnorm]);
       for(int j=1; j<local_iprpts+1; j++)
-        f[j] = f[j] * gnrm * r[j-1];
+        f[j] = f[j] * gnrm * atom.r_mesh[j-1];
       
       /*
 
@@ -181,7 +182,7 @@ c     ----------------------------------------------------------------
           atom.corden(j,is) += fac1 * f[j+1];
         atom.ecorv[is] += fac1 * atom.ec(ic, is);
       } else if(atom.coreStateType(ic, is) == 'V') {
-        movedToValence[is] += (3-lsms.n_spin_pola) * std::abs(atom.kc(ic, is));
+        atom.movedToValence[is] += (3-lsms.n_spin_pola) * std::abs(atom.kc(ic, is));
       }
       /*
          if(ndeep.gt.ndeepz)then
