@@ -221,5 +221,57 @@ c     ----------------------------------------------------------------
     }
     printf("\n");
   }
+
+  Real qsemmt = 0.0;
+  Real qsemws = 0.0;
+  Real qcormt = 0.0;
+  Real qcorws = 0.0;
+  std::vector<Real> wrk1(local_iprpts+2);
+  std::vector<Real> wrk2(local_iprpts+2);
+  if(atom.numc > 0)
+  {
+    
+    for(int is=0; is<lsms.n_spin_pola; is++)
+    {
+      rtmp[0] = 0.0;
+      wrk2[0] = 0.0;
+      for(int j=1; j<=last2; j++)
+      {
+        wrk2[j] = atom.semcor(j-1,is) / atom.r_mesh[j-1];
+        rtmp[j] = std::sqrt(atom.r_mesh[j-1]);
+      }
+      int last2p1 = last2+1;
+      int three = 3;
+      newint_(&last2p1, &rtmp[0], &wrk2[0], &wrk1[0], &three);
+      qsemmt += 2.0 * wrk1[atom.jmt];
+      qsemws += 2.0 * wrk1[last2];
+      atom.mcpsc_mt += 2.0 * (3-2*is) * wrk1[atom.jmt];
+      atom.mcpsc_ws += 2.0 * (3-2*is) * wrk1[last2];
+
+      wrk2[0] = 0.0;
+      for(int j=1; j<=last2; j++)
+      {
+        wrk2[j] = atom.corden(j-1,is) / atom.r_mesh[j-1];
+      }
+      newint_(&last2p1, &rtmp[0], &wrk2[0], &wrk1[0], &three);
+      qcormt += 2.0 * wrk1[atom.jmt];
+      qcorws += 2.0 * wrk1[last2];
+      atom.mcpsc_mt += 2.0 * (3-2*is) * wrk1[atom.jmt];
+      atom.mcpsc_ws += 2.0 * (3-2*is) * wrk1[last2];
+    }
+  }
+
+  Real qcorout = atom.zsemss + atom.zcorss - qsemmt - qcormt;
+  atom.qcpsc_mt = qcormt + qsemmt;
+  atom.qcpsc_ws = qcorws + qsemws;
+
+  if(lsms.global.iprint >= 0)
+  {
+    printf("getCoreStates: Muffin-tin core charge        = %16.11f\n", qcormt);
+    printf("               Muffin-tin semicore charge    = %16.11f\n", qsemmt);
+    printf("               Muffin-tin core+semi moment   = %16.11f\n", atom.mcpsc_mt);
+    printf("               Wigner-Seitz core+semi moment = %16.11f\n", atom.mcpsc_ws);
+    printf("               Interstitial charge core      = %16.11f\n", qcorout);
+  }
 }
 
