@@ -103,6 +103,7 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
       {
 	nnorm = last;
 
+/*
 	deepst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
                 &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, &c,
                 &nitmax, &tol, &atom.jws, &last, &iter, &local_iprpts, &ipdeq);
@@ -114,6 +115,8 @@ c        -------------------------------------------------------------
 c        -------------------------------------------------------------
 	 */
 	atom.coreStateType(ic, is) = 'C'; // deep core state
+        if(atom.ec(ic, is) >= lsms.energyContour.ebot || iter < 0)
+          atom.coreStateType(ic, is) = 'V';
       } else {
 	nnorm = last2;
         semcst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
@@ -127,7 +130,7 @@ c           ----------------------------------------------------------
 c           ----------------------------------------------------------
 	 */
 	atom.coreStateType(ic, is) = 'S'; // semi core state
-	if(atom.ec(ic, is) >= lsms.energyContour.ebot)
+	if(atom.ec(ic, is) >= lsms.energyContour.ebot || iter < 0)
 	  atom.coreStateType(ic, is) = 'V'; // shallow core state -> move to valence
       }
         

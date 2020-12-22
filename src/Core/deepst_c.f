@@ -98,7 +98,7 @@ c     ================================================================
          write(6,'('' nws     = '',i6)') nws
          write(6,'('' ipdeq*2 = '',i6)') ipdeq*2
          write(6,'('' iprpts  = '',i6)') iprpts
-	 call fstop(sname)
+         call fstop(sname)
       endif
 c
 c     ================================================================
@@ -110,7 +110,7 @@ c     ================================================================
       dm=h/720.0d0
       rtmp(0)=0.d0
       do j=1,iprpts
-	rtmp(j)=sqrt(r(j))
+        rtmp(j)=sqrt(r(j))
       enddo
 c
 c     ================================================================
@@ -152,6 +152,10 @@ c     check potential
 c     ================================================================
       if(elim.ge.0) then
          write(6,'('' DEEPST:: v+l*(l+1)/r**2 always positive'',f5.1)')z
+         write(6,'('' DEEPST:: n='',i2,'' l='',i2,'' k='',i3)')
+     &         nqn,lqn,kqn
+         iter = -1
+         return
          call fstop(sname)
       endif
 c
@@ -190,6 +194,10 @@ c     check first the sign of the big component
 c     ================================================================
       if (fnrm.lt.0.0d0) then
          write(6,'('' DEEPST:: wrong big component change'')')
+         write(6,'('' DEEPST:: n='',i2,'' l='',i2,'' k='',i3)')
+     &         nqn,lqn,kqn
+         iter = -2
+         return
          call fstop(sname)
       endif
 c
@@ -241,6 +249,8 @@ c     ================================================================
       write(6,'('' DEEPST:: zero energy '',f5.2)')z
       write(6,'('' DEEPST:: n = '',i2)') nqn
       write(6,'('' DEEPST:: l = '',i2)') lqn
+      iter = -3
+      return
       call fstop(sname)
 c
 c     ================================================================

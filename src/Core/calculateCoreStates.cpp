@@ -44,9 +44,11 @@ void calculateCoreStates(LSMSCommunication &comm, LSMSSystemParameters &lsms, Lo
     if(local.atom[i].numc>0)
     {
       for(int ic=0; ic<local.atom[i].numc; ic++)
-        etopcor=std::max(local.atom[i].ec(ic,0),etopcor);
+        if(local.atom[i].coreStateType(ic,0)!='V')
+          etopcor=std::max(local.atom[i].ec(ic,0),etopcor);
       if(local.atom[i].nspin>1) for(int ic=0; ic<local.atom[i].numc; ic++)
-        etopcor=std::max(local.atom[i].ec(ic,1),etopcor);
+        if(local.atom[i].coreStateType(ic,1)!='V')
+          etopcor=std::max(local.atom[i].ec(ic,1),etopcor);
     }
   }
   globalMax(comm,etopcor);
