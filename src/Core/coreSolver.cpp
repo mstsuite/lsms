@@ -55,13 +55,12 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
   */
   // Matrix<char> coreStateType(atom.numc,2);
   
-  int numDeepStates = (atom.zcorss+1)/lsms.n_spin_pola;
+  int numDeepStates = atom.zcorss;
+  if(lsms.n_spin_pola == 2) numDeepStates = (atom.zcorss+1)/lsms.n_spin_pola;
   int last = atom.vr.l_dim();
   int last2 = last;
   int ndeep = 0;
   int nnorm;
-
-
   
   Real c = cphot * std::pow(10.0, lsms.nrelc);
   
@@ -78,12 +77,13 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
 
   if(atom.numc <= 0) return;
   int local_iprpts=atom.vr.l_dim();
-  std::vector<Real> f(local_iprpts+1);
+  std::vector<Real> f(local_iprpts+2);
   std::vector<Real> rtmp(local_iprpts+2);
   std::vector<Real> qmp(local_iprpts+2);
   
   for(int is=0; is<lsms.n_spin_pola; is++)
-  { 
+  {
+    ndeep = 0;
     for(int ic=0; ic<atom.numc; ic++)
     {
       int nitmax = 50;
@@ -93,6 +93,12 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
       Real fac1 = (3-lsms.n_spin_pola) * std::abs(atom.kc(ic, is));
       ndeep += (3-lsms.n_spin_pola) * std::abs(atom.kc(ic, is));
 
+      nnorm = last;
+
+      deepst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
+              &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, &c,
+              &nitmax, &tol, &atom.jws, &last, &iter, &local_iprpts, &ipdeq);
+      
       if(ndeep <= numDeepStates)
       {
 	nnorm = last;
@@ -127,7 +133,7 @@ c           ----------------------------------------------------------
         
       f[0] = 0.0;
       rtmp[0] = 0.0;
-      for(int j = 1; j<nnorm; j++)
+      for(int j = 1; j<=nnorm; j++)
       {
 	rtmp[j] = std::sqrt(atom.r_mesh[j-1]);
 	f[j] = f[j]/atom.r_mesh[j-1];
@@ -136,7 +142,7 @@ c           ----------------------------------------------------------
       int nnp1 = nnorm+1;
       int three = 3;
       newint_(&nnp1, &rtmp[0], &f[0], &qmp[0], &three);
-      Real gnrm = 1.0 / (2.0 * qmp[nnorm]);
+      Real gnrm = 1.0 / (2.0 * qmp[nnorm-1]);
       for(int j=1; j<local_iprpts+1; j++)
         f[j] = f[j] * gnrm * atom.r_mesh[j-1];
       
@@ -207,12 +213,11 @@ c     ----------------------------------------------------------------
     for(int is=0; is<lsms.n_spin_pola; is++)
     {
       printf("getCoreStates: spin index #%d\n", is);
-      printf("Eigenvalues: n   l   k   energy    type\n");
+      printf("Eigenvalues: n    l    k         energy      type\n");
     
       for(int ic=0; ic<atom.numc; ic++)
       {
-        printf("Eigenvalues: n   l   k   energy    type\n");
-        printf("            %2d   %2d    %3d   %20.13f    %c\n",
+        printf("            %2d   %2d  %3d   %20.13f    %c\n",
                atom.nc(ic,is), atom.lc(ic,is), atom.kc(ic,is),
                atom.ec(ic,is), atom.coreStateType(ic,is));
       }
@@ -244,9 +249,9 @@ c     ----------------------------------------------------------------
       int three = 3;
       newint_(&last2p1, &rtmp[0], &wrk2[0], &wrk1[0], &three);
       qsemmt += 2.0 * wrk1[atom.jmt];
-      qsemws += 2.0 * wrk1[last2];
-      atom.mcpsc_mt += 2.0 * (3-2*is) * wrk1[atom.jmt];
-      atom.mcpsc_ws += 2.0 * (3-2*is) * wrk1[last2];
+      qsemws += 2.0 * wrk1[last2-1];
+      atom.mcpsc_mt += 2.0 * (1-2*is) * wrk1[atom.jmt];
+      atom.mcpsc_ws += 2.0 * (1-2*is) * wrk1[last2-1];
 
       wrk2[0] = 0.0;
       for(int j=1; j<=last2; j++)
@@ -255,9 +260,9 @@ c     ----------------------------------------------------------------
       }
       newint_(&last2p1, &rtmp[0], &wrk2[0], &wrk1[0], &three);
       qcormt += 2.0 * wrk1[atom.jmt];
-      qcorws += 2.0 * wrk1[last2];
-      atom.mcpsc_mt += 2.0 * (3-2*is) * wrk1[atom.jmt];
-      atom.mcpsc_ws += 2.0 * (3-2*is) * wrk1[last2];
+      qcorws += 2.0 * wrk1[last2-1];
+      atom.mcpsc_mt += 2.0 * (1-2*is) * wrk1[atom.jmt];
+      atom.mcpsc_ws += 2.0 * (1-2*is) * wrk1[last2-1];
     }
   }
 

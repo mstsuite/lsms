@@ -3,7 +3,7 @@
 #include "Communication/LSMSCommunication.hpp"
 #include "CoreStates.hpp"
 
-const bool useNewGetCoreStates =  false;
+const bool useNewGetCoreStates =  true;
 
 void calculateCoreStates(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local)
 {
