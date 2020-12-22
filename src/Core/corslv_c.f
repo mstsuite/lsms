@@ -122,7 +122,10 @@ c     ================================================================
 c        -------------------------------------------------------------
          call deepst(nc(i),lc(i),kc(i),ecore(i),
      >               rv,r,f(1),h,z,c,nitmax,tol,jws,last,iter,
-     >               iprpts,ipdeq)
+     >        iprpts,ipdeq)
+         if(iter .lt. 0) then
+            call fstop('deepst')
+         end if
 c        -------------------------------------------------------------
 c
 c        =============================================================
@@ -134,7 +137,10 @@ c08/04/95if( ecore(i) .ge. -ten ) then
 c           ----------------------------------------------------------
             call semcst(nc(i),lc(i),kc(i),ecore(i),
      >                  rv,r,f(1),h,z,c,nitmax,tol,jmt,jws,last2,iter,
-     >                  iprpts,ipdeq)
+     >           iprpts,ipdeq)
+            if(iter .lt. 0) then
+               call fstop('semcst')
+            end if
 c           ----------------------------------------------------------
          endif
 ! else
