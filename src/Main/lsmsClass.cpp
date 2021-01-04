@@ -1024,6 +1024,8 @@ Real LSMS::scfEnergy(Real *eb)
     if (potentialShifter.vSpinShiftFlag)
       potentialShifter.restorePotentials(local);
 
+    calculateLocalQrms(lsms, local);
+
     mixing -> updateChargeDensity(comm, lsms, local.atom);
 
     // LSMS 1: lsms_main.f:2101-2116

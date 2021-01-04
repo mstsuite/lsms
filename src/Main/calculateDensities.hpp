@@ -20,4 +20,6 @@ void calculateDensities(LSMSSystemParameters &lsms, int iatom, int is, int ie, i
 
 void checkAllLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local);
 
+void calculateLocalQrms(LSMSSystemParameters &lsms, LocalTypeInfo &local);
+
 #endif

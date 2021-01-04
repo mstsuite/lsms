@@ -513,6 +513,9 @@ int main(int argc, char *argv[])
     checkAllLocalCharges(lsms, local);
     calculateTotalEnergy(comm, lsms, local, crystal);
 
+    // Calculate charge density rms
+    calculateLocalQrms(lsms, local);
+    
     // Mix charge density
     mixing -> updateChargeDensity(comm, lsms, local.atom);
     dTimePM = MPI_Wtime() - dTimePM;

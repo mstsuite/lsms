@@ -107,7 +107,7 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
   {
     rhonew(i,0)=rhonew(i,1)=0.0;
     rtmp[i+1]=std::sqrt(atom.r_mesh[i]);
-    if(atom.r_mesh[i] < r_sph) ir_sph = i+2;  // i+1?
+    if(atom.r_mesh[i] < r_sph) ir_sph = i+1;  // i+2?
   }
   if(ir_sph > atom.jws) ir_sph = atom.jws;
 
@@ -226,7 +226,7 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
   //   }
   // }
 
-
+/*
 // calculate the rms between old and new charge densities
   for(int is=0; is<lsms.n_spin_pola; is++)
   {
@@ -237,16 +237,69 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
     int isold = is;
     if (atom.spinFlipped)
       isold = lsms.n_spin_pola - is - 1;       // 0->1 and 1->0 and if n_spin_pola==1: 0->0 !
+    // printf("$$$ caclculate rms\n");
     for(int ir=0; ir<atom.jws; ir++)
+    {
       w2[ir+1] = 2.0 * std::pow((rhonew(ir,is)-atom.rhotot(ir,is)),2) / std::pow(atom.r_mesh[ir],4);
-    interp_(&atom.r_mesh[0],&w2[1],&four,&dzero,&w2[0],&dummy,&f);
+      // printf("%4d  %f %f %f\n",ir,rhonew(ir,is),atom.rhotot(ir,is),w2[ir+1]);
+    }
+    // interp_(&atom.r_mesh[0],&w2[1],&four,&dzero,&w2[0],&dummy,&f);
     newint_(&ir_sph_p1,&rtmp[0],&w2[0],w1,&seven);
-    interp_(&rtmp[0],&w1[0],&ir_sph_p1,&sqrt_r_sph,&qrms[is],&dummy,&f);
+    // interp_(&rtmp[0],&w1[0],&ir_sph_p1,&sqrt_r_sph,&qrms[is],&dummy,&f);
+    qrms[is] = w1[ir_sph];
     qrms[is] = std::sqrt(qrms[is] / (4.0*M_PI*atom.omegaMT));
     // qrms[is] = qrms[is] / (4.0*M_PI*atom.omegaMT);
   }
+*/
 }
 
+void calculateLocalQrms(LSMSSystemParameters &lsms, LocalTypeInfo &local)
+{
+#pragma omp parallel for default(none) shared(lsms,local)
+  for(int i=0; i<local.num_local; i++)
+  {
+    Real rtmp[local.atom[i].jws+2];
+    Real r_sph = local.atom[i].rInscribed;
+    if(lsms.mtasa>0) r_sph = local.atom[i].rws;
+    int ir_sph;
+    
+    int four=4;
+    int five=5;
+    int seven=7;
+    Real dzero=0.0;
+
+    rtmp[0]=0.0;
+    for(int ir=0; ir<local.atom[i].jws; ir++)
+    {
+      rtmp[ir+1]=std::sqrt(local.atom[i].r_mesh[ir]);
+      if(local.atom[i].r_mesh[ir] < r_sph) ir_sph = ir+1;  // i+2?
+    }
+    if(ir_sph > local.atom[i].jws) ir_sph = local.atom[i].jws;
+    Real w1[local.atom[i].jws+3], w2[local.atom[i].jws+3];
+    
+    // calculate the rms between old and new charge densities
+    for(int is=0; is<lsms.n_spin_pola; is++)
+    {
+      Real dummy;
+      Real sqrt_r_sph = std::sqrt(r_sph);
+      int ir_sph_p1 = ir_sph + 1;
+      // printf("$$$ caclculate rms\n");
+      for(int ir = 0; ir < local.atom[i].jws; ir++)
+      {
+        w2[ir+1] = 2.0 * std::pow((local.atom[i].rhoNew(ir,is) - local.atom[i].rhotot(ir,is)),2)
+          / std::pow(local.atom[i].r_mesh[ir],4);
+        // printf("%4d  %f %f %f\n",ir,rhonew(ir,is),atom.rhotot(ir,is),w2[ir+1]);
+      }
+      // interp_(&atom.r_mesh[0],&w2[1],&four,&dzero,&w2[0],&dummy,&f);
+      newint_(&ir_sph_p1,&rtmp[0],&w2[0],w1,&seven);
+      // interp_(&rtmp[0],&w1[0],&ir_sph_p1,&sqrt_r_sph,&qrms[is],&dummy,&f);
+      local.atom[i].qrms[is] = w1[ir_sph];
+      local.atom[i].qrms[is] = std::sqrt(local.atom[i].qrms[is] / (4.0*M_PI*local.atom[i].omegaMT));
+      // qrms[is] = qrms[is] / (4.0*M_PI*atom.omegaMT);
+    }
+  }
+}
+  
 void calculateAllLocalChargeDensities(LSMSSystemParameters &lsms, LocalTypeInfo &local)
 {
 #pragma omp parallel for default(none) shared(lsms,local)
