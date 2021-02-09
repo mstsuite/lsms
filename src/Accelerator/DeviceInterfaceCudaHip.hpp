@@ -15,6 +15,7 @@
 typedef cuDoubleComplex deviceDoubleComplex;
 
 const auto deviceMemcpyHostToDevice = cudaMemcpyHostToDevice;
+const auto deviceMemcpyDeviceToHost = cudaMemcpyDeviceToHost;
 
 typedef cudaStream_t deviceStream_t;
 typedef cudaError_t deviceError_t;
@@ -67,6 +68,7 @@ inline deviceError_t deviceStreamDestroy(cudaStream_t stream)
 typedef hipDoubleComplex deviceDoubleComplex;
 
 const auto deviceMemcpyHostToDevice = hipMemcpyHostToDevice;
+const auto deviceMemcpyDeviceToHost = hipMemcpyDeviceToHost;
 
 typedef hipStream_t deviceStream_t;
 typedef hipError_t deviceError_t;
@@ -78,13 +80,15 @@ inline deviceError_t deviceMalloc (void** devPtr, size_t size )
   {return hipMalloc (devPtr, size);}
 
 inline deviceError_t deviceMallocHost (void** devPtr, size_t size )
-  {return hipHostMalloc(devPtr, size, 0); /* hipMallocHost (devPtr, size); */ }
+  {return hipMallocHost (devPtr, size); }
+  /* {return hipHostMalloc(devPtr, size, 0); /* hipMallocHost (devPtr, size);  } */
 
 inline deviceError_t deviceFree (void* devPtr)
   {return hipFree(devPtr);}
 
 inline deviceError_t deviceFreeHost (void* devPtr)
-  {return hipHostFree(devPtr); /* hipFreeHost(devPtr); */ }
+  {return hipFreeHost(devPtr); }
+  /* {return hipHostFree(devPtr); /* hipFreeHost(devPtr);  } */
 
 inline deviceError_t deviceMemcpy (void* dst, const void* src, size_t count, hipMemcpyKind kind)
   {return hipMemcpy(dst, src, count, kind);}
