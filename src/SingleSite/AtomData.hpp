@@ -443,6 +443,7 @@ public:
   int jmt,jws;
   Real xstart,rmt,h;
   Real rInscribed; // LSMS_1.9: rins
+  Real rCircumscribed;
   std::vector<Real> r_mesh, x_mesh;
   bool generateNewMesh;
 

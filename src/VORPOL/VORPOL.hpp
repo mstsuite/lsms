@@ -44,6 +44,7 @@ extern "C"
                      int *ipvp,int *ipnode, int *ipcorn, int *ipedge,int *iprcrit,
                      Real *gwwylm, Real*grwylm,
                      int *ncrit, Complex *wylm,
+                     Real *rcirc,
                      int *iprint,char *istop,int istopl_len);
 }
 

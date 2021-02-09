@@ -243,6 +243,7 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &l
     MPI_Pack(&atom.xstart,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.rmt,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.rInscribed,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
+    MPI_Pack(&atom.rCircumscribed,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(atom.header,80,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.alat,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.efermi,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
@@ -309,6 +310,7 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &l
     MPI_Unpack(buf,s,&pos,&atom.xstart,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&atom.rmt,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&atom.rInscribed,1,MPI_DOUBLE,comm.comm);
+    MPI_Unpack(buf,s,&pos,&atom.rCircumscribed,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,atom.header,80,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,&atom.alat,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&atom.efermi,1,MPI_DOUBLE,comm.comm);

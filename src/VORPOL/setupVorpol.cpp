@@ -54,6 +54,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
                   &ipvp,&ipnode,&ipcorn,&ipedge,&iprcrit,
                   &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.grwylm(0,0),
                   &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.wylm(0,0,0),
+                  &local.atom[i].rCircumscribed,
                   &lsms.global.iprint,lsms.global.istop,32);
     local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
 // set rmt according to value of fixRMT
@@ -121,5 +122,6 @@ void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, Cryst
     printf("WS cell volume        = %20.13f\n", local.atom[0].omegaWS);
     printf("Interstitial volume   = %20.13f\n", lsms.volumeInterstitial);
     printf("WS sphere radius      = %20.13f\n", local.atom[0].rws);
+    printf("Circumscribed radius  = %20.13f\n", local.atom[0].rCircumscribed);
   }
 }

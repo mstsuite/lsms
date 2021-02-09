@@ -9,6 +9,7 @@ c     cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &                        ipvp,ipnode,ipcorn,ipedge,iprcrit,
      &                        gwwylm,grwylm,
      &                        ncrit,wylm,
+     &                        rcirc,
      >                        iprint,istop)
 c     ================================================================
 c
@@ -57,6 +58,9 @@ c
       real*8     rcrit(iprcrit)
       real*8     runion(ipvp+ipedge+ipcorn)
       real*8     rad(num_atoms)
+!
+!     circumscribed radius
+      real*8     rcirc
 c
 !      real*8     plm((iplcut+1)*(iplcut+2)/2)
        real*8     plm((lmax+1)*(lmax+2)/2)
@@ -160,6 +164,7 @@ c     ----------------------------------------------------------------
       call inter_dip(lmax,ncrit,ngaussr,omegint,
      >            grwylm,gwwylm,wylm,dipint(-1,1),dipint(-1,2))
 c
+      rcirc = sqrt(dc2(indxc(ncorn)))
 c     ================================================================
 c     write out the calculated volumes................................
       if(iprint.ge.0) then
