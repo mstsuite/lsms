@@ -124,13 +124,13 @@ deviceDoubleComplex dlmFunction(deviceDoubleComplex *hfn, double *cosmp, double 
 {
   int mAbs = abs(m);
 
-  deviceDoubleComplex dlm = hfn[l]*plm[PLM_IDX(l,mAbs)];
+  deviceDoubleComplex dlm = hfn[l]*plm[plmIdxDev(l,mAbs)];
   if(m==0) return dlm;
 
   if(m<0)
   {
     dlm = dlm * make_hipDoubleComplex(cosmp[mAbs],sinmp[mAbs]);
-    if(mAbs & 0x01 != 0) // m is odd
+    if((mAbs & 0x01) != 0) // m is odd
       dlm = -dlm;
   } else {
     dlm = dlm * make_hipDoubleComplex(cosmp[mAbs],-sinmp[mAbs]);

@@ -129,7 +129,7 @@ cuDoubleComplex dlmFunction(cuDoubleComplex *hfn, double *cosmp, double *sinmp, 
   if(m<0)
   {
     dlm = dlm * make_cuDoubleComplex(cosmp[mAbs],sinmp[mAbs]);
-    if(mAbs & 0x01 != 0) // m is odd
+    if((mAbs & 0x01) != 0) // m is odd
       dlm = -dlm;
   } else {
     dlm = dlm * make_cuDoubleComplex(cosmp[mAbs],-sinmp[mAbs]);
