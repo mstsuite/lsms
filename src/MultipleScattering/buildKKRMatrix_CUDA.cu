@@ -883,11 +883,16 @@ void buildKKRMatrixLMaxDifferentCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
 
 
   smSize = kkrsz_ns*kkrsz_ns*sizeof(cuDoubleComplex);
-  buildKKRMatrixMultiplyKernelCuda<<<blocks, threads, smSize>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
-                                                                kkrsz_ns, ispin, lsms.n_spin_pola, lsms.n_spin_cant,
-                                                                iie, d.getBlkSizeTmatStore(), d.getTmatStoreLDim(),
-                                                                (cuDoubleComplex *)d.getDevTmatStore(), nrmat_ns,
-                                                                (cuDoubleComplex *)devBgij, (cuDoubleComplex *)devM);
+  threads = 256;
+  // threads = 1;
+  // printf("buildKKRMatrixMultiplyKernelCuda: smSize=%zu\n",smSize);
+  // note that the shared memory requiremets of the present implementation is too large for lmax>3
+  // buildKKRMatrixMultiplyKernelCuda<<<blocks, threads, smSize>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
+  buildKKRMatrixMultiplyKernelCuda<<<blocks, threads>>>(devAtom.LIZlmax, devAtom.LIZStoreIdx, devOffsets,
+                                                        kkrsz_ns, ispin, lsms.n_spin_pola, lsms.n_spin_cant,
+                                                        iie, d.getBlkSizeTmatStore(), d.getTmatStoreLDim(),
+                                                        (cuDoubleComplex *)d.getDevTmatStore(), nrmat_ns,
+                                                        (cuDoubleComplex *)devBgij, (cuDoubleComplex *)devM);
   /* 
   // loop over the LIZ blocks
   for(int ir1 = 0; ir1 < devAtom.numLIZ; ir1++)
