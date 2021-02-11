@@ -384,6 +384,22 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 #endif
 #if defined(ACCELERATOR_HIP)
   case MST_BUILD_KKR_MATRIX_ACCELERATOR:
+/*
+  {
+// test 
+//  Matrix<Real> testLIZPos(3,atom.numLIZ);
+//  Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
+  Complex testIlp1[2*lsms.maxlmax + 1];
+//  deviceMemcpy(&bgij[0], devBgij, nrmat_ns*nrmat_ns*sizeof(Complex), deviceMemcpyDeviceToHost);
+//  deviceMemcpy(&testLIZPos[0], devAtom.LIZPos, 3*atom.numLIZ*sizeof(Real), deviceMemcpyDeviceToHost);
+  deviceMemcpy(&testIlp1[0], DeviceConstants::ilp1, (2*lsms.maxlmax + 1)*sizeof(Complex), deviceMemcpyDeviceToHost);  
+  printf("calculateTauMatrix:\n");
+  for(int l=0; l<2*lsms.maxlmax; l++)
+  {
+    printf("l=%d : ilp1 [%g + %gi] | DeviceConstats::ilp1 [%g + %gi]\n",l,IFactors::ilp1[l].real(),IFactors::ilp1[l].imag(), testIlp1[l].real(), testIlp1[l].imag());
+  }
+  }
+*/
     devM = deviceStorage->getDevM();
     buildKKRMatrixHip(lsms, local, atom, *deviceStorage, deviceAtoms[localAtomIndex], ispin, iie, energy, prel,
                        devM);
@@ -483,7 +499,10 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       exit(1);
       break; 
 #endif
-    default: break; // do nothing. We are using the GPU matrix
+    default:
+      printf("UNKNOWN SOLVER FOR MST_BUILD_KKR_MATRIX_ACCELERATOR (%x)!!!\n", linearSolver);
+      exit(1);
+      break; // do nothing. We are using the GPU matrix
     } break;
 #endif
   default:
