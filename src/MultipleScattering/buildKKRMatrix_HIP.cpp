@@ -81,6 +81,8 @@ inline void calculateSinCosPowersHip(Real *rij, int lend, Real *sinmp, Real *cos
   }
 }
 
+#define PLM_IDX(l,m) (((l)*((l)+1))/2 + (m))
+
 __device__ __inline__ int plmIdxDev(int l, int m)
 { return l*(l+1)/2+m; }
 
@@ -253,7 +255,7 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
     Real *testSinmp = (Real *) (testSM + sinmpOffset);
     Real *testCosmp = (Real *) (testSM + cosmpOffset);
     Real *testPlm = (Real *) (testSM + plmOffset);
-    deviceDoubleComplex *testDlm = (deviceDoubleComplex *) (testSM + dlmOffset);
+    // deviceDoubleComplex *testDlm = (deviceDoubleComplex *) (testSM + dlmOffset);
 #endif
 
     Real r = std::sqrt(rij[0]*rij[0] + rij[1]*rij[1] + rij[2]*rij[2]);
@@ -552,12 +554,12 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms, LocalTypeInfo &l
   Real testCosmp[2*lsms.maxlmax + 1];
   // Real plm[((lsms.maxlmax+1) * (lsms.maxlmax+2)) / 2];
   Real testPlm[lsms.angularMomentumIndices.ndlm];
-  Complex testDlm[lsms.angularMomentumIndices.ndlj];
+// Complex testDlm[lsms.angularMomentumIndices.ndlj];
   deviceMemcpy(testHfn, devTestSM + hfnOffset, (2*lsms.maxlmax + 1)*sizeof(Complex), deviceMemcpyDeviceToHost);
   deviceMemcpy(testSinmp, devTestSM + sinmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), deviceMemcpyDeviceToHost);
   deviceMemcpy(testCosmp, devTestSM + cosmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), deviceMemcpyDeviceToHost);
   deviceMemcpy(testPlm, devTestSM + plmOffset, lsms.angularMomentumIndices.ndlm*sizeof(Real), deviceMemcpyDeviceToHost);
-  deviceMemcpy(testDlm, devTestSM + dlmOffset, lsms.angularMomentumIndices.ndlj*sizeof(Complex), deviceMemcpyDeviceToHost);
+// deviceMemcpy(testDlm, devTestSM + dlmOffset, lsms.angularMomentumIndices.ndlj*sizeof(Complex), deviceMemcpyDeviceToHost);
 
   for(int i = 0; i < atom.numLIZ; i++)
   {
@@ -614,7 +616,7 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms, LocalTypeInfo &l
 
         if(ir1 == 0 && ir2 == 10)
         {
-          for(int l=0; l<=atom.LIZlmax[ir1]+atom.LIZlmax[ir2]; l++)
+         for(int l=0; l<=atom.LIZlmax[ir1]+atom.LIZlmax[ir2]; l++)
           {
             if(sinmp[l] != testSinmp[l])
               printf("sinmp[%d] (%g) != testSinmp[%d] (%g)\n", l, sinmp[l], l, testSinmp[l]);
@@ -764,6 +766,29 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms, LocalTypeInfo &l
     }
   }
   */
+#ifdef COMPARE_ORIGINAL
+  Matrix<Complex> mCPU(nrmat_ns,nrmat_ns);
+  Matrix<Complex> mGPU(nrmat_ns,nrmat_ns);
+
+  cudaMemcpy(&mGPU(0,0), devM, nrmat_ns*nrmat_ns*sizeof(Complex), cudaMemcpyDeviceToHost);
+  buildKKRMatrixCPU(lsms, local, atom, iie, energy, prel, mCPU);
+
+  for(int i=0; i<nrmat_ns; i++)
+    for(int j=0; j<nrmat_ns; j++)
+        {
+            if(mCPU(i,j) != mGPU(i,j))
+              // if(bgij[idx] != gijTest[idx])
+            {
+              printf("buildBGijCPU : mCPU(%d, %d) [%g + %gi] != mGPU(%d, %d) [%g + %gi]\n",
+                     i, j, mCPU(i, j).real(), mCPU(i, j).imag(),
+                     i, j, mGPU(i,j).real(), mGPU(i,j).imag());
+              exitCompare = true;
+            }
+        }
+
+  if(exitCompare)
+    exit(1);
+#endif
 }
 void buildKKRMatrixLMaxDifferentHip(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom,
                                      DeviceStorage &d, DeviceAtom &devAtom, int ispin,
