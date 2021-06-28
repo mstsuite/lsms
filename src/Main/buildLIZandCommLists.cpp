@@ -176,6 +176,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
         local.atom[local_id].LIZPos(1,j)=tempLIZ[j].p2;
         local.atom[local_id].LIZPos(2,j)=tempLIZ[j].p3;
 // calculate the lmax for the various shells
+        local.atom[local_id].lmax = crystal.types[type_id].lmax;
         int lkeep=crystal.types[type_id].lmax;
         local.atom[local_id].lmax = lkeep;
         for(int n1=0; n1<4; n1++)

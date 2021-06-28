@@ -109,8 +109,8 @@ c
       call zeroout(dipole,6*4*2)
 
 !     gfill & gafill are now called from zplanint_d
-!     call gfill
-!     call gafill
+      call gfill
+      call gafill
 
       pi=fnpi()
 

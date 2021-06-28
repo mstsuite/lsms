@@ -53,17 +53,6 @@ DeviceStorage *deviceStorage;
 DeviceConstants deviceConstants;
 #endif
 
-#ifdef BUILDKKRMATRIX_GPU
-// void *allocateDStore(void);
-// void freeDStore(void *);
-// void *allocateDConst(void);
-// void freeDConst(void *);
-#include "Accelerator/buildKKRMatrix_gpu.hpp"
-
-std::vector<DeviceConstants> deviceConstants;
-//std::vector<void *> deviceConstants;
-#endif
-
 void initLSMSLuaInterface(lua_State *L);
 int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &crystal, MixingParameters &mix, PotentialShifter &potentialshifter,
        AlloyMixingDesc &alloyDesc);
@@ -188,10 +177,6 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   // deviceStorage = allocateDStore();
   deviceStorage = new DeviceStorage;
 #endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.resize(local.num_local);
-  // for(int i=0; i<local.num_local; i++) deviceConstants[i] = allocateDConst();
-#endif
 
   for(int i=0; i<local.num_local; i++)
     local.atom[i].pmat_m.resize(lsms.energyContour.groupSize());
@@ -284,16 +269,9 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
 LSMS::~LSMS()
 {
   local.tmatStore.unpinMemory();
-#ifdef BUILDKKRMATRIX_GPU
-  // for (int i=0; i<local.num_local; i++)
-  //   freeDConst(deviceConstants[i]);
-#endif
 #if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // freeDStore(deviceStorage);
   delete deviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.clear();
 #endif
   acceleratorFinalize();
   // finalizeCommunication();
