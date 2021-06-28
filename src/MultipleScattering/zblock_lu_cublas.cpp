@@ -40,7 +40,6 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
   cuDoubleComplex *devA=(cuDoubleComplex *)DeviceStorage::getDevM();
   int *ipvt=DeviceStorage::getDevIpvt();
 
-#ifndef BUILDKKRMATRIX_GPU
   // copy matrix to device 
   /*
   cublasStat = cublasSetMatrix ( na, na, sizeof(cuDoubleComplex), &a(0,0), lda, devA, lda);
@@ -56,7 +55,6 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
     printf("cudaMemcpy Error in 'zblock_lu_cublas'. cudaErr=%d\n",cudaErr);
     printf("  na=%d lda=%d  &a(0,0)=%zx devA=%zx\n",na,lda,&a(0,0),devA);
   }
-#endif
 
 // printf("idcol[0]=%d\n",idcol[0]);
       if(idcol[0] == 0)

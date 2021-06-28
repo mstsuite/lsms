@@ -17,11 +17,6 @@ void spin_trafo_(Real *evec, Complex * u, Complex *ud);
 }
 
 
-#ifdef BUILDKKRMATRIX_GPU
-void * allocateDConst(void);
-void freeDConst(void *);
-#endif
-
 
 class AtomData {
 public:
