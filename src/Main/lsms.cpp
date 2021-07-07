@@ -4,7 +4,7 @@
 #include <string.h>
 #include <iostream>
 
-// #include <fenv.h>
+#include <fenv.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -62,13 +62,6 @@ IFactors iFactors;
 DeviceStorage *deviceStorage;
 DeviceConstants deviceConstants;
 #endif
-#ifdef BUILDKKRMATRIX_GPU
-#include "Accelerator/buildKKRMatrix_gpu.hpp"
-
-std::vector<DeviceConstants> deviceConstants;
-// void *allocateDConst(void);
-// void freeDConst(void *);
-#endif
 // std::vector<void *> deviceConstants;
 // std::vector<void *> deviceStorage;
 
@@ -83,7 +76,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
 
 void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local);
 
-/*
+
 static int
 feenableexcept (unsigned int excepts)
 {
@@ -100,7 +93,7 @@ feenableexcept (unsigned int excepts)
 
   return ( fesetenv (&fenv) ? -1 : old_excepts );
 }
-*/
+
 
 
 int main(int argc, char *argv[])
@@ -123,6 +116,7 @@ int main(int argc, char *argv[])
   initLSMSLuaInterface(L);
 
   // feenableexcept(FE_INVALID);
+  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
 #ifdef USE_GPTL
   GPTLinitialize();
@@ -160,9 +154,6 @@ int main(int argc, char *argv[])
     printf("Using %d OpenMP threads\n", omp_get_max_threads());
 #endif
     acceleratorPrint();
-#ifdef BUILDKKRMATRIX_GPU
-    printf("Using GPU to build KKR matrix.\n");
-#endif
 #ifdef LSMS_NO_COLLECTIVES
     printf("\nWARNING!!!\nCOLLECTIVE COMMUNICATION (ALLREDUCE etc.) ARE SKIPPED!\n");
     printf("THIS IS FOR TESTING ONLY!\nRESULTS WILL BE WRONG!!!\n\n");
@@ -279,10 +270,6 @@ int main(int argc, char *argv[])
 #if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // deviceStorage = allocateDStore();
   deviceStorage = new DeviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.resize(local.num_local);
-  // for(int i=0; i<local.num_local; i++) deviceConstants[i]=allocateDConst();
 #endif
 
   for (int i=0; i<local.num_local; i++)
@@ -695,16 +682,10 @@ int main(int argc, char *argv[])
 
   local.tmatStore.unpinMemory();
 
-#ifdef BUILDKKRMATRIX_GPU
-  // for(int i=0; i<local.num_local; i++) freeDConst(deviceConstants[i]);
-#endif
 
 #if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // freeDStore(deviceStorage);
   delete deviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.clear();
 #endif
 
   acceleratorFinalize();

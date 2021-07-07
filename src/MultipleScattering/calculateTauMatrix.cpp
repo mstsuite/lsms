@@ -37,14 +37,6 @@ extern DeviceStorage *deviceStorage;
 #endif
 #include <assert.h>
 
-#ifdef BUILDKKRMATRIX_GPU
-#include "Accelerator/buildKKRMatrix_gpu.hpp"
-extern std::vector<DeviceConstants> deviceConstants;
-void clearM00(Complex *m, int blk_sz, int lda, cudaStream_t s);
-#endif
-// extern std::vector<void *> deviceConstants;
-
-//#endif
 
 extern "C"
 {
@@ -315,16 +307,9 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
 
 // calculateTauMatrix replaces gettaucl from LSMS_1. The communication is performed in calculateAllTauMatrices
 // and the t matrices are in tmatStore, replacing vbig in gettaucl.
-#ifndef BUILDKKRMATRIX_GPU
 void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int localAtomIndex,
                         int ispin, Complex energy, Complex prel,
                         Complex *tau00_l,Matrix<Complex> &m,int iie)
-#else
-  void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int localAtomIndex,
-                          int ispin, Complex energy, Complex prel,
-                          Complex *tau00_l,Matrix<Complex> &m,int iie,
-                          DeviceConstants &d_const, DeviceStorage *d_store)
-#endif
 {
   const unsigned int defaultLinearSolver = MST_LINEAR_SOLVER_DEFAULT;
   unsigned int linearSolver = lsms.global.linearSolver & MST_LINEAR_SOLVER_MASK; // only use 12 least significant bits
@@ -349,11 +334,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   switch(buildKKRMatrixKernel)
   {
     case MST_BUILD_KKR_MATRIX_F77:
-#ifdef BUILDKKRMATRIX_GPU
-      buildKKRMatrix_gpu(lsms, local, atom, ispin, energy, prel, iie, m, d_const);
-#else
       buildKKRMatrix(lsms, local, atom, ispin, energy, prel, iie, m);
-#endif
       break;
   case MST_BUILD_KKR_MATRIX_CPP:
     buildKKRMatrixCPU(lsms, local, atom, iie, energy, prel, m);
@@ -651,10 +632,6 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     int alg=2;
     if(alg>2) vecs=(Complex *)malloc((nrmat_ns*(kkrsz_ns*6+6))*sizeof(Complex));
     int *idcol = new int[blk_sz[0]]; idcol[0]=0;
-#ifdef BUILDKKRMATRIX_GPU
-    Complex *dev_m=get_dev_m_();
-    clearM00(dev_m, blk_sz[0], nrmat_ns,get_stream_(0));
-#endif
     {
       if(linearSolver == MST_LINEAR_SOLVER_BLOCK_INVERSE_F77)
         block_inv_(&m(0,0),vecs,&nrmat_ns,&nrmat_ns,&nrmat_ns,ipvt,
@@ -751,11 +728,6 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
 #endif
 
   double timeCalcTauMatTotal=MPI_Wtime();
-#ifdef BUILDKKRMATRIX_GPU
-#pragma omp parallel for default(none) \
-            shared(lsms,local,energy,prel,tau00_l,max_nrmat_ns,m_dat,deviceConstants,deviceStorage) \
-            firstprivate(iie) num_threads(lsms.global.GPUThreads)
-#else
 #if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #pragma omp parallel for default(none) \
             shared(lsms,local,energy,prel,tau00_l,max_nrmat_ns,m_dat,deviceStorage) \
@@ -763,7 +735,6 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
 #else
 #pragma omp parallel for default(none) shared(lsms,local,energy,prel,tau00_l,max_nrmat_ns,m_dat) \
             firstprivate(iie)
-#endif
 #endif
   for(int i=0; i<local.num_local; i++)
   {
@@ -775,17 +746,9 @@ void calculateAllTauMatrices(LSMSCommunication &comm,LSMSSystemParameters &lsms,
     Matrix<Complex> m(max_nrmat_ns,max_nrmat_ns);
 #endif
     double timeCalcTauMat=MPI_Wtime();
-#ifndef BUILDKKRMATRIX_GPU
     calculateTauMatrix(lsms,local,local.atom[i], i, 0, energy,prel,&tau00_l(0,i),m,iie);
     if(lsms.n_spin_pola != lsms.n_spin_cant) // spin polarized second spin
       calculateTauMatrix(lsms,local,local.atom[i], i, 1, energy,prel,&tau00_l(0,i+local.num_local),m,iie);
-#else
-    calculateTauMatrix(lsms,local,local.atom[i], i, 0, energy,prel,&tau00_l(0,i),m,iie,
-                       deviceConstants[i], deviceStorage);
-    if(lsms.n_spin_pola != lsms.n_spin_cant) // spin polarized second spin
-      calculateTauMatrix(lsms,local,local.atom[i], i, 1, energy,prel,&tau00_l(0,i+local.num_local),m,iie,
-			 deviceConstants[i], deviceStorage);
-#endif
     timeCalcTauMat=MPI_Wtime()-timeCalcTauMat;
     if(lsms.global.iprint>=1) printf("calculateTauMatrix: %lf sec\n",timeCalcTauMat);
   }
