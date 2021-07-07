@@ -511,7 +511,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   }
 
   timeBuildKKRMatrix=MPI_Wtime()-timeBuildKKRMatrix;
-  if(lsms.global.iprint>=1) printf("  timeBuildKKRMatrix=%lf\n",timeBuildKKRMatrix);
+  if(lsms.global.iprint>=0) printf("  timeBuildKKRMatrix=%lf\n",timeBuildKKRMatrix);
 
 // use the new or old solvers?
   if(linearSolver < MST_LINEAR_SOLVER_BLOCK_INVERSE_F77) // new solvers. Old solvers have numbers > 0x8000. different postpocessing required. 0 is the default solver, for the time being use the old LSMS_1.9 one
