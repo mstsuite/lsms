@@ -76,7 +76,9 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
 
 void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local);
 
-
+/*
+ * Need portablew way to enable FP exceptions!
+ *
 static int
 feenableexcept (unsigned int excepts)
 {
@@ -93,7 +95,7 @@ feenableexcept (unsigned int excepts)
 
   return ( fesetenv (&fenv) ? -1 : old_excepts );
 }
-
+*/ 
 
 
 int main(int argc, char *argv[])
@@ -115,8 +117,7 @@ int main(int argc, char *argv[])
   luaL_openlibs(L);
   initLSMSLuaInterface(L);
 
-  // feenableexcept(FE_INVALID);
-  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+  // feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
 #ifdef USE_GPTL
   GPTLinitialize();
