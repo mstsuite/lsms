@@ -966,6 +966,11 @@ Real LSMS::scfEnergy(Real *eb)
     for (int i=0; i<local.num_local; i++)
     {
       local.atom[i].newConstraint();
+            
+      local.atom[i].evec[0] = local.atom[i].evecNew[0];
+      local.atom[i].evec[1] = local.atom[i].evecNew[1];
+      local.atom[i].evec[2] = local.atom[i].evecNew[2];
+      
       checkIfSpinHasFlipped(lsms, local.atom[i]);
     }
 
@@ -1022,6 +1027,8 @@ Real LSMS::scfEnergy(Real *eb)
     calculateChargesPotential(comm,lsms,local,crystal,1);
     mixing -> updatePotential(comm,lsms,local.atom);
 
+    mixing -> updateMoments(comm, lsms, local.atom);
+    
     if (potentialShifter.vSpinShiftFlag)
       potentialShifter.resetPotentials(local);
 

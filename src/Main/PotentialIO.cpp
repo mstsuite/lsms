@@ -222,6 +222,13 @@ void initialAtomSetup(LSMSCommunication &comm,LSMSSystemParameters &lsms, Crysta
   lsms.chempot=fspace[1]/Real(lsms.num_atoms);
 }
 
+void updateCrystalFromAtom(LSMSSystemParameters &lsms, CrystalParameters &crystal, AtomData &atom, int crystalID)
+{
+  crystal.evecs(0,crystalID) = atom.evec[0];
+  crystal.evecs(1,crystalID) = atom.evec[1];
+  crystal.evecs(2,crystalID) = atom.evec[2];
+}
+
 int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local)
 {
   AtomData pot_data;
@@ -267,9 +274,13 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
         if(crystal.types[i].node==comm.rank)
         {
           writeSingleAtomData_hdf5(fid_1,local.atom[crystal.types[i].local_id],i+1);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, local.atom[crystal.types[i].local_id], i);
         } else {
           communicateSingleAtomData(comm, crystal.types[i].node, comm.rank, crystal.types[i].local_id, pot_data,i);
           writeSingleAtomData_hdf5(fid_1,pot_data,i+1);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, pot_data, i);
         }
         H5Gclose(fid_1);
       } else if(lsms.pot_out_type==1) { // BIGCELL style Text
@@ -279,11 +290,15 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
         if(crystal.types[i].node==comm.rank)
         {
           writeSingleAtomData_bigcell(fname,local.atom[crystal.types[i].local_id]);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, local.atom[crystal.types[i].local_id], i);
         } else {
           int local_id;
           communicateSingleAtomData(comm, crystal.types[i].node, comm.rank, local_id, pot_data,i);
           if(local_id!=crystal.types[i].local_id) printf("WARNING: local_id doesn't match in writePotentials!\n");
           writeSingleAtomData_bigcell(fname,pot_data);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, pot_data, i);
         }
       }
     }

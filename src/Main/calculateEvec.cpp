@@ -2,7 +2,7 @@
 
 void calculateEvec(LSMSSystemParameters &lsms, LocalTypeInfo &local)
 {
-  Real tolerance = 1.0e-8;
+  const Real tolerance = 1.0e-8;
 
   for (int i=0; i<local.num_local; i++)
   {
@@ -64,6 +64,8 @@ void calculateEvec(LSMSSystemParameters &lsms, LocalTypeInfo &local)
     local.atom[i].evecOut[0] = local.atom[i].evecNew[0];
     local.atom[i].evecOut[1] = local.atom[i].evecNew[1];
     local.atom[i].evecOut[2] = local.atom[i].evecNew[2];
+
+    // local.atom[i].magneticMomentOut = evecMagnitude;
 
   }
   

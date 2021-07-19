@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "mixing.hpp"
 #include "Communication/LSMSCommunication.hpp"
 
@@ -466,6 +467,59 @@ public:
 
 };
 
+class SimpleMomentDirectionMixing : public MomentMixing {
+  Real alpev;
+public:
+  SimpleMomentDirectionMixing(Real _alpha) : alpev(_alpha) {}
+
+  void update(LSMSCommunication &comm, LSMSSystemParameters &lsms, std::vector<AtomData> &as)
+  {
+
+    const Real tolerance = 1.0e-8;
+
+    for (int i=0; i<as.size(); i++)
+    { 
+      
+      if (lsms.global.iprint > 0)
+      {
+        printf("Moment direction before mixing = (%12.8f, %12.8f, %12.8f)\n",
+               as[i].evecNew[0], as[i].evecNew[1], as[i].evecNew[2]);
+      }
+  
+      as[i].evecNew[0] = alpev * as[i].evecNew[0] + (1.0-alpev) * as[i].evec[0];
+      as[i].evecNew[1] = alpev * as[i].evecNew[1] + (1.0-alpev) * as[i].evec[1];
+      as[i].evecNew[2] = alpev * as[i].evecNew[2] + (1.0-alpev) * as[i].evec[2];
+  
+      Real evecMagnitude = std::sqrt(as[i].evecNew[0] * as[i].evecNew[0] +
+                                     as[i].evecNew[1] * as[i].evecNew[1] +
+                                     as[i].evecNew[2] * as[i].evecNew[2]);
+  
+      if (evecMagnitude < tolerance)
+      {
+        printf("GETEVEC: magnitude of evec too small. (= %35.25f)\n", evecMagnitude);
+      }
+  
+      as[i].evecNew[0] = as[i].evecNew[0] / evecMagnitude;
+      as[i].evecNew[1] = as[i].evecNew[1] / evecMagnitude;
+      as[i].evecNew[2] = as[i].evecNew[2] / evecMagnitude; 
+
+      // as[i].evecOut[0] = as[i].evecNew[0];
+      // as[i].evecOut[1] = as[i].evecNew[1];
+      // as[i].evecOut[2] = as[i].evecNew[2];
+
+      as[i].b_con[0] = 0.0;
+      as[i].b_con[1] = 0.0;
+      as[i].b_con[2] = 0.0;
+      
+      if (lsms.global.iprint > 0)
+      {
+        printf("Moment direction after mixing = (%12.8f, %12.8f, %12.8f)\n",
+               as[i].evecNew[0], as[i].evecNew[1], as[i].evecNew[2]);
+      }
+      
+    }
+  }
+};
 
 
 void setupMixing(MixingParameters &mix, Mixing* &mixing, int iprint)
@@ -478,9 +532,10 @@ void setupMixing(MixingParameters &mix, Mixing* &mixing, int iprint)
   // frozen potential by default
   if (!mix.quantity[MixingParameters::no_mixing] &&
       !mix.quantity[MixingParameters::charge] && 
-      !mix.quantity[MixingParameters::potential] && 
-      !mix.quantity[MixingParameters::moment_magnitude] && 
-      !mix.quantity[MixingParameters::moment_direction])
+      !mix.quantity[MixingParameters::potential])
+    // && 
+    //  !mix.quantity[MixingParameters::moment_magnitude] && 
+    //  !mix.quantity[MixingParameters::moment_direction])
   {
     mixing = new FrozenPotential;
     if(iprint >= 0)
@@ -496,9 +551,10 @@ void setupMixing(MixingParameters &mix, Mixing* &mixing, int iprint)
   // charge mixing
   else if (!mix.quantity[MixingParameters::no_mixing] &&
             mix.quantity[MixingParameters::charge] && 
-           !mix.quantity[MixingParameters::potential] && 
-           !mix.quantity[MixingParameters::moment_magnitude] && 
-           !mix.quantity[MixingParameters::moment_direction])
+           !mix.quantity[MixingParameters::potential])
+    // && 
+    // !mix.quantity[MixingParameters::moment_magnitude] && 
+    // !mix.quantity[MixingParameters::moment_direction])
   {
     switch (mix.algorithm[MixingParameters::charge]) {
       case 1 :
@@ -524,9 +580,10 @@ void setupMixing(MixingParameters &mix, Mixing* &mixing, int iprint)
   // potential mixing
   else if (!mix.quantity[MixingParameters::no_mixing] &&
            !mix.quantity[MixingParameters::charge] && 
-            mix.quantity[MixingParameters::potential] && 
-           !mix.quantity[MixingParameters::moment_magnitude] && 
-           !mix.quantity[MixingParameters::moment_direction])
+           mix.quantity[MixingParameters::potential])
+    // && 
+    // !mix.quantity[MixingParameters::moment_magnitude] && 
+    // !mix.quantity[MixingParameters::moment_direction])
   {
     switch (mix.algorithm[MixingParameters::potential]) {
       case 1 :
@@ -554,6 +611,44 @@ void setupMixing(MixingParameters &mix, Mixing* &mixing, int iprint)
     if(iprint >= 0){
       printf("Mixing quantity   : potential\n");
       printf("Mixing parameters : %4.2f\n", mix.mixingParameter[MixingParameters::potential]);
+    }
+  }
+  else
+  {
+    if(iprint >= 0) {
+      printf("Type of mixing is not supported.\n");
+      for (int i = 0; i < mix.numQuantities; i++) {
+        printf("quantity = %5d, algorithm = %5d, mixing parameter = %6.3f\n", 
+               mix.quantity[i], mix.algorithm[i], mix.mixingParameter[i]);
+      }
+      exit(1);
+    }
+  }
+
+  // Moment mixing
+  if (!mix.quantity[MixingParameters::moment_magnitude] && 
+      !mix.quantity[MixingParameters::moment_direction])
+  {
+    if(iprint >= 0)
+      printf("No moment mixing!\n");
+  }
+  else if (!mix.quantity[MixingParameters::moment_magnitude] && 
+            mix.quantity[MixingParameters::moment_direction])
+  {
+    switch (mix.algorithm[MixingParameters::moment_direction]) {
+    case 1 :
+        if(mix.mixingParameter[MixingParameters::moment_direction] > 0.0)
+        {
+          mixing -> momentMixing = new SimpleMomentDirectionMixing(mix.mixingParameter[MixingParameters::moment_direction]);
+          if(iprint >= 0)
+          {
+            printf("Moment Direction Mixing : simple\n");
+            printf("Mixing parameters : %4.2f\n", mix.mixingParameter[MixingParameters::moment_direction]);
+          }
+        }
+        break;
+    default:
+      printf("Moment Direction Mixing : none\n");
     }
   }
   else

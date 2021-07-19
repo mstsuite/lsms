@@ -16,6 +16,6 @@ const double convertRydbergToeV = 13.605698066;
 // defined by SI to be 1.380649e-23 J/K
 
 // const double kBoltzmann = 6.3336e-6;
-const double kBoltzmann = 1.380649e-23/4.5874208973812E+17;
+const double kBoltzmann = 1.380649e-23 * 4.5874208973812E+17;
 
 #endif

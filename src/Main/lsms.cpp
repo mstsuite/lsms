@@ -488,9 +488,17 @@ int main(int argc, char *argv[])
 
     // Calculate magnetic moments for each site and check if spin has flipped
     calculateEvec(lsms, local);
-    mixEvec(lsms, local, 0.0);
-    for (int i=0; i<local.num_local; i++) {
-      local.atom[i].newConstraint();
+    // mixEvec(lsms, local, 0.0);
+    mixing -> updateMoments(comm, lsms, local.atom);
+    for (int i=0; i<local.num_local; i++)
+    {
+      if(!mix.quantity[MixingParameters::moment_direction])
+        local.atom[i].newConstraint();
+      
+      local.atom[i].evec[0] = local.atom[i].evecNew[0];
+      local.atom[i].evec[1] = local.atom[i].evecNew[1];
+      local.atom[i].evec[2] = local.atom[i].evecNew[2];
+      
       checkIfSpinHasFlipped(lsms, local.atom[i]);
     }
 
@@ -526,6 +534,7 @@ int main(int argc, char *argv[])
     // If charge is mixed, recalculate potential and mix (need a flag for this from input)
     calculateChargesPotential(comm, lsms, local, crystal, 1);
     mixing -> updatePotential(comm, lsms, local.atom);
+    
     dTimePM = MPI_Wtime() - dTimePM;
     timeCalcPotentialsAndMixing += dTimePM;
 

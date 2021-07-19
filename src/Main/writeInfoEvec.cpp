@@ -11,7 +11,7 @@ void writeSingleEvec(FILE *f,int z, int i, Real posX, Real posY, Real posZ, Atom
           -1.0,
           atom.b_con[0], atom.b_con[1], atom.b_con[2],
           atom.vSpinShift,
-          atom.evecNew[0], atom.evecNew[1], atom.evecNew[2]);
+          atom.evecOut[0], atom.evecOut[1], atom.evecOut[2]);
 }
 
 // write out the magnetism and constraint info for each site

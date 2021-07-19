@@ -4,7 +4,9 @@
 
 #define MY_LSMSMODE_ENUM \
 X(main) \
-X(liz0)
+X(liz0) \
+X(gf_out) \
+X(matsubara)
 
 #define X(name) name,
  
