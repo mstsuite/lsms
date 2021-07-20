@@ -236,12 +236,14 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     if(!luaGetIntegerFieldFromStack(L,"type",&t) || (t-1)==i)
     {
       luaGetStrNFromStack(L,"atom",crystal.types[crystal.num_types].name,4);
+      crystal.types[crystal.num_types].pot_in_idx = -1;
       luaGetIntegerFieldFromStack(L,"pot_in_idx",&crystal.types[crystal.num_types].pot_in_idx);
       luaGetIntegerFieldFromStack(L,"lmax",&crystal.types[crystal.num_types].lmax);
       luaGetIntegerFieldFromStack(L,"Z",&crystal.types[crystal.num_types].Z);
       luaGetIntegerFieldFromStack(L,"Zc",&crystal.types[crystal.num_types].Zc);
       luaGetIntegerFieldFromStack(L,"Zs",&crystal.types[crystal.num_types].Zs);
       luaGetIntegerFieldFromStack(L,"Zv",&crystal.types[crystal.num_types].Zv);
+      crystal.types[crystal.num_types].forceZeroMoment = 0;
       luaGetIntegerFieldFromStack(L,"forceZeroMoment",&crystal.types[crystal.num_types].forceZeroMoment);
       luaGetIntegerFieldFromStack(L,"alloy_class",&crystal.types[crystal.num_types].alloy_class);
       crystal.types[crystal.num_types].alloy_class--; // <-- zero-based indexing
