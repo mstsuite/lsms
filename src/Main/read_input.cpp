@@ -424,8 +424,17 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     char h[80];
     if(luaGetStrN(L,"lsmsMode",h,80))
     {
+      int i=0;
+      while(h[i] != '\0' && i<80)
+      {
+        h[i] = std::tolower(h[i]);
+        i++;
+      }
+
       if(strncmp(h,"main",80)==0) lsms.lsmsMode=LSMSMode::main;
       else if(strncmp(h,"liz0",80)==0) lsms.lsmsMode=LSMSMode::liz0;
+      else if(strncmp(h,"gf_out",80)==0) lsms.lsmsMode=LSMSMode::gf_out;
+      else if(strncmp(h,"matsubara",80)==0) lsms.lsmsMode=LSMSMode::matsubara;
       else
       {
         printf("Unknown lsmsMode: '%s'\n Defaulting to 'main'.\n",h);
