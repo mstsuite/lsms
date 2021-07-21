@@ -7,6 +7,7 @@ c     cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      >                    ngaussr,
      >                    cgnt,lmax_cg,
      >                    dos,dosck,green,dipole,
+     &                    greenIntLLp,
      &                    ncrit,grwylm,gwwylm,wylm,
      >                    pi,iprint,istop)
 c     ================================================================
@@ -44,6 +45,8 @@ c
       integer    ngaussr
       integer    iprint,iprint_dos
       integer lmax_cg,nprpts,ncrit
+
+      integer j, lm1, lm2
 c
       real*8     rins,r_sph,r_mesh(nprpts)
       real*8     cgnt(lmax_cg+1,(lmax_cg+1)**2,(lmax_cg+1)**2)
@@ -54,11 +57,13 @@ c
       complex*16 pnrel
       complex*16 matom_left(lmax+1)
       complex*16 matom_right(lmax+1)
-      complex*16 tau00(kkrsz*kkrsz)
-      complex*16 pzz(kkrsz*kkrsz)
+      complex*16 tau00(kkrsz,kkrsz)
+      complex*16 pzz(kkrsz,kkrsz)
       complex*16 pzj
-      complex*16 pzzck(kkrsz*kkrsz)
+      complex*16 pzj_full(kkrsz)
+      complex*16 pzzck(kkrsz,kkrsz)
       complex*16 pzjck
+      complex*16 pzjck_full(kkrsz)
       complex*16 dzz(kkrsz*kkrsz*3)
       complex*16 dzj
       complex*16 vzz(kkrsz*kkrsz*3)
@@ -74,6 +79,8 @@ c dipole(m,2) is the gradient of the dipole potential at the origin
       complex*16 dipole(-1:1,2)
       complex*16 wylm(*)
 c
+      complex*16 greenIntLLp(kkrsz,kkrsz)
+      
       parameter (sname='gf_local')
 c
       sqr2=sqrt(2.d0)
@@ -102,15 +109,38 @@ c     -----------------------------------------------------------------
       call int_zz_zj(mtasa,zj_flag,lmax,kkrsz,
      >               pnrel,matom_left,matom_right,
      >               rins,r_sph,r_mesh,jmt,
-c    >               r_sph,r_mesh,506,
      >               zlr_left,zlr_right,jlr,nprpts,
      >               ngaussr,
      >               cgnt,lmax_cg,
      >               pzzck,pzz,pzjck,pzj,dzz,dzj,vzz,vzj,
+     &               pzjck_full, pzj_full,
      &               ncrit,grwylm,gwwylm,wylm,
      >               iprint_dos,istop)
 c     -----------------------------------------------------------------
 c
+!      write(*,*) "pzz and pzzck after int_zz_zj"
+!      do lm1=1,kkrsz
+!         do lm2=1,kkrsz
+!            write(*,*) lm1, lm2, pzz(lm1,lm2), pzzck(lm1,lm2)
+!         end do
+!      end do
+!      call fstop("gf_local")
+
+!     calculate radially L, L' resolved Green's function integrated
+!     integrated over the atomic volume
+
+      do lm1 = 1,kkrsz
+         do lm2 = 1,kkrsz
+            greenIntLLp(lm1,lm2) = tau00(lm1,lm2)*pzz(lm1,lm2)
+         end do
+      end do
+      if (zj_flag .eq. 1) then
+         do lm1 = 1,kkrsz
+            greenIntLLp(lm1,lm1) = greenIntLLp(lm1,lm1) - pzj_full(lm1)
+         end do
+      end if
+      
+      
 c     ================================================================
 c     dos =>  ZZ(e)*tau(e) - ZJ(e)....................................
 c     ----------------------------------------------------------------

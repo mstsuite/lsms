@@ -15,15 +15,9 @@ xcFunctional={0,1} -- von Barth Hedin (LSMS_1)
 iprint=0
 default_iprint=-1
 print_node=0
--- istop="buildKKRMatrix"
 istop="main"
 
 nscf=10
-
-xRepeat=1
-yRepeat=1
-zRepeat=1
-makeTypesUnique=1
 
 -- energyContour = {npts=1,grid=0,ebot=-0.2,etop=0.0,eitop=0.825,eibot=0.1}
 -- energyContour = {npts=11,grid=2,ebot=-0.3,etop=0.0,eitop=0.825,eibot=0.025,maxGroupSize=5}

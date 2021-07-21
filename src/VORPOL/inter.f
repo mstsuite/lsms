@@ -1,10 +1,10 @@
 c     ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-      subroutine inter(zj_flag,lmax,
+      subroutine inter_m(zj_flag,lmax,
      >                     pnrel,matom_left,matom_right,
      >                     r_sph,
      >                     ngaussr,
      >                     cgnt,lmax_cg,
-     >                     pzz,pzj,
+     >                     pzz,pzj,pzj_full,
      &                     ncrit,grwylm,gwwylm,wylm,
      >                     iprint,istop)
 c     =================================================================
@@ -34,6 +34,7 @@ c
       complex*16 bh(0:lmax)
       complex*16 pzz((lmax+1)**2,(lmax+1)**2)
       complex*16 pzj
+      complex*16 pzj_full((lmax+1)**2)
 
       complex*16 wylm(*)
 c
@@ -60,7 +61,7 @@ c     -----------------------------------------------------------------
      >                     ncrit,ngaussr,
      >                     grwylm,gwwylm,wylm,
      >                     cgnt,lmax_cg,
-     >                     pzz,pzj,bj,bh)
+     >                     pzz,pzj,pzj_full,bj,bh)
 c
 c     =================================================================
 c     printout if needed...............................................

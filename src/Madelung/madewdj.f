@@ -230,7 +230,7 @@ c     loop over contributing atom positions based on basis in distant cell
 c     we are actually subtracting contributions from inside rcut which
 c     are put in by k-space sum.
       do nsub2 =1,num_atoms
-        call zeroout(dqintloc,2*ndlm)
+        call czeroout(dqintloc,ndlm)
         if(nsub2.eq.myatom)then
           ibegin=2
         else

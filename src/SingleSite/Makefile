@@ -17,7 +17,7 @@ clean:
 	$(F77) -c -o $@ $<
 
 %.o : %.f90
-	$(F77) -c -o $@ $<
+	$(F90) -c -o $@ $<
 
 libSingleSite.a : $(OBJ)
 	$(AR) -r libSingleSite.a $(OBJ) 

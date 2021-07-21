@@ -6,6 +6,8 @@
 #include <complex>
 #include "Complex.hpp"
 
+#include "PhysicalConstants.hpp"
+
 #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/SingleSiteScattering.hpp"
 #include "MultipleScattering/MultipleScattering.hpp"
@@ -21,12 +23,6 @@
 #if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 // void copyTmatStoreToDevice(LocalTypeInfo &local);
 
-#ifdef BUILDKKRMATRIX_GPU
-#include "Accelerator/buildKKRMatrix_gpu.hpp"
-extern std::vector<DeviceConstants> deviceConstants;
-// extern std::vector<void *> deviceConstants;
-// extern void * deviceStorage;
-#endif
 
 #include "Accelerator/DeviceStorage.hpp"
 extern DeviceStorage *deviceStorage;
@@ -62,8 +58,9 @@ void green_function_(int *mtasa,int *n_spin_pola,int *n_spin_cant,
                      int *nprpts, int* nplmax,
                      int *ngaussr,
                      Real *cgnt, int *lmax_cg,
-                     Complex *dos,Complex *dosck,Complex *green,Complex *dipole,
-                     int *ncrit,Real *grwylm,Real *gwwylm,Complex *wylm,
+                     Complex *dos, Complex *dosck, Complex *green, Complex *dipole,
+                     Complex *greenIntLLp,
+                     int *ncrit, Real *grwylm, Real *gwwylm, Complex *wylm,
                      int *iprint,char *istop,int len_sitop);
 
 void green_function_rel_(int *mtasa,
@@ -87,14 +84,15 @@ void matrot1_(Real * rGlobal, Real *evec_r, int *lmax,
               Complex *dmat, Complex *dmatp);
 }
 
-void buildEnergyContour(int igrid,Real ebot,Real etop,Real eibot, Real eitop,
+void buildEnergyContour(int igrid,Real ebot,Real etop,Real eibot, Real eitop, Real temperature,
                         std::vector<Complex> &egrd, std::vector<Complex> &dele1, int npts, int &nume,
                         int iprint, char *istop)
 {
   Real pi=2.0*std::asin(1.0);
+  Real dE;
   int ipepts;
-  if(iprint>=0) printf("Energy Contour Parameters: grid=%d npts=%d, ebot=%lf etop=%lf eibot=%lf eitop=%lf\n",
-                      igrid,npts,ebot,etop,eibot,eitop);
+  if(iprint>=0) printf("Energy Contour Parameters: grid=%d  npts=%d\n                           ebot=%lf etop=%lf eibot=%lf eitop=%lf\n                           temperature = %lf K\n",
+                       igrid,npts,ebot,etop,eibot,eitop,temperature);
   switch (igrid)
   {
   case 0: // single energy point
@@ -105,6 +103,12 @@ void buildEnergyContour(int igrid,Real ebot,Real etop,Real eibot, Real eitop,
     egrd.resize(npts+2); dele1.resize(npts+2);
     ipepts=egrd.size();
     congauss_(&ebot,&etop,&eibot,&egrd[0],&dele1[0],&npts,&nume,&pi,&ipepts,&iprint,istop,32);
+    break;
+  case 4: // Matsubara frequencies: Temperature & npts
+    egrd.resize(npts); dele1.resize(npts); nume=npts;
+    dE = pi * kBoltzmann * temperature; // pi/k_B T
+    for(int i = 0; i < npts; i++)
+      egrd[i] = std::complex<Real>(etop, Real(2*i+1) * dE);
     break;
   default:
     fprintf(stderr,"Unknown energy grid type %d in 'buildEnergyContour'\n",igrid);
@@ -132,6 +136,9 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 // constrained potentials:
   std::vector<Matrix<Real > > vr_con;
   Matrix<Real> evec_r;
+
+// files for writing the Greens functions if needed
+  std::vector<FILE *> gfOutFile;
 
   int i_vdif=0;
 
@@ -221,15 +228,44 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   // e_top=lsms.energyContour.etop;
   // if(lsms.energyContour.etop==0.0) etop=lsms.chempot;
   buildEnergyContour(lsms.energyContour.grid, lsms.energyContour.ebot, lsms.chempot,
-                     lsms.energyContour.eibot, lsms.energyContour.eitop, egrd, dele1,
+                     lsms.energyContour.eibot, lsms.energyContour.eitop, lsms.temperature,
+                     egrd, dele1,
                      lsms.energyContour.npts, nume, lsms.global.iprint, lsms.global.istop);
 
+
+  if(lsms.lsmsMode==LSMSMode::matsubara)
+  {
+    printf("\nGenerated %lu energy points at Matsubara frequencies\n\n", egrd.size());
+    
+    for(int i = 0; i < egrd.size(); i++)
+    {
+      printf("%4d : (%g, %g)\n",i, egrd[i].real(), egrd[i].imag());
+    }
+    //exit(0);
+  } else if(lsms.lsmsMode==LSMSMode::gf_out) {
+    printf("\nWriting the Green's function at %lu energy points.\n\n", egrd.size());
+    
+    for(int i = 0; i < egrd.size(); i++)
+    {
+      printf("%4d : (%g, %g)\n",i, egrd[i].real(), egrd[i].imag());
+    }
+    // open the files for writing the Green's function
+    gfOutFile.resize(local.num_local);
+    for(int i=0; i<local.num_local; i++)
+    {
+      char fname[80];
+      snprintf(fname, 80, "greens_function_%06d.out", local.global_id[i]);
+      gfOutFile[i] = fopen(fname, "w");
+    }
+  }
+  
   for(int i=0; i<local.num_local; i++)
   {
     if(local.atom[i].dos_real.l_dim()<nume) 
       local.atom[i].dos_real.resize(nume,4);
   }
 
+  // solution{Non}Rel[energy point][local atom idx]
   std::vector<std::vector<NonRelativisticSingleScattererSolution> >solutionNonRel;
   std::vector<std::vector<RelativisticSingleScattererSolution> >solutionRel;
 
@@ -267,14 +303,6 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 
 // setup Device constant on GPU
   int maxNumLIZ=0;
-#ifdef BUILDKKRMATRIX_GPU
-  #pragma omp parallel for default(none) shared(lsms,local,deviceConstants)
-  for(int i=0; i<local.num_local; i++)
-  {
-    setupForBuildKKRMatrix_gpu(lsms,local.atom[i],deviceConstants[i]);
-    // setupForBuildKKRMatrix_gpu_opaque(lsms,local.atom[i],deviceConstants[i]);
-  }
-#endif
   for(int i=0; i<local.num_local; i++)
   {
     if(local.atom[i].numLIZ>maxNumLIZ) maxNumLIZ=local.atom[i].numLIZ;
@@ -362,176 +390,199 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 #endif
     if(lsms.global.iprint>=0) printf("timeSingleScatteres = %lf sec\n",timeSingleScatterers);
 
-#ifdef BUILDKKRMATRIX_GPU
-  copyTmatStoreToDevice(local);
-#endif
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
-  extern DeviceStorage *deviceStorage;
-  unsigned int buildKKRMatrixKernel = lsms.global.linearSolver & MST_BUILD_KKR_MATRIX_MASK;
-  if(buildKKRMatrixKernel == 0) buildKKRMatrixKernel = MST_BUILD_KKR_MATRIX_DEFAULT;
-  if(buildKKRMatrixKernel == MST_BUILD_KKR_MATRIX_ACCELERATOR)
-  {
-    if(lsms.global.iprint>=0) printf("copying atom data to accelerator\n");
-    deviceStorage->copyTmatStoreToDevice(local.tmatStore, local.blkSizeTmatStore);
-    for(int i=0; i<local.num_local; i++)
-      deviceAtoms[i].copyFromAtom(local.atom[i]);
-  }
+    extern DeviceStorage *deviceStorage;
+    unsigned int buildKKRMatrixKernel = lsms.global.linearSolver & MST_BUILD_KKR_MATRIX_MASK;
+    if(buildKKRMatrixKernel == 0) buildKKRMatrixKernel = MST_BUILD_KKR_MATRIX_DEFAULT;
+    if(buildKKRMatrixKernel == MST_BUILD_KKR_MATRIX_ACCELERATOR)
+    {
+      if(lsms.global.iprint>=0) printf("copying atom data to accelerator\n");
+      deviceStorage->copyTmatStoreToDevice(local.tmatStore, local.blkSizeTmatStore);
+      for(int i=0; i<local.num_local; i++)
+        deviceAtoms[i].copyFromAtom(local.atom[i]);
+    }
 #endif
   
 
-  for(int ie=eGroupIdx[ig]; ie<eGroupIdx[ig+1]; ie++)
-  {
-    int iie=ie-eGroupIdx[ig];
-    Complex energy=egrd[ie];
-    Complex pnrel=std::sqrt(energy);
-    if(lsms.global.iprint>=1) printf("Energy #%d (%lf,%lf)\n",ie,real(energy),imag(energy));
-
-    double timeCATM=MPI_Wtime();
-    calculateAllTauMatrices(comm, lsms, local, vr_con, energy, iie, tau00_l);
-
-    timeCalculateAllTauMatrices+=MPI_Wtime()-timeCATM;
-    // if(!lsms.global.checkIstop("buildKKRMatrix"))
+    for(int ie=eGroupIdx[ig]; ie<eGroupIdx[ig+1]; ie++)
     {
+      int iie=ie-eGroupIdx[ig];
+      Complex energy=egrd[ie];
+      Complex pnrel=std::sqrt(energy);
+      if(lsms.global.iprint>=0) printf("Energy #%d (%lf,%lf)\n",ie,real(energy),imag(energy));
+      
+      double timeCATM=MPI_Wtime();
+      calculateAllTauMatrices(comm, lsms, local, vr_con, energy, iie, tau00_l);
+
+      timeCalculateAllTauMatrices+=MPI_Wtime()-timeCATM;
+      // if(!lsms.global.checkIstop("buildKKRMatrix"))
+      {
 #ifdef USE_NVTX
-    nvtxEventAttributes_t eventAttrib = {0};
-    eventAttrib.version = NVTX_VERSION;
-    eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
-    eventAttrib.colorType = NVTX_COLOR_ARGB;
-    eventAttrib.color = 0x00ffff00;
-    eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;
-    eventAttrib.message.ascii = "calculateDensities";
-    nvtxRangePushEx(&eventAttrib);
+        nvtxEventAttributes_t eventAttrib = {0};
+        eventAttrib.version = NVTX_VERSION;
+        eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
+        eventAttrib.colorType = NVTX_COLOR_ARGB;
+        eventAttrib.color = 0x00ffff00;
+        eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;
+        eventAttrib.message.ascii = "calculateDensities";
+        nvtxRangePushEx(&eventAttrib);
 #endif
-    double timeCalcDensities=MPI_Wtime();
-    if(lsms.relativity != full)
-    {
-// openMP here
-#pragma omp parallel for default(none) \
-        shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,gauntCoeficients,dele1,tau00_l) \
-        firstprivate(ie,iie,pnrel,energy,nume)
-      for(int i=0; i<local.num_local; i++)
-      {
-        //Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
-        //if (lsms.mtasa==0) r_sph=local.atom[i].r_mesh[local.atom[i].jmt];
-        Real r_sph=local.atom[i].rInscribed;
-        if(lsms.mtasa>0) r_sph=local.atom[i].rws;
-        Real rins=local.atom[i].rmt;
-	int jmt = local.atom[i].jmt;
-	if(lsms.mtasa==1) jmt = local.atom[i].jws;
-//        int nprpts=solutionNonRel[iie][i].zlr.l_dim1();
-        int nprpts=local.atom[i].r_mesh.size();
-//        int nplmax=solutionNonRel[iie][i].zlr.l_dim2()-1;
-        int nplmax=local.atom[i].lmax;
-        green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
-                        &local.atom[i].lmax, &local.atom[i].kkrsz,
-                        &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
-                        &rins,&r_sph,&local.atom[i].r_mesh[0],&jmt,&local.atom[i].jws,
-                        &pnrel,&tau00_l(0,i),&solutionNonRel[iie][i].matom(0,0),
-                        &solutionNonRel[iie][i].zlr(0,0,0),&solutionNonRel[iie][i].jlr(0,0,0),
-                        &nprpts,&nplmax,
-                        &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
-                        &dos(0,i),&dosck(0,i),&green(0,0,i),&dipole(0,0,i),
-                        &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
-                        &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
-                        &lsms.global.iprint,lsms.global.istop,32);
-	if((lsms.n_spin_pola == 2) && (lsms.n_spin_cant == 1)) // spin polarized, collinear case
-	{
-	  green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
-                        &local.atom[i].lmax, &local.atom[i].kkrsz,
-                        &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
-                        &rins,&r_sph,&local.atom[i].r_mesh[0],&jmt,&local.atom[i].jws,
-                        &pnrel,&tau00_l(0,i+local.num_local),&solutionNonRel[iie][i].matom(0,1),
-                        &solutionNonRel[iie][i].zlr(0,0,1),&solutionNonRel[iie][i].jlr(0,0,1),
-                        &nprpts,&nplmax,
-                        &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
-                        &dos(1,i),&dosck(1,i),&green(0,1,i),&dipole(0,0,i),
-                        &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
-                        &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
-                        &lsms.global.iprint,lsms.global.istop,32);
-	}
-
-        if(local.atom[i].forceZeroMoment &&(lsms.n_spin_pola>1))
+        double timeCalcDensities=MPI_Wtime();
+        if(lsms.relativity != full)
         {
-          if(lsms.n_spin_cant>1) // spin canted case
+// openMP here
+#pragma omp parallel for default(none)                                  \
+  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,gauntCoeficients,dele1,tau00_l) \
+  firstprivate(ie,iie,pnrel,energy,nume)
+          for(int i=0; i<local.num_local; i++)
           {
-            for(int ir=0; ir<green.l_dim1(); ir++)
-            {
-              // green(ir,0,i) is the charge density part and green(ir,1:3,i) are the magnetic moment part
-              green(ir,1,i) = green(ir,2,i) = green(ir,3,0) = 0.0;
-            }
-	    dos(1,i) = dos(2,i) = dos(3,i) = dosck(1,i) = dosck(2,i) = dos(3,i) = 0.0;
-          } else { // spin polarized collinear case
-            for(int ir=0; ir<green.l_dim1(); ir++)
-            {
-              // green(ir,0,i) is the spin up charge density and green(ir,1,i) is spin down part
-              green(ir,0,i) = 0.5*(green(ir,0,i) + green(ir,1,i));
-              green(ir,1,i) = green(ir,0,i);
-            }
-          }
-        }
-
-        Complex tr_pxtau[3];
-        calculateDensities(lsms, i, 0, ie, nume, energy, dele1[ie],
-                           dos,dosck,green,
-                           dipole,
-                           local.atom[i]);
-	if((lsms.n_spin_pola == 2) && (lsms.n_spin_cant == 1)) // spin polarized, collinear case
-	{
-	  calculateDensities(lsms, i, 1, ie, nume, energy, dele1[ie],
-			     dos,dosck,green,
-			     dipole,
-			     local.atom[i]);
-	}
-
-      }
-    } else { // fully relativistic
-      for(int i=0; i<local.num_local; i++)
-      {
-        //Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
-        //if (lsms.mtasa==0) r_sph=local.atom[i].r_mesh[local.atom[i].jmt];
-        Real r_sph=local.atom[i].rInscribed;
-        if(lsms.mtasa>0) r_sph=local.atom[i].rws;
-        Real rins=local.atom[i].rmt;
+            //Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
+            //if (lsms.mtasa==0) r_sph=local.atom[i].r_mesh[local.atom[i].jmt];
+            Real r_sph=local.atom[i].rInscribed;
+            if(lsms.mtasa>0) r_sph=local.atom[i].rws;
+            Real rins=local.atom[i].rmt;
+            int jmt = local.atom[i].jmt;
+            if(lsms.mtasa==1) jmt = local.atom[i].jws;
 //        int nprpts=solutionNonRel[iie][i].zlr.l_dim1();
-        int nprpts=local.atom[i].r_mesh.size();
+            int nprpts=local.atom[i].r_mesh.size();
 //        int nplmax=solutionNonRel[iie][i].zlr.l_dim2()-1;
-        int nplmax=local.atom[i].lmax;
-        // printf("Relativistic version not implemented yet\n");
-        // exit(1);
-        
-        green_function_rel_(&lsms.mtasa,
+            int nplmax=local.atom[i].lmax;
+            Array3d<Complex> greenIntLLp(local.atom[i].kkrsz,local.atom[i].kkrsz,
+                                         lsms.n_spin_cant*lsms.n_spin_cant);
+            green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
                             &local.atom[i].lmax, &local.atom[i].kkrsz,
                             &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
-                            &rins,&local.atom[i].r_mesh[0],
-                            &local.atom[i].jws, // originally jmt
-                            &local.atom[i].jws,&local.atom[i].h,
-                            &pnrel,&tau00_l(0,i),&solutionRel[iie][i].matom(0,0),
-                            &solutionRel[iie][i].gz(0,0,0),&solutionRel[iie][i].fz(0,0,0),
-                            &solutionRel[iie][i].gj(0,0,0),&solutionRel[iie][i].fj(0,0,0),
-                            &solutionRel[iie][i].nuz[0],&solutionRel[iie][i].indz(0,0),
-                            &nprpts,
+                            &rins,&r_sph,&local.atom[i].r_mesh[0],&jmt,&local.atom[i].jws,
+                            &pnrel,&tau00_l(0,i),&solutionNonRel[iie][i].matom(0,0),
+                            &solutionNonRel[iie][i].zlr(0,0,0),&solutionNonRel[iie][i].jlr(0,0,0),
+                            &nprpts,&nplmax,
                             &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
                             &dos(0,i),&dosck(0,i),&green(0,0,i),&dipole(0,0,i),
-                            &dos_orb(0,i),&dosck_orb(0,i),&dens_orb(0,0,i),
+                            &greenIntLLp(0,0,0),
+                            &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
+                            &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
                             &lsms.global.iprint,lsms.global.istop,32);
+            if((lsms.n_spin_pola == 2) && (lsms.n_spin_cant == 1)) // spin polarized, collinear case
+            {
+              green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
+                              &local.atom[i].lmax, &local.atom[i].kkrsz,
+                              &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
+                              &rins,&r_sph,&local.atom[i].r_mesh[0],&jmt,&local.atom[i].jws,
+                              &pnrel,&tau00_l(0,i+local.num_local),&solutionNonRel[iie][i].matom(0,1),
+                              &solutionNonRel[iie][i].zlr(0,0,1),&solutionNonRel[iie][i].jlr(0,0,1),
+                              &nprpts,&nplmax,
+                              &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
+                              &dos(1,i),&dosck(1,i),&green(0,1,i),&dipole(0,0,i),
+                              &greenIntLLp(0,0,0),
+                              &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
+                              &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
+                              &lsms.global.iprint,lsms.global.istop,32);
+            }
 
-        // rotateToGlobal(local.atom[i], dos, dosck, dos_orb, dosck_orb, green, dens_orb, i);
-        
-        // this is the non-rel version now
-        calculateDensities(lsms, i, 0, ie, nume, energy, dele1[ie],
-                           dos,dosck,green,
-                           dipole,
-                           local.atom[i]);
-        
+            if(lsms.lsmsMode==LSMSMode::gf_out)
+            {
+              fprintf(gfOutFile[i], "Energy #%04d (%lf,%lf)\n",ie,std::real(energy),std::imag(energy));
+              for(int isp=0; isp<lsms.n_spin_cant*lsms.n_spin_cant; isp++)
+                for(int lm1=0; lm1<local.atom[i].kkrsz; lm1++)
+                  for(int lm2=0; lm2<local.atom[i].kkrsz; lm2++)
+                    fprintf(gfOutFile[i], "%1d %3d %3d %lg %lg\n", isp, lm1, lm2,
+                            std::real(greenIntLLp(lm1,lm2,isp)), std::imag(greenIntLLp(lm1,lm2,isp)));
+                
+            }
+            
+            if(local.atom[i].forceZeroMoment &&(lsms.n_spin_pola>1))
+            {
+              if(lsms.n_spin_cant>1) // spin canted case
+              {
+                for(int ir=0; ir<green.l_dim1(); ir++)
+                {
+              // green(ir,0,i) is the charge density part and green(ir,1:3,i) are the magnetic moment part
+                  green(ir,1,i) = green(ir,2,i) = green(ir,3,0) = 0.0;
+                }
+                dos(1,i) = dos(2,i) = dos(3,i) = dosck(1,i) = dosck(2,i) = dos(3,i) = 0.0;
+              } else { // spin polarized collinear case
+                for(int ir=0; ir<green.l_dim1(); ir++)
+                {
+              // green(ir,0,i) is the spin up charge density and green(ir,1,i) is spin down part
+                  green(ir,0,i) = 0.5*(green(ir,0,i) + green(ir,1,i));
+                  green(ir,1,i) = green(ir,0,i);
+                }
+              }
+            }
+
+            Complex tr_pxtau[3];
+            calculateDensities(lsms, i, 0, ie, nume, energy, dele1[ie],
+                               dos,dosck,green,
+                               dipole,
+                               local.atom[i]);
+            if((lsms.n_spin_pola == 2) && (lsms.n_spin_cant == 1)) // spin polarized, collinear case
+            {
+              calculateDensities(lsms, i, 1, ie, nume, energy, dele1[ie],
+                                 dos,dosck,green,
+                                 dipole,
+                                 local.atom[i]);
+            }
+
+          }
+        } else { // fully relativistic
+          for(int i=0; i<local.num_local; i++)
+          {
+            //Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
+            //if (lsms.mtasa==0) r_sph=local.atom[i].r_mesh[local.atom[i].jmt];
+            Real r_sph=local.atom[i].rInscribed;
+            if(lsms.mtasa>0) r_sph=local.atom[i].rws;
+            Real rins=local.atom[i].rmt;
+//        int nprpts=solutionNonRel[iie][i].zlr.l_dim1();
+            int nprpts=local.atom[i].r_mesh.size();
+//        int nplmax=solutionNonRel[iie][i].zlr.l_dim2()-1;
+            int nplmax=local.atom[i].lmax;
+            // printf("Relativistic version not implemented yet\n");
+            // exit(1);
+            /*
+              for(int j1=0; j1<solutionRel[iie][i].gz.n_row(); j1++)
+              for(int j2=0; j2<solutionRel[iie][i].gz.n_col(); j2++)
+              for(int j3=0; j3<solutionRel[iie][i].gz.n_slice(); j3++)
+              {
+              printf("gz(%d,%d,%d) = %f %f\n",j1,j2,j3,solutionRel[iie][i].gz(j1,j2,j3).real(), solutionRel[iie][i].gz(j1,j2,j3).imag());
+              printf("gj(%d,%d,%d) = %f %f\n",j1,j2,j3,solutionRel[iie][i].gj(j1,j2,j3).real(), solutionRel[iie][i].gj(j1,j2,j3).imag());
+              printf("fz(%d,%d,%d) = %f %f\n",j1,j2,j3,solutionRel[iie][i].fz(j1,j2,j3).real(), solutionRel[iie][i].fz(j1,j2,j3).imag());
+              printf("fj(%d,%d,%d) = %f %f\n",j1,j2,j3,solutionRel[iie][i].fj(j1,j2,j3).real(), solutionRel[iie][i].fj(j1,j2,j3).imag());
+              }
+            */
+            
+            green_function_rel_(&lsms.mtasa,
+                                &local.atom[i].lmax, &local.atom[i].kkrsz,
+                                &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
+                                &rins,&local.atom[i].r_mesh[0],
+                                &local.atom[i].jws, // originally jmt
+                                &local.atom[i].jws,&local.atom[i].h,
+                                &pnrel,&tau00_l(0,i),&solutionRel[iie][i].matom(0,0),
+                                &solutionRel[iie][i].gz(0,0,0),&solutionRel[iie][i].fz(0,0,0),
+                                &solutionRel[iie][i].gj(0,0,0),&solutionRel[iie][i].fj(0,0,0),
+                                &solutionRel[iie][i].nuz[0],&solutionRel[iie][i].indz(0,0),
+                                &nprpts,
+                                &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
+                                &dos(0,i),&dosck(0,i),&green(0,0,i),&dipole(0,0,i),
+                                &dos_orb(0,i),&dosck_orb(0,i),&dens_orb(0,0,i),
+                                &lsms.global.iprint,lsms.global.istop,32);
+
+            rotateToGlobal(local.atom[i], dos, dosck, dos_orb, dosck_orb, green, dens_orb, i);
+            
+            // this is the non-rel version now
+            calculateDensities(lsms, i, 0, ie, nume, energy, dele1[ie],
+                               dos,dosck,green,
+                               dipole,
+                               local.atom[i]);
+            
+          }
+        }
+#ifdef USE_NVTX
+        nvtxRangePop();
+#endif
+        timeCalcDensities=MPI_Wtime()-timeCalcDensities;
+        if(lsms.global.iprint>=1) printf("timeCalculateDensities = %lf sec\n",timeCalcDensities);
       }
     }
-#ifdef USE_NVTX
-    nvtxRangePop();
-#endif
-    timeCalcDensities=MPI_Wtime()-timeCalcDensities;
-    if(lsms.global.iprint>=1) printf("timeCalculateDensities = %lf sec\n",timeCalcDensities);
-  }
-  }
   }
   timeEnergyContourIntegration_2=MPI_Wtime()-timeEnergyContourIntegration_2;
   if(lsms.global.iprint>=0)
@@ -540,5 +591,15 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
     printf("  before energy loop             = %lf sec\n",timeEnergyContourIntegration_1);
     printf("  in energy loop                 = %lf sec\n",timeEnergyContourIntegration_2);
     printf("    in calculateAllTauMatrices   = %lf sec\n",timeCalculateAllTauMatrices);
+  }
+  if(lsms.lsmsMode==LSMSMode::matsubara)
+  {
+    printf("\nFinished Matsubara mode\n");
+    MPI_Abort(MPI_COMM_WORLD,0);
+  } else if(lsms.lsmsMode==LSMSMode::gf_out) {
+    printf("\nFinished writing Green's functions.\n");
+    for(int i=0; i<local.num_local; i++)
+      fclose(gfOutFile[i]);
+    MPI_Abort(MPI_COMM_WORLD,0);
   }
 }

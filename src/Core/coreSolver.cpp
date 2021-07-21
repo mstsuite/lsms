@@ -64,8 +64,10 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
   
   Real c = cphot * std::pow(10.0, lsms.nrelc);
   
-  if(lsms.mtasa != 0)
-    last2 = atom.jws;
+  // if(lsms.mtasa != 0)
+  //   last2 = atom.jws;
+  int jmt = atom.jmt;
+  if(lsms.mtasa==1) jmt = atom.jws;
 
   atom.corden = 0.0;
   atom.semcor = 0.0;
@@ -121,7 +123,7 @@ c        -------------------------------------------------------------
 	nnorm = last2;
         semcst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
                 &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, &c,
-                &nitmax, &tol, &atom.jmt, &atom.jws, &last2, &iter, &local_iprpts, &ipdeq);
+                &nitmax, &tol, &jmt, &atom.jws, &last2, &iter, &local_iprpts, &ipdeq);
 	/*
 c           ----------------------------------------------------------
             call semcst(nc(i),lc(i),kc(i),ecore(i),
@@ -251,9 +253,9 @@ c     ----------------------------------------------------------------
       int last2p1 = last2+1;
       int three = 3;
       newint_(&last2p1, &rtmp[0], &wrk2[0], &wrk1[0], &three);
-      qsemmt += 2.0 * wrk1[atom.jmt];
+      qsemmt += 2.0 * wrk1[jmt];
       qsemws += 2.0 * wrk1[last2-1];
-      atom.mcpsc_mt += 2.0 * (1-2*is) * wrk1[atom.jmt];
+      atom.mcpsc_mt += 2.0 * (1-2*is) * wrk1[jmt];
       atom.mcpsc_ws += 2.0 * (1-2*is) * wrk1[last2-1];
 
       wrk2[0] = 0.0;
@@ -262,9 +264,9 @@ c     ----------------------------------------------------------------
         wrk2[j] = atom.corden(j-1,is) / atom.r_mesh[j-1];
       }
       newint_(&last2p1, &rtmp[0], &wrk2[0], &wrk1[0], &three);
-      qcormt += 2.0 * wrk1[atom.jmt];
+      qcormt += 2.0 * wrk1[jmt];
       qcorws += 2.0 * wrk1[last2-1];
-      atom.mcpsc_mt += 2.0 * (1-2*is) * wrk1[atom.jmt];
+      atom.mcpsc_mt += 2.0 * (1-2*is) * wrk1[jmt];
       atom.mcpsc_ws += 2.0 * (1-2*is) * wrk1[last2-1];
     }
   }

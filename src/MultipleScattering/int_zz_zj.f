@@ -8,6 +8,7 @@ c     ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      >                     ngaussr,
      >                     cgnt,lmax_cg,
      >                     pzzck,pzz,pzjck,pzj,dzz,dzj,vzz,vzj,
+     &                     pzjckout, pzj_full,
      &                     ncrit,grwylm,gwwylm,wylm,
      >                     iprint,istop)
 c     =================================================================
@@ -49,9 +50,10 @@ c
       complex*16 matom_right(0:lmax)
       complex*16 pzz(kkrsz,kkrsz)
       complex*16 pzj
+      complex*16 pzj_full(kkrsz)
       complex*16 pzzck(kkrsz,kkrsz)
       complex*16 pzjck
-      complex*16 pzjckout(9)
+      complex*16 pzjckout(kkrsz)
       complex*16 dzz(kkrsz,kkrsz,-1:1)
       complex*16 dzj
       complex*16 vzz(kkrsz,kkrsz,-1:1)
@@ -105,8 +107,8 @@ c     *****************************************************************
 c
 c     -----------------------------------------------------------------
       pi=fnpi()
-      call zeroout(pzzck,2*kkrsz*kkrsz)
-      call zeroout(pzjckout,2*9)
+      call czeroout(pzzck,kkrsz*kkrsz)
+      call czeroout(pzjckout,kkrsz)
       pzjck=czero
       rtmp(0)=0.d0
       do ir=1,jmt
@@ -150,8 +152,9 @@ c           if(l.eq.1)then
 ctest ctmp for l decomposed dos!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             pzzck(lm,lm)=zlzl
             pzjck=pzjck+zljl
-c           endif
-            if(lm.le.9)pzjckout(lm)=-zljl/pi
+c     endif
+            pzjckout(lm) = zljl
+!            pzjckout(lm)=-zljl/pi
          enddo
       enddo
 c     =================================================================
@@ -168,8 +171,8 @@ c        -------------------------------------------------------------
 c        -------------------------------------------------------------
       endif
 
-      call zeroout(dzz,2*kkrsz*kkrsz*3)
-      call zeroout(vzz,2*kkrsz*kkrsz*3)
+      call czeroout(dzz,kkrsz*kkrsz*3)
+      call czeroout(vzz,kkrsz*kkrsz*3)
       dzj=czero
       vzj=czero
       do l=0,lmax
@@ -230,17 +233,20 @@ ctest if(mtasa.eq.2)write(6,'(''WARNING******messing with int_zz_zj'')')
 c        --------------------------------------------------------------
          call mbeqa(pzzck,pzz,2*kkrsz*kkrsz)
          pzj=pzjck
+         do lm=1,kkrsz
+            pzj_full(lm) = pzjckout(lm)
+         end do
 c        --------------------------------------------------------------
          return
       endif
 
 c Interstitial contributions
-      call inter(zj_flag,lmax,
+      call inter_m(zj_flag,lmax,
      >           pnrel,matom_left,matom_right,
      >           r_sph,
      >           ngaussr,
      >           cgnt,lmax_cg,
-     >           pzz,pzj,
+     >           pzz,pzj,pzj_full,
      &           ncrit,grwylm,gwwylm,wylm,
      >           iprint,istop)
 c
@@ -249,6 +255,9 @@ c     add the MT and the interstial contributions......................
 c     -----------------------------------------------------------------
       call zaxpy(kkrsz*kkrsz,cone,pzzck,1,pzz,1)
       pzj=pzj+pzjck
+      do lm=1,kkrsz
+         pzj_full(lm) = pzj_full(lm)+pzjckout(lm)
+      end do
 c     -----------------------------------------------------------------
 c
 c     =================================================================

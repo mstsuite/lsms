@@ -8,6 +8,7 @@ c     cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      >                          ngaussr,
      >                          cgnt,lmax_cg,
      >                          dos,dosck,green,dipole,
+     &                          greenIntLLp,
      &                          ncrit,grwylm,gwwylm,wylm,
      >                          iprint,istop)
 c     ================================================================
@@ -77,6 +78,8 @@ c
       complex*16 t3
       complex*16 t4
 
+      complex*16 greenIntLLp(kkrsz,kkrsz,n_spin_cant*n_spin_cant)
+
       complex*16 wylm(*)
 c
       parameter (sname='green_function')
@@ -112,6 +115,7 @@ c        --------------------------------------------------------------
      &                 nprpts,
      >                 ngaussr,cgnt,lmax_cg,
      >                 dos(isp),dosck(isp),green(1,isp),dipole(1,isp),
+     &                 greenIntLLp(1,1,isp),
      &                 ncrit,grwylm,gwwylm,wylm,
      >                 pi,iprint,istop)
 c        --------------------------------------------------------------

@@ -158,7 +158,7 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
   exit(1);
 #endif
 
-  // if forceZeroMoment != force the up and down densities to be identical
+  // if forceZeroMoment != 0 force the up and down densities to be identical
   if(atom.forceZeroMoment && (lsms.n_spin_pola!=1))
   {
     Real diff = 0.0;

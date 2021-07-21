@@ -38,6 +38,7 @@ public:
       tmat_g.resize(a.kkrsz*lsms.n_spin_cant,a.kkrsz*lsms.n_spin_pola);
   }
 // non relativistic wave functions
+  // zlr(ir, l, spin)
   Array3d<Complex> zlr,jlr;
   Matrix<Complex> matom;
   Array3d<Complex> tmat_l;
