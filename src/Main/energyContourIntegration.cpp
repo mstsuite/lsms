@@ -432,7 +432,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         {
 // openMP here
 #pragma omp parallel for default(none)                                  \
-  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,gauntCoeficients,dele1,tau00_l) \
+  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,gauntCoeficients,dele1,tau00_l,gfOutFile) \
   firstprivate(ie,iie,pnrel,energy,nume)
           for(int i=0; i<local.num_local; i++)
           {
