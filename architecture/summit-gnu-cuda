@@ -33,12 +33,14 @@ ifdef USE_OPENMP
 export LSMS_CXX=mpicxx $(COMP_OPTIONS) -std=c++14 $(USE_ACCELERATOR) $(OPT_DEFINES) -fopenmp
 export CC=mpicc  $(COMP_OPTIONS) $(USE_ACCELERATOR) $(OPT_DEFINES) -fopenmp
 export F77=mpif77  $(COMP_OPTIONS) $(USE_ACCELERATOR) -fopenmp
+export F90=mpif90  $(COMP_OPTIONS) $(USE_ACCELERATOR) -fopenmp
 export CUDA_CXX=nvcc -arch=sm_60 -I $(MPI_ROOT)/include $(USE_ACCELERATOR) -std=c++14 -Xcompiler -fopenmp 
 else
 # export LSMS_CXX=mpicxx $(COMP_OPTIONS) -std=c++14 -I$(BOOST_ROOT) $(USE_ACCELERATOR) $(OPT_DEFINES)
 export LSMS_CXX=mpicxx $(COMP_OPTIONS) -std=c++14 $(USE_ACCELERATOR) $(OPT_DEFINES)
 export CC=mpicc  $(COMP_OPTIONS) $(USE_ACCELERATOR) $(OPT_DEFINES)
 export F77=mpif77 $(COMP_OPTIONS) $(USE_ACCELERATOR)
+export F90=mpif90 $(COMP_OPTIONS) $(USE_ACCELERATOR)
 export CUDA_CXX=nvcc -arch=sm_60 -I $(MPI_ROOT)/include -std=c++14 $(USE_ACCELERATOR)
 endif
 
