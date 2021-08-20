@@ -115,7 +115,7 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
 //      >               rv,r,f(1),h,z,c,nitmax,tol,jws,last,iter,
 //      >               iprpts,ipdeq)
 // c        -------------------------------------------------------------
-
+*/
 	atom.coreStateType(ic, is) = 'C'; // deep core state
         if(atom.ec(ic, is) >= lsms.energyContour.ebot || iter < 0)
           atom.coreStateType(ic, is) = 'V';
