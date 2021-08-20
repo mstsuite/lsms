@@ -30,16 +30,16 @@ extern "C"
             &local_iprpts,&local_ipcore,
             &lsms.global.iprint,lsms.global.istop,32);
 
-      subroutine getcor(n_spin_pola,mtasa,
-     >                  jmt,jws,r_mesh,h,xstart,vr,
-     >                  numc,nc,lc,kc,ec,
-     >                  ztotss,zsemss,zcorss,
-     >                  ecorv,esemv,corden,semcor,
-!ebot,etopcor,
-     >                  nrelc,
-     >                  qcpsc_mt,qcpsc_ws,mcpsc_mt,mcpsc_ws,
-     >                  iprpts, ipcore,
-     >                  iprint,istop)
+//       subroutine getcor(n_spin_pola,mtasa,
+//      >                  jmt,jws,r_mesh,h,xstart,vr,
+//      >                  numc,nc,lc,kc,ec,
+//      >                  ztotss,zsemss,zcorss,
+//      >                  ecorv,esemv,corden,semcor,
+// !ebot,etopcor,
+//      >                  nrelc,
+//      >                  qcpsc_mt,qcpsc_ws,mcpsc_mt,mcpsc_ws,
+//      >                  iprpts, ipcore,
+//      >                  iprint,istop)
 */
 
 void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
@@ -109,13 +109,13 @@ void getCoreStates(LSMSSystemParameters &lsms, AtomData &atom)
 	deepst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
                 &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, &c,
                 &nitmax, &tol, &atom.jws, &last, &iter, &local_iprpts, &ipdeq);
-	/*
-c        -------------------------------------------------------------
-         call deepst(nc(i),lc(i),kc(i),ecore(i),
-     >               rv,r,f(1),h,z,c,nitmax,tol,jws,last,iter,
-     >               iprpts,ipdeq)
-c        -------------------------------------------------------------
-	 */
+
+// c        -------------------------------------------------------------
+//          call deepst(nc(i),lc(i),kc(i),ecore(i),
+//      >               rv,r,f(1),h,z,c,nitmax,tol,jws,last,iter,
+//      >               iprpts,ipdeq)
+// c        -------------------------------------------------------------
+
 	atom.coreStateType(ic, is) = 'C'; // deep core state
         if(atom.ec(ic, is) >= lsms.energyContour.ebot || iter < 0)
           atom.coreStateType(ic, is) = 'V';
@@ -124,13 +124,13 @@ c        -------------------------------------------------------------
         semcst_(&atom.nc(ic, is), &atom.lc(ic, is), &atom.kc(ic, is), &atom.ec(ic, is),
                 &atom.vr(0,is), &atom.r_mesh[0], &f[1], &atom.h, &atom.ztotss, &c,
                 &nitmax, &tol, &jmt, &atom.jws, &last2, &iter, &local_iprpts, &ipdeq);
-	/*
-c           ----------------------------------------------------------
-            call semcst(nc(i),lc(i),kc(i),ecore(i),
-     >                  rv,r,f(1),h,z,c,nitmax,tol,jmt,jws,last2,iter,
-     >                  iprpts,ipdeq)
-c           ----------------------------------------------------------
-	 */
+
+// c           ----------------------------------------------------------
+//             call semcst(nc(i),lc(i),kc(i),ecore(i),
+//      >                  rv,r,f(1),h,z,c,nitmax,tol,jmt,jws,last2,iter,
+//      >                  iprpts,ipdeq)
+// c           ----------------------------------------------------------
+
 	atom.coreStateType(ic, is) = 'S'; // semi core state
 	if(atom.ec(ic, is) >= lsms.energyContour.ebot || iter < 0)
 	  atom.coreStateType(ic, is) = 'V'; // shallow core state -> move to valence
