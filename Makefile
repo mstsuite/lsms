@@ -6,9 +6,9 @@ export LIBS := -L$(TOP_DIR)/lua/lib -llua $(TOP_DIR)/mjson/mjson.a
 include architecture.h 
 
 ifdef USE_LIBXC
-  ADDITIONAL_TARGETS += libxc
-  ADD_LIBS += -L$(TOP_DIR)/opt/lib/ -lxc
-  INC_PATH += -I$(TOP_DIR)/opt/include/
+  export ADDITIONAL_TARGETS += libxc
+  export ADD_LIBS += -L$(TOP_DIR)/opt/lib/ -lxc
+  export INC_PATH += -I$(TOP_DIR)/opt/include/
   export OPT_DEFINES += -DUSE_LIBXC
 endif
 
