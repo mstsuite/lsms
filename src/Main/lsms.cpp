@@ -22,20 +22,19 @@
 #include <hdf5.h>
 
 #include "lua.hpp"
-//#include "lua.h"
-//#include "lauxlib.h"
-//#include "lualib.h"
 
+
+#include "LuaInterface/LuaInterface.hpp"
 #include "SystemParameters.hpp"
 #include "PotentialIO.hpp"
 #include "Communication/distributeAtoms.hpp"
 #include "Communication/LSMSCommunication.hpp"
-#include "Core/CoreStates.hpp"
+#include "Core/calculateCoreStates.hpp"
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
 #include "VORPOL/VORPOL.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "calculateChemPot.hpp"
 #include "calculateDensities.hpp"
@@ -46,11 +45,14 @@
 #include "Potential/PotentialShifter.hpp"
 #include "TotalEnergy/calculateTotalEnergy.hpp"
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
-
+#include "VORPOL/setupVorpol.hpp"
 #include "Misc/readLastLine.hpp"
 
+#include "buildLIZandCommLists.hpp"
 #include "writeInfoEvec.cpp"
 #include "write_restart.hpp"
+#include "mixing_params.hpp"
+#include "read_input.hpp"
 
 SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
@@ -65,16 +67,6 @@ DeviceConstants deviceConstants;
 // std::vector<void *> deviceConstants;
 // std::vector<void *> deviceStorage;
 
-
-void initLSMSLuaInterface(lua_State *L);
-int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &crystal, MixingParameters &mix, PotentialShifter &potentialShifter,
-     AlloyMixingDesc &alloyDesc);
-void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
-                          CrystalParameters &crystal, LocalTypeInfo &local);
-void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local,
-                 SphericalHarmonicsCoeficients &shc);
-
-void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local);
 
 /*
  * Need portablew way to enable FP exceptions!
@@ -489,7 +481,10 @@ int main(int argc, char *argv[])
     // Calculate magnetic moments for each site and check if spin has flipped
     calculateEvec(lsms, local);
     // mixEvec(lsms, local, 0.0);
-    mixing -> updateMoments(comm, lsms, local.atom);
+
+    // @TODO: include the update moments again
+    //mixing -> updateMoments(comm, lsms, local.atom);
+
     for (int i=0; i<local.num_local; i++)
     {
       if(!mix.quantity[MixingParameters::moment_direction])

@@ -1,12 +1,15 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "PotentialIO.hpp"
+
 #include <stdio.h>
+
 #include <hdf5.h>
+
 #include "Main/SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/AtomData.hpp"
 #include "SingleSite/readSingleAtomData.hpp"
 #include "SingleSite/writeSingleAtomData.hpp"
-#include "PotentialIO.hpp"
 #include "HDF5io.hpp"
 #include "Main/initializeAtom.hpp"
 

@@ -1,10 +1,11 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "read_input.hpp"
+
 #include <stdlib.h>
 
+#include <iostream>
+
 #include "lua.hpp"
-//#include "lua.h"
-//#include "lauxlib.h"
-//#include "lualib.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -14,13 +15,10 @@
 
 #include "SystemParameters.hpp"
 #include "mixing.hpp"
-#include "LSMSMode.hpp"
 #include "LuaInterface/LuaSupport.hpp"
-#include "../Potential/PotentialShifter.hpp"
 
-#include <iostream>
 
-void repeatBasisCell(LSMSSystemParameters &lsms, CrystalParameters &crystal, int nx, int ny, int nz, int unique)
+static void repeatBasisCell(LSMSSystemParameters &lsms, CrystalParameters &crystal, int nx, int ny, int nz, int unique)
 {
   int numBasis=crystal.num_atoms;
   int numSites=numBasis*nx*ny*nz;

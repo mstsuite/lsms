@@ -1,6 +1,8 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "write_restart.hpp"
 
-#include <stdio.h>
+#include <cstdio>
+
 #include "mixing.hpp"
 #include "LSMSMode.hpp"
 

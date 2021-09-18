@@ -11,7 +11,7 @@
 #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/SingleSiteScattering.hpp"
 #include "MultipleScattering/MultipleScattering.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Misc/Coeficients.hpp"
 #include "calculateDensities.hpp"
 #include "MultipleScattering/linearSolvers.hpp"

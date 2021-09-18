@@ -1,5 +1,9 @@
-#include "Misc/integrateOneDim.cpp"
+
+#include "localTotalEnergy.hpp"
+
 #include <cmath>
+
+#include "Misc/integrateOneDim.hpp"
 
 extern "C"
 {

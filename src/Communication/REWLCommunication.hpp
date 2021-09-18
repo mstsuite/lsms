@@ -3,9 +3,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <mpi.h>
+
 #include "Real.hpp"
-//#include "TypeTraits.hpp"
+#include "TypeTraits.hpp"
 
 class REWLCommunication {
 

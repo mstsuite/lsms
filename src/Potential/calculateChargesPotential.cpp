@@ -27,7 +27,6 @@ void calculateChargesPotential(LSMSCommunication &comm, LSMSSystemParameters &ls
 
   delete[] qsub;
 
-  return;
 }
 
 
@@ -1132,8 +1131,7 @@ void calculateMTZeroPotDiff(LSMSSystemParameters &lsms, LocalTypeInfo &local, in
     // if(local.atom[i].forceZeroMoment && (lsms.n_spin_pola != 1))
     //   local.atom[i].vdif = local.atom[i].vdifNew = 0.0;
   }
-  
-  return;
+
 }
 
 

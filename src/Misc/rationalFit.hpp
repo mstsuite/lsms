@@ -2,6 +2,8 @@
 #ifndef LSMS_RATIONAL_FIT_HPP
 #define LSMS_RATIONAL_FIT_HPP
 
+#include <vector>
+
 #include "Real.hpp"
 #include "Complex.hpp"
 
