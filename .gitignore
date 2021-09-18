@@ -17,82 +17,6 @@ lua-5.2.4/man
 *.toc
 lsms_manual.pdf
 
-/libxc-4.2.3/config.status
-/libxc-4.2.3/libtool
-/libxc-4.2.3/src/libxc_docs.txt
-/libxc-4.2.3/src/libxc_funcs.f90
-/libxc-4.2.3/src/libxc_inc.f03
-/libxc-4.2.3/cmake/Makefile
-/libxc-4.2.3/maple/Makefile
-/libxc-4.2.3/pylibxc/Makefile
-/libxc-4.2.3/scripts/Makefile
-/libxc-4.2.3/src/maple2c/Makefile
-/libxc-4.2.3/src/Makefile
-/libxc-4.2.3/testsuite/pytest/Makefile
-/libxc-4.2.3/testsuite/Makefile
-/libxc-4.2.3/Makefile
-/.idea/misc.xml
-/libxc-4.2.3/autom4te.cache/output.0
-/libxc-4.2.3/autom4te.cache/output.1
-/libxc-4.2.3/autom4te.cache/requests
-/libxc-4.2.3/stamp-h1
-/libxc-4.2.3/autom4te.cache/traces.0
-/libxc-4.2.3/autom4te.cache/traces.1
-/.idea/vcs.xml
-/libxc-4.2.3/src/xc_funcs.h
-/libxc-4.2.3/src/genwiki
-/libxc-4.2.3/src/libxc.f90
-/libxc-4.2.3/src/.libs/libxc.la
-/libxc-4.2.3/src/libxc.la
-/opt/lib/libxc.la
-/libxc-4.2.3/src/.libs/libxc.lai
-/opt/lib/pkgconfig/libxc.pc
-/libxc-4.2.3/src/libxc_funcs_m.mod
-/opt/include/libxc_funcs_m.mod
-/libxc-4.2.3/src/libxcf03.f90
-/libxc-4.2.3/src/.libs/libxcf03.la
-/libxc-4.2.3/src/libxcf03.la
-/opt/lib/libxcf03.la
-/libxc-4.2.3/src/.libs/libxcf03.lai
-/opt/lib/pkgconfig/libxcf03.pc
-/libxc-4.2.3/src/.libs/libxcf90.la
-/libxc-4.2.3/src/libxcf90.la
-/opt/lib/libxcf90.la
-/libxc-4.2.3/src/.libs/libxcf90.lai
-/opt/lib/pkgconfig/libxcf90.pc
-/opt/include/xc.h
-/libxc-4.2.3/testsuite/xc-consistency
-/libxc-4.2.3/testsuite/xc-error
-/libxc-4.2.3/testsuite/xc-get_data
-/libxc-4.2.3/src/xc-info
-/opt/bin/xc-info
-/libxc-4.2.3/testsuite/xc-regression
-/libxc-4.2.3/testsuite/xc-run_testsuite.trs
-/libxc-4.2.3/src/xc-sanity
-/libxc-4.2.3/src/xc-threshold
-/opt/bin/xc-threshold
-/libxc-4.2.3/src/xc_f03_lib_m.mod
-/opt/include/xc_f03_lib_m.mod
-/libxc-4.2.3/src/xc_f90_lib_m.mod
-/opt/include/xc_f90_lib_m.mod
-/libxc-4.2.3/src/xc_f90_types_m.mod
-/opt/include/xc_f90_types_m.mod
-/opt/include/xc_funcs.h
-/opt/include/xc_funcs_removed.h
-/opt/include/xc_version.h
-/doc/html/formula.repository
-/.idea/codeStyles/codeStyleConfig.xml
-/Test/Cu/i_lsms.restart
-/Test/Cu/info_evec_out
-/Test/Cu/k.out
-/doc/manual/lsms_implementation.bbl
-/doc/manual/lsms_implementation.blg
-/doc/manual/lsms_implementation.pdf
-/doc/manual/lsms_manual.bbl
-/doc/manual/lsms_manual.blg
-/Test/Cu/out
-/.idea/codeStyles/Project.xml
-/Test/Cu/w_cu.0
 ### C++ template
 # Prerequisites
 *.d
@@ -133,7 +57,7 @@ CMakeCache.txt
 CMakeFiles
 CMakeScripts
 Testing
-old.Makefile
+Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
@@ -225,14 +149,14 @@ dkms.conf
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
-# .idea/artifacts
-# .idea/compiler.xml
-# .idea/jarRepositories.xml
-# .idea/modules.xml
-# .idea/*.iml
-# .idea/modules
-# *.iml
-# *.ipr
+.idea/artifacts
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/modules.xml
+.idea/*.iml
+.idea/modules
+*.iml
+*.ipr
 
 # CMake
 cmake-build-*/
@@ -268,157 +192,3 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 *build*/**
-### VirtualEnv template
-# Virtualenv
-# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
-.Python
-[Bb]in
-[Ii]nclude
-[Ll]ib
-[Ll]ib64
-[Ll]ocal
-[Ss]cripts
-pyvenv.cfg
-.venv
-pip-selfcheck.json
-
-### Python template
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
