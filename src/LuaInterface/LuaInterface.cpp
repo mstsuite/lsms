@@ -1,4 +1,7 @@
-#include "lua.h"
+
+#include "LuaInterface.hpp"
+
+#include "lua.hpp"
 
 
 // int luaopen_RadialGrid(lua_State *L);

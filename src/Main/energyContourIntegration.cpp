@@ -11,7 +11,7 @@
 #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/SingleSiteScattering.hpp"
 #include "MultipleScattering/MultipleScattering.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Misc/Coeficients.hpp"
 #include "calculateDensities.hpp"
 #include "MultipleScattering/linearSolvers.hpp"
@@ -178,15 +178,21 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
       int jmt = local.atom[i].jmt;
       if(lsms.mtasa==1) jmt = local.atom[i].jws;
 // here I leave out the i_vdif<0 case!
-      constraint_(&jmt,&rmt,&lsms.n_spin_pola,
-                  &(vr_con[i])(0,0),&local.atom[i].r_mesh[0],&pi4,
-                  &local.atom[i].evec[0],&evec_r(0,i),local.atom[i].b_con,
-                  local.atom[i].b_basis,&i_vdif,&h_app_para_mag,&h_app_perp_mag,
-                  &iprpts,
-                  &lsms.global.iprint,lsms.global.istop,32);
+      if (lsms.constraint == 0) {
+        constraint_(&jmt,&rmt,&lsms.n_spin_pola,
+            &(vr_con[i])(0,0),&local.atom[i].r_mesh[0],&pi4,
+           &local.atom[i].evec[0],&evec_r(0,i),local.atom[i].b_con,
+           local.atom[i].b_basis,&i_vdif,&h_app_para_mag,&h_app_perp_mag,
+           &iprpts,
+           &lsms.global.iprint,lsms.global.istop,32);
+      }
       if(lsms.relativity != full)
       {
-        spin_trafo_(&evec_r(0,i),&local.atom[i].ubr[0],&local.atom[i].ubrd[0]);
+        if (lsms.constraint == 0) {
+          spin_trafo_(&evec_r(0,i),&local.atom[i].ubr[0],&local.atom[i].ubrd[0]);
+        } else {
+          spin_trafo_(&local.atom[i].evec[0],&local.atom[i].ubr[0],&local.atom[i].ubrd[0]);
+        }
       } else { //. relativistic
         int matrot_size=2*(local.atom[i].lmax+1)*(local.atom[i].lmax+1);
         local.atom[i].dmat.resize(matrot_size,matrot_size);
@@ -196,8 +202,15 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         rGlobal[1]=0.0;
         rGlobal[2]=1.0;
 
-        matrot1_(rGlobal,&evec_r(0,i),&local.atom[i].lmax,
-                 &local.atom[i].dmat(0,0),&local.atom[i].dmatp(0,0));
+        if (lsms.constraint == 0) {
+          matrot1_(rGlobal,&local.atom[i].evec[0],&local.atom[i].lmax,
+                   &local.atom[i].dmat(0,0),&local.atom[i].dmatp(0,0));
+        } else {
+          matrot1_(rGlobal,&evec_r(0,i),&local.atom[i].lmax,
+                   &local.atom[i].dmat(0,0),&local.atom[i].dmatp(0,0));
+        }
+
+
       }
     } else { // n_spin_cant != 2 i.e. non spin polarized
 // call zcopy(4,u,1,ubr,1)
@@ -409,7 +422,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
       int iie=ie-eGroupIdx[ig];
       Complex energy=egrd[ie];
       Complex pnrel=std::sqrt(energy);
-      if(lsms.global.iprint>=-1) printf("Energy #%d (%lf,%lf)\n",ie,real(energy),imag(energy));
+      if(lsms.global.iprint>=0) printf("Energy #%d (%lf,%lf)\n",ie,real(energy),imag(energy));
       
       double timeCATM=MPI_Wtime();
       calculateAllTauMatrices(comm, lsms, local, vr_con, energy, iie, tau00_l);

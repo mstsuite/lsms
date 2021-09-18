@@ -1,5 +1,7 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "calculateChargesPotential.hpp"
+
+#include "newFunctionalInterface.hpp"
 #ifdef USE_LIBXC
 #include "libxcInterface.hpp"
 #endif
@@ -27,7 +29,7 @@ void calculateChargesPotential(LSMSCommunication &comm, LSMSSystemParameters &ls
   //   pf = fopen("vr_test_ccp1_1.dat","w");
   // printAtomPotential(pf, local.atom[0]);
   // fclose(pf);
-  
+
   // for (int i=0; i<crystal.num_types; i++) printf("i, qsub = %5d %25.15f\n", i, qsub[i]);
   if(lsms.global.iprint > 0)
     printf(">>> calculatePotential\n");
@@ -35,7 +37,6 @@ void calculateChargesPotential(LSMSCommunication &comm, LSMSSystemParameters &ls
 
   delete[] qsub;
 
-  return;
 }
 
 
@@ -825,7 +826,7 @@ C        dz=mint/qint
     int jmt, jws;
 
     jws = local.atom[i].jws;
-    
+
     switch (lsms.mtasa)
     {
       case 1:
@@ -944,7 +945,7 @@ C        dz=mint/qint
     }
     else if (lsms.xcFunctional[0] == 2)  // new functionals
     {
-      switch (chargeSwitch) 
+      switch (chargeSwitch)
       {
         case 1:
         {
@@ -982,7 +983,7 @@ C        dz=mint/qint
         }
       }
     }
-    else 
+    else
     {
       printf("Unknown XC Functional class!\n");
       MPI_Abort(comm.comm,1);
@@ -998,7 +999,7 @@ C        dz=mint/qint
         for(int ir=0; ir<local.atom[0].r_mesh.size(); ir++)
           fprintf(of,"%d %lg   %lg %lg   %lg %lg   %lg %lg  %lg %lg\n",ir,local.atom[i].r_mesh[ir],
                   local.atom[i].rhoNew(ir,0), local.atom[i].rhoNew(ir,1),
-                  local.atom[i].rhotot(ir,0),  local.atom[i].rhotot(ir,1), 
+                  local.atom[i].rhotot(ir,0),  local.atom[i].rhotot(ir,1),
                   local.atom[i].exchangeCorrelationPotential(ir,0), local.atom[i].exchangeCorrelationPotential(ir,1),
                   local.atom[i].exchangeCorrelationEnergy(ir,0), local.atom[i].exchangeCorrelationEnergy(ir,1));
         fclose(of);
@@ -1155,7 +1156,7 @@ C        dz=mint/qint
         for(int ir=0; ir<local.atom[0].r_mesh.size(); ir++)
           fprintf(of,"%d %lg   %lg %lg   %lg %lg   %lg %lg  %lg %lg   %lg %lg  %lg %lg\n",ir,local.atom[i].r_mesh[ir],
                   local.atom[i].rhoNew(ir,0), local.atom[i].rhoNew(ir,1),
-                  local.atom[i].rhotot(ir,0),  local.atom[i].rhotot(ir,1), 
+                  local.atom[i].rhotot(ir,0),  local.atom[i].rhotot(ir,1),
                   local.atom[i].exchangeCorrelationPotential(ir,0), local.atom[i].exchangeCorrelationPotential(ir,1),
                   local.atom[i].exchangeCorrelationEnergy(ir,0), local.atom[i].exchangeCorrelationEnergy(ir,1),
                   local.atom[i].vr(ir,0), local.atom[i].vr(ir,1),
@@ -1169,7 +1170,26 @@ C        dz=mint/qint
         printf("vrms[] =  %lg %lg\n", local.atom[i].vrms[0], local.atom[i].vrms[1]);
       }
       MPI_Abort(comm.comm,1);
-    } 
+    }
+
+
+    /*
+     * Phenomenological longitudinal spin fluctuations
+     *
+     * https://doi.org/10.1103/PhysRevB.75.054402
+     * https://doi.org/10.1103/PhysRevB.102.014402
+     *
+     */
+     if (lsms.n_spin_pola == 2) {
+       auto mag_mom = local.atom[i].mvalws;
+       auto h_lsf = local.atom[i].lsf_functional.exchange_field(mag_mom);
+
+       for (int ir = 0; ir < local.atom[0].r_mesh.size(); ir++) {
+         local.atom[i].vrNew(ir, 0) -= h_lsf * local.atom[i].r_mesh[ir];
+         local.atom[i].vrNew(ir, 1) += h_lsf * local.atom[i].r_mesh[ir];
+       }
+
+     }
 
     calculateMTZeroPotDiff(lsms, local, chargeSwitch);
 
@@ -1225,8 +1245,7 @@ void calculateMTZeroPotDiff(LSMSSystemParameters &lsms, LocalTypeInfo &local, in
     // if(local.atom[i].forceZeroMoment && (lsms.n_spin_pola != 1))
     //   local.atom[i].vdif = local.atom[i].vdifNew = 0.0;
   }
-  
-  return;
+
 }
 
 

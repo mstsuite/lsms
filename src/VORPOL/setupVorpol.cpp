@@ -1,8 +1,8 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-#include "Main/SystemParameters.hpp"
-#include "Communication/LSMSCommunication.hpp"
-#include "Misc/Coeficients.hpp"
-#include "VORPOL.hpp"
+
+#include "setupVorpol.hpp"
+
+#include <cstdio>
 
 void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local,SphericalHarmonicsCoeficients &shc)
 {
@@ -116,12 +116,13 @@ void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, Cryst
 
   if(lsms.global.iprint >= 0)
   {
-    printf("\n");
-    printf("Total cell volume     = %20.13f\n", lsms.volumeTotal);
-    printf("Volume renorm. factor = %20.13f\n", lsms.volumeNorm);
-    printf("WS cell volume        = %20.13f\n", local.atom[0].omegaWS);
-    printf("Interstitial volume   = %20.13f\n", lsms.volumeInterstitial);
-    printf("WS sphere radius      = %20.13f\n", local.atom[0].rws);
-    printf("Circumscribed radius  = %20.13f\n", local.atom[0].rCircumscribed);
+    std::printf("\n");
+    std::printf("Total cell volume     = %20.13f\n", lsms.volumeTotal);
+    std::printf("Volume renorm. factor = %20.13f\n", lsms.volumeNorm);
+    std::printf("WS cell volume        = %20.13f\n", local.atom[0].omegaWS);
+    std::printf("Interstitial volume   = %20.13f\n", lsms.volumeInterstitial);
+    std::printf("WS sphere radius      = %20.13f\n", local.atom[0].rws);
+    std::printf("Circumscribed radius  = %20.13f\n", local.atom[0].rCircumscribed);
   }
 }
+

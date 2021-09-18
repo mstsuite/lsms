@@ -4,7 +4,7 @@
 #include "SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 
-void calculateChemPot(LSMSCommunication &comm,LSMSSystemParameters &lsms, LocalTypeInfo &local,
+void calculateChemPot(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local,
                       Real &eigensum);
 
 #endif

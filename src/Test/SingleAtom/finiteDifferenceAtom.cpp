@@ -10,7 +10,7 @@
 #include "Matrix.hpp"
 
 #include "../../Misc/rationalFit.hpp"
-#include "../../Misc/integrateOneDim.cpp"
+#include "../../Misc/integrateOneDim.hpp"
 
 #include "calculateXC.cpp"
 

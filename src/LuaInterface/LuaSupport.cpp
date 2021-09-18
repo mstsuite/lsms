@@ -1,6 +1,10 @@
-#include <string.h>
-#include "Real.hpp"
+
 #include "LuaSupport.hpp"
+
+#include <string.h>
+#include <cstdio>
+
+#include "Real.hpp"
 
 // useful routine borrowed from internet
 void luaStackDump(lua_State *L) {

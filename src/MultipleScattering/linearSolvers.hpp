@@ -31,15 +31,20 @@
 #define MST_BUILD_KKR_MATRIX_ACCELERATOR 0x3000
 
 #define MST_LINEAR_SOLVER_ZGESV 1
-void solveTau00zgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00);
+void solveTau00zgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                     AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
 #define MST_LINEAR_SOLVER_ZGETRF 2
-void solveTau00zgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00);
+void solveTau00zgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                      AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
 #define MST_LINEAR_SOLVER_ZCGESV 3
-void solveTau00zcgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00);
+void solveTau00zcgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                      AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
 #define MST_LINEAR_SOLVER_ZBLOCKLU_F77 4
-void solveTau00zblocklu_f77(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00);
+void solveTau00zblocklu_f77(LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                            AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
 #define MST_LINEAR_SOLVER_ZBLOCKLU_CPP 5
-void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00);
+void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                            AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
 
 // #ifdef ACCELERATOR_CUBLAS
 #define MST_LINEAR_SOLVER_ZGETRF_CUBLAS 0x10
@@ -61,19 +66,28 @@ void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local, At
 #ifdef ACCELERATOR_CUDA_C
 void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m);
 void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM);
-void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie);
+void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                               AtomData &atom, int iie, int ispin);
 
 void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
-void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
-void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+
+// CUDA Solvers
+void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
+void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
+
 #ifdef USE_XGETRF
 void solveTau00Xgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
-                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
 #endif
+
 #ifdef USE_IRSXGESV
 void solveTau00IRSXgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
-                                 Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+                                 Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
 #endif
+
+
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 
 #ifdef __CUDACC__

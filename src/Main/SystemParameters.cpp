@@ -1,11 +1,14 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "SystemParameters.hpp"
+
 #include <stdio.h>
 #include <string>
-#include "SystemParameters.hpp"
+
 #include "LSMSMode.hpp"
 #include "Potential/getXCName.hpp"
 #include "MultipleScattering/linearSolvers.hpp"
 #include "MultipleScattering/buildKKRMatrix.hpp"
+
 const char *potentialTypeName[]=
 {
   "HDF5 (LSMS_1 format)",

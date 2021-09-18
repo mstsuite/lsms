@@ -1,22 +1,15 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 
-#include "Real.hpp"
-#include "Matrix.hpp"
-#include "Main/SystemParameters.hpp"
-#include "CoreStates.hpp"
-#include "PhysicalConstants.hpp"
+#include "coreSolver.hpp"
 
 #include <vector>
 #include <cmath>
 
-extern "C"
-{
-  void deepst_(int *nqn, int *lqn, int *kqn, Real *en, Real *rv, Real *r, Real *rf, Real *h, Real *z, Real *c,
-               int *nitmax, Real *tol, int *nws, int *nlast, int *iter, int *iprpts, int *ipdeq);
-  void semcst_(int *nqn, int *lqn, int *kqn, Real *en,Real *rv, Real *r, Real *rf, Real *h, Real *z, Real *c,
-               int *nitmax, Real *tol, int *nmt, int *nws, int *nlast, int *iter, int *iprpts,int *ipdeq);
-  void newint_(int *nr, Real *r, Real *f, Real *g, int *ip0);
-}
+#include "Real.hpp"
+#include "Matrix.hpp"
+#include "Main/SystemParameters.hpp"
+#include "PhysicalConstants.hpp"
+
 
 /*
     getcor_(&lsms.n_spin_pola,&lsms.mtasa,

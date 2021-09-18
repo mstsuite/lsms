@@ -1,3 +1,6 @@
+
+#include "calculateTrPxTau.hpp"
+
 #include "Complex.hpp"
 
 void calculateTrPxTau(Complex *tau00, int kkrsz, Complex *tr_pxtau)

@@ -4,13 +4,11 @@
 #include <cstdio>
 
 #include "Real.hpp"
-#include "Complex.hpp"
 #include "Matrix.hpp"
 #include "SingleSite/AtomData.hpp"
 #include "initializeAtom.hpp"
-#include "Core/CoreStates.hpp"
-#include "Misc/integrateOneDim.cpp"
-#include "Potential/calculateChargesPotential.hpp"
+#include "Core/calculateCoreStates.hpp"
+#include "Misc/integrateOneDim.hpp"
 
 /* initializeAtom(AtomData &a)
    initialize an atom using the following information in AtomData
