@@ -90,7 +90,11 @@ target_link_libraries(lsmscore PUBLIC Lua::Lua)
 target_link_libraries(lsmscore PUBLIC mjson)
 
 # LibXC
-target_link_libraries(lsmscore PUBLIC libxc::libxc)
+# target_link_libraries(lsmscore PUBLIC libxc::libxc)
+
+target_include_directories(lsmscore PUBLIC ${libxc_INCLUDE_DIR})
+target_link_libraries(lsmscore PUBLIC ${libxc_LIBRARIES})
+target_compile_definitions(lsmscore PUBLIC USE_LIBXC)
 
 # DL
 target_link_libraries(lsmscore PUBLIC ${CMAKE_DL_LIBS})

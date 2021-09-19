@@ -1,7 +1,5 @@
 // lsms class to encapsulate a version of LSMS_1.9 for use in gWL etc.
 
-#include "lsmsClass.hpp"
-
 #include <mpi.h>
 #include <iostream>
 #include <vector>
@@ -15,6 +13,7 @@
 #include "PotentialIO.hpp"
 #include "Communication/distributeAtoms.hpp"
 #include "Communication/LSMSCommunication.hpp"
+#include "Core/CoreStates.hpp"
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
@@ -22,15 +21,15 @@
 #include "Potential/calculateChargesPotential.hpp"
 #include "Potential/interpolatePotential.hpp"
 #include "Potential/PotentialShifter.hpp"
-#include "energyContourIntegration.hpp"
+#include "EnergyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "calculateChemPot.hpp"
 #include "calculateDensities.hpp"
 #include "calculateEvec.hpp"
 #include "TotalEnergy/calculateTotalEnergy.hpp"
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
-#include "Core/calculateCoreStates.hpp"
-#include "Core/coreSolver.hpp"
+
+#include "lsmsClass.hpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -1028,8 +1027,7 @@ Real LSMS::scfEnergy(Real *eb)
     calculateChargesPotential(comm,lsms,local,crystal,1);
     mixing -> updatePotential(comm,lsms,local.atom);
 
-    // @TODO: fix this again
-    //mixing -> updateMoments(comm, lsms, local.atom);
+    mixing -> updateMoments(comm, lsms, local.atom);
     
     if (potentialShifter.vSpinShiftFlag)
       potentialShifter.resetPotentials(local);
