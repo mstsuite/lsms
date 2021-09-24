@@ -1,0 +1,27 @@
+LSMS_3: Program started
+Using 4 MPI processes
+Using 1 OpenMP threads
+Reading input file 'i_lsms.lua'
+Loaded input file!
+System information:
+===================
+Number of atoms        :          4
+Number of atomic types :          4
+Performing Muffin-Tin (MT) calculation
+communicated Parameters.
+set global ids.
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128843 Ry
+RMS = 8.13266e-14
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128858 Ry
+RMS = 6.2226e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128849 Ry
+RMS = 6.23632e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128869 Ry
+RMS = 8.16995e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128863 Ry
+RMS = 1.00189e-15

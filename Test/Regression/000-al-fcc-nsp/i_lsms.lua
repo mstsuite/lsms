@@ -24,7 +24,7 @@ default_iprint=-1
 print_node=0
 istop="main"
 
-nscf=30
+nscf=10
 rmsTolerance=1.0e-16
 
 xRepeat=1
@@ -43,7 +43,7 @@ bravais[3]={ 0.0, 0.0, 1.0*a}
 
 site_default={lmax=3,rLIZ=12.5,rsteps={89.5,91.5,93.2,99.9},atom="Al",Z=13,Zc=2,Zs=8,Zv=3,rad=2}
 
-mixing = { {quantity = "potential", algorithm = "broyden", mixing_parameter = 0.05} }
+mixing = { {quantity = "potential", algorithm = "simple", mixing_parameter = 0.001} }
 
 numberOfMixQuantities = 0
 for k,v in pairs(mixing) do

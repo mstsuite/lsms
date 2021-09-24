@@ -1,0 +1,57 @@
+LSMS_3: Program started
+Using 1 MPI processes
+Using 1 OpenMP threads
+Reading input file 'i_lsms.lua'
+Loaded input file!
+System information:
+===================
+Number of atoms        :          4
+Number of atomic types :          4
+Performing Muffin-Tin (MT) calculation
+communicated Parameters.
+set global ids.
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128843 Ry
+RMS = 8.13266e-14
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128858 Ry
+RMS = 6.2226e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128849 Ry
+RMS = 6.23632e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128869 Ry
+RMS = 8.16995e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128863 Ry
+RMS = 1.00189e-15
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128883 Ry
+RMS = 1.88232e-15
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128834 Ry
+RMS = 8.37203e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128854 Ry
+RMS = 9.0172e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128838 Ry
+RMS = 8.28262e-16
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.128848 Ry
+RMS = 6.17752e-16
+Writing new potentials.
+Writing restart file.
+Band Energy = 4.306692585315797 Ry
+Fermi Energy = 0.501060346745968 Ry
+Total Energy = -1935.128848338087437 Ry
+timeScfLoop[rank==0] = 186.764748 sec
+     number of iteration:10
+timeScfLoop/iteration = 18.676475 sec
+timeCalcChemPot[rank==0]/iteration = 0.000006 sec
+timeCalcPotentialsAndMixing[rank==0]/iteration = 0.002499 sec
+timeBuildLIZandCommList[rank==0]: 0.000765 sec
+FOM Scale = 8077950976.000000
+Energy Contour Points = 32
+FOM = 4.3252e+08/sec
+FOM * energyContourPoints = = 1.38406e+10/sec

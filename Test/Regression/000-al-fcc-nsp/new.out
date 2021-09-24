@@ -1,0 +1,137 @@
+LSMS_3: Program started
+Using 4 MPI processes
+Using 12 OpenMP threads
+Reading input file 'i_lsms.lua'
+Loaded input file!
+System information:
+===================
+Number of atoms        :          4
+Number of atomic types :          4
+Performing Muffin-Tin (MT) calculation
+communicated Parameters.
+set global ids.
+ezrho                       =     -1156.3309267973734222323400900 Ry
+new ezrho                   =     -1156.3306251018768762151012197 Ry
+ezrho                       =     -1156.3309387215751939947949722 Ry
+new ezrho                   =     -1156.3306251018789225781802088 Ry
+ezrho                       =     -1156.3309393748979800875531510 Ry
+new ezrho                   =     -1156.3306251018786952045047656 Ry
+ezrho                       =     -1156.3309296951908891060156748 Ry
+new ezrho                   =     -1156.3306251018791499518556520 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 8.13266e-14
+ezrho                       =     -1156.3309325557406737061683089 Ry
+new ezrho                   =     -1156.3306251018796046992065385 Ry
+ezrho                       =     -1156.3309379159788932156516239 Ry
+new ezrho                   =     -1156.3306251018791499518556520 Ry
+ezrho                       =     -1156.3309411621094113797880709 Ry
+new ezrho                   =     -1156.3306251018775583361275494 Ry
+ezrho                       =     -1156.3309370731285525835119188 Ry
+new ezrho                   =     -1156.3306251018786952045047656 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 6.2226e-16
+ezrho                       =     -1156.3309387215742845000931993 Ry
+new ezrho                   =     -1156.3306251018768762151012197 Ry
+ezrho                       =     -1156.3309379159782110946252942 Ry
+new ezrho                   =     -1156.3306251018789225781802088 Ry
+ezrho                       =     -1156.3309317613286566484021023 Ry
+new ezrho                   =     -1156.3306251018800594465574250 Ry
+ezrho                       =     -1156.3309317613257007906213403 Ry
+new ezrho                   =     -1156.3306251018802868202328682 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 6.23632e-16
+ezrho                       =     -1156.3309379159834406891604885 Ry
+new ezrho                   =     -1156.3306251018791499518556520 Ry
+ezrho                       =     -1156.3309417739890250231837854 Ry
+new ezrho                   =     -1156.3306251018782404571538791 Ry
+ezrho                       =     -1156.3309355713679451582720503 Ry
+new ezrho                   =     -1156.3306251018802868202328682 Ry
+ezrho                       =     -1156.3309444668936976086115465 Ry
+new ezrho                   =     -1156.3306251018802868202328682 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 8.16995e-16
+ezrho                       =     -1156.3309245151731374789960682 Ry
+new ezrho                   =     -1156.3306251018809689412591979 Ry
+ezrho                       =     -1156.3309426629396057251142338 Ry
+new ezrho                   =     -1156.3306251018811963149346411 Ry
+ezrho                       =     -1156.3309426629214158310787752 Ry
+new ezrho                   =     -1156.3306251018814236886100844 Ry
+ezrho                       =     -1156.3309444669059757870854810 Ry
+new ezrho                   =     -1156.3306251018784678308293223 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 1.00189e-15
+ezrho                       =     -1156.3309438475805563939502463 Ry
+new ezrho                   =     -1156.3306251018796046992065385 Ry
+ezrho                       =     -1156.3309428906359244138002396 Ry
+new ezrho                   =     -1156.3306251018757393467240036 Ry
+ezrho                       =     -1156.3309438475762362941168249 Ry
+new ezrho                   =     -1156.3306251018796046992065385 Ry
+ezrho                       =     -1156.3309438475803290202748030 Ry
+new ezrho                   =     -1156.3306251018796046992065385 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 1.88232e-15
+ezrho                       =     -1156.3309381599742664548102766 Ry
+new ezrho                   =     -1156.3306251018780130834784359 Ry
+ezrho                       =     -1156.3309302567847680620616302 Ry
+new ezrho                   =     -1156.3306251018791499518556520 Ry
+ezrho                       =     -1156.3309261012250317435245961 Ry
+new ezrho                   =     -1156.3306251018791499518556520 Ry
+ezrho                       =     -1156.3309302567809027095790952 Ry
+new ezrho                   =     -1156.3306251018793773255310953 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 8.37203e-16
+ezrho                       =     -1156.3309384179569860862102360 Ry
+new ezrho                   =     -1156.3306251018780130834784359 Ry
+ezrho                       =     -1156.3309302567681697837542742 Ry
+new ezrho                   =     -1156.3306251018766488414257765 Ry
+ezrho                       =     -1156.3309384179597145703155547 Ry
+new ezrho                   =     -1156.3306251018777857098029926 Ry
+ezrho                       =     -1156.3309384179651715385261923 Ry
+new ezrho                   =     -1156.3306251018782404571538791 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 9.01121e-16
+ezrho                       =     -1156.3309302567772647307720035 Ry
+new ezrho                   =     -1156.3306251018789225781802088 Ry
+ezrho                       =     -1156.3309302916939032002119347 Ry
+new ezrho                   =     -1156.3306251018782404571538791 Ry
+ezrho                       =     -1156.3309381599772223125910386 Ry
+ezrho                       =     -1156.3309302567790837201755494 Ry
+new ezrho                   =     -1156.3306251018786952045047656 Ry
+new ezrho                   =     -1156.3306251018789225781802088 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 8.29867e-16
+ezrho                       =     -1156.3309395155158654233673587 Ry
+new ezrho                   =     -1156.3306251018786952045047656 Ry
+ezrho                       =     -1156.3309302567895429092459381 Ry
+new ezrho                   =     -1156.3306251018786952045047656 Ry
+ezrho                       =     -1156.3309302567822669516317546 Ry
+new ezrho                   =     -1156.3306251018768762151012197 Ry
+ezrho                       =     -1156.3309395155133643129374832 Ry
+new ezrho                   =     -1156.3306251018786952045047656 Ry
+Band Energy = 4.306693 Ry           Fermi Energy = 0.501060 Ry
+Total Energy = -1935.127611 Ry
+RMS = 6.19569e-16
+Writing new potentials.
+Writing restart file.
+Band Energy = 4.306692585315796 Ry
+Fermi Energy = 0.501060346745968 Ry
+Total Energy = -1935.127610643174421 Ry
+timeScfLoop[rank==0] = 79.544595 sec
+     number of iteration:10
+timeScfLoop/iteration = 7.954459 sec
+timeCalcChemPot[rank==0]/iteration = 0.158355 sec
+timeCalcPotentialsAndMixing[rank==0]/iteration = 0.035670 sec
+timeBuildLIZandCommList[rank==0]: 0.000665 sec
+FOM Scale = 8077950976.000000
+Energy Contour Points = 32
+FOM = 1.01552e+09/sec
+FOM * energyContourPoints = = 3.24968e+10/sec
