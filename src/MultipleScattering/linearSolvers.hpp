@@ -49,6 +49,8 @@ void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local, At
 // #ifdef ACCELERATOR_CUSOLVER
 #define MST_LINEAR_SOLVER_ZZGESV_CUSOLVER 0x12
 #define MST_LINEAR_SOLVER_ZGETRF_CUSOLVER 0x13
+#define MST_LINEAR_SOLVER_XGETRF_CUSOLVER 0x14
+#define MST_LINEAR_SOLVER_IRSXGESV_CUSOLVER 0x15
 // #endif
 
 // #ifdef ACCELERATOR_HIP
@@ -64,7 +66,14 @@ void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, Local
 void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
 void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
 void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
-
+#ifdef USE_XGETRF
+void solveTau00Xgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+#endif
+#ifdef USE_IRSXGESV
+void solveTau00IRSXgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                                 Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+#endif
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
 
 #ifdef __CUDACC__
