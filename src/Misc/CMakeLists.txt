@@ -5,7 +5,6 @@ target_sources(lsmscore
         PUBLIC
         integrator.hpp
         utils.hpp
-        poisson.cpp
         poisson.hpp
         associatedLegendreFunction.cpp
         associatedLegendreFunction.hpp

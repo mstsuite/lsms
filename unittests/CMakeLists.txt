@@ -10,11 +10,20 @@ add_test(
 )
 ###################################################################
 ###################################################################
-# 2. Test Lua Libraries
+# 2. Test Integration Routines
 add_executable(test_integrator test_integrator.cpp)
 target_link_libraries(test_integrator PUBLIC lsmscore)
 add_test(
         NAME test_integrator
         COMMAND $<TARGET_FILE:test_integrator>
+)
+###################################################################
+###################################################################
+# 3. Test Poisson Solver Routines
+add_executable(test_poisson test_poisson.cpp)
+target_link_libraries(test_poisson PUBLIC lsmscore)
+add_test(
+        NAME test_poisson
+        COMMAND $<TARGET_FILE:test_poisson>
 )
 ###################################################################

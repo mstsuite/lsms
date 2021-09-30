@@ -50,12 +50,12 @@ namespace lsms {
 
 
   template<typename T>
-  void static radial_poisson(T *VHartree,
-                             T *VHartreeDeriv,
-                             const double *__restrict__ R,
-                             const double *__restrict__ Rp,
-                             const double *__restrict__ density,
-                             const int end) {
+  void Kradial_poisson(T *VHartree,
+                      T *VHartreeDeriv,
+                      const double *__restrict__ R,
+                      const double *__restrict__ Rp,
+                      const double *__restrict__ density,
+                      const int end) {
 
     int idx;
 
