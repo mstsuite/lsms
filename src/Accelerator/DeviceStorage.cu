@@ -126,21 +126,66 @@ public:
         cudaStreamCreate(&stream[i][0]);
         cudaStreamCreate(&stream[i][1]);
         cudaEventCreateWithFlags(&event[i],cudaEventDisableTiming);
-        cublasCreate(&cublas_h[i]);
-        cusolverDnCreate(&cusolverDnHandle[i]);
-
+        cublasCheckError(cublasCreate(&cublas_h[i]));
+        cusolverCheckError(cusolverDnCreate(&cusolverDnHandle[i]));
 	int lWork;
-	cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
-				    (cuDoubleComplex *)dev_m[i], N, &lWork);
+	cusolverCheckError(cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
+                                                       (cuDoubleComplex *)dev_m[i], N, &lWork));
 	dev_workBytes[i] = 0;
 #ifndef ARCH_IBM
 	cusolverDnZZgesv_bufferSize(cusolverDnHandle[i], N, 2*kkrsz_max,
 				    (cuDoubleComplex *)dev_m[i], N, dev_ipvt[i], (cuDoubleComplex *)dev_tau[i], N, (cuDoubleComplex *)dev_tau[i], N,
 				    dev_work[i], &dev_workBytes[i]);
 #endif
-
-	dev_workBytes[i] = std::max(dev_workBytes[i]*sizeof(cuDoubleComplex),
-				    lWork*sizeof(cuDoubleComplex));
+	dev_workBytes[i] = std::max(dev_workBytes[i],
+				    lWork*sizeof(cuDoubleComplex));        
+#ifdef USE_XGETRF
+        {
+#if CUDA_VERSION < 11010
+        printf("Error: Xgetrf requires CUDA 11.1+\n");
+        exit(0);
+#endif          
+        cusolverCheckError(cusolverDnCreateParams(&cusolverDnParams[i]));
+        cusolverCheckError(cusolverDnSetAdvOptions(cusolverDnParams[i], CUSOLVERDN_GETRF, CUSOLVER_ALG_2));        
+        cudaMalloc((void**)&dev_ipvt64[i],N*sizeof(int64_t));
+        size_t llWork;
+        cusolverCheckError(cusolverDnXgetrf_bufferSize(cusolverDnHandle[i],
+                                                       cusolverDnParams[i],
+                                                       (int64_t)N,
+                                                       (int64_t)N,
+                                                       CUDA_C_64F,
+                                                       (cuDoubleComplex *)dev_m[i],
+                                                       (int64_t)N,
+                                                       CUDA_C_64F,
+                                                       &llWork,
+                                                       &host_workBytes[i]));
+        dev_workBytes[i] = std::max(dev_workBytes[i], llWork);
+        host_work[i] = malloc(host_workBytes[i]);
+        }
+#endif        
+#ifdef USE_IRSXGESV
+        {
+#if CUDA_VERSION < 10020
+        printf("Error: IRSXgesv requires CUDA 10.2+\n");
+        exit(1);
+#endif                    
+        cusolverCheckError(cusolverDnIRSParamsCreate(&cusolverDnIRSParams[i]));
+        cusolverCheckError(cusolverDnIRSParamsSetRefinementSolver(cusolverDnIRSParams[i],
+                                                                  CUSOLVER_IRS_REFINE_CLASSICAL));
+        cusolverCheckError(cusolverDnIRSParamsSetSolverPrecisions(cusolverDnIRSParams[i],
+                                                                  CUSOLVER_C_64F,
+                                                                  CUSOLVER_C_16F));
+        cusolverCheckError(cusolverDnIRSInfosCreate(&cusolverDnIRSInfo[i]));
+        size_t llWork;
+        cusolverCheckError(cusolverDnIRSXgesv_bufferSize(cusolverDnHandle[i],
+                                                         cusolverDnIRSParams[i],
+                                                         N,
+                                                         2*kkrsz_max,
+                                                         &llWork));
+        dev_workBytes[i] = std::max(dev_workBytes[i], llWork);
+        cudaMalloc((void**)&dev_X[i], 4*N*kkrsz_max*sizeof(Complex));
+        }
+#endif
 	cudaMalloc((void**)&dev_work[i], dev_workBytes[i]);
         // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
       }
@@ -160,8 +205,8 @@ public:
         cudaFree(dev_m[i]);
         cudaFree(dev_ipvt[i]);
         cudaFree(dev_info[i]);
+        cudaFree(dev_bgij[i]);        
 #ifdef BUILDKKRMATRIX_GPU
-        cudaFree(dev_bgij[i]);
         cudaFree(dev_tmat_n[i]);
 #endif
 	cudaFree(dev_work[i]);
@@ -170,6 +215,17 @@ public:
         cudaStreamDestroy(stream[i][1]);
         cudaEventDestroy(event[i]);
         cublasDestroy(cublas_h[i]);
+#ifdef USE_XGETRF
+        ::free(host_work[i]);
+        cudaFree(dev_ipvt64[i]);                
+        cusolverDnDestroyParams(cusolverDnParams[i]);
+#endif
+#ifdef USE_IRSXGESV
+        cusolverDnIRSInfosDestroy(cusolverDnIRSInfo[i]);
+        cusolverDnIRSParamsDestroy(cusolverDnIRSParams[i]);
+        cudaFree(dev_X[i]);
+#endif        
+        cusolverDnDestroy(cusolverDnHandle[i]);
       }
       // dev_tmat_store.clear();
       cudaFree(devTmatStore);
@@ -228,6 +284,17 @@ int *DeviceStorage::dev_ipvt[MAX_THREADS];
 int *DeviceStorage::dev_info[MAX_THREADS];
 cublasHandle_t DeviceStorage::cublas_h[MAX_THREADS];
 cusolverDnHandle_t DeviceStorage::cusolverDnHandle[MAX_THREADS];
+#ifdef USE_XGETRF
+cusolverDnParams_t DeviceStorage::cusolverDnParams[MAX_THREADS];
+int64_t* DeviceStorage::dev_ipvt64[MAX_THREADS];
+void* DeviceStorage::host_work[MAX_THREADS];
+size_t DeviceStorage::host_workBytes[MAX_THREADS];
+#endif
+#ifdef USE_IRSXGESV
+cusolverDnIRSParams_t DeviceStorage::cusolverDnIRSParams[MAX_THREADS];
+cusolverDnIRSInfos_t DeviceStorage::cusolverDnIRSInfo[MAX_THREADS];
+Complex *DeviceStorage::dev_X[MAX_THREADS];
+#endif
 cudaEvent_t DeviceStorage::event[MAX_THREADS];
 cudaStream_t DeviceStorage::stream[MAX_THREADS][2];
 // DeviceMatrix<Complex> DeviceStorage::dev_tmat_store;

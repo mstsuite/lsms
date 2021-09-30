@@ -409,7 +409,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
       int iie=ie-eGroupIdx[ig];
       Complex energy=egrd[ie];
       Complex pnrel=std::sqrt(energy);
-      if(lsms.global.iprint>=0) printf("Energy #%d (%lf,%lf)\n",ie,real(energy),imag(energy));
+      if(lsms.global.iprint>=-1) printf("Energy #%d (%lf,%lf)\n",ie,real(energy),imag(energy));
       
       double timeCATM=MPI_Wtime();
       calculateAllTauMatrices(comm, lsms, local, vr_con, energy, iie, tau00_l);

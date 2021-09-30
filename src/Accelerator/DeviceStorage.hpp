@@ -62,7 +62,18 @@ private:
   static int *dev_info[MAX_THREADS];
 #if defined(ACCELERATOR_CUDA_C)
   static cublasHandle_t cublas_h[MAX_THREADS];
-  static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];  
+  static cusolverDnHandle_t cusolverDnHandle[MAX_THREADS];
+#ifdef USE_XGETRF
+  static size_t host_workBytes[MAX_THREADS];  
+  static void *host_work[MAX_THREADS];  
+  static int64_t *dev_ipvt64[MAX_THREADS];  
+  static cusolverDnParams_t cusolverDnParams[MAX_THREADS];
+#endif
+#ifdef USE_IRSXGESV
+  static cusolverDnIRSParams_t cusolverDnIRSParams[MAX_THREADS];
+  static cusolverDnIRSInfos_t cusolverDnIRSInfo[MAX_THREADS];
+  static Complex *dev_X[MAX_THREADS];
+#endif  
   // static cudaEvent_t event[MAX_THREADS];
   // static cudaStream_t stream[MAX_THREADS][2];
 #endif
@@ -100,6 +111,17 @@ public:
   static cudaEvent_t getEvent() { return event[omp_get_thread_num()]; }
   static cublasHandle_t getCublasHandle() { return cublas_h[omp_get_thread_num()]; }
   static cusolverDnHandle_t getCusolverDnHandle() { return cusolverDnHandle[omp_get_thread_num()]; }
+#ifdef USE_XGETRF
+  static int64_t* getDevIpvt64() { return dev_ipvt64[omp_get_thread_num()]; }
+  static size_t getHostWorkBytes() { return host_workBytes[omp_get_thread_num()]; }  
+  static void *getHostWork() {  return host_work[omp_get_thread_num()]; }    
+  static cusolverDnParams_t getCusolverParams() { return cusolverDnParams[omp_get_thread_num()]; }
+#endif
+#ifdef USE_IRSXGESV
+  static cusolverDnIRSParams_t getCusolverIRSParams() { return cusolverDnIRSParams[omp_get_thread_num()]; }
+  static cusolverDnIRSInfos_t getCusolverIRSInfo() { return cusolverDnIRSInfo[omp_get_thread_num()]; }
+  static Complex* getDevX() { return dev_X[omp_get_thread_num()]; }
+#endif
 #endif
 #if defined(ACCELERATOR_HIP)
   static hipblasHandle_t getHipBlasHandle() { return hipblas_h[omp_get_thread_num()]; }

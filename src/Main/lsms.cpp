@@ -52,6 +52,10 @@
 #include "writeInfoEvec.cpp"
 #include "write_restart.hpp"
 
+#ifdef USE_NVTX
+#include <nvToolsExt.h>
+#endif
+
 SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
 IFactors iFactors;
@@ -471,9 +475,12 @@ int main(int argc, char *argv[])
   }
 
   int iteration;
+#ifdef USE_NVTX
+  nvtxRangePushA("SCFLoop");
+#endif  
   for (iteration=0; iteration<lsms.nscf && !converged; iteration++)
   {
-    if (lsms.global.iprint >= 0)
+    if (lsms.global.iprint >= -1 && comm.rank == 0)
       printf("SCF iteration %d:\n", iteration);
 
     // Calculate band energy
@@ -599,8 +606,10 @@ int main(int argc, char *argv[])
     }
 
   }
-
- timeScfLoop = MPI_Wtime() - timeScfLoop;
+#ifdef USE_NVTX
+  nvtxRangePop();
+#endif
+  timeScfLoop = MPI_Wtime() - timeScfLoop;
   
   writeInfoEvec(comm, lsms, crystal, local, eband, lsms.infoEvecFileOut);
   if(lsms.localAtomDataFile[0]!=0)
@@ -689,6 +698,7 @@ int main(int argc, char *argv[])
             (double)energyContourPoints * (double)fomScale * (double)iteration / timeScfLoop);
     //         (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
   }
+
 
   local.tmatStore.unpinMemory();
 

@@ -23,6 +23,16 @@
    exit(0); \
  }                                                                 \
 }
+
+#define cusolverCheckError(call) {                                    \
+cusolverStatus_t err = call;                                                    \
+if(CUSOLVER_STATUS_SUCCESS != err) {                                                \
+fprintf(stderr, "cuSolver error in file '%s' in line %i : %d.\n",        \
+        __FILE__, __LINE__, err);              \
+fflush(stderr); \
+exit(0);                                                  \
+} }
+
 #endif
 #if defined(ACCELERATOR_HIP)
 #define deviceCheckError() {                                          \
