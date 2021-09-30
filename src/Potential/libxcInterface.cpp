@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "Main/SystemParameters.hpp"
 #include "Real.hpp"
 #include "libxcInterface.hpp"
@@ -55,16 +56,26 @@ void LibxcInterface::evaluate(std::vector<Real> &rMesh, Matrix<Real> &rhoIn, int
   if(needGradients)
   {
 // calculate the contracted gradients. Note that rho is spherically symmetric: grad(rho) = e_r * (d rho / d r)
+    if(nSpin>1)
+    {
 // spin polarized:
 // spin up
-    calculateDerivative(&rMesh[0], &rho[0], &dRho[0], jmt+1, 2, 2);
+      calculateDerivative(&rMesh[0], &rho[0], &dRho[0], jmt+1, 2, 2);
 // spin down
-    calculateDerivative(&rMesh[0], &rho[1], &dRho[1], jmt+1, 2, 2);
-    for(int ir=0; ir<=jmt; ir++)
-    {
-      sigma[ir*3]=   dRho[ir*2]*dRho[ir*2];
-      sigma[ir*3+1]= dRho[ir*2]*dRho[ir*2+1];
-      sigma[ir*3+2]= dRho[ir*2+1]*dRho[ir*2+1];
+      calculateDerivative(&rMesh[0], &rho[1], &dRho[1], jmt+1, 2, 2);
+      for(int ir=0; ir<=jmt; ir++)
+      {
+	sigma[ir*3]=   dRho[ir*2]*dRho[ir*2];
+	sigma[ir*3+1]= dRho[ir*2]*dRho[ir*2+1];
+	sigma[ir*3+2]= dRho[ir*2+1]*dRho[ir*2+1];
+      }
+    } else {
+      // non spin polarized
+      calculateDerivative(&rMesh[0], &rho[0], &dRho[0], jmt+1);
+      for(int ir=0; ir<=jmt; ir++)
+      {
+	sigma[ir] = dRho[ir]*dRho[ir];
+      }
     }
   }
   for(int i=0; i<numFunctionals; i++)
