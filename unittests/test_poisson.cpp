@@ -3,6 +3,7 @@
 //
 
 #undef NDEBUG
+
 #include <assert.h>
 
 #include <cstring>
@@ -11,6 +12,7 @@
 #include <cmath>
 
 #include "integrator.hpp"
+#include "poisson.hpp"
 
 #include "Misc/integrateOneDim.hpp"
 
@@ -34,12 +36,15 @@ int main(int argc, char *argv[]) {
   std::vector<double> radial_mesh(number_of_points, 0.0);
   std::vector<double> radial_mesh_deriv(number_of_points, 0.0);
   std::vector<double> function(number_of_points, 0.0);
+  std::vector<double> density(number_of_points, 0.0);
+  std::vector<double> vhartreederiv(number_of_points, 0.0);
+  std::vector<double> vhartree(number_of_points, 0.0);
 
-  std::vector<double> integrand(number_of_points, 0.0);
-  std::vector<double> integral(number_of_points, 0.0);
 
   auto r0 = 0.00001;
-  auto h = 0.0155;
+  auto rmax = 2.0;
+
+  auto h = std::log(rmax / r0) / number_of_points;
 
 
   for (auto i = 0; i < number_of_points; i++) {
@@ -47,8 +52,16 @@ int main(int argc, char *argv[]) {
     radial_mesh_deriv[i] = r0 * exp(i * h) * h;
   }
 
-  auto rSphere = radial_mesh[number_of_points - 1];
+  /*
+   * 1. Test
+   */
 
+  for (auto i = 0; i < number_of_points; i++) {
+    density[i] = 4 * M_PI * radial_mesh[i] * radial_mesh[i] * std::exp(-0.01 * radial_mesh[i]);
+  }
+
+
+  radial_poisson(vhartree, vhartreederiv, radial_mesh, radial_mesh_deriv, density, number_of_points);
 
 
   return EXIT_SUCCESS;

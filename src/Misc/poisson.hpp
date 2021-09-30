@@ -12,6 +12,8 @@
 #include <cmath>
 #include <vector>
 
+#include "integrator.hpp"
+
 namespace lsms {
 
 
@@ -45,37 +47,43 @@ namespace lsms {
       T(&f)[2]) {
 
     f[0] = rp * q;
-    f[1] = rp * (-4.0 * M_PI * n - 2.0 / r * q);
+    f[1] = rp * (-n / (r * r) - 2.0 / r * q);
   }
 
-
+  /**
+   * Radial poisson solver
+   *
+   * Density will be rho(r) = 4 * PI * r * r * n(r)
+   *
+   */
   template<typename T>
-  void Kradial_poisson(T *VHartree,
-                      T *VHartreeDeriv,
-                      const double *__restrict__ R,
-                      const double *__restrict__ Rp,
-                      const double *__restrict__ density,
-                      const int end) {
+  void radial_poisson(std::vector<T> &VHartree,
+                      std::vector<T> &VHartreeDeriv,
+                      const std::vector<T> &R,
+                      const std::vector<T> &Rp,
+                      const std::vector<T> &density,
+                      int end) {
 
     int idx;
-
     T yp[2];
-
     T f0[2];
     T f1[2];
     T f2[2];
     T f3[2];
     T f4[2];
-
     T delta;
-
-    double lam;
-
+    T lam;
     T i0;
     T i1;
 
+
+    std::vector<T> density_r(end, 0.0);
+    for (int i = 0; i < end; i++) {
+      density_r[i] = density[i] / R[i];
+    }
+
     // Starter condition
-    VHartree[0] = 4 * M_PI * simps_r(density, R, Rp, end);
+    VHartree[0] = radialIntegral(density_r, R, end);
     VHartreeDeriv[0] = 0;
 
 
@@ -110,7 +118,7 @@ namespace lsms {
 
     i0 = VHartree[idx] + 1.0 / 12.0 * (-f0[0] + 8.0 * f1[0]);
     i1 = VHartreeDeriv[idx] + 1.0 / 12.0 * (-f0[1] + 8.0 * f1[1])
-         - Rp[idx + 1] * lam * 4 * M_PI * density[idx + 1];
+         - Rp[idx + 1] * lam * density[idx + 1] / (R[idx + 1] * R[idx + 1]);
 
     delta = 1 + lam * 2.0 * Rp[idx + 1] / R[idx + 1];
 
@@ -127,7 +135,7 @@ namespace lsms {
 
     i0 = VHartree[idx] + 1.0 / 24.0 * (f0[0] - 5.0 * f1[0] + 19.0 * f2[0]);
     i1 = VHartreeDeriv[idx] + 1.0 / 24.0 * (f0[1] - 5.0 * f1[1] + 19.0 * f2[1])
-         - Rp[idx + 1] * lam * 4 * M_PI * density[idx + 1];
+         - Rp[idx + 1] * lam * density[idx + 1] / (R[idx + 1] * R[idx + 1]);
 
     delta = 1 + lam * 2.0 * Rp[idx + 1] / R[idx + 1];
 
@@ -143,7 +151,7 @@ namespace lsms {
 
     i0 = VHartree[idx] + 1.0 / 720.0 * (-19.0 * f0[0] - 106.0 * f1[0] - 264 * f2[0] + 646 * f3[0]);
     i1 = VHartreeDeriv[idx] + 1.0 / 720.0 * (-19.0 * f0[1] - 106.0 * f1[1] - 264.0 * f2[0] + 646 * f3[1])
-         - Rp[idx + 1] * lam * 4 * M_PI * density[idx + 1];
+         - Rp[idx + 1] * lam * density[idx + 1] / (R[idx + 1] * R[idx + 1]);
 
     delta = 1 + lam * 2.0 * Rp[idx + 1] / R[idx + 1];
 
@@ -171,7 +179,7 @@ namespace lsms {
 
       i1 = VHartreeDeriv[idx] + 1.0 / 1440.0 * (27.0 * f0[1] - 173.0 * f1[1]
                                                 + 482.0 * f2[1] - 798.0 * f3[1] + 1427.0 * f4[1])
-           - Rp[idx + 1] * lam * 4 * M_PI * density[idx + 1];
+           - Rp[idx + 1] * lam * density[idx + 1] / (R[idx + 1] * R[idx + 1]);
 
       delta = 1 + lam * 2.0 * Rp[idx + 1] / R[idx + 1];
 
