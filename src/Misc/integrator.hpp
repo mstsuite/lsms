@@ -5,6 +5,9 @@
 #ifndef LSMS_INTEGRATOR_HPP
 #define LSMS_INTEGRATOR_HPP
 
+#include <algorithm>
+#include <functional>
+
 #include "utils.hpp"
 
 namespace lsms {
@@ -75,7 +78,12 @@ namespace lsms {
     return result;
   }
 
-
+  /**
+   * Radial integrator for any mesh
+   *
+   * This method doesn't use any interpolations for the last point and assumes an alight mesh.
+   * The mesh should be align to according to the `generateRadialMesh` method
+   */
   template<typename T>
   T radialIntegral(const std::vector<T> &integrand,
                    const std::vector<T> &radial_mesh,
@@ -88,34 +96,51 @@ namespace lsms {
     // Index of element that has radius greater then equal `r_sphere`
     auto i_after_rs = std::distance(radial_mesh.begin(), iter.base());
 
-    // Create a shifted mesh so that the zeros point can be added
-    std::vector<T> extended_integrand(i_after_rs + 2);
-    std::vector<T> extended_r_mesh(i_after_rs + 2);
+    auto end_point = i_after_rs + 1;
 
-    for (int i = 0; i < i_after_rs; ++i) {
-      extended_integrand[i + 1] = integrand[i];
-      extended_r_mesh[i + 1] = radial_mesh[i];
-    }
+    return simpson_nonuniform(radial_mesh, integrand, end_point);
+  }
 
-    extended_integrand[0] = 0.0;
-    extended_r_mesh[0] = 0.0;
+  /**
+  * Radial integrator for any mesh
+  */
+  template<typename T>
+  T radialIntegral(const std::vector<T> &integrand,
+                   const std::vector<T> &radial_mesh,
+                   int end) {
 
-
-    // Interpolate to the last value
-    auto lagrange = integrand[i_after_rs - 1] *
-                    (r_sphere - radial_mesh[i_after_rs]) / (radial_mesh[i_after_rs - 1] - radial_mesh[i_after_rs])
-                    + integrand[i_after_rs]
-                      * (r_sphere - radial_mesh[i_after_rs - 1]) /
-                      (radial_mesh[i_after_rs] - radial_mesh[i_after_rs - 1]);
-
-    extended_integrand[i_after_rs + 1] = lagrange;
-    extended_r_mesh[i_after_rs + 1] = r_sphere;
-
-    auto extended_length = i_after_rs + 2;
-
-    auto result = simpson_nonuniform(extended_r_mesh, extended_integrand, extended_length);
+    auto result = simpson_nonuniform(radial_mesh, integrand, end);
 
     return result;
+  }
+
+  /**
+   * Radial integrator for mesh with an analytic derivative
+   *
+   * \f[ r = r_0 * exp(i * h) ]\f
+   *
+   * dr / di = r * h
+   *
+   */
+  template<typename T>
+  T radialIntegralDerivMesh(const std::vector<T> &val,
+                            const std::vector<T> &radial_mesh_deriv,
+                            int end) {
+
+    T intval = 0.0;
+    int idx;
+
+    for (idx = 0; idx < end - 2; idx += 2) {
+      intval += 1.0 / 3.0 * (val[idx] * radial_mesh_deriv[idx] +
+                             4 * val[idx + 1] * radial_mesh_deriv[idx + 1] +
+                             val[idx + 2] * radial_mesh_deriv[idx + 2]);
+    };
+
+    if ((end % 2) == 0) {
+      intval +=
+          0.5 * (val[idx] * radial_mesh_deriv[idx] + val[idx + 1] * radial_mesh_deriv[idx + 1]);
+    };
+    return intval;
   }
 
 
