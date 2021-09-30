@@ -42,12 +42,12 @@ int LibxcInterface::init(int nSpin, int *xcFunctional)
 void LibxcInterface::evaluate(std::vector<Real> &rMesh, Matrix<Real> &rhoIn, int jmt, int nSpin, Matrix<Real> &xcEnergyOut, Matrix<Real> &xcPotOut)
 {
 // note: rho in lsms is stored as 4*pi * r^2 * rho
-  std::vector<Real> rho(nSpin*jmt);
-  std::vector<Real> dRho(nSpin*jmt);
-  std::vector<Real> sigma((2*nSpin-1)*jmt); // contracted gradient (1 entry/point for non polarized 3 for spin polarized)(see libxc documentation)
-  std::vector<Real> xcPot(nSpin*jmt), xcEnergy(jmt);
-  std::vector<Real> vSigma((2*nSpin-1)*jmt); // derivative with respect to contracted gradient (see libxc documentation)
-  for(int ir=0; ir<jmt; ir++)
+  std::vector<Real> rho(nSpin*(jmt+1));
+  std::vector<Real> dRho(nSpin*(jmt+1));
+  std::vector<Real> sigma((2*nSpin-1)*(jmt+1)); // contracted gradient (1 entry/point for non polarized 3 for spin polarized)(see libxc documentation)
+  std::vector<Real> xcPot(nSpin*(jmt+1)), xcEnergy(jmt+1);
+  std::vector<Real> vSigma((2*nSpin-1)*(jmt+1)); // derivative with respect to contracted gradient (see libxc documentation)
+  for(int ir=0; ir<=jmt; ir++)
   {
     rho[ir*nSpin]=rhoIn(ir,0)/(4.0*M_PI*rMesh[ir]*rMesh[ir]); xcEnergyOut[ir]=0.0; xcPotOut(ir,0)=0.0;
     if(nSpin>1) { rho[ir*nSpin+1]=rhoIn(ir,1)/(4.0*M_PI*rMesh[ir]*rMesh[ir]); xcPotOut(ir,1)=0.0; }
@@ -57,10 +57,10 @@ void LibxcInterface::evaluate(std::vector<Real> &rMesh, Matrix<Real> &rhoIn, int
 // calculate the contracted gradients. Note that rho is spherically symmetric: grad(rho) = e_r * (d rho / d r)
 // spin polarized:
 // spin up
-    calculateDerivative(&rMesh[0], &rho[0], &dRho[0], jmt, 2, 2);
+    calculateDerivative(&rMesh[0], &rho[0], &dRho[0], jmt+1, 2, 2);
 // spin down
-    calculateDerivative(&rMesh[0], &rho[1], &dRho[1], jmt, 2, 2);
-    for(int ir=0; ir<jmt; ir++)
+    calculateDerivative(&rMesh[0], &rho[1], &dRho[1], jmt+1, 2, 2);
+    for(int ir=0; ir<=jmt; ir++)
     {
       sigma[ir*3]=   dRho[ir*2]*dRho[ir*2];
       sigma[ir*3+1]= dRho[ir*2]*dRho[ir*2+1];
