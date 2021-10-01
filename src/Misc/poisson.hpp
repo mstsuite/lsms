@@ -95,8 +95,8 @@ namespace lsms {
     VHartree[1] = VHartree[0] + (f0[0] + f1[0]) / 2;
     VHartreeDeriv[1] = VHartreeDeriv[0] + (f0[1] + f1[1]) / 2;
 
-    /*
-    for (int idx = 1; idx < end - 1; ++idx) {
+  /*
+    for (int idx = 1; idx < end; ++idx) {
       rad_func(R[idx - 1], Rp[idx - 1], density[idx - 1], VHartreeDeriv[idx - 1], f0);
       yp[0] = VHartree[idx - 1] + f0[0];
       yp[1] = VHartreeDeriv[idx - 1] + f0[1];
@@ -105,9 +105,8 @@ namespace lsms {
       VHartreeDeriv[idx] = VHartreeDeriv[idx - 1] + (f0[1] + f1[1]) / 2;
 
     }
-
     return;
-    */
+*/
 
     // Adams Moulton 3
     idx = 1;
