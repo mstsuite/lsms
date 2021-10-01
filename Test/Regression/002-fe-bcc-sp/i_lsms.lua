@@ -14,7 +14,7 @@ relativity="s"
 core_relativity="f"
 
 num_atoms=2
-nspin=2
+nspin=3
 mtasa=0
 
 xcFunctional = { 1, 1, 7 }
@@ -56,7 +56,7 @@ for i =1,num_atoms do site[i]={} end
 site[1].pos={0,0,0}
 site[1].evec={0,0,1}
 site[2].pos={0.5*a,0.5*a,0.5*a}
-site[2].evec={0,0,1}
+site[2].evec={0,1,0}
 
 
 for i =1,num_atoms do
