@@ -16,6 +16,8 @@ and for calculations using Monte-Carlo simulations:
 
 ## Installation
 
+[![CMake](https://github.com/francoMU/lsms/actions/workflows/cmake.yml/badge.svg)](https://github.com/francoMU/lsms/actions/workflows/cmake.yml)
+
 ### CMake
 
 <div style="padding: 15px; border: 1px solid transparent; border-color: transparent; margin-bottom: 20px; border-radius: 4px; color: #a94442; background-color: #f2dede; border-color: #ebccd1;">
