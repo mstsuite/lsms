@@ -948,7 +948,13 @@ Real LSMS::scfEnergy(Real *eb)
   {
     //if (lsms.global.iprint >= 0)
     //  printf("SCF iteration %d:\n", iterationCount);
-    Real rms=0.5*(local.qrms[0]+local.qrms[1]);
+    Real rms = 0.0;
+    if(lsms.n_spin_pola > 1)
+    {
+      rms = 0.5*(local.qrms[0]+local.qrms[1]);
+    } else {
+      rms = local.qrms[0];
+    }
     // if(comm.rank==0) printf("Walker %d: On SCF iteration %d. Last RMS = %17.15f\n", myWalkerID, iterationCount, rms);
 
     energyContourIntegration(comm, lsms, local);
@@ -1033,8 +1039,14 @@ Real LSMS::scfEnergy(Real *eb)
       potentialShifter.resetPotentials(local);
 
     rms = 0.0;
-    for(int i=0; i<local.num_local; i++)
-      rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
+    if(lsms.n_spin_pola > 1)
+    {
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
+    } else {
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, local.atom[i].qrms[0]);
+    }
     globalMax(comm, rms);
 
     if (potentialShifter.vSpinShiftFlag)

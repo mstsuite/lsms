@@ -545,11 +545,21 @@ int main(int argc, char *argv[])
     dTimePM = MPI_Wtime() - dTimePM;
     timeCalcPotentialsAndMixing += dTimePM;
 
-    // Real rms = 0.5 * (local.qrms[0] + local.qrms[1]);
     Real rms = 0.0;
-    for(int i=0; i<local.num_local; i++)
-      rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
-    globalMax(comm, rms);
+    if(lsms.n_spin_pola > 1)
+    {
+      // rms = 0.5 * (local.qrms[0] + local.qrms[1]);
+      rms = 0.0;
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
+      globalMax(comm, rms);
+    } else {
+      // rms = local.qrms[0];
+      rms = 0.0;
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, local.atom[i].qrms[0]);
+      globalMax(comm, rms);
+    }
     
 // check for convergence
     converged = rms < lsms.rmsTolerance;
