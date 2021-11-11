@@ -547,4 +547,6 @@ public:
   }
 };
 
+int printAtomPotential(FILE *of, AtomData &atom);
+
 #endif
