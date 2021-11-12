@@ -1,4 +1,4 @@
-OBJ = calculateChargesPotential.o interpolatePotential.o getqm_mt.o getvmt.o newexchg.o alpha2_c.o newpot_c.o epcorr.o rs.o getXCName.o libxcInterface.o calculateASAro3.o
+OBJ = calculateChargesPotential.o interpolatePotential.o getqm_mt.o getvmt.o newexchg.o alpha2_c.o newpot_c.o epcorr.o rs.o getXCName.o libxcInterface.o calculateASAro3.o newFunctionalInterface.o
 
 all: libPotential.a
 

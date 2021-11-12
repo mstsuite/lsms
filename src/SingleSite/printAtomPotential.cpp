@@ -12,13 +12,14 @@ int printAtomPotential(FILE *of, AtomData &atom)
 
 
   for(int ir=0; ir<atom.r_mesh.size(); ir++)
-    fprintf(of,"%d %lg   %lg %lg   %lg %lg   %lg %lg  %lg %lg   %lg %lg  %lg %lg\n",ir,local.atom[i].r_mesh[ir],
-                  atom.rhoNew(ir,0), atom.rhoNew(ir,1),
-                  atom.rhotot(ir,0), atom.rhotot(ir,1), 
-                  atom.exchangeCorrelationPotential(ir,0), atom.exchangeCorrelationPotential(ir,1),
-                  atom.exchangeCorrelationEnergy(ir,0), atom.exchangeCorrelationEnergy(ir,1),
-                  atom.vr(ir,0), atom.vr(ir,1),
-                  atom.vrNew(ir,0), atom.vrNew(ir,1));
+    fprintf(of,"%d %.10lg   %.10lg %.10lg   %.10lg %.10lg   %.10lg %.10lg  %.10lg %.10lg   %.10lg %.10lg  %.10lg %.10lg\n",
+            ir,atom.r_mesh[ir],
+            atom.rhoNew(ir,0), atom.rhoNew(ir,1),
+            atom.rhotot(ir,0), atom.rhotot(ir,1), 
+            atom.exchangeCorrelationPotential(ir,0), atom.exchangeCorrelationPotential(ir,1),
+            atom.exchangeCorrelationEnergy(ir,0), atom.exchangeCorrelationEnergy(ir,1),
+            atom.vr(ir,0), atom.vr(ir,1),
+            atom.vrNew(ir,0), atom.vrNew(ir,1));
 
   // printf("Wrote vr_pot.out.\n");
 

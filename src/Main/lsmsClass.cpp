@@ -153,6 +153,8 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   // set up exchange correlation functionals
   if(lsms.xcFunctional[0] == 1)  // libxc functional
     lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
+  if(lsms.xcFunctional[0] == 2)  // new LSMS functional
+    lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
 
   lsms.angularMomentumIndices.init(2 * crystal.maxlmax);
   sphericalHarmonicsCoeficients.init(2 * crystal.maxlmax);

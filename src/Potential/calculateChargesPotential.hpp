@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef CALCULATE_CHARGES_HPP
 #define CALCULATE_CHARGES_HPP
 
@@ -23,7 +24,7 @@ extern "C"
 {
   void newpot_(int *n_spin_pola, Real *ztotss, Real *rhoup, Real *rhodn, Real *rhot, Real *vrold, 
                Real *vrnew, Real *vrms, Real *vx, Real *vmt1, Real *vmt, Real *vxout, Real *sqr, 
-               int *jmt, Real *rins, Real *rmt, int *mtasa, int *iexch);
+               int *jmt, Real *rins, Real *rmt, int *mtasa); //, int *iexch);
 }
 
 /* ============================================================
