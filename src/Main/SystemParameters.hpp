@@ -16,6 +16,7 @@
 
 const int numFunctionalIndices=3;
 #include "Potential/libxcInterface.hpp"
+#include "Potential/newFunctionalInterface.hpp"
 
 
 class LSMSGlobals {
@@ -85,6 +86,7 @@ public:
                             // densityFunctional[0]=1: functionals from libxc 
   //char *xcName;
   LibxcInterface libxcFunctional;
+  NewFunctionalInterface newFunctional;
   int vSpinShiftFlag;      // if !=0 : shift the spin up and down potentials according to atom.vSpinShift
                            // this is used in WL-LSMS with moment magnitude fluctuations
   //double vSpinShift_min;   // vSpinShift_min, vSpinShift_max define the range for atom.vSpinShift

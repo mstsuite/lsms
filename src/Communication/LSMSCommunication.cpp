@@ -222,6 +222,13 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     if(crystal.types[i].lmax>crystal.maxlmax) crystal.maxlmax=crystal.types[i].lmax; 
   lsms.maxlmax=crystal.maxlmax;
 
+  for(int i = 0; i < alloyDesc.size(); i++)
+    for(int j = 0; j < alloyDesc[i].size(); j++)
+    {
+      if(alloyDesc[i][j].lmax > lsms.maxlmax) lsms.maxlmax=alloyDesc[i][j].lmax;
+    }
+  crystal.maxlmax=lsms.maxlmax;
+
 // set lsms.commRank to comm.rank
   lsms.commRank = comm.rank;
 }

@@ -5,7 +5,7 @@ c     cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      >                  vrold,vrnew,vrms,vx,
      >                  vmt1,vmt,vxout,
      >                  sqr,jmt,rins,rws,
-     >                  mtasa,iexch)
+     >                  mtasa)
 c     ================================================================
 c
       implicit   none
@@ -15,7 +15,7 @@ c
       integer    mtasa
 c
       integer    ir
-      integer    iexch
+!      integer    iexch
 c
       real*8     alpgga
       real*8     epcorr

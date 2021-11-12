@@ -235,7 +235,9 @@ int main(int argc, char *argv[])
 
   // set up exchange correlation functionals
   if (lsms.xcFunctional[0] == 1)         // use libxc functional
-    lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional); 
+    lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
+  if (lsms.xcFunctional[0] == 2)         // use new LSMS functional
+    lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
 
   lsms.angularMomentumIndices.init(2*crystal.maxlmax);
   sphericalHarmonicsCoeficients.init(2*crystal.maxlmax);
@@ -513,8 +515,17 @@ int main(int argc, char *argv[])
     // Calculate charge densities, potentials, and total energy
     calculateAllLocalChargeDensities(lsms, local);
     calculateChargesPotential(comm, lsms, local, crystal, 0);
+
+    // FILE *pf = fopen("vr_test_1.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
     checkAllLocalCharges(lsms, local);
     calculateTotalEnergy(comm, lsms, local, crystal);
+
+    // pf = fopen("vr_test_2.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
 
     // Calculate charge density rms
     calculateLocalQrms(lsms, local);
@@ -523,6 +534,10 @@ int main(int argc, char *argv[])
     mixing -> updateChargeDensity(comm, lsms, local.atom);
     dTimePM = MPI_Wtime() - dTimePM;
     timeCalcPotentialsAndMixing += dTimePM; 
+
+    // pf = fopen("vr_test_3.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
 
     // Recalculate core states
     // - swap core state energies for different spin channels first if spin has flipped
@@ -537,11 +552,26 @@ int main(int argc, char *argv[])
     }
     calculateCoreStates(comm, lsms, local);
 
+    // pf = fopen("vr_test_4.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
     dTimePM = MPI_Wtime();
     // If charge is mixed, recalculate potential and mix (need a flag for this from input)
     calculateChargesPotential(comm, lsms, local, crystal, 1);
+
+    // pf = fopen("vr_test_5.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
     mixing -> updatePotential(comm, lsms, local.atom);
     
+    // pf = fopen("vr_test_6.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
+    // exitLSMS(comm, 1);
+
     dTimePM = MPI_Wtime() - dTimePM;
     timeCalcPotentialsAndMixing += dTimePM;
 
