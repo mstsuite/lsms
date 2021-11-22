@@ -88,10 +88,6 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     AlloyMixingDesc& alloyDesc)
 {
 
-// c     read in the structure  identity.................................
-//       read(10,'(a)') systemid
-//                      CHARACTER*50
-
   luaGetStrN(L,"systemid",lsms.systemid,50);
   snprintf(lsms.potential_file_in,128,"v_%s",lsms.systemid);
   snprintf(lsms.potential_file_out,128,"w_%s",lsms.systemid);
@@ -102,24 +98,12 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   lsms.pot_out_type=-1; // don't write potential
   luaGetInteger(L,"pot_out_type",&lsms.pot_out_type);
 
-// c     read in the standard output target switch.......................
-//       read(10,'(a)') output_to_screen  
-
-// c     ================================================================
-// c     read in subroutine stop level
-//       read(10,'(a)') istop
-// c     write(6,'(a)') istop
-
   char ctmp[32]; strncpy(ctmp,"main",32);
   luaGetStrN(L,"istop",ctmp,32); lsms.global.setIstop(ctmp);
 
   lsms.global.linearSolver=0;
   luaGetInteger(L,"linearSolver",(int *)&lsms.global.linearSolver);
 
-// c     ================================================================
-// c     read in print level for a particular node and rest of the nodes.
-//       read(10,*    ) node_print,print_instr,nprint
-// c     write(6,'(3i5)') node_print,print_instr,nprint
   luaGetInteger(L,"iprpts",&lsms.global.iprpts);
   luaGetInteger(L,"ipcore",&lsms.global.ipcore);
   luaGetInteger(L,"print_node",&lsms.global.print_node);
@@ -131,23 +115,14 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   lsms.global.GPUThreads=1;
 #endif
   luaGetInteger(L,"gpu_threads",&lsms.global.GPUThreads);
-// c     ================================================================
-// c     read in the number of atoms in the system.......................
-//       read(10,*    ) num_atoms
+
   lsms.num_atoms=0;
   luaGetInteger(L,"num_atoms", &lsms.num_atoms);
-//       if(num_atoms.lt.1 .or. num_atoms.gt.max_atoms) then
-//          write(6,'(/,'' RDIN_ATOM_FT::'',
-//      >               '' num_atoms exceeds the upper limit'')')
-//          write(6,'(  ''                num_atoms:'',i5)')num_atoms
-//          write(6,'(  ''                max_atoms:'',i5)')max_atoms
-//          call fstop(sname)
-//       endif
 
   lsms.relativity=scalar;
   lsms.nrelc=lsms.nrelv=0;
   char rel_str[80];
-  rel_str[0]='s'; rel_str[1]=0; // defualt is scalar relativistic
+  rel_str[0]='s'; rel_str[1]=0; // default is scalar relativistic
   luaGetStrN(L,"relativity",rel_str,40);
   switch(rel_str[0])
   {
@@ -201,11 +176,6 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     luaGetIntegerPositionInTable(L,"xcFunctional",i+1,&lsms.xcFunctional[i]);
   }
 
-
-//       if (nspin.lt.0 .or.(nspin.le.3.and. nspin.gt.ipspin+1)) then
-//          write(6,'('' RDIN_ATOM_FT:: Wrong input for nspin'')')
-//          call fstop(sname)
-//       endif
 
 // Read Bravais Vectors:
   for(int i=0; i<3; i++)
@@ -324,6 +294,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 
       luaGetStrNFromStack(L,"atom",alloyDesc[i][j].name,4);
       luaGetRealFieldFromStack(L,"conc",&alloyDesc[i][j].conc);
+      luaGetIntegerFieldFromStack(L,"lmax",&alloyDesc[i][j].lmax);
       luaGetIntegerFieldFromStack(L,"Z",&alloyDesc[i][j].Z);
       luaGetIntegerFieldFromStack(L,"Zc",&alloyDesc[i][j].Zc);
       luaGetIntegerFieldFromStack(L,"Zs",&alloyDesc[i][j].Zs);
