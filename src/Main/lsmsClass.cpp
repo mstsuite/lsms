@@ -110,7 +110,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   lsms.ngaussr               = 10;
   lsms.ngaussq               = 40;
   // if (comm.rank == comm.size-1) lsms.global.iprint = 0;
-  //lsms.vSpinShiftFlag = 0;
+  lsms.vSpinShiftFlag = 0;
 
   if (comm.rank == 0)
   {
@@ -187,6 +187,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   local.setMaxPts(lsms.global.iprpts);
   local.setMaxCore(lsms.global.ipcore);
 
+  if (lsms.global.iprint >= 0) printLSMSGlobals(stdout, lsms);
   if (lsms.global.iprint >= 0)
   {
     printLSMSSystemParameters(stdout, lsms);
