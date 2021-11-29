@@ -1,4 +1,5 @@
-// lsms class to encapsulate a version of LSMS_1.9 for use in gWL etc.
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+// lsms class to encapsulate LSMS for use in gWL etc.
 
 #ifndef LSMS_CLASS_H
 #define LSMS_CLASS_H

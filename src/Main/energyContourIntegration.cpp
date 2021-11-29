@@ -595,11 +595,13 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   if(lsms.lsmsMode==LSMSMode::matsubara)
   {
     printf("\nFinished Matsubara mode\n");
-    MPI_Abort(MPI_COMM_WORLD,0);
+    exitLSMS(comm, 0);
+    // MPI_Abort(MPI_COMM_WORLD,0);
   } else if(lsms.lsmsMode==LSMSMode::gf_out) {
     printf("\nFinished writing Green's functions.\n");
     for(int i=0; i<local.num_local; i++)
       fclose(gfOutFile[i]);
-    MPI_Abort(MPI_COMM_WORLD,0);
+    exitLSMS(comm, 0);
+    // MPI_Abort(MPI_COMM_WORLD,0);
   }
 }

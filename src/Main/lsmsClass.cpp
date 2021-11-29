@@ -1,4 +1,5 @@
-// lsms class to encapsulate a version of LSMS_1.9 for use in gWL etc.
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+// lsms class to encapsulate  LSMS for use in gWL etc.
 
 #include <mpi.h>
 #include <iostream>
@@ -681,7 +682,8 @@ void LSMS::setOccupancies(int *occ) {
   MPI_Status status;
  
   // distribute occupancies to respective processes
-  if( comm.rank == 0 ) {
+  if( comm.rank == 0 )
+    {
 
     // for every atomic site
     std::vector<MPI_Request> request(crystal.num_types);

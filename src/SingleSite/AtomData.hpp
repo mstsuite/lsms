@@ -312,8 +312,14 @@ public:
     xstart = a.xstart;
     rmt = a.rmt;
     h = a.h;
-    r_mesh = a.r_mesh;
-    x_mesh = a.x_mesh;
+
+    r_mesh.resize(a.r_mesh.size());
+    x_mesh.resize(a.x_mesh.size());
+    for(int i=0; i<a.r_mesh.size(); i++)
+    {
+      r_mesh[i] = a.r_mesh[i];
+      x_mesh[i] = a.x_mesh[i];
+    }
 
     alat = a.alat;
     efermi = a.efermi;
