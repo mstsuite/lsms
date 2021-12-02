@@ -2,8 +2,10 @@
 #ifndef LSMS_RATIONAL_FIT_HPP
 #define LSMS_RATIONAL_FIT_HPP
 
-#include "Real.hpp"
-#include "Complex.hpp"
+// #include "Real.hpp"
+// #include "Complex.hpp"
+
+#include <vector>
 
 /// Fit a function as a rational function with a  and quadratic denominator
 /// at point \f$ r_i\f$.
