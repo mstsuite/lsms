@@ -3,11 +3,14 @@
 #ifndef LSMS_BUILD_KKR_MATRIX_HPP
 #define LSMS_BUILD_KKR_MATRIX_HPP
 
+#include "Real.hpp"
 #include "Complex.hpp"
 #include "Matrix.hpp"
 #include <vector>
 #include <string>
 #include <utility>
+
+#include "Main/SystemParameters.hpp"
 
 #include "MultipleScattering.hpp"
 #include "linearSolvers.hpp"

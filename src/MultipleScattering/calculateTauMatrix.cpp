@@ -659,8 +659,8 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     // block inversion:
     // vecs only needed for alg>2!
     // Complex vecs[nrmat_ns*(kkrsz_ns*6+6)];
-    Complex *vecs;
-    Complex tmp_vecs; vecs=&tmp_vecs;
+    Complex *vecs=nullptr;
+    
     int *ipvt = new int[nrmat_ns];
     Matrix<Complex> delta(kkrsz_ns, kkrsz_ns);
     // Complex *delta = new Complex[kkrsz_ns*kkrsz_ns];
