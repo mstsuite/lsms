@@ -5,6 +5,7 @@
 #define MY_LSMSMODE_ENUM \
 X(main) \
 X(liz0) \
+X(dos) \
 X(gf_out) \
 X(matsubara)
 

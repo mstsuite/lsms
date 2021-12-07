@@ -104,6 +104,15 @@ void buildEnergyContour(int igrid,Real ebot,Real etop,Real eibot, Real eitop, Re
     ipepts=egrd.size();
     congauss_(&ebot,&etop,&eibot,&egrd[0],&dele1[0],&npts,&nume,&pi,&ipepts,&iprint,istop,32);
     break;
+  case 3: // DOS calculation: Points parallel to the real axis
+    egrd.resize(npts); dele1.resize(npts); nume=npts;
+    if (npts == 1)
+      dE = 0.0;
+    else
+      dE = (etop - ebot) / Real(npts - 1);
+    for(int i = 0; i < npts; i++)
+      egrd[i] = std::complex<Real>(ebot + Real(i) * dE, eibot);
+    break;
   case 4: // Matsubara frequencies: Temperature & npts
     egrd.resize(npts); dele1.resize(npts); nume=npts;
     dE = pi * kBoltzmann * temperature; // pi/k_B T
@@ -137,6 +146,10 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   std::vector<Matrix<Real > > vr_con;
   Matrix<Real> evec_r;
 
+// files for writing the density of states if needed
+  FILE *dosOutFile;
+  std::vector<Real> dosOut;
+  
 // files for writing the Greens functions if needed
   std::vector<FILE *> gfOutFile;
 
@@ -224,16 +237,29 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
     
   }
   
-  // Real e_top;
-  // e_top=lsms.energyContour.etop;
+  Real e_top;
+  e_top=lsms.chempot;
   // if(lsms.energyContour.etop==0.0) etop=lsms.chempot;
-  buildEnergyContour(lsms.energyContour.grid, lsms.energyContour.ebot, lsms.chempot,
+  if(lsms.lsmsMode == LSMSMode::dos) e_top = lsms.energyContour.etop;
+  
+  buildEnergyContour(lsms.energyContour.grid, lsms.energyContour.ebot, e_top,
                      lsms.energyContour.eibot, lsms.energyContour.eitop, lsms.temperature,
                      egrd, dele1,
                      lsms.energyContour.npts, nume, lsms.global.iprint, lsms.global.istop);
 
-
-  if(lsms.lsmsMode==LSMSMode::matsubara)
+  if(lsms.lsmsMode == LSMSMode::dos)
+  {
+    dosOut.resize(egrd.size());
+    if(lsms.global.iprint>0)
+    {
+      printf("\nGenerate %lu energy points from %g Ry to %g Ry with imaginary part i%g Ry for DOS calculation",
+             egrd.size(), egrd[0].real(), egrd[egrd.size()-1].real(), egrd[0].imag());
+    }
+    if(comm.rank == 0)
+    {
+      dosOutFile = fopen("dos.out", "w");
+    }
+  } else if(lsms.lsmsMode==LSMSMode::matsubara)
   {
     printf("\nGenerated %lu energy points at Matsubara frequencies\n\n", egrd.size());
     
@@ -592,16 +618,52 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
     printf("  in energy loop                 = %lf sec\n",timeEnergyContourIntegration_2);
     printf("    in calculateAllTauMatrices   = %lf sec\n",timeCalculateAllTauMatrices);
   }
-  if(lsms.lsmsMode==LSMSMode::matsubara)
+  if(lsms.lsmsMode == LSMSMode::dos)
+  {
+    for(int i = 0; i<nume; i++)
+      {
+        dosOut[i] = 0.0;
+      }
+    if(lsms.n_spin_pola == 1) // non spin polarized
+    {
+      for(int ia=0; ia<local.num_local; ia++)
+        for(int ie=0; ie<nume; ie++)
+        {
+          dosOut[ie] += local.atom[ia].dos_real(ie, 0);
+        }
+    } else if (lsms.n_spin_cant == 1) { // collinear spin polarized
+      for(int ia=0; ia<local.num_local; ia++)
+        for(int ie=0; ie<nume; ie++)
+        {
+          dosOut[ie] += local.atom[ia].dos_real(ie, 0) + local.atom[ia].dos_real(ie,1);
+        }
+    } else { // non-collinear spin polarized
+      for(int ia=0; ia<local.num_local; ia++)
+        for(int ie=0; ie<nume; ie++)
+        {
+          dosOut[ie] += local.atom[ia].dos_real(ie, 0) + local.atom[ia].dos_real(ie,3);
+        }
+    }
+
+    globalSum(comm, &dosOut[0], nume);
+
+    for(int ie=0; ie<nume; ie++)
+      fprintf(dosOutFile, "%g %g   %g\n", egrd[ie].real(), egrd[ie].imag(), dosOut[ie]);
+    
+    if(comm.rank == 0)
+    {
+      printf("\nFinished DOS mode\n");
+      fclose(dosOutFile);
+    }
+    exitLSMS(comm, 0);
+  } if(lsms.lsmsMode==LSMSMode::matsubara)
   {
     printf("\nFinished Matsubara mode\n");
     exitLSMS(comm, 0);
-    // MPI_Abort(MPI_COMM_WORLD,0);
   } else if(lsms.lsmsMode==LSMSMode::gf_out) {
     printf("\nFinished writing Green's functions.\n");
     for(int i=0; i<local.num_local; i++)
       fclose(gfOutFile[i]);
     exitLSMS(comm, 0);
-    // MPI_Abort(MPI_COMM_WORLD,0);
   }
 }

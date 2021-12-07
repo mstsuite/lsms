@@ -403,12 +403,13 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       }
 
       if(strncmp(h,"main",80)==0) lsms.lsmsMode=LSMSMode::main;
+      else if(strncmp(h,"dos",80)==0) lsms.lsmsMode=LSMSMode::dos;
       else if(strncmp(h,"liz0",80)==0) lsms.lsmsMode=LSMSMode::liz0;
       else if(strncmp(h,"gf_out",80)==0) lsms.lsmsMode=LSMSMode::gf_out;
       else if(strncmp(h,"matsubara",80)==0) lsms.lsmsMode=LSMSMode::matsubara;
       else
       {
-        printf("Unknown lsmsMode: '%s'\n Defaulting to 'main'.\n",h);
+        printf("!!! Unknown lsmsMode: '%s'\n!!!  Defaulting to 'main'.\n",h);
         lsms.lsmsMode=LSMSMode::main;
       }
     }
