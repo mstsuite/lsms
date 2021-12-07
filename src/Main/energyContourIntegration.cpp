@@ -240,7 +240,11 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   Real e_top;
   e_top=lsms.chempot;
   // if(lsms.energyContour.etop==0.0) etop=lsms.chempot;
-  if(lsms.lsmsMode == LSMSMode::dos) e_top = lsms.energyContour.etop;
+  if(lsms.lsmsMode == LSMSMode::dos)
+  {
+    e_top = lsms.energyContour.etop;
+    if(lsms.energyContour.grid != 3 && comm.rank==0)
+      printf("WARNING: lsms.energyContour.grid (%d) != 3 in dos calculation.\n   Make sure that this is rearly what you want!\n", lsms.energyContour.grid)
   
   buildEnergyContour(lsms.energyContour.grid, lsms.energyContour.ebot, e_top,
                      lsms.energyContour.eibot, lsms.energyContour.eitop, lsms.temperature,
