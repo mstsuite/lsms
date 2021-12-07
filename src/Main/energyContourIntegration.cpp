@@ -148,7 +148,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 
 // files for writing the density of states if needed
   FILE *dosOutFile;
-  std::vector<Real> dosOut;
+  std::vector<Real> dosOut, dosUpOut, dosDownOut;
   
 // files for writing the Greens functions if needed
   std::vector<FILE *> gfOutFile;
@@ -250,14 +250,15 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   if(lsms.lsmsMode == LSMSMode::dos)
   {
     dosOut.resize(egrd.size());
+    if(lsms.n_spin_pola > 1)
+    {
+      dosUpOut.resize(egrd.size());
+      dosDownOut.resize(egrd.size());
+    }
     if(lsms.global.iprint>0)
     {
       printf("\nGenerate %lu energy points from %g Ry to %g Ry with imaginary part i%g Ry for DOS calculation",
              egrd.size(), egrd[0].real(), egrd[egrd.size()-1].real(), egrd[0].imag());
-    }
-    if(comm.rank == 0)
-    {
-      dosOutFile = fopen("dos.out", "w");
     }
   } else if(lsms.lsmsMode==LSMSMode::matsubara)
   {
@@ -621,9 +622,17 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   if(lsms.lsmsMode == LSMSMode::dos)
   {
     for(int i = 0; i<nume; i++)
+    {
+      dosOut[i] = 0.0;
+    }
+    if(lsms.n_spin_pola > 1)
+    {
+      for(int i = 0; i<nume; i++)
       {
-        dosOut[i] = 0.0;
+        dosUpOut[i] = 0.0;
+        dosDownOut[i] = 0.0;
       }
+    }
     if(lsms.n_spin_pola == 1) // non spin polarized
     {
       for(int ia=0; ia<local.num_local; ia++)
@@ -636,24 +645,46 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         for(int ie=0; ie<nume; ie++)
         {
           dosOut[ie] += local.atom[ia].dos_real(ie, 0) + local.atom[ia].dos_real(ie,1);
+          dosUpOut[ie] += local.atom[ia].dos_real(ie, 0);
+          dosDownOut[ie] += local.atom[ia].dos_real(ie,1);
         }
     } else { // non-collinear spin polarized
       for(int ia=0; ia<local.num_local; ia++)
         for(int ie=0; ie<nume; ie++)
         {
-          dosOut[ie] += local.atom[ia].dos_real(ie, 0) + local.atom[ia].dos_real(ie,3);
+          Real t1 = local.atom[ia].dos_real(ie, 0);
+          Real t2 = std::sqrt(local.atom[ia].dos_real(ie, 1)*local.atom[ia].dos_real(ie, 1)
+            + local.atom[ia].dos_real(ie, 2)*local.atom[ia].dos_real(ie, 2)
+            + local.atom[ia].dos_real(ie, 3)*local.atom[ia].dos_real(ie, 3));
+          dosOut[ie] += local.atom[ia].dos_real(ie, 0); // + local.atom[ia].dos_real(ie,3);
+          dosUpOut[ie] += 0.5*(t1+t2);
+          dosDownOut[ie] += 0.5*(t1-t2);
         }
     }
 
     globalSum(comm, &dosOut[0], nume);
 
-    for(int ie=0; ie<nume; ie++)
-      fprintf(dosOutFile, "%g %g   %g\n", egrd[ie].real(), egrd[ie].imag(), dosOut[ie]);
-    
     if(comm.rank == 0)
     {
-      printf("\nFinished DOS mode\n");
+      dosOutFile = fopen("dos.out", "w");
+      for(int ie=0; ie<nume; ie++)
+        fprintf(dosOutFile, "%g %g   %g\n", egrd[ie].real(), egrd[ie].imag(), dosOut[ie]);
       fclose(dosOutFile);
+
+      if(lsms.n_spin_pola > 1)
+      {
+        dosOutFile = fopen("dos_up.out", "w");
+        for(int ie=0; ie<nume; ie++)
+          fprintf(dosOutFile, "%g %g   %g\n", egrd[ie].real(), egrd[ie].imag(), dosUpOut[ie]);
+        fclose(dosOutFile);
+
+        dosOutFile = fopen("dos_down.out", "w");
+        for(int ie=0; ie<nume; ie++)
+          fprintf(dosOutFile, "%g %g   %g\n", egrd[ie].real(), egrd[ie].imag(), dosDownOut[ie]);
+        fclose(dosOutFile);
+      }
+    
+      printf("\nFinished DOS mode\n");  
     }
     exitLSMS(comm, 0);
   } if(lsms.lsmsMode==LSMSMode::matsubara)
