@@ -25,7 +25,8 @@ int zblock_lu_cublas(cublasHandle_t handle, Matrix<Complex> &a, int *blk_sz, int
     *host_ipvt, int *idcol)
 {
   int k;
-  int info[1];
+  // int info[1];
+  int *info = DeviceStorage::getDevInfo();
   cuDoubleComplex *aArrays[1];
   int lda=a.l_dim();
   const cuDoubleComplex cone  = make_cuDoubleComplex( 1.0, 0.0);

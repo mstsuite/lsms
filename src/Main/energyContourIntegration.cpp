@@ -244,7 +244,8 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
   {
     e_top = lsms.energyContour.etop;
     if(lsms.energyContour.grid != 3 && comm.rank==0)
-      printf("WARNING: lsms.energyContour.grid (%d) != 3 in dos calculation.\n   Make sure that this is rearly what you want!\n", lsms.energyContour.grid)
+      printf("WARNING: lsms.energyContour.grid (%d) != 3 in dos calculation.\n   Make sure that this is rearly what you want!\n", lsms.energyContour.grid);
+  }
   
   buildEnergyContour(lsms.energyContour.grid, lsms.energyContour.ebot, e_top,
                      lsms.energyContour.eibot, lsms.energyContour.eitop, lsms.temperature,
@@ -651,6 +652,11 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
           dosOut[ie] += local.atom[ia].dos_real(ie, 0) + local.atom[ia].dos_real(ie,1);
           dosUpOut[ie] += local.atom[ia].dos_real(ie, 0);
           dosDownOut[ie] += local.atom[ia].dos_real(ie,1);
+          /*
+          dosOut[ie] += local.atom[ia].dos_real(ie, 0); // + local.atom[ia].dos_real(ie,1);
+          dosUpOut[ie] += 0.5*(local.atom[ia].dos_real(ie, 0) + local.atom[ia].dos_real(ie,1));
+          dosDownOut[ie] +=  0.5*(local.atom[ia].dos_real(ie, 0) - local.atom[ia].dos_real(ie,1));
+          */
         }
     } else { // non-collinear spin polarized
       for(int ia=0; ia<local.num_local; ia++)
@@ -667,6 +673,11 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
     }
 
     globalSum(comm, &dosOut[0], nume);
+    if(lsms.n_spin_pola > 1)
+    {
+      globalSum(comm, &dosUpOut[0], nume);
+      globalSum(comm, &dosDownOut[0], nume);
+    }
 
     if(comm.rank == 0)
     {
@@ -690,9 +701,9 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
     
       printf("\nFinished DOS mode\n");  
     }
+    synchronizeLSMS(comm);
     exitLSMS(comm, 0);
-  } if(lsms.lsmsMode==LSMSMode::matsubara)
-  {
+  } else if(lsms.lsmsMode==LSMSMode::matsubara) {
     printf("\nFinished Matsubara mode\n");
     exitLSMS(comm, 0);
   } else if(lsms.lsmsMode==LSMSMode::gf_out) {
