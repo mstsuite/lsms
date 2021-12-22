@@ -49,7 +49,7 @@ if (NOT Lua_FOUND)
     ExternalProject_Add(Lua
             SOURCE_DIR ${_src}
             BUILD_IN_SOURCE true
-            CONFIGURE_COMMAND sed -i "/^INSTALL_TOP/c INSTALL_TOP=${_install}" ${_src}/Makefile
+            CONFIGURE_COMMAND sed -i '' -e "/^INSTALL_TOP/c INSTALL_TOP=${_install}" ${_src}/Makefile
             BUILD_COMMAND ${MAKE_EXECUTABLE} -C ${_src}
             INSTALL_COMMAND ${MAKE_EXECUTABLE} install -C ${_src}
             )
