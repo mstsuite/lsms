@@ -351,7 +351,7 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
       buildKKRMatrix(lsms, local, atom, ispin, energy, prel, iie, m);
       break;
   case MST_BUILD_KKR_MATRIX_CPP:
-    buildKKRMatrixCPU(lsms, local, atom, iie, energy, prel, m);
+    buildKKRMatrixCPU(lsms, local, atom, ispin, iie, energy, prel, m);
     break;
 #if defined(ACCELERATOR_CUDA_C)
   case MST_BUILD_KKR_MATRIX_ACCELERATOR:
@@ -659,8 +659,8 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
     // block inversion:
     // vecs only needed for alg>2!
     // Complex vecs[nrmat_ns*(kkrsz_ns*6+6)];
-    Complex *vecs;
-    Complex tmp_vecs; vecs=&tmp_vecs;
+    Complex *vecs=nullptr;
+    
     int *ipvt = new int[nrmat_ns];
     Matrix<Complex> delta(kkrsz_ns, kkrsz_ns);
     // Complex *delta = new Complex[kkrsz_ns*kkrsz_ns];

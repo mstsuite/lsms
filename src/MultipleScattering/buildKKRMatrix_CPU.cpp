@@ -5,6 +5,8 @@
 #include <vector>
 #include <cmath>
 
+#include "buildKKRMatrix.hpp"
+
 #include "SingleSite/SingleSiteScattering.hpp"
 #include "MultipleScattering.hpp"
 #include "Misc/Indices.hpp"
@@ -252,7 +254,7 @@ void buildBGijCPU(LSMSSystemParameters &lsms, AtomData &atom, int ir1, int ir2, 
 }
 
 
-void buildKKRMatrixLMaxIdenticalCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel,
+void buildKKRMatrixLMaxIdenticalCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, int iie, Complex energy, Complex prel,
                                     Matrix<Complex> &m)
 {
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
@@ -365,14 +367,25 @@ void buildKKRMatrixLMaxIdenticalCPU(LSMSSystemParameters &lsms, LocalTypeInfo &l
                  ir1, ir2, bgijSmall(0,0).real(), bgijSmall(0,0).imag(), tmat_n(0,0).real(), tmat_n(0,0).imag(), p.real(), p.imag());
         }
 #endif
-             
-        BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
-                     &local.tmatStore(iie*local.blkSizeTmatStore, atom.LIZStoreIdx[ir1]), &kkr1_ns,
-                     // &tmat_n(0, 0), &kkr1_ns,
-                     &bgij(iOffset, jOffset), &nrmat_ns, &czero,
-                     // &bgijSmall(0, 0), &kkrsz_ns, &czero,
-                     &m(iOffset, jOffset), &nrmat_ns);
-        
+        if(lsms.n_spin_pola == lsms.n_spin_cant) // non polarized or spin canted
+        {
+          BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
+                       &local.tmatStore(iie*local.blkSizeTmatStore, atom.LIZStoreIdx[ir1]), &kkr1_ns,
+                       // &tmat_n(0, 0), &kkr1_ns,
+                       &bgij(iOffset, jOffset), &nrmat_ns, &czero,
+                       // &bgijSmall(0, 0), &kkrsz_ns, &czero,
+                       &m(iOffset, jOffset), &nrmat_ns);
+        } else {  // spin polarized, collinear
+          int lmax=lsms.maxlmax;
+          int kkrsz=(lmax+1)*(lmax+1);
+          int spinOffset = kkrsz * kkrsz * ispin;
+          BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
+                       &local.tmatStore(iie*local.blkSizeTmatStore + spinOffset, atom.LIZStoreIdx[ir1]), &kkr1_ns,
+                       // &tmat_n(0, 0), &kkr1_ns,
+                       &bgij(iOffset, jOffset), &nrmat_ns, &czero,
+                       // &bgijSmall(0, 0), &kkrsz_ns, &czero,
+                       &m(iOffset, jOffset), &nrmat_ns);
+        }
         /*
         for(int i=0; i<kkr1_ns; i++)
           for(int j=0; j<kkr2_ns; j++)
@@ -391,7 +404,7 @@ void buildKKRMatrixLMaxIdenticalCPU(LSMSSystemParameters &lsms, LocalTypeInfo &l
 
 #ifdef COMPARE_ORIGINAL
   bool exitCompare = false;
-  int ispin = 0;
+  // int ispin = 0;
   Matrix<Complex> mTest(nrmat_ns, nrmat_ns);
   buildKKRMatrix(lsms, local, atom, ispin, energy, prel, iie, mTest);
   int idx=0;
@@ -414,7 +427,7 @@ void buildKKRMatrixLMaxIdenticalCPU(LSMSSystemParameters &lsms, LocalTypeInfo &l
 #endif
 }
 
-void buildKKRMatrixLMaxDifferentCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel,
+void buildKKRMatrixLMaxDifferentCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, int iie, Complex energy, Complex prel,
                                     Matrix<Complex> &m)
 {
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
@@ -521,11 +534,21 @@ void buildKKRMatrixLMaxDifferentCPU(LSMSSystemParameters &lsms, LocalTypeInfo &l
                      &m(iOffset, jOffset), &nrmat_ns);
         */
 #endif
-        
-        BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
-                     &local.tmatStore(iie*local.blkSizeTmatStore, atom.LIZStoreIdx[ir1]), &kkrsz_ns,
-                     &bgij(iOffset, jOffset), &nrmat_ns, &czero,
-                     &m(iOffset, jOffset), &nrmat_ns);
+        if(lsms.n_spin_pola == lsms.n_spin_cant) // non polarized or spin canted
+        {
+          BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
+                       &local.tmatStore(iie*local.blkSizeTmatStore, atom.LIZStoreIdx[ir1]), &kkrsz_ns,
+                       &bgij(iOffset, jOffset), &nrmat_ns, &czero,
+                       &m(iOffset, jOffset), &nrmat_ns);
+        } else {  // spin polarized, collinear
+          int lmax=lsms.maxlmax;
+          int kkrsz=(lmax+1)*(lmax+1);
+          int spinOffset = kkrsz * kkrsz * ispin;
+          BLAS::zgemm_("n", "n", &kkr1_ns, &kkr2_ns, &kkr1_ns, &cmone,
+                       &local.tmatStore(iie*local.blkSizeTmatStore + spinOffset, atom.LIZStoreIdx[ir1]), &kkrsz_ns,
+                       &bgij(iOffset, jOffset), &nrmat_ns, &czero,
+                       &m(iOffset, jOffset), &nrmat_ns);
+        }
        
       }
     }
@@ -551,7 +574,7 @@ void buildKKRMatrixLMaxDifferentCPU(LSMSSystemParameters &lsms, LocalTypeInfo &l
 #endif
 }
 
-void buildKKRMatrixCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel,
+void buildKKRMatrixCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, int iie, Complex energy, Complex prel,
                                     Matrix<Complex> &m)
 {
   // decide between identical lmax and different lmax:
@@ -572,9 +595,9 @@ void buildKKRMatrixCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDat
   if(lmaxIdentical)
   {
     // printf("lmax identical in buildKKRMatrix\n");
-    buildKKRMatrixLMaxIdenticalCPU(lsms, local, atom, iie, energy, prel, m);
+    buildKKRMatrixLMaxIdenticalCPU(lsms, local, atom, ispin, iie, energy, prel, m);
   } else {
     // printf("lmax not identical in buildKKRMatrix\n");
-     buildKKRMatrixLMaxDifferentCPU(lsms, local, atom, iie, energy, prel, m);
+    buildKKRMatrixLMaxDifferentCPU(lsms, local, atom, ispin, iie, energy, prel, m);
   }
 }

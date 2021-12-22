@@ -3,11 +3,14 @@
 #ifndef LSMS_BUILD_KKR_MATRIX_HPP
 #define LSMS_BUILD_KKR_MATRIX_HPP
 
+#include "Real.hpp"
 #include "Complex.hpp"
 #include "Matrix.hpp"
 #include <vector>
 #include <string>
 #include <utility>
+
+#include "Main/SystemParameters.hpp"
 
 #include "MultipleScattering.hpp"
 #include "linearSolvers.hpp"
@@ -22,7 +25,7 @@
 
 #define MST_BUILD_KKR_MATRIX_F77         0x1000
 #define MST_BUILD_KKR_MATRIX_CPP         0x2000
-void buildKKRMatrixCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie, Complex energy, Complex prel,
+void buildKKRMatrixCPU(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int ispin, int iie, Complex energy, Complex prel,
                     Matrix<Complex> &m);
 #define MST_BUILD_KKR_MATRIX_CUDA 0x3000
 #ifdef ACCELERATOR_CUDA_C

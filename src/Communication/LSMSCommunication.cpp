@@ -29,6 +29,11 @@ void exitLSMS(LSMSCommunication &comm, int errorCode)
   MPI_Abort(comm.comm, errorCode);
 }
 
+void synchronizeLSMS(LSMSCommunication &comm)
+{
+  MPI_Barrier(comm.comm);
+}
+
 void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms, 
                            CrystalParameters &crystal, MixingParameters &mix,
                            AlloyMixingDesc &alloyDesc)
@@ -225,10 +230,12 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   lsms.maxlmax=crystal.maxlmax;
 
   for(int i = 0; i < alloyDesc.size(); i++)
+  {
     for(int j = 0; j < alloyDesc[i].size(); j++)
     {
       if(alloyDesc[i][j].lmax > lsms.maxlmax) lsms.maxlmax=alloyDesc[i][j].lmax;
     }
+  }
   crystal.maxlmax=lsms.maxlmax;
 
 // set lsms.commRank to comm.rank

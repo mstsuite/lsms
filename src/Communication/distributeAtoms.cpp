@@ -1,6 +1,11 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "distributeAtoms.hpp"
 
 #include <cstdio>
+
+// #include "Main/SystemParameters.hpp"
+// #include "LSMSCommunication.hpp"
+
 
 int distributeTypes(CrystalParameters &crystal, LSMSCommunication &comm)
 {
@@ -34,7 +39,7 @@ int distributeTypes(CrystalParameters &crystal, LSMSCommunication &comm)
   if(idx!=crystal.num_types)
   {
     std::printf("Error distributing atoms to nodes! (This should not happen.)\n");
-    exit(1);
+    exitLSMS(comm, 1);
   }
 
   int num_local=0;

@@ -43,6 +43,7 @@ void initializeCommunication(LSMSCommunication &comm, MPI_Comm mpiCommunicator);
 void finalizeCommunication(void);
 
 void exitLSMS(LSMSCommunication &comm, int errorCode);
+void synchronizeLSMS(LSMSCommunication &comm);
 
 void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
                            CrystalParameters &crystal, MixingParameters &mix, AlloyMixingDesc &alloyDesc);

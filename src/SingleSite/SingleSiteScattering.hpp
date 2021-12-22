@@ -54,6 +54,50 @@ public:
   Complex ubr[4], ubrd[4];
 };
 
+////////////////
+// Relativistic
+////////////////
+
+// lambdaIndexFromKappaMu
+// kappa != 0
+// twoMu = 2*mu, i.e. odd integers ..., -7, -5, -3, -1, +1, +3, +5, +7, ...
+inline int lambdaIndexFromKappaMu(int kappa, int twoMu)
+{
+  return 2*kappa*kappa + kappa + (twoMu - 1)/2;
+}
+
+// clebschGordonCoefficientHalf
+// Clebsch-Gordon coefficients for j_2 = 1/2
+
+// ms: spin m quantum number. ms=+1/2 -> +1; ms=-1/2 -> -1
+inline double clebschGordonCoefficientJ2Half(int kappa, int m, int ms)
+{
+  int l;
+  double c, twolp1;
+  if(kappa < 0)
+  {
+    l = -kappa - 1;
+    twolp1 = 2.0*l + 1.0;
+    if(ms < 0)
+    {
+      c = std::sqrt((l - m + 1.0) / twolp1);
+    } else {
+      c = std::sqrt((l + m + 1.0) / twolp1);
+    }
+  } else {
+    l = kappa;
+    twolp1 = 2.0*l + 1.0;
+    if(ms < 0)
+    {
+      c =  std::sqrt((double)(l + m) / twolp1);
+    } else {
+      c = -std::sqrt((double)(l - m) / twolp1);
+    }
+  }
+  
+  return c;
+}
+
 class RelativisticSingleScattererSolution : public SingleScattererSolution {
 public:
 // relativistic wave functions
@@ -95,9 +139,19 @@ public:
   }
 };
 
+// Wave functions are expanded in free space spherical solutions using the phase method
+// as phi_L(r) = sum_L' sineMatrix(r,L',L) * N_L'(r) - cosineMatrix(r,L',L) * J_L'(r)
+
+class NewRelativisticSingleScattererSolution : public SingleScattererSolution {
+public:
+  Array3d<Complex> sineMatrixRegular, cosineMatrixRegular; // sineMatrix(ir, Lambda', Lambda)
+  Array3d<Complex> sineMatrixIrregular, cosineMatrixIrregular; // sineMatrix(ir, Lambda', Lambda)
+};
+
 class FullPotentialRelativisticSingleScattererSolution : public SingleScattererSolution {
 public:
-  Array3d<Complex> sineMatrix, cosineMatrix; // sineMatrix(ir, Lambda', Lambda)
+  Array3d<Complex> sineMatrixRegular, cosineMatrixRegular; // sineMatrix(ir, Lambda', Lambda)
+  Array3d<Complex> sineMatrixIrregular, cosineMatrixIrregular; // sineMatrix(ir, Lambda', Lambda)
 };
 
 extern "C"
