@@ -171,6 +171,15 @@ set(HDF5_PREFER_PARALLEL false)
 find_package(HDF5 REQUIRED)
 target_link_libraries(lsmscore PUBLIC HDF5::HDF5)
 
+# Linear algebra libraries
+option(USE_ESSL "Use IBM ESSL library" OFF)
+
+if(USE_ESSL)
+    find_package(ESSL REQUIRED)
+    set(ESSL_WORKAROUND True)
+
+    target_link_libraries(lsmscore PUBLIC ESSL)
+elseif()
 # Lapack
 option(SEARCH_LAPACK "Search for LAPACK" ON)
 if (NOT SEARCH_LAPACK)
@@ -208,6 +217,7 @@ else ()
     find_package(BLAS REQUIRED)
 endif ()
 target_link_libraries(lsmscore PUBLIC BLAS::BLAS)
+endif()
 
 # Lua
 target_link_libraries(lsmscore PUBLIC Lua::Lua)
