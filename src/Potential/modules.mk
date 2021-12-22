@@ -14,6 +14,8 @@ local_src := $(addprefix $(local_dir)/,\
                 newexchg.f \
                 newpot_c.f \
                 PotentialShifter.cpp \
+                newFunctionalInterface.cpp \
+                lsf_functional.cpp \
                 rs.f)
 
 sources += $(local_src)

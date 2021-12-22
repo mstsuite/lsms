@@ -18,6 +18,7 @@ local_src := $(addprefix $(local_dir)/,\
         ReplicaExchangeWL.cpp \
         AlloyBankIO.cpp \
         rotateToGlobal.cpp \
+        writeInfoEvec.cpp \
         write_restart.cpp)
 
 sources += $(local_src)
