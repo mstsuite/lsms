@@ -37,30 +37,29 @@ using namespace std;
 //TODO move inside DeviceStorage?
 //allocate a thread specific matrix on the host and pin its memory
 extern "C"
-Complex* get_host_m_(const int &max_nrmat_ns) {
-  static Complex * m_v=0;
-  static int cur_size=0;
+Complex *get_host_m_(const int &max_nrmat_ns) {
+  static Complex *m_v = 0;
+  static int cur_size = 0;
   static cudaError_t pinned;
 
-  if(cur_size<max_nrmat_ns) {
+  if (cur_size < max_nrmat_ns) {
 
     //release previously allocated memory
-    if(m_v!=0) {
-      if(pinned) cudaFreeHost(m_v);
+    if (m_v != 0) {
+      if (pinned) cudaFreeHost(m_v);
       else free(m_v);
     }
 
     //allocate new memory
-    pinned = cudaMallocHost((void**)&m_v,max_nrmat_ns*max_nrmat_ns*sizeof(Complex)*omp_get_max_threads());
+    pinned = cudaMallocHost((void **) &m_v, max_nrmat_ns * max_nrmat_ns * sizeof(Complex) * omp_get_max_threads());
 
-    if ( pinned != cudaSuccess )
-    {
+    if (pinned != cudaSuccess) {
       fprintf(stderr, "Matrix not pinned\n");
-      m_v = (Complex*)malloc(max_nrmat_ns*max_nrmat_ns*sizeof(Complex)*omp_get_max_threads());
+      m_v = (Complex *) malloc(max_nrmat_ns * max_nrmat_ns * sizeof(Complex) * omp_get_max_threads());
     }
-    cur_size=max_nrmat_ns;
+    cur_size = max_nrmat_ns;
   }
-  return m_v; 
+  return m_v;
 }
 
 /*
@@ -82,109 +81,110 @@ private:
 public:
 */
 
-  int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads)
-  {
-    if(!initialized)
-    {
-      //printf("*************************************MEMORY IS BEING ALLOCATED\n");
-      if(_nThreads>MAX_THREADS)
-      {
-        printf("nThreads (%d) in DeviceStorage::allocate exceeds MAX_THREADS (%d)\n",_nThreads,MAX_THREADS);
-        printf("  change MAX_THREADS in src/Accelerator/DeviceStorage.cu and recompile!\n");
+int DeviceStorage::allocate(int kkrsz_max, int nspin, int numLIZ, int _nThreads) {
+  if (!initialized) {
+    //printf("*************************************MEMORY IS BEING ALLOCATED\n");
+    if (_nThreads > MAX_THREADS) {
+      printf("nThreads (%d) in DeviceStorage::allocate exceeds MAX_THREADS (%d)\n", _nThreads, MAX_THREADS);
+      printf("  change MAX_THREADS in src/Accelerator/DeviceStorage.cu and recompile!\n");
+      exit(1);
+    }
+    nThreads = _nThreads;
+    int N = kkrsz_max * nspin * numLIZ;
+    // printf("DeviceStorage::alocate N=%d\n",N);
+    for (int i = 0; i < nThreads; i++) {
+      cudaError_t err;
+      err = cudaMalloc((void **) &dev_m[i], N * N * sizeof(Complex));
+      if (err != cudaSuccess) {
+        printf("failed to allocate dev_m[%d], size=%d, err=%d\n",
+               i, N * N * sizeof(Complex), err);
         exit(1);
       }
-      nThreads=_nThreads;
-      int N=kkrsz_max*nspin*numLIZ;
-      // printf("DeviceStorage::alocate N=%d\n",N);
-      for(int i=0;i<nThreads;i++)
-      {
-        cudaError_t err;
-        err = cudaMalloc((void**)&dev_m[i],N*N*sizeof(Complex));
-        if(err!=cudaSuccess)
-        {
-          printf("failed to allocate dev_m[%d], size=%d, err=%d\n",
-                i,N*N*sizeof(Complex),err);
-          exit(1);
-        }
-        cudaMalloc((void**)&dev_ipvt[i],N*sizeof(int));
-        cudaMalloc((void**)&dev_info[i],nThreads*sizeof(int));
-	err = cudaMalloc((void**)&dev_bgij[i],N*N*sizeof(Complex));
-        if(err!=cudaSuccess)
-        {
-          printf("failed to allocate dev_bgij[%d], size=%d, err=%d\n",
-                i,N*N*sizeof(Complex),err);
-          exit(1);
-        }
-#ifdef BUILDKKRMATRIX_GPU
-        // cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
-        cudaMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
-#endif
-        cudaMalloc((void**)&dev_tau[i], 4*N*kkrsz_max*sizeof(Complex));
-        cudaMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
-        cudaMalloc((void**)&dev_t[i], 4*N*kkrsz_max*sizeof(Complex));
-        cudaMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
-        cudaStreamCreate(&stream[i][0]);
-        cudaStreamCreate(&stream[i][1]);
-        cudaEventCreateWithFlags(&event[i],cudaEventDisableTiming);
-        cublasCheckError(cublasCreate(&cublas_h[i]));
-        cusolverCheckError(cusolverDnCreate(&cusolverDnHandle[i]));
-	int lWork;
-	cusolverCheckError(cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
-                                                       (cuDoubleComplex *)dev_m[i], N, &lWork));
-	dev_workBytes[i] = 0;
-#ifndef ARCH_IBM
-	cusolverDnZZgesv_bufferSize(cusolverDnHandle[i], N, 2*kkrsz_max,
-				    (cuDoubleComplex *)dev_m[i], N, dev_ipvt[i], (cuDoubleComplex *)dev_tau[i], N, (cuDoubleComplex *)dev_tau[i], N,
-				    dev_work[i], &dev_workBytes[i]);
-#endif
-	dev_workBytes[i] = std::max(dev_workBytes[i],
-				    lWork*sizeof(cuDoubleComplex));        
-#ifdef USE_XGETRF
-        {
-#if CUDA_VERSION < 11010
-        printf("Error: Xgetrf requires CUDA 11.1+\n");
-        exit(0);
-#endif          
-        cusolverCheckError(cusolverDnCreateParams(&cusolverDnParams[i]));
-        cusolverCheckError(cusolverDnSetAdvOptions(cusolverDnParams[i], CUSOLVERDN_GETRF, CUSOLVER_ALG_2));        
-        cudaMalloc((void**)&dev_ipvt64[i],N*sizeof(int64_t));
-        size_t llWork;
-        cusolverCheckError(cusolverDnXgetrf_bufferSize(cusolverDnHandle[i],
-                                                       cusolverDnParams[i],
-                                                       (int64_t)N,
-                                                       (int64_t)N,
-                                                       CUDA_C_64F,
-                                                       (cuDoubleComplex *)dev_m[i],
-                                                       (int64_t)N,
-                                                       CUDA_C_64F,
-                                                       &llWork,
-                                                       &host_workBytes[i]));
-        dev_workBytes[i] = std::max(dev_workBytes[i], llWork);
-        host_work[i] = malloc(host_workBytes[i]);
-        }
-#endif        
-#ifdef USE_IRSXGESV
-        {
-#if CUDA_VERSION < 10020
-        printf("Error: IRSXgesv requires CUDA 10.2+\n");
+      cudaMalloc((void **) &dev_ipvt[i], N * sizeof(int));
+      cudaMalloc((void **) &dev_info[i], nThreads * sizeof(int));
+      err = cudaMalloc((void **) &dev_bgij[i], N * N * sizeof(Complex));
+      if (err != cudaSuccess) {
+        printf("failed to allocate dev_bgij[%d], size=%d, err=%d\n",
+               i, N * N * sizeof(Complex), err);
         exit(1);
-#endif                    
-        cusolverCheckError(cusolverDnIRSParamsCreate(&cusolverDnIRSParams[i]));
-        cusolverCheckError(cusolverDnIRSParamsSetRefinementSolver(cusolverDnIRSParams[i],
-                                                                  CUSOLVER_IRS_REFINE_CLASSICAL));
-        cusolverCheckError(cusolverDnIRSParamsSetSolverPrecisions(cusolverDnIRSParams[i],
-                                                                  CUSOLVER_C_64F,
-                                                                  CUSOLVER_C_16F));
-        cusolverCheckError(cusolverDnIRSInfosCreate(&cusolverDnIRSInfo[i]));
-        size_t llWork;
-        cusolverCheckError(cusolverDnIRSXgesv_bufferSize(cusolverDnHandle[i],
-                                                         cusolverDnIRSParams[i],
-                                                         N,
-                                                         2*kkrsz_max,
-                                                         &llWork));
-        dev_workBytes[i] = std::max(dev_workBytes[i], llWork);
-        cudaMalloc((void**)&dev_X[i], 4*N*kkrsz_max*sizeof(Complex));
-        }
+      }
+
+
+
+#ifdef BUILDKKRMATRIX_GPU
+      // cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
+      cudaMalloc((void**)&dev_tmat_n[i],nspin*nspin*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex));
+#endif
+
+      cudaMalloc((void **) &dev_tau[i], nspin * N * kkrsz_max * sizeof(Complex));
+      cudaMalloc((void **) &dev_tau00[i], nspin * nspin * kkrsz_max * kkrsz_max * sizeof(Complex));
+#ifndef ARCH_IBM
+      cudaMalloc((void **) &dev_t[i], nspin  * N * kkrsz_max * sizeof(Complex));
+#endif
+      cudaMalloc((void **) &dev_t0[i], nspin * nspin * kkrsz_max * kkrsz_max * sizeof(Complex));
+      cudaStreamCreate(&stream[i][0]);
+      cudaStreamCreate(&stream[i][1]);
+      cudaEventCreateWithFlags(&event[i], cudaEventDisableTiming);
+      cublasCheckError(cublasCreate(&cublas_h[i]));
+      cusolverCheckError(cusolverDnCreate(&cusolverDnHandle[i]));
+      int lWork;
+      cusolverCheckError(cusolverDnZgetrf_bufferSize(cusolverDnHandle[i], N, N,
+                                                     (cuDoubleComplex *) dev_m[i], N, &lWork));
+      dev_workBytes[i] = 0;
+#ifndef ARCH_IBM
+      cusolverDnZZgesv_bufferSize(cusolverDnHandle[i], N, nspin * kkrsz_max,
+                                  (cuDoubleComplex *) dev_m[i], N, dev_ipvt[i], (cuDoubleComplex *) dev_tau[i], N,
+                                  (cuDoubleComplex *) dev_tau[i], N,
+                                  dev_work[i], &dev_workBytes[i]);
+#endif
+      dev_workBytes[i] = std::max(dev_workBytes[i],
+                                  lWork * sizeof(cuDoubleComplex));
+#ifdef USE_XGETRF
+      {
+#if CUDA_VERSION < 11010
+      printf("Error: Xgetrf requires CUDA 11.1+\n");
+      exit(0);
+#endif
+      cusolverCheckError(cusolverDnCreateParams(&cusolverDnParams[i]));
+      cusolverCheckError(cusolverDnSetAdvOptions(cusolverDnParams[i], CUSOLVERDN_GETRF, CUSOLVER_ALG_2));
+      cudaMalloc((void**)&dev_ipvt64[i],N*sizeof(int64_t));
+      size_t llWork;
+      cusolverCheckError(cusolverDnXgetrf_bufferSize(cusolverDnHandle[i],
+                                                     cusolverDnParams[i],
+                                                     (int64_t)N,
+                                                     (int64_t)N,
+                                                     CUDA_C_64F,
+                                                     (cuDoubleComplex *)dev_m[i],
+                                                     (int64_t)N,
+                                                     CUDA_C_64F,
+                                                     &llWork,
+                                                     &host_workBytes[i]));
+      dev_workBytes[i] = std::max(dev_workBytes[i], llWork);
+      host_work[i] = malloc(host_workBytes[i]);
+      }
+#endif
+#ifdef USE_IRSXGESV
+      {
+#if CUDA_VERSION < 10020
+      printf("Error: IRSXgesv requires CUDA 10.2+\n");
+      exit(1);
+#endif
+      cusolverCheckError(cusolverDnIRSParamsCreate(&cusolverDnIRSParams[i]));
+      cusolverCheckError(cusolverDnIRSParamsSetRefinementSolver(cusolverDnIRSParams[i],
+                                                                CUSOLVER_IRS_REFINE_CLASSICAL));
+      cusolverCheckError(cusolverDnIRSParamsSetSolverPrecisions(cusolverDnIRSParams[i],
+                                                                CUSOLVER_C_64F,
+                                                                CUSOLVER_C_16F));
+      cusolverCheckError(cusolverDnIRSInfosCreate(&cusolverDnIRSInfo[i]));
+      size_t llWork;
+      cusolverCheckError(cusolverDnIRSXgesv_bufferSize(cusolverDnHandle[i],
+                                                       cusolverDnIRSParams[i],
+                                                       N,
+                                                       2*kkrsz_max,
+                                                       &llWork));
+      dev_workBytes[i] = std::max(dev_workBytes[i], llWork);
+      cudaMalloc((void**)&dev_X[i], nspin*nspin*N*kkrsz_max*sizeof(Complex));
+      }
 #endif
 	cudaMalloc((void**)&dev_work[i], dev_workBytes[i]);
         // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
@@ -194,7 +194,7 @@ public:
     }
     return 0;
   }
-  
+
   void DeviceStorage::free()
   {
     if(initialized) {
@@ -205,7 +205,7 @@ public:
         cudaFree(dev_m[i]);
         cudaFree(dev_ipvt[i]);
         cudaFree(dev_info[i]);
-        cudaFree(dev_bgij[i]);        
+        cudaFree(dev_bgij[i]);
 #ifdef BUILDKKRMATRIX_GPU
         cudaFree(dev_tmat_n[i]);
 #endif
@@ -217,14 +217,14 @@ public:
         cublasDestroy(cublas_h[i]);
 #ifdef USE_XGETRF
         ::free(host_work[i]);
-        cudaFree(dev_ipvt64[i]);                
+        cudaFree(dev_ipvt64[i]);
         cusolverDnDestroyParams(cusolverDnParams[i]);
 #endif
 #ifdef USE_IRSXGESV
         cusolverDnIRSInfosDestroy(cusolverDnIRSInfo[i]);
         cusolverDnIRSParamsDestroy(cusolverDnIRSParams[i]);
         cudaFree(dev_X[i]);
-#endif        
+#endif
         cusolverDnDestroy(cusolverDnHandle[i]);
       }
       // dev_tmat_store.clear();
@@ -316,7 +316,7 @@ int DeviceAtom::allocate(int _lmax, int _nspin, int _numLIZ)
   cudaMalloc((void**)&LIZPos,numLIZ*3*sizeof(Real));
   cudaMalloc((void**)&LIZlmax,numLIZ*sizeof(int));
   cudaMalloc((void**)&LIZStoreIdx,numLIZ*sizeof(int));
-  
+
   return 0;
 }
 

@@ -1,5 +1,5 @@
 #include "calculateTotalEnergy.hpp"
-#include "localTotalEnergy.cpp"
+#include "localTotalEnergy.hpp"
 
 void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local, CrystalParameters &crystal)
 {

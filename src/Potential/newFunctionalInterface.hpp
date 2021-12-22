@@ -2,8 +2,12 @@
 #ifndef LSMS_NEWFUNCTIONALINTERFACE_HPP
 #define LSMS_NEWFUNCTIONALINTERFACE_HPP
 
-#include "Main/SystemParameters.hpp"
+#include <vector>
+
 #include "Real.hpp"
+#include "Matrix.hpp"
+
+#include "common.hpp"
 
 enum class XCFunctional
 {

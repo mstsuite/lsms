@@ -18,4 +18,6 @@ const double convertRydbergToeV = 13.605698066;
 // const double kBoltzmann = 6.3336e-6;
 const double kBoltzmann = 1.380649e-23 * 4.5874208973812E+17;
 
+const double convertKtoRydberg = 6.33361706838587e-06;
+
 #endif

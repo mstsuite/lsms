@@ -1,5 +1,10 @@
-#include "Misc/integrateOneDim.cpp"
+
+#include "localTotalEnergy.hpp"
+
 #include <cmath>
+
+#include "Misc/integrateOneDim.hpp"
+#include "PhysicalConstants.hpp"
 
 extern "C"
 {
@@ -202,6 +207,16 @@ Real &energy, Real &pressure)
     printf("ezpt                        = %35.25lf Ry\n\n",ezpt);
   }
 // add all energy contributions:
+
+
+ /*
+  * Longitudinal spin fluctuations
+  */
+
+  if (lsms.n_spin_pola == 2) {
+    auto mag_mom = atom.mvalws;
+    energy += -convertKtoRydberg * lsms.temperature * atom.lsf_functional.entropy(mag_mom);
+  }
 
   energy += kineticEnergy + coulombEnergy + xcEnergy + ezpt;
 }

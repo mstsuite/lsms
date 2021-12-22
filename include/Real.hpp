@@ -2,7 +2,6 @@
 #define LSMS_REAL_H
 
 #include <cmath>
-#include <hdf5.h>
 
 typedef double Real;
 
@@ -10,6 +9,7 @@ typedef double Real;
 
 #ifndef __CUDACC__
 #include <mpi.h>
+#include <hdf5.h>
 
 
 template<>

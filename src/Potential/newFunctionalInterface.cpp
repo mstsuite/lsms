@@ -1,8 +1,9 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 
-#include "Main/SystemParameters.hpp"
-#include "Real.hpp"
 #include "newFunctionalInterface.hpp"
+
+#include "Real.hpp"
+
 #include "Misc/rationalFit.hpp"
 
 

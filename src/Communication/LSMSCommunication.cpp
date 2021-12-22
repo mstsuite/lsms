@@ -1,5 +1,5 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-#include <mpi.h>
+
 #include "LSMSCommunication.hpp"
 
 #define USE_ISEND
@@ -61,6 +61,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Pack(lsms.localAtomDataFile,128,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.num_atoms,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.nspin,1,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack(&lsms.constraint,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.relativity,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.nrelc,1,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.nrelv,1,MPI_INT,buf,s,&pos,comm.comm);
@@ -137,6 +138,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&lsms.num_atoms,1,MPI_INT,comm.comm);
     crystal.num_atoms=lsms.num_atoms;
     MPI_Unpack(buf,s,&pos,&lsms.nspin,1,MPI_INT,comm.comm);
+    MPI_Unpack(buf,s,&pos,&lsms.constraint,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.relativity,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.nrelc,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.nrelv,1,MPI_INT,comm.comm);

@@ -1,0 +1,52 @@
+name: CMake
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up GCC
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: 10
+        platform: x64
+
+    - name: download-openmpi
+      run: wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.gz
+
+    - name: extract-openmpi
+      run: tar -xvf ./openmpi-4.0.2.tar.gz
+
+    - name: configure-openmpi
+      run: ./openmpi-4.0.2/configure --prefix="/home/${USER}/.openmpi"
+
+    - name: install-openmpi
+      run: |
+        make -j
+        sudo make install
+
+    - name: set-openmpi-path
+      run: |
+        export PATH=${PATH}:/home/${USER}/.openmpi/bin/
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/${USER}/.openmpi/lib/
+        echo ${PATH}
+        echo ${LD_LIBRARY_PATH}
+
+    - name: display-compilers
+      run: |
+        echo "$(gcc -version)"
+        echo "$(mpic++ --version)"
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+

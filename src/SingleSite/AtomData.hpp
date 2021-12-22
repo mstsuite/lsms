@@ -10,6 +10,7 @@
 #include "Matrix.hpp"
 #include "Array3d.hpp"
 #include "VORPOL/VORPOL.hpp"
+#include "Potential/lsf_functional.hpp"
 
 extern "C"
 {
@@ -503,6 +504,9 @@ public:
   Matrix<Real> exchangeCorrelationEnergy;        // Exchange-correlation energy
   Real exchangeCorrelationE;                     // Exchange-correlation energy
   Real exchangeCorrelationV[2];                  // Exchange-correlation potential for spin up/down
+
+// LSF
+  lsms::LSFFunctional lsf_functional;
 
 // Core state info
   Matrix<Real> ec;

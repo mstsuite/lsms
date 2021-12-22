@@ -1,9 +1,9 @@
-#ifndef CALCULATEEVEC_HPP
-#define CALCULATEEVEC_HPP
- 
+#ifndef LSMS_CALCULATEEVEC_HPP
+#define LSMS_CALCULATEEVEC_HPP
+
 #include <cmath>
+
 #include "Main/SystemParameters.hpp"
-//#include "SingleSite/AtomData.hpp"
 
 void calculateEvec(LSMSSystemParameters &lsms, LocalTypeInfo &local);
 

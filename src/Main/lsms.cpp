@@ -22,20 +22,19 @@
 #include <hdf5.h>
 
 #include "lua.hpp"
-//#include "lua.h"
-//#include "lauxlib.h"
-//#include "lualib.h"
 
+
+#include "LuaInterface/LuaInterface.hpp"
 #include "SystemParameters.hpp"
 #include "PotentialIO.hpp"
 #include "Communication/distributeAtoms.hpp"
 #include "Communication/LSMSCommunication.hpp"
-#include "Core/CoreStates.hpp"
+#include "Core/calculateCoreStates.hpp"
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
 #include "VORPOL/VORPOL.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "calculateChemPot.hpp"
 #include "calculateDensities.hpp"
@@ -46,11 +45,14 @@
 #include "Potential/PotentialShifter.hpp"
 #include "TotalEnergy/calculateTotalEnergy.hpp"
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
-
+#include "VORPOL/setupVorpol.hpp"
 #include "Misc/readLastLine.hpp"
 
-#include "writeInfoEvec.cpp"
+#include "buildLIZandCommLists.hpp"
+#include "writeInfoEvec.hpp"
 #include "write_restart.hpp"
+#include "mixing_params.hpp"
+#include "read_input.hpp"
 
 #ifdef USE_NVTX
 #include <nvToolsExt.h>
@@ -69,16 +71,6 @@ DeviceConstants deviceConstants;
 // std::vector<void *> deviceConstants;
 // std::vector<void *> deviceStorage;
 
-
-void initLSMSLuaInterface(lua_State *L);
-int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &crystal, MixingParameters &mix, PotentialShifter &potentialShifter,
-     AlloyMixingDesc &alloyDesc);
-void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
-                          CrystalParameters &crystal, LocalTypeInfo &local);
-void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local,
-                 SphericalHarmonicsCoeficients &shc);
-
-void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local);
 
 /*
  * Need portablew way to enable FP exceptions!
@@ -290,13 +282,7 @@ int main(int argc, char *argv[])
   if (lsms.global.iprint >= 0) printLSMSSystemParameters(stdout, lsms);
   if (lsms.global.iprint >= 1) printCrystalParameters(stdout, crystal);
   if (lsms.global.iprint >= 0) printAlloyParameters(stdout, alloyDesc);
-  if (lsms.global.iprint >= 0)
-  {
-    fprintf(stdout,"LIZ for atom 0 on this node\n");
-    printLIZInfo(stdout, local.atom[0]);
-    if(local.atom[0].forceZeroMoment)
-      fprintf(stdout,"\nMagnetic moment of atom 0 forced to be zero!\n\n");
-  }
+
   if (lsms.global.iprint >= 1)
   {
     printCommunicationInfo(stdout, comm);
@@ -329,6 +315,29 @@ int main(int argc, char *argv[])
 #endif
 
   loadPotentials(comm, lsms, crystal, local);
+
+  if (lsms.global.iprint >= 0)
+  {
+    fprintf(stdout,"LIZ for atom 0 on this node\n");
+    printLIZInfo(stdout, local.atom[0]);
+    if(local.atom[0].forceZeroMoment) {
+      fprintf(stdout,"\nMagnetic moment of atom 0 forced to be zero!\n\n");
+    }
+  }
+
+  // Read evec file if in is define
+  if ( lsms.infoEvecFileIn[0]!=0) {
+    readInfoEvec(comm,
+                 lsms,
+                 crystal,
+                 local,
+                 lsms.infoEvecFileIn);
+    if (lsms.global.iprint >= 0)
+    {
+      fprintf(stdout,"Evec are read from: %s\n", lsms.infoEvecFileIn);
+    }
+  }
+
 
   if ( alloyDesc.size() > 0 )
   {

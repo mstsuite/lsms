@@ -1,12 +1,15 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "PotentialIO.hpp"
+
 #include <stdio.h>
+
 #include <hdf5.h>
+
 #include "Main/SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/AtomData.hpp"
 #include "SingleSite/readSingleAtomData.hpp"
 #include "SingleSite/writeSingleAtomData.hpp"
-#include "PotentialIO.hpp"
 #include "HDF5io.hpp"
 #include "Main/initializeAtom.hpp"
 
@@ -152,6 +155,12 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
     local.atom[i].lmax=crystal.types[local.global_id[i]].lmax;
     local.atom[i].kkrsz=(local.atom[i].lmax+1)*
                         (local.atom[i].lmax+1);
+
+    // LSF
+    auto lsf_functional = crystal.types[local.global_id[i]].lsf_functional;
+    local.atom[i].lsf_functional = lsms::LSFFunctional(
+        lsms.temperature, lsms::LSFTypeMap[lsf_functional]);
+
     if(lsms.fixRMT==0)
     {
       local.atom[i].rmt=local.atom[i].rInscribed;

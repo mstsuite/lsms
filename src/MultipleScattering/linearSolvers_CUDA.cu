@@ -4,16 +4,18 @@
 
 #include <stdio.h>
 
-#include "Complex.hpp"
-#include "Matrix.hpp"
 #include <vector>
 
-#include "Accelerator/DeviceStorage.hpp"
-#include "Accelerator/deviceCheckError.hpp"
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 #include <cublas_v2.h>
 #include <cusolverDn.h>
+
+#include "Complex.hpp"
+#include "Matrix.hpp"
+#include "Accelerator/DeviceStorage.hpp"
+#include "Accelerator/deviceCheckError.hpp"
+
 
 /*
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
@@ -74,11 +76,28 @@ __global__ void zeroDiagonalBlocksKernelCuda(T *devM, int lDim, int nCol, int bl
     }
 }
 
-void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie)
+void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                               AtomData &atom, int iie, int ispin)
 {
   int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz;
-  cudaMemcpy(devT0, &local.tmatStore(iie*local.blkSizeTmatStore,atom.LIZStoreIdx[0]),
+
+  int jsm =  kkrsz_ns * kkrsz_ns * ispin;
+
+  cudaMemcpy(devT0, &local.tmatStore(iie*local.blkSizeTmatStore + jsm,atom.LIZStoreIdx[0]),
              kkrsz_ns*kkrsz_ns*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
+
+#ifdef T_CUDA_DEBUG
+  std::ofstream myfile;
+  auto filename = "TAU" + std::to_string(iie) + "_" + std::to_string(ispin);
+  myfile.open(filename.c_str());
+  for (int i = 0; i < kkrsz_ns * kkrsz_ns; i++) {
+    Complex buffer;
+    cudaMemcpy(&buffer, &devT0[i], sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
+    myfile << std::real(buffer) << " " << std::imag(buffer) << std::endl;
+  }
+  myfile.close();
+#endif
+
 }
 
 void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m)
@@ -100,6 +119,7 @@ __global__ void copyTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, i
       tau[IDX(i,j,nrmat)] = t[IDX(i,j,kkrsz)];
   }
 }
+
 
 __global__ void copyTauToTau00Cuda(cuDoubleComplex *tau00, cuDoubleComplex *tau, int kkrsz, int nrmat)
 {
@@ -129,11 +149,11 @@ void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, D
   // printf("copyTMatrixToTau\n");
   copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devTau, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
   deviceCheckError();
-  
+
   Barray[0] = devTau;
 
   Aarray[0] = (cuDoubleComplex *)devM;
-  
+
   int *ipivArray=d.getDevIpvt();
   int *infoArray = d.getDevInfo();
   int info;
@@ -156,7 +176,7 @@ void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, D
 
 #ifndef ARCH_IBM
 void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
-                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00)
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin)
 {
   cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
@@ -171,7 +191,7 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 
   int *devIpiv = d.getDevIpvt();
   int devInfo[1]; // d.getDevInfo();
-  
+
   zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
   zeroMatrixCuda(devT, nrmat_ns, kkrsz_ns);
   copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devT, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
@@ -193,7 +213,7 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 #endif
 
 void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
-                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00)
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin)
 {
   cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
@@ -203,21 +223,22 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   cuDoubleComplex *devTau00 = (cuDoubleComplex *)d.getDevTau00();
   cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
 
-  int *devIpiv=d.getDevIpvt();
+  int *devIpiv = d.getDevIpvt();
   int *devInfo = d.getDevInfo();
 
   zeroMatrixCuda(devTau, nrmat_ns, kkrsz_ns);
   deviceCheckError();
   copyTMatrixToTauCuda<<<kkrsz_ns,1>>>(devTau, (cuDoubleComplex *)tMatrix, kkrsz_ns, nrmat_ns);
   deviceCheckError();
-  
-  cusolverCheckError(cusolverDnZgetrf(cusolverDnHandle, nrmat_ns, nrmat_ns, 
+
+  cusolverCheckError(cusolverDnZgetrf(cusolverDnHandle, nrmat_ns, nrmat_ns,
                                       (cuDoubleComplex *)devM, nrmat_ns, devWork, devIpiv,
                                       devInfo ));
 
+
   cusolverCheckError(cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, kkrsz_ns,
                                       (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devTau, nrmat_ns, devInfo));
-  
+
   // copy result into tau00
   copyTauToTau00Cuda<<<kkrsz_ns,1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);
   deviceCheckError();
@@ -227,7 +248,7 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 
 #ifdef USE_XGETRF
 void solveTau00Xgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
-                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00)
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin)
 {
   cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
   cusolverDnParams_t cusolverDnParams = DeviceStorage::getCusolverParams();
@@ -287,7 +308,7 @@ void solveTau00Xgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 
 #ifdef USE_IRSXGESV
 void solveTau00IRSXgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
-                                 Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00)
+                                 Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin)
 {
   cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
   cusolverDnIRSParams_t cusolverDnIRSParams = DeviceStorage::getCusolverIRSParams();

@@ -1,12 +1,7 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "SingleSiteScattering.hpp"
 
-extern "C"
-{
-  void trltog_(int *, int *, Complex *, Complex *, Complex *, Complex *, Complex *);
-  void gjinv_(Complex *a, int *n, int *nmax, Complex *detl);
-  void tripmt_(Complex *u, Complex *b, Complex *ust, int *ndi1, int *ind2, int *ndim);
-}
+
 
 void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom,
                                       Matrix<Real> &vr,

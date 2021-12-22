@@ -16,7 +16,7 @@
 #include "Potential/PotentialShifter.hpp"
 #include "PotentialIO.hpp"
 #include "SystemParameters.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "calculateChemPot.hpp"
 #include "lsmsClass.hpp"
 #include "ReplicaExchangeWL.hpp"

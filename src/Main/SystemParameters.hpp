@@ -1,8 +1,11 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_SYSTEM_PARAM_H
 #define LSMS_SYSTEM_PARAM_H
+
 #include <stdio.h>
 #include <string.h>
+
+#include <vector>
 
 #include "Real.hpp"
 #include "Complex.hpp"
@@ -13,8 +16,7 @@
 
 #include "Misc/Indices.hpp"
 
-
-const int numFunctionalIndices=3;
+#include "Potential/common.hpp"
 #include "Potential/libxcInterface.hpp"
 #include "Potential/newFunctionalInterface.hpp"
 
@@ -69,6 +71,7 @@ public:
   Real rmsTolerance; // rms Convergence criterion
   int num_atoms;
   int nspin;
+  int constraint;
   Relativity relativity;
   int nrelc,nrelv;
   int n_spin_cant;
@@ -139,6 +142,7 @@ public:
   int pot_in_idx;
   Real conc;
   int alloy_class;
+  int lsf_functional{0};
 };
 
 class CrystalParameters {
