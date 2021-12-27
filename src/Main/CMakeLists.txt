@@ -64,5 +64,7 @@ target_sources(lsms_main
         lsms.cpp)
 
 
-
+target_sources(lsms_wl
+        PUBLIC
+        wl_lsms.cpp)
 

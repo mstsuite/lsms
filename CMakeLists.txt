@@ -109,13 +109,6 @@ if (USE_ACCELERATOR_CUDA_C)
         target_compile_definitions(lsmscore PUBLIC "MST_BUILD_KKR_MATRIX_DEFAULT=${MST_BUILD_KKR_MATRIX_DEFAULT}")
     endif ()
 
-    option(ARCH_IBM "Is IBM architecture" OFF)
-
-    if (ARCH_IBM)
-        message(STATUS "Use the IBM architecture")
-        target_compile_definitions(lsmscore PUBLIC "ARCH_IBM")
-    endif()
-
     if (USE_BUILDKKRMATRIX_GPU)
         message(STATUS "KKR Matrix build on GPU")
         target_compile_definitions(lsmscore PUBLIC BUILDKKRMATRIX_GPU)
@@ -160,6 +153,12 @@ if (USE_ACCELERATOR_CUDA_C)
 
 endif ()
 
+option(ARCH_IBM "Is IBM architecture" OFF)
+
+if (ARCH_IBM)
+   message(STATUS "Use the IBM architecture")
+   target_compile_definitions(lsmscore PUBLIC "ARCH_IBM")
+endif()
 
 # Find MPI library
 find_package(MPI REQUIRED COMPONENTS CXX OPTIONAL_COMPONENTS)

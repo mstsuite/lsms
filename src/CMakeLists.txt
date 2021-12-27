@@ -15,6 +15,16 @@ add_library(lsmscore STATIC)
 target_link_libraries(lsms_main
         PUBLIC lsmscore)
 
+add_executable(lsms_wl)
+set_target_properties(lsms_wl PROPERTIES OUTPUT_NAME "wl-lsms")
+
+set_target_properties(lsms_wl
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+
+target_link_libraries(lsms_main
+        PUBLIC lsmscore)
 #
 #
 set_target_properties(lsmscore PROPERTIES
