@@ -66,5 +66,7 @@ target_sources(lsms_main
 
 target_sources(lsms_wl
         PUBLIC
+	lsmsClass.cpp
+	lsmsClass.hpp
         wl_lsms.cpp)
 

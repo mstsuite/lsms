@@ -10,7 +10,8 @@
 // we use BOOST for the random number generator
 // #include <boost/random.hpp>
 #include <random>
-#include "../../mjson/json.h"
+// #include "../../mjson/json.h"
+#include "json.h"
 #include "EvecGenerator.h"
 #include "Graph2d.hpp"
 
