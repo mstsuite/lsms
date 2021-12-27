@@ -49,7 +49,8 @@ if (NOT Lua_FOUND)
     ExternalProject_Add(Lua
             SOURCE_DIR ${_src}
             BUILD_IN_SOURCE true
-            CONFIGURE_COMMAND sed -i '' -e "/^INSTALL_TOP/c INSTALL_TOP=${_install}" ${_src}/Makefile
+#            CONFIGURE_COMMAND sed -i .tmp -e "/^INSTALL_TOP/c\\\rINSTALL_TOP=${_install}" ${_src}/Makefile
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/replace_INSTALL_TOP.cmake ${_src}/Makefile ${_src}/Makefile ${_install}
             BUILD_COMMAND ${MAKE_EXECUTABLE} -C ${_src}
             INSTALL_COMMAND ${MAKE_EXECUTABLE} install -C ${_src}
             )
