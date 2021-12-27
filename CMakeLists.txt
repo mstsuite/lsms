@@ -17,7 +17,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Enable the CUDA compilation
 option(USE_ACCELERATOR_CUDA_C "Use the cuda accelerator" OFF)
-option(USE_BUILDKKRMATRIX_GPU "Build also the kkr matrix on GPU" ON)
+# option(USE_BUILDKKRMATRIX_GPU "Build also the kkr matrix on GPU" ON)
 
 if (USE_ACCELERATOR_CUDA_C)
     message(STATUS "ACCELERATOR_CUDA_C was activated")
@@ -109,12 +109,12 @@ if (USE_ACCELERATOR_CUDA_C)
         target_compile_definitions(lsmscore PUBLIC "MST_BUILD_KKR_MATRIX_DEFAULT=${MST_BUILD_KKR_MATRIX_DEFAULT}")
     endif ()
 
-    if (USE_BUILDKKRMATRIX_GPU)
-        message(STATUS "KKR Matrix build on GPU")
-        target_compile_definitions(lsmscore PUBLIC BUILDKKRMATRIX_GPU)
-    else ()
-        message(STATUS "KKR Matrix is not build on GPU")
-    endif ()
+    #    if (USE_BUILDKKRMATRIX_GPU)
+    #        message(STATUS "KKR Matrix build on GPU")
+    #        target_compile_definitions(lsmscore PUBLIC BUILDKKRMATRIX_GPU)
+    #    else ()
+    #        message(STATUS "KKR Matrix is not build on GPU")
+    #    endif ()
 
     if (BUILD_WITH_OPENMP)
         message(STATUS "OpenMP is also defined for GPU")
@@ -227,6 +227,7 @@ target_link_libraries(lsmscore PUBLIC mjson)
 # LibXC
 if (USE_LIBXC)
     target_link_libraries(lsmscore PUBLIC libxc::libxc)
+    target_compile_definitions(lsmscore PUBLIC USE_LIBXC)
 endif ()
 
 # DL
