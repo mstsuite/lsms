@@ -23,7 +23,7 @@ target_sources(lsmscore
         constraint.f
         dfv.f
         dfv_new.f
-        essl_workaround.f
+        $<$<BOOL:${USE_ESSL}>:essl_workaround.f>
         fit.f
         fitpot.f
         fnpi.f
