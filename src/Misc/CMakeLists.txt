@@ -66,11 +66,12 @@ target_sources(lsmscore
         io.hpp
         )
 
-if(ESSL_WORKAROUND)
+if(USE_ESSL)
   target_sources(lsmscore
         PUBLIC
         essl_workaround.f
         )
+  message(STATUS "Adding essl_workaround.f")
 endif()
 
 target_include_directories(
