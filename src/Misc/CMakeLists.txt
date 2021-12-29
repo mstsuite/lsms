@@ -23,7 +23,6 @@ target_sources(lsmscore
         constraint.f
         dfv.f
         dfv_new.f
-        $<$<BOOL:${USE_ESSL}>:essl_workaround.f>
         fit.f
         fitpot.f
         fnpi.f
@@ -66,6 +65,13 @@ target_sources(lsmscore
         zsphbesjh.f
         io.hpp
         )
+
+if(ESSL_WORKAROUND)
+  target_sources(lsmscore
+        PUBLIC
+        essl_workaround.f
+        )
+endif()
 
 target_include_directories(
         lsmscore
