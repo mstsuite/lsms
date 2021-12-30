@@ -29,8 +29,6 @@ if (USE_ACCELERATOR_CUDA_C)
     enable_language(CUDA)
 endif ()
 
-option(USE_ACCELERATOR_HIP "Use HIP for accelerator" OFF)
-
 if (USE_ACCELERATOR_HIP)
     message(STATUS "ACCELERATOR_HIP was activated")
 endif ()
@@ -157,6 +155,14 @@ if (USE_ACCELERATOR_HIP)
 
     target_compile_definitions(lsmscore PUBLIC ACCELERATOR_HIP)
 
+    find_package(hip REQUIRED)
+    target_link_libraries(lsmscore PUBLIC hip::device)
+
+    find_package(hipblas REQUIRED)
+    target_link_libraries(lsmscore PUBLIC roc::hipblas)
+
+    find_package(rocsolver REQUIRED)
+    target_link_libraries(lsmscore PUBLIC roc::rocsolver)
 endif ()
 
 if (DEFINED MST_LINEAR_SOLVER_DEFAULT)

@@ -63,7 +63,8 @@ __device__
 inline void calculateSinCosPowersHip(Real *rij, int lend, Real *sinmp, Real *cosmp)
 {
   const Real ptol = 1.0e-6;
-  Real pmag = std::sqrt(rij[0]*rij[0]+rij[1]*rij[1]);
+  // Real pmag = std::sqrt(rij[0]*rij[0]+rij[1]*rij[1]);
+  Real pmag = sqrt(rij[0]*rij[0]+rij[1]*rij[1]);
   cosmp[0] = 1.0;
   sinmp[0] = 0.0;
   if(pmag>ptol)
@@ -89,21 +90,24 @@ __device__ __inline__ int plmIdxDev(int l, int m)
 __device__
 void associatedLegendreFunctionNormalizedHip(Real x, int lmax, Real *Plm)
 {
-  const Real pi = std::acos(-1.0);
+  const Real pi = acos(-1.0);
   // y = \sqrt{1-x^2}
-  Real y = std::sqrt(1.0-x*x);
+  // Real y = std::sqrt(1.0-x*x);
+  Real y = sqrt(1.0-x*x);
   // initialize the first entry
   // Plm[0]=std::sqrt(R(1)/(R(2)*pi));
-  Plm[0]=std::sqrt(1.0/(4.0*pi));
+  Plm[0]=sqrt(1.0/(4.0*pi));
 
   if(lmax<1) return;
 
   for(int m=1; m<=lmax; m++)
   {
     // \bar{P}_{mm} = - \sqrt{\frac{2m+1}{2m}} y \bar{P}_{m-1, m-1}
-    Plm[plmIdxDev(m,m)] = - std::sqrt(Real(2*m+1)/Real(2*m)) * y * Plm[plmIdxDev(m-1,m-1)];
+    // Plm[plmIdxDev(m,m)] = - std::sqrt(Real(2*m+1)/Real(2*m)) * y * Plm[plmIdxDev(m-1,m-1)];
+    Plm[plmIdxDev(m,m)] = - sqrt(Real(2*m+1)/Real(2*m)) * y * Plm[plmIdxDev(m-1,m-1)];
     // \bar{P}_{mm-1} = \sqrt{2 m + 1} x \bar{P}_{m-1, m-1}
-    Plm[plmIdxDev(m,m-1)] = std::sqrt(Real(2*m+1)) * x * Plm[plmIdxDev(m-1,m-1)]; 
+    // Plm[plmIdxDev(m,m-1)] = std::sqrt(Real(2*m+1)) * x * Plm[plmIdxDev(m-1,m-1)]; 
+    Plm[plmIdxDev(m,m-1)] = sqrt(Real(2*m+1)) * x * Plm[plmIdxDev(m-1,m-1)]; 
   }
 
   for(int m=0; m<lmax; m++)
@@ -113,8 +117,10 @@ void associatedLegendreFunctionNormalizedHip(Real x, int lmax, Real *Plm)
       // \bar{P}_{lm} = a_{lm} (x \bar{P}_{l-1. m} - b_{lm} \bar{P}_{l-2, m})
       // a_{lm} = \sqrt{\frac{(4 l^2 - 1)(l^2 - m^2)}}
       // b_{lm} = \sqrt{\frac{(l -1)^2 - m^2}{4 (l-1)^2 -1}}
-      Real a_lm = std::sqrt(Real(4*l*l-1)/Real(l*l - m*m));
-      Real b_lm = std::sqrt(Real((l-1)*(l-1) - m*m)/Real(4*(l-1)*(l-1)-1));
+      // Real a_lm = std::sqrt(Real(4*l*l-1)/Real(l*l - m*m));
+      Real a_lm = sqrt(Real(4*l*l-1)/Real(l*l - m*m));
+      // Real b_lm = std::sqrt(Real((l-1)*(l-1) - m*m)/Real(4*(l-1)*(l-1)-1));
+      Real b_lm = sqrt(Real((l-1)*(l-1) - m*m)/Real(4*(l-1)*(l-1)-1));
       Plm[plmIdxDev(l,m)] = a_lm * (x * Plm[plmIdxDev(l-1,m)] - b_lm * Plm[plmIdxDev(l-2,m)]);
     }
   }
@@ -258,14 +264,16 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
     // deviceDoubleComplex *testDlm = (deviceDoubleComplex *) (testSM + dlmOffset);
 #endif
 
-    Real r = std::sqrt(rij[0]*rij[0] + rij[1]*rij[1] + rij[2]*rij[2]);
+    // Real r = std::sqrt(rij[0]*rij[0] + rij[1]*rij[1] + rij[2]*rij[2]);
+    Real r = sqrt(rij[0]*rij[0] + rij[1]*rij[1] + rij[2]*rij[2]);
     int lmax1 = LIZlmax[ir1];
     int lmax2 = LIZlmax[ir2];
     int kkri=(lmax1+1)*(lmax1+1);
     int kkrj=(lmax2+1)*(lmax2+1);
     int lend = lmax1 + lmax2;
 
-    Real pi4=4.0*2.0*std::asin(1.0);
+    // Real pi4=4.0*2.0*std::asin(1.0);
+    const Real pi4=4.0*2.0*asin(1.0);
     Real cosTheta = rij[2]/r;
   
     if(hipThreadIdx_x == 0)
