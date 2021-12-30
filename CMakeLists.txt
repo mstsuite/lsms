@@ -15,14 +15,27 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Enable the CUDA compilation
+# Enable compilation for Accelerators
 option(USE_ACCELERATOR_CUDA_C "Use the cuda accelerator" OFF)
 # option(USE_BUILDKKRMATRIX_GPU "Build also the kkr matrix on GPU" ON)
+option(USE_ACCELERATOR_HIP "Use HIP for accelerator" OFF)
+
+if(USE_ACCELERATOR_CUDA_C AND USE_ACCELERATOR_HIP)
+  message(FATAL_ERROR "Both ACCELERATOR_CUDA_C and ACCELERATOR_HIP defined.\nOnly ONE of these allowed!")
+endif()
 
 if (USE_ACCELERATOR_CUDA_C)
     message(STATUS "ACCELERATOR_CUDA_C was activated")
     enable_language(CUDA)
 endif ()
+
+option(USE_ACCELERATOR_HIP "Use HIP for accelerator" OFF)
+
+if (USE_ACCELERATOR_HIP)
+    message(STATUS "ACCELERATOR_HIP was activated")
+endif ()
+
+
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -138,6 +151,12 @@ if (USE_ACCELERATOR_CUDA_C)
     else ()
         message(FATAL_ERROR "Cusolver was not defined or found")
     endif ()
+endif ()
+
+if (USE_ACCELERATOR_HIP)
+
+    target_compile_definitions(lsmscore PUBLIC ACCELERATOR_HIP)
+
 endif ()
 
 if (DEFINED MST_LINEAR_SOLVER_DEFAULT)

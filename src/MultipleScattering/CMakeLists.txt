@@ -48,6 +48,15 @@ if (USE_ACCELERATOR_CUDA_C)
     )
 endif ()
 
+if (USE_ACCELERATOR_HIP)
+    target_sources(
+            lsmscore
+            PUBLIC
+            buildKKRMatrix_HIP.cpp
+            linearSolvers_HIP.cpp
+    )
+endif ()
+
 target_include_directories(
         lsmscore
         PUBLIC
