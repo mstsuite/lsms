@@ -19,7 +19,6 @@ and for calculations using Monte-Carlo simulations:
 ### CMake
 
 <div style="padding: 15px; border: 1px solid transparent; border-color: transparent; margin-bottom: 20px; border-radius: 4px; color: #a94442; background-color: #f2dede; border-color: #ebccd1;">
-Warning
 
 The current CMake can now build both LSMS and WL-LSMS.
 
