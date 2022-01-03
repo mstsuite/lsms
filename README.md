@@ -16,14 +16,12 @@ and for calculations using Monte-Carlo simulations:
 
 ## Installation
 
-[![CMake](https://github.com/francoMU/lsms/actions/workflows/cmake.yml/badge.svg)](https://github.com/francoMU/lsms/actions/workflows/cmake.yml)
-
 ### CMake
 
 <div style="padding: 15px; border: 1px solid transparent; border-color: transparent; margin-bottom: 20px; border-radius: 4px; color: #a94442; background-color: #f2dede; border-color: #ebccd1;">
 Warning
 
-The current CMake can only build LSMS and not WL-LSMS
+The current CMake can now build both LSMS and WL-LSMS.
 
 </div>
 
@@ -53,7 +51,7 @@ Here is an example of installing `LSMS` with GCC-10, OpenMPI and MKL. LibXC and 
 Clone the branch with the CMake build system
 
 ```bash
-git clone -b feature/build_system git@github.com:francoMU/lsms.git
+git clone https://github.com/mstsuite/lsms.git
 ```
 
 Create a build folder in a directory of your choice.
@@ -63,7 +61,7 @@ mkdir build_lsms
 cd build_lsms
 ```
 
-Run Cmake. CMake fill try to find all libaries automatically.
+Run CMake. CMake will try to find all libaries automatically.
 
 ```bash
 cmake <path/to/lsms/root> \
@@ -74,6 +72,13 @@ cmake <path/to/lsms/root> \
       -DCMAKE_CXX_FLAGS="-O3 -mtune=native" \
       -DCMAKE_Fortran_FLAGS="-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch" \
       -DBLA_VENDOR=Intel10_64lp
+```
+
+For a number of systems toolchain files are provided in the `toolchain` directory that provide the definitions to run CMake.
+
+```bash
+cmake -DCMAKE_TOOLCHAIN_FILE=<path/to/lsms/root>/toolchain/<system-name>.cmake \
+      <path/to/lsms/root>
 ```
 
 This is just an example for creating the build-system. `CMAKE_BUILD_TYPE` can be either Release or Debug. This has only an
