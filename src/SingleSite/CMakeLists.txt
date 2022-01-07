@@ -25,7 +25,7 @@ target_sources(
          readSingleAtomData.hpp
          SingleSiteScattering.hpp
          writeSingleAtomData.hpp
-         RelativisticSphericalScatterer.cpp
+         RelativisticSphericalScatterer.cpp
          RelativisticScatterer.hpp)
 
 target_include_directories(lsmscore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

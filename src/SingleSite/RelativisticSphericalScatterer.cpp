@@ -5,13 +5,6 @@
 
 #include "RelativisticScatterer.hpp"
 
-class relativisticAngularMomentumIndices {
-  std::vector<int> kappaFromLambda;
-  std::vector<int> twoMuFromLambda;
-public:
-  void init(int lmax);
-};
-
 // lambdaIndexFromKappaMu
 // kappa != 0
 // twoMu = 2*mu, i.e. odd integers ..., -7, -5, -3, -1, +1, +3, +5, +7, ...
