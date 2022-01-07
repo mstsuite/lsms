@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 // routines to calculate the associated Legendre functions P_{lm} needed to calculate 
 // spherical harmonics
 // This also provides the coeficients c_{lm} to calculate spherical harmonics:

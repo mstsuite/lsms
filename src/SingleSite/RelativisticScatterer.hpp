@@ -12,7 +12,7 @@ public:
   static std::vector<int> kappaFromLambda;
   static std::vector<int> twoMuFromLambda;
 public:
-  void init(int lmax);
+  static void init(int lmax);
 };
 
 
@@ -127,7 +127,7 @@ public:
 
 // spinAngularFunction \chi_\Lambda(\hat{r})
 
-void spinAngularFunction();
+void spinAngularFunction(int lambda, Real theta, Real phi, Complex *chi);
 
 /*
 Input needed: momentum/energy, kappa, mu, r_mesh, v(r), b(r)

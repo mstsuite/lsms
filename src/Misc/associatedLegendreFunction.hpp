@@ -1,3 +1,7 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#ifndef LSMS_ASSOCIATED_LEGENDRE_HPP
+#define LSMS_ASSOCIATED_LEGENDRE_HPP
+
 // calculate the associated Legendre Function
 // P_{lm}(x) = \sqrt{2 (2l+1)\frac{(l-m)!}{(l+m)!}} x^m \frac{d^m}{dx^m} P_l(x)
 // where P_l(x) is the Legendre Polynomial of degree l
@@ -86,4 +90,4 @@ void associatedLegendreFunction(R x, int lmax, R *Plm)
   }
 }
 
-
+#endif

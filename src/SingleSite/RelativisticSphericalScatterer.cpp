@@ -5,6 +5,30 @@
 
 #include "RelativisticScatterer.hpp"
 
+#include "associatedLegendreFunction.hpp"
+
+std::vector<int> RelativisticAngularMomentumIndices::kappaFromLambda;
+std::vector<int> RelativisticAngularMomentumIndices::twoMuFromLambda;
+
+void RelativisticAngularMomentumIndices::init(int lmax)
+{
+  int kmymax = 2*(lmax+1)*(lmax+1);
+  kappaFromLambda.resize(kmymax);
+  twoMuFromLambda.resize(kmymax);
+  for(int kappa = -lmax - 1; kappa < lmax+1; kappa++)
+  {
+    if(kappa != 0)
+    {
+      int twoJ = 2*abs(kappa)-1;
+      for(int twoMu = -twoJ; twoMu <= twoJ; twoMu += 2)
+      {
+        kappaFromLambda[lambdaIndexFromKappaMu(kappa, twoMu)] = kappa;
+        twoMuFromLambda[lambdaIndexFromKappaMu(kappa, twoMu)] = twoMu;
+      }
+    }
+  }
+}
+
 // lambdaIndexFromKappaMu
 // kappa != 0
 // twoMu = 2*mu, i.e. odd integers ..., -7, -5, -3, -1, +1, +3, +5, +7, ...
@@ -64,8 +88,17 @@ void ChiSimgaZChiTable::init(int lmax)
 
 // spinAngularFunction \chi_\Lambda(\hat{r})
 
-void spinAngularFunction()
+void spinAngularFunction(int lambda, Real theta, Real phi, Complex *chi) // , Real *plm)
 {
+  const Complex i(0, 1);
+  int kappa = RelativisticAngularMomentumIndices::kappaFromLambda[lambda];
+  int twoMu = RelativisticAngularMomentumIndices::twoMuFromLambda[lambda];
+  int l = lFromKappa(kappa);
+  std::vector<Real> plm((l+1)*(l+2)/2);
+  associatedLegendreFunctionNormalized(std::cos(theta), l, &plm[0]); // Y_lm(\theta, \phi) = \bar{P}_{lm}(\cos \theta) e^{i m \phi}
+
+  chi[0] = clebschGordonCoefficientJ2HalfTwoMu(kappa, twoMu, +1) * plm[plmIdx(l, (twoMu - 1)/2)] * std::exp(i * phi * Real((twoMu - 1)/2));
+  chi[1] = clebschGordonCoefficientJ2HalfTwoMu(kappa, twoMu, -1) * plm[plmIdx(l, (twoMu + 1)/2)] * std::exp(i * phi * Real((twoMu + 1)/2));
 }
 
 /*
