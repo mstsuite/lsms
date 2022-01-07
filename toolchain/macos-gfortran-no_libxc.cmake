@@ -1,0 +1,6 @@
+# Toolchain for building LSMS on MacOS
+
+set(USE_LIBXC OFF)
+set(MST_LINEAR_SOLVER_DEFAULT 0x0005)
+set(MST_BUILD_KKR_MATRIX_DEFAULT 0x1000)
+set(BLA_VENDOR Apple)

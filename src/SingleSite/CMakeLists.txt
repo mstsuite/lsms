@@ -24,6 +24,8 @@ target_sources(
          checkAntiFerromagneticStatus.hpp
          readSingleAtomData.hpp
          SingleSiteScattering.hpp
-         writeSingleAtomData.hpp)
+         writeSingleAtomData.hpp
+         RelativisticSphericalScatterer.cpp
+         RelativisticScatterer.hpp)
 
 target_include_directories(lsmscore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
