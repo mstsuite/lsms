@@ -270,6 +270,11 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &l
     MPI_Pack(&atom.zvalss,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.qtotws,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.mtotws,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
+
+    MPI_Pack(&atom.mtotmt,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
+    MPI_Pack(&atom.mvalmt,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
+    MPI_Pack(&atom.mvalws,1,MPI_DOUBLE,buf,s,&pos,comm.comm);
+
     MPI_Pack(atom.evec,3,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(atom.evecNew,3,MPI_DOUBLE,buf,s,&pos,comm.comm);
     MPI_Pack(atom.evecOut,3,MPI_DOUBLE,buf,s,&pos,comm.comm);
@@ -337,6 +342,11 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &l
     MPI_Unpack(buf,s,&pos,&atom.zvalss,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&atom.qtotws,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&atom.mtotws,1,MPI_DOUBLE,comm.comm);
+
+    MPI_Unpack(buf,s,&pos,&atom.mtotmt,1,MPI_DOUBLE,comm.comm);
+    MPI_Unpack(buf,s,&pos,&atom.mvalmt,1,MPI_DOUBLE,comm.comm);
+    MPI_Unpack(buf,s,&pos,&atom.mvalws,1,MPI_DOUBLE,comm.comm);
+
     MPI_Unpack(buf,s,&pos,atom.evec,3,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,atom.evecNew,3,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,atom.evecOut,3,MPI_DOUBLE,comm.comm);
