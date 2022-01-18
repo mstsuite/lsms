@@ -156,6 +156,16 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
     local.atom[i].kkrsz=(local.atom[i].lmax+1)*
                         (local.atom[i].lmax+1);
 
+    /*
+     * Multipole moments
+     */
+
+    local.atom[i].lmax_mom = crystal.types[local.global_id[i]].lmax_mom;
+    auto lmax_mom = crystal.types[local.global_id[i]].lmax_mom;
+    local.atom[i].multipole_moms = std::vector<Complex>( (lmax_mom + 1) * (lmax_mom + 1), 0.0 );
+    local.atom[i].multipole_madelung = Matrix<Complex>( (lmax_mom + 1) * (lmax_mom + 1), crystal.num_atoms);
+
+
     // LSF
     auto lsf_functional = crystal.types[local.global_id[i]].lsf_functional;
     local.atom[i].lsf_functional = lsms::LSFFunctional(

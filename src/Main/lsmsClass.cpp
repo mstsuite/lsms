@@ -18,6 +18,7 @@
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
+#include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
 #include "VORPOL/VORPOL.hpp"
 #include "Potential/calculateChargesPotential.hpp"
 #include "Potential/interpolatePotential.hpp"
@@ -219,7 +220,11 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   calculateVolumes(comm, lsms, crystal, local);
 
   // need to calculate madelung matrices
+#ifdef LEGACY_MADELUNG
   calculateMadelungMatrices(lsms, crystal, local);
+#else
+  calculateMultiMadelungMatrices(lsms, crystal, local);
+#endif
 
   if (lsms.global.iprint >= 0)
     printLocalTypeInfo(stdout, local);

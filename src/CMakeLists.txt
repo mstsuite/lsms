@@ -62,6 +62,10 @@ add_subdirectory(Misc)
 
 add_subdirectory(MultipleScattering)
 
+add_subdirectory(MultipoleMadelung)
+
+add_subdirectory(MultipoleMoments)
+
 add_subdirectory(Potential)
 
 add_subdirectory(RadialGrid)

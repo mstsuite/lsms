@@ -131,6 +131,10 @@
       return data[j*lDim+i];
     }
 
+    inline T operator() (size_type i, size_type j) const {
+      return data[j*lDim+i];
+    }
+
   // The second way to access the elements of a matrix uses the familair C |[]| operator and vies the |data| array as a continous block of memory.
     inline T& operator[](size_type i) {
       return data[i];

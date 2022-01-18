@@ -64,6 +64,8 @@ target_sources(lsmscore
         zsphbesj.f
         zsphbesjh.f
         io.hpp
+        integrator.hpp
+        utils.hpp
         )
 
 if(USE_ESSL)

@@ -143,6 +143,7 @@ public:
   Real conc;
   int alloy_class;
   int lsf_functional{0};
+  int lmax_mom{0};
 };
 
 class CrystalParameters {

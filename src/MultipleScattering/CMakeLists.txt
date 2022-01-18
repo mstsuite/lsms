@@ -20,9 +20,9 @@ target_sources(lsmscore
         zrandn.f
         tau_inv_postproc.f
         trgtol.f
-        green_function.f
-        gf_local.f
-        int_zz_zj.f
+        green_function.f90
+        gf_local.f90
+        int_zz_zj.f90
         mdosms_c.f
         mgreen_c.f
         green_function_rel.f

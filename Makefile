@@ -26,6 +26,7 @@ include src/Madelung/modules.mk
 include src/Main/modules.mk
 include src/Misc/modules.mk
 include src/MultipleScattering/modules.mk
+include src/MultipoleMadelung/modules.mk
 include src/Potential/modules.mk
 include src/RadialGrid/modules.mk
 include src/SingleSite/modules.mk

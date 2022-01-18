@@ -15,6 +15,8 @@
 #include "Misc/Coeficients.hpp"
 #include "calculateDensities.hpp"
 #include "MultipleScattering/linearSolvers.hpp"
+#include "MultipoleMoments.hpp"
+
 // #include <omp.h>
 #ifdef USE_NVTX
 #include <nvToolsExt.h>
@@ -507,6 +509,17 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                             &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
                             &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
                             &lsms.global.iprint,lsms.global.istop,32);
+
+
+            /*
+             * Multipole moments:
+             */
+
+            //lsms::multi_moms::multipole_mom_e(solutionNonRel[iie][i],
+            //                                  tau00_l,
+            //                                  )
+
+
             if((lsms.n_spin_pola == 2) && (lsms.n_spin_cant == 1)) // spin polarized, collinear case
             {
               green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,

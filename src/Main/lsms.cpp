@@ -47,6 +47,7 @@
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
 #include "VORPOL/setupVorpol.hpp"
 #include "Misc/readLastLine.hpp"
+#include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
 
 #include "buildLIZandCommLists.hpp"
 #include "writeInfoEvec.hpp"
@@ -386,7 +387,12 @@ int main(int argc, char *argv[])
   setupMixing(mix, mixing, lsms.global.iprint);
 
 // need to calculate madelung matrices
+#ifdef LEGACY_MADELUNG
   calculateMadelungMatrices(lsms, crystal, local);
+#else
+  calculateMultiMadelungMatrices(lsms, crystal, local);
+#endif
+
 
   if (lsms.global.iprint >= 1)
   {

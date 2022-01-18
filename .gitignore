@@ -17,82 +17,6 @@ lua-5.2.4/man
 *.toc
 lsms_manual.pdf
 
-/libxc-4.2.3/config.status
-/libxc-4.2.3/libtool
-/libxc-4.2.3/src/libxc_docs.txt
-/libxc-4.2.3/src/libxc_funcs.f90
-/libxc-4.2.3/src/libxc_inc.f03
-/libxc-4.2.3/cmake/Makefile
-/libxc-4.2.3/maple/Makefile
-/libxc-4.2.3/pylibxc/Makefile
-/libxc-4.2.3/scripts/Makefile
-/libxc-4.2.3/src/maple2c/Makefile
-/libxc-4.2.3/src/Makefile
-/libxc-4.2.3/testsuite/pytest/Makefile
-/libxc-4.2.3/testsuite/Makefile
-/libxc-4.2.3/Makefile
-/.idea/misc.xml
-/libxc-4.2.3/autom4te.cache/output.0
-/libxc-4.2.3/autom4te.cache/output.1
-/libxc-4.2.3/autom4te.cache/requests
-/libxc-4.2.3/stamp-h1
-/libxc-4.2.3/autom4te.cache/traces.0
-/libxc-4.2.3/autom4te.cache/traces.1
-/.idea/vcs.xml
-/libxc-4.2.3/src/xc_funcs.h
-/libxc-4.2.3/src/genwiki
-/libxc-4.2.3/src/libxc.f90
-/libxc-4.2.3/src/.libs/libxc.la
-/libxc-4.2.3/src/libxc.la
-/opt/lib/libxc.la
-/libxc-4.2.3/src/.libs/libxc.lai
-/opt/lib/pkgconfig/libxc.pc
-/libxc-4.2.3/src/libxc_funcs_m.mod
-/opt/include/libxc_funcs_m.mod
-/libxc-4.2.3/src/libxcf03.f90
-/libxc-4.2.3/src/.libs/libxcf03.la
-/libxc-4.2.3/src/libxcf03.la
-/opt/lib/libxcf03.la
-/libxc-4.2.3/src/.libs/libxcf03.lai
-/opt/lib/pkgconfig/libxcf03.pc
-/libxc-4.2.3/src/.libs/libxcf90.la
-/libxc-4.2.3/src/libxcf90.la
-/opt/lib/libxcf90.la
-/libxc-4.2.3/src/.libs/libxcf90.lai
-/opt/lib/pkgconfig/libxcf90.pc
-/opt/include/xc.h
-/libxc-4.2.3/testsuite/xc-consistency
-/libxc-4.2.3/testsuite/xc-error
-/libxc-4.2.3/testsuite/xc-get_data
-/libxc-4.2.3/src/xc-info
-/opt/bin/xc-info
-/libxc-4.2.3/testsuite/xc-regression
-/libxc-4.2.3/testsuite/xc-run_testsuite.trs
-/libxc-4.2.3/src/xc-sanity
-/libxc-4.2.3/src/xc-threshold
-/opt/bin/xc-threshold
-/libxc-4.2.3/src/xc_f03_lib_m.mod
-/opt/include/xc_f03_lib_m.mod
-/libxc-4.2.3/src/xc_f90_lib_m.mod
-/opt/include/xc_f90_lib_m.mod
-/libxc-4.2.3/src/xc_f90_types_m.mod
-/opt/include/xc_f90_types_m.mod
-/opt/include/xc_funcs.h
-/opt/include/xc_funcs_removed.h
-/opt/include/xc_version.h
-/doc/html/formula.repository
-/.idea/codeStyles/codeStyleConfig.xml
-/Test/Cu/i_lsms.restart
-/Test/Cu/info_evec_out
-/Test/Cu/k.out
-/doc/manual/lsms_implementation.bbl
-/doc/manual/lsms_implementation.blg
-/doc/manual/lsms_implementation.pdf
-/doc/manual/lsms_manual.bbl
-/doc/manual/lsms_manual.blg
-/Test/Cu/out
-/.idea/codeStyles/Project.xml
-/Test/Cu/w_cu.0
 ### C++ template
 # Prerequisites
 *.d
@@ -216,6 +140,8 @@ dkms.conf
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
+.idea/misc.xml
+.idea/vcs.xml
 
 # Gradle
 .idea/**/gradle.xml
@@ -225,12 +151,11 @@ dkms.conf
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
-# .idea/artifacts
-# .idea/compiler.xml
-# .idea/jarRepositories.xml
-# .idea/modules.xml
-# .idea/*.iml
-# .idea/modules
+.idea/artifacts
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/modules.xml
+.idea/modules
 # *.iml
 # *.ipr
 

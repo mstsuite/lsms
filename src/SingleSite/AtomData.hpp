@@ -322,6 +322,10 @@ public:
       x_mesh[i] = a.x_mesh[i];
     }
 
+    lmax_mom = a.lmax_mom;
+    multipole_moms = a.multipole_moms;
+    multipole_madelung = a.multipole_madelung;
+
     alat = a.alat;
     efermi = a.efermi;
     vdif = a.vdif;
@@ -473,6 +477,11 @@ public:
                                       // to force zero magnetic moment
   int numc;                           // Number of core states
   bool spinFlipped;                   // Flag for antiferromagnetic condition
+
+// Multipole moments
+  int lmax_mom;
+  std::vector<Complex> multipole_moms;
+  Matrix<Complex> multipole_madelung;
 
 // local energy
   Real localEnergy;

@@ -128,7 +128,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     case 's': case 'S': lsms.relativity=scalar; lsms.nrelv=0; lsms.nrelc=0; break;
     case 'f': case 'F': lsms.relativity=full; lsms.nrelv=0; lsms.nrelc=0; break;
   }
-  rel_str[0]='d'; rel_str[1]=0; // default 
+  rel_str[0]='d'; rel_str[1]=0; // default
   luaGetStrN(L,"core_relativity",rel_str,40);
   switch(rel_str[0])
   {
@@ -149,7 +149,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 
 // c     read spin polarization index....................................
 //       read(10,*    ) nspin,i_vdif,iexch
- 
+
 /* nspin = 1 : non spin polarized
            2 : spin polarized, collinear
            3 : spin polarized, non-collinear
@@ -208,6 +208,11 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     {
       luaGetStrNFromStack(L,"atom",crystal.types[crystal.num_types].name,4);
       crystal.types[crystal.num_types].pot_in_idx = -1;
+
+      // Multipole moment parameters
+      crystal.types[crystal.num_types].lmax_mom = 0;
+      luaGetIntegerFieldFromStack(L, "lmax_mom", &crystal.types[crystal.num_types].lmax_mom);
+
       luaGetIntegerFieldFromStack(L,"pot_in_idx",&crystal.types[crystal.num_types].pot_in_idx);
       luaGetIntegerFieldFromStack(L,"lmax",&crystal.types[crystal.num_types].lmax);
       luaGetIntegerFieldFromStack(L,"Z",&crystal.types[crystal.num_types].Z);
@@ -263,7 +268,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     std::cout << "atom[" << i <<  "] = " << crystal.types[i].name << std::endl;
     std::cout << "Z  = " << crystal.types[i].Z << std::endl;
   } */
- 
+
   // for Wang-Landau for alloys
 
   // read in alloy file information
@@ -302,9 +307,9 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       luaGetIntegerFieldFromStack(L,"Zs",&alloyDesc[i][j].Zs);
       luaGetIntegerFieldFromStack(L,"Zv",&alloyDesc[i][j].Zv);
       lua_pop(L,1);
-    } 
+    }
     lua_pop(L,3);
-  } 
+  }
 
   // print values and quit to double-check
   /* std::cout << "nalloy_class = " << alloyDesc.size() << std::endl;
@@ -458,11 +463,11 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     int quantityIdx = -1;
     if (strcmp("no_mixing", quantity) == 0)
       quantityIdx = MixingParameters::no_mixing;
-    else if (strcmp("charge", quantity) == 0) 
+    else if (strcmp("charge", quantity) == 0)
       quantityIdx = MixingParameters::charge;
-    else if (strcmp("potential", quantity) == 0) 
+    else if (strcmp("potential", quantity) == 0)
       quantityIdx = MixingParameters::potential;
-    else if (strcmp("moment_magnitude", quantity) == 0) 
+    else if (strcmp("moment_magnitude", quantity) == 0)
       quantityIdx = MixingParameters::moment_magnitude;
     else if (strcmp("moment_direction", quantity) == 0)
       quantityIdx = MixingParameters::moment_direction;
@@ -488,7 +493,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   int potentialShiftSwitch = 0;
   potentialShifter.vSpinShiftFlag = false;
 // check if potentialShift has been assigned
-  lua_getglobal(L,"potentialShift"); 
+  lua_getglobal(L,"potentialShift");
   if(lua_istable(L,-1))
   {
     lua_pop(L,1);
@@ -511,7 +516,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 
   lsms.localAtomDataFile[0]=0;
   luaGetStrN(L,"localAtomDataFile",lsms.localAtomDataFile,120);
-  
+
   // read default block size for zblock_lu
   lsms.zblockLUSize=0;
   luaGetInteger(L,"zblockLUSize",&lsms.zblockLUSize);
@@ -594,7 +599,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 //      >             1i5)')j_ij
 //          call fstop(sname)
 //       endif
- 
+
   /* printf("End of read input\n"); 
   luaStackDump(L); */
   return 0;

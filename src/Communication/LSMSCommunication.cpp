@@ -316,6 +316,12 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to, int &l
     MPI_Pack(&atom.kc(0,0),t,MPI_INT,buf,s,&pos,comm.comm);
     MPI_Pack(&atom.kc(0,1),t,MPI_INT,buf,s,&pos,comm.comm);
 
+    // Multipole parameters
+    MPI_Pack(&atom.lmax_mom,1,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack(&atom.multipole_moms[0],atom.lmax_mom,MPI_COMPLEX,buf,s,&pos,comm.comm);
+    auto size = atom.multipole_madelung.size();
+    MPI_Pack(&atom.multipole_madelung[0],size,MPI_COMPLEX,buf,s,&pos,comm.comm);
+
 
     MPI_Send(buf,s,MPI_PACKED,to,tag,comm.comm);
   }

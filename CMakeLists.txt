@@ -82,10 +82,11 @@ add_subdirectory(src)
 
 add_subdirectory(include)
 
-#
-#
-#
-
+option(USE_LEGACY_MADELUNG "Use the legacy madelung implementation" OFF)
+if (USE_LEGACY_MADELUNG)
+    message(STATUS "Use the legacy madelung calculations")
+    target_compile_definitions(lsmscore PUBLIC LEGACY_MADELUNG)
+endif ()
 
 # Find OpenMP library
 option(BUILD_WITH_OPENMP "Build with OpenMP" ON)
