@@ -23,7 +23,8 @@ void plm_normalized_(int *lmax, double *x, double *plm)
 void ylm_coefficients_(int *lmax, double *clm)
 {
   for(int i=0; i<((*lmax) +1)*((*lmax) +2)/2; i++)
-    clm[i]=std::sqrt(0.5);
+    clm[i] = 1.0;
+//    clm[i]=std::sqrt(0.5);
 }
 }
 

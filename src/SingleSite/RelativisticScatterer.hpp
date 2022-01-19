@@ -5,7 +5,9 @@
 #include "Complex.hpp"
 #include "SingleSiteScattering.hpp"
 #include "Array3d.hpp"
+#include <array>
 
+typedef std::array<Complex, 4> DiracSpinor;
 
 class RelativisticAngularMomentumIndices {
 public:

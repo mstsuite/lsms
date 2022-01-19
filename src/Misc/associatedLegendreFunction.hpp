@@ -90,4 +90,9 @@ void associatedLegendreFunction(R x, int lmax, R *Plm)
   }
 }
 
+// Complex Spherical Harmonics
+// template <typename C> // C has to be a complex data type
+// void complexSphericalHarmonics(Real phi, Real theta, int lmax, C *ylm)
+// {
+// }
 #endif

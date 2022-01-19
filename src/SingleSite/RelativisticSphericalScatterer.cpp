@@ -108,7 +108,7 @@ Output: t, C, S
 
 // N.B. kineticEnergy = relativisticEnergy - m_e c^2 (m_e = 1/2 in Rydberg units)
 
-void freeElectronJ(Complex kineticEnergy, int kappa, int mu, std::vector<Real> &r_mesh)
+void freeElectronJ(Complex kineticEnergy, int kappa, int mu, std::vector<Real> &r_mesh, std::vector<DiracSpinor> &jKM)
 {
   int l, lBar;
   if(kappa < 0)
@@ -119,9 +119,15 @@ void freeElectronJ(Complex kineticEnergy, int kappa, int mu, std::vector<Real> &
     l = kappa;
     lBar = kappa - 1;
   }
+  int lmax = std::max(l, lBar);
+  std::vector<Real> plm(((lmax+1)*(lmax+2))/2);
+
+  // void associatedLegendreFunctionNormalized(R x, int lmax, R *Plm)
+  // $ Y_lm(\theta, \phi) = \bar{P}_{lm}(\cos \theta) e^{i m \phi} $
+  
 }
 
-void freeElectronN(Complex kineticEnergy, int kappa, int mu, std::vector<Real> &r_mesh)
+void freeElectronN(Complex kineticEnergy, int kappa, int mu, std::vector<Real> &r_mesh, std::vector<DiracSpinor> &nKM)
 {
   int l, lBar;
   if(kappa < 0)
@@ -132,4 +138,6 @@ void freeElectronN(Complex kineticEnergy, int kappa, int mu, std::vector<Real> &
     l = kappa;
     lBar = kappa - 1;
   }
+  int lmax = std::max(l, lBar);
+  std::vector<Real> plm(((lmax+1)*(lmax+2))/2);
 }

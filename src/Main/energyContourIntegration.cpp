@@ -594,6 +594,14 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
               printf("fj(%d,%d,%d) = %f %f\n",j1,j2,j3,solutionRel[iie][i].fj(j1,j2,j3).real(), solutionRel[iie][i].fj(j1,j2,j3).imag());
               }
             */
+
+            if(lsms.global.iprint >= 2)
+            {
+              printf(" 'tau00_l(*,%d)' = \n", i);
+              for(int it =0 ; it<maxkkrsz_ns*maxkkrsz_ns; it++)
+                printf(" (%f. %f) ", tau00_l(it,i).real(), tau00_l(it,i).imag());
+              printf("\n");
+            }
             
             green_function_rel_(&lsms.mtasa,
                                 &local.atom[i].lmax, &local.atom[i].kkrsz,
@@ -611,7 +619,19 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                                 &dos_orb(0,i),&dosck_orb(0,i),&dens_orb(0,0,i),
                                 &lsms.global.iprint,lsms.global.istop,32);
 
+            if(lsms.global.iprint >= 1)
+            {
+              printf("  before rotate 'dos(*,%d)' = (%f. %f) (%f, %f) (%f, %f) (%f, %f)\n", i, dos(0,0).real(), dos(0,0).imag(),
+                     dos(1,0).real(), dos(1,0).imag(), dos(2,0).real(), dos(2,0).imag(), dos(3,0).real(), dos(3,0).imag());
+            }
+            
             rotateToGlobal(local.atom[i], dos, dosck, dos_orb, dosck_orb, green, dens_orb, i);
+
+            if(lsms.global.iprint >= 1)
+            {
+              printf("  after rotate 'dos(*,%d)' = (%f. %f) (%f, %f) (%f, %f) (%f, %f)\n", i, dos(0,0).real(), dos(0,0).imag(),
+                     dos(1,0).real(), dos(1,0).imag(), dos(2,0).real(), dos(2,0).imag(), dos(3,0).real(), dos(3,0).imag());
+            }
             
             // this is the non-rel version now
             calculateDensities(lsms, i, 0, ie, nume, energy, dele1[ie],
