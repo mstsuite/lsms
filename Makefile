@@ -1,57 +1,128 @@
 
-export TOP_DIR = $(shell pwd)
-export INC_PATH =
-export LIBS := -L$(TOP_DIR)/lua/lib -llua $(TOP_DIR)/mjson/mjson.a
+# Defines common flags for compiling the program
+include architecture.mk
 
-include architecture.h 
+# Collect information from each module in these four variables.
+# Initialize them here as simple variables.
+#programs :=
+sources :=
+#libraries :=
+#extra_clean :=
 
-ifdef USE_LIBXC
-  ADDITIONAL_TARGETS += libxc
-  ADD_LIBS += -L$(TOP_DIR)/opt/lib/ -lxc
-  INC_PATH += -I$(TOP_DIR)/opt/include/
-  export OPT_DEFINES += -DUSE_LIBXC
-endif
+# name of output binary
+BINNAME := lsms
+BINDIR := $(realpath .)/bin
+BIN := $(BINDIR)/$(BINNAME)
 
-ifdef HAS_BACKTRACE
-  export OPT_DEFINES += -DHAS_BACKTRACE
-endif
+include_dirs := src include
+CPPFLAGS += $(addprefix -I ,$(include_dirs))
+vpath %.h $(include_dirs)
 
-all: liblua $(ADDITIONAL_TARGETS) libmjson LSMS
-# all: liblua libjson $(ADDITIONAL_TARGETS) libmjson LSMS
-# all: liblua LSMS Documentation
+include src/Accelerator/modules.mk
+include src/Communication/modules.mk
+include src/Core/modules.mk
+include src/LuaInterface/modules.mk
+include src/Madelung/modules.mk
+include src/Main/modules.mk
+include src/Misc/modules.mk
+include src/MultipleScattering/modules.mk
+include src/Potential/modules.mk
+include src/RadialGrid/modules.mk
+include src/SingleSite/modules.mk
+include src/TotalEnergy/modules.mk
+include src/VORPOL/modules.mk
 
-.PHONY: libxc clean LSMS Documentation liblua libjson libmjson Tools
+SRCS = $(sources)
 
+# intermediate directory for generated object files
+OBJDIR := .o
+# intermediate directory for generated dependency files
+DEPDIR := .d
+
+# object files, auto generated from source files
+OBJS := $(patsubst %,$(OBJDIR)/%.o,$(basename $(SRCS)))
+# dependency files, auto generated from source files
+DEPS := $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
+
+# compilers (at least gcc and clang) don't create the subdirectories automatically
+$(shell mkdir -p $(dir $(OBJS)) >/dev/null)
+$(shell mkdir -p $(dir $(DEPS)) >/dev/null)
+$(shell mkdir -p $(dir $(BIN)) >/dev/null)
+
+# compile C source files
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@
+# compile C++ source files
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c -o $@
+# compile Fortran source files
+COMPILE.f90 = $(F90) $(DEPFLAGS) $(FFLAGS) $(FPPFLAGS) -c -o $@
+# link object files to binary
+LINK.o = $(LD) $(LDFLAGS) -o $@
+# precompile step
+PRECOMPILE =
+# postcompile step
+POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
+
+all: $(BIN)
+
+.PHONY: clean
 clean:
-	cd lua && $(MAKE) clean
-	cd mjson && $(MAKE) clean
-	cd src && $(MAKE) clean
-	cd lib && $(MAKE) clean
-	cd doc && $(MAKE) clean
-	cd Tools && $(MAKE) clean
-#	cd libjson && $(MAKE) clean
+	$(RM) -r $(OBJDIR) $(DEPDIR) $(BIN) $(BINDIR)
 
-LSMS: liblua libmjson $(ADDITIONAL_TARGETS)
-	cd src && $(MAKE)
+.PHONY: install
+install:
+	@echo no install tasks configured
 
-Tools: liblua 
-	cd Tools && $(MAKE)
+.PHONY: convert
+convert:
+	@echo
+	find . -type f -print0 | xargs -0 dos2unix
 
-Documentation:
-	cd doc && $(MAKE)
+$(BIN): $(OBJS)
+	$(LINK.o) $^ $(LDLIBS)
 
-liblua:
-	cd lua; $(MAKE); $(MAKE) local
+$(OBJDIR)/%.o: %.f
+$(OBJDIR)/%.o: %.f $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.f90) $<
+	$(POSTCOMPILE)
 
-libmjson:
-	cd mjson && $(MAKE)
+$(OBJDIR)/%.o: %.F
+$(OBJDIR)/%.o: %.F $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.f90) $<
+	$(POSTCOMPILE)
 
-# libjson:
-#	cd libjson && $(MAKE)
+$(OBJDIR)/%.o: %.f90
+$(OBJDIR)/%.o: %.f90 $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.f90) $<
+	$(POSTCOMPILE)
 
-zblock_lu_driver: liblua 
-	cd src && $(MAKE) zblock_lu_driver
+$(OBJDIR)/%.o: %.c
+$(OBJDIR)/%.o: %.c $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.c) $<
+	$(POSTCOMPILE)
 
+$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.o: %.cpp $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.cc) $<
+	$(POSTCOMPILE)
 
-test: liblua $(ADDITIONAL_TARGETS) libmjson
-	cd src && $(MAKE) test
+$(OBJDIR)/%.o: %.cc
+$(OBJDIR)/%.o: %.cc $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.cc) $<
+	$(POSTCOMPILE)
+
+$(OBJDIR)/%.o: %.cxx
+$(OBJDIR)/%.o: %.cxx $(DEPDIR)/%.d
+	$(PRECOMPILE)
+	$(COMPILE.cc) $<
+	$(POSTCOMPILE)
+
+.PRECIOUS: $(DEPDIR)/%.d
+$(DEPDIR)/%.d: ;
+
+include $(DEPS)

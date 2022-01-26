@@ -47,7 +47,7 @@ c
       integer    kqn
       integer    nitmax
       integer    nws
-      integer    nlast
+      integer    nlast,nnmax
       integer    iter
       integer    imm
       integer    nodes
@@ -55,6 +55,7 @@ c
       integer    invp
       integer    j
       integer    nmax
+      integer    ir
 c
       real*8     rg(iprpts)
       real*8     rf(iprpts)
@@ -94,7 +95,10 @@ c     ================================================================
       if(nws+ipdeq*2 .gt. iprpts) then
          write(6,'('' DEEPST::core cannot work:'',
      >   '' nws+ipdeq2.gt.iprpts'')')
-	 call fstop(sname)
+         write(6,'('' nws     = '',i6)') nws
+         write(6,'('' ipdeq*2 = '',i6)') ipdeq*2
+         write(6,'('' iprpts  = '',i6)') iprpts
+         call fstop(sname)
       endif
 c
 c     ================================================================
@@ -106,7 +110,7 @@ c     ================================================================
       dm=h/720.0d0
       rtmp(0)=0.d0
       do j=1,iprpts
-	rtmp(j)=sqrt(r(j))
+        rtmp(j)=sqrt(r(j))
       enddo
 c
 c     ================================================================
@@ -137,7 +141,8 @@ c     ================================================================
          elim=-z*z/(0.75d0*nqn*nqn)
       else
          elim=(rv(1)+lll/r(1))/r(1)
-         do j=2,nlast
+!ywg     do j=2,nlast
+         do j=2,nws
             elim=min((rv(j)+lll/r(j))/r(j),elim)
          enddo
       endif
@@ -147,6 +152,10 @@ c     check potential
 c     ================================================================
       if(elim.ge.0) then
          write(6,'('' DEEPST:: v+l*(l+1)/r**2 always positive'',f5.1)')z
+         write(6,'('' DEEPST:: n='',i2,'' l='',i2,'' k='',i3)')
+     &         nqn,lqn,kqn
+         iter = -1
+         return
          call fstop(sname)
       endif
 c
@@ -185,6 +194,10 @@ c     check first the sign of the big component
 c     ================================================================
       if (fnrm.lt.0.0d0) then
          write(6,'('' DEEPST:: wrong big component change'')')
+         write(6,'('' DEEPST:: n='',i2,'' l='',i2,'' k='',i3)')
+     &         nqn,lqn,kqn
+         iter = -2
+         return
          call fstop(sname)
       endif
 c
@@ -212,18 +225,32 @@ c     ================================================================
       imm=0
       val=abs(de/en)
       if (val.le.tol) go to 7
-  5   enew=en+de
+ 5    enew=en+de
+
       if(enew.lt.0.0d0) go to 6
-      de=de+0.5d0
+!meis      de=de+0.5d0
+      de=de*0.5d0
       val=val*0.5d0
       if (val.gt.tol) go to 5
 c
 c     ================================================================
 c     just in case the energy becomes zero
 c     ================================================================
+      nnmax = max(nws,nlast)
+      do ir=1,nnmax
+        write(6,'(''ir,vr = '',i8,f20.12)') ir, rv(ir)
+      end do
+
+      write(6,'('' DEEPST:: nws = '',i4)') nws
+      write(6,'('' DEEPST:: nlast = '',i4)') nlast
+      write(6,'('' DEEPST:: iprpts = '',i4)') iprpts
+      write(6,'('' DEEPST:: nmax = '',i4)') nmax
+
       write(6,'('' DEEPST:: zero energy '',f5.2)')z
       write(6,'('' DEEPST:: n = '',i2)') nqn
       write(6,'('' DEEPST:: l = '',i2)') lqn
+      iter = -3
+      return
       call fstop(sname)
 c
 c     ================================================================

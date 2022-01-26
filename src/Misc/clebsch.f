@@ -19,7 +19,7 @@ c
     1 continue
 
       inr=0
-      do 3 l=0,12
+      do 33 l=0,12
          twolp1=dfloat(2*l+1)
          do 3 m=-l,l
             inr=inr+1
@@ -60,6 +60,7 @@ c
             ind2(ir)=inr
 c
     3 continue
+   33 continue
 c
 c      write(6,*)
        do ir=1,inr

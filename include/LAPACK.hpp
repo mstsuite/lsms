@@ -25,11 +25,20 @@ namespace LAPACK {
 			 int*,int*);
   extern "C" void zgesv_(int*,int*,std::complex<double>*,int*,int*,std::complex<double>*,
 			 int*,int*);
+  extern "C" void zcgesv_(int* N,int* NRHS,std::complex<double>* A,int* LDA,int* IPIV,std::complex<double>* B,
+			 int* LDB, std::complex<double>* X, int *LDX,
+                         std::complex<double>* work, std::complex<float> *swork, double *rwork,
+                         int *ITER, int* INFO);
 
   //MSS
   extern "C" int  dgetrf_(int* M, int* N, double* A, int* LDA, int* IPIV, int* INFO);
+  extern "C" int  zgetrf_(int* M, int* N, std::complex<double>* A, int* LDA, int* IPIV, int* INFO);
+
+  extern "C" int  zgetrs_(const char * trans, int* n, int* nrhs, std::complex<double>* A, int* LDA, int* IPIV, std::complex<double>* B, int *LDB, int* INFO);
 
   extern "C" int  dgetri_(int* N, double* A, int* LDA, int* IPIV,  double* WORK, int* LWORK, int* INFO);
+  extern "C" void zgetri_(int *n, Complex *a, int *lda,int *ipvt, Complex *w, int *lw,
+               int *info);
 
 // ============================================================================
   inline void GESV(int ma,int mb,float* a,int lda,int* pivot,

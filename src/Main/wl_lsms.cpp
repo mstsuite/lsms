@@ -10,11 +10,12 @@
 #include "PotentialIO.hpp"
 #include "Communication/distributeAtoms.hpp"
 #include "Communication/LSMSCommunication.hpp"
-#include "Core/CoreStates.hpp"
+// #include "Core/CoreStates.hpp"
+#include "Core/calculateCoreStates.hpp"
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "VORPOL/VORPOL.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "Potential/PotentialShifter.hpp"
 #include "calculateChemPot.hpp"
@@ -649,8 +650,8 @@ int main(int argc, char *argv[])
         
       char *wl_inf = NULL;
       char *wl_outf = NULL;
-      if (gWL_in_name) wl_inf = gWL_in_name;
-      if (gWL_out_name) wl_outf = gWL_out_name;
+      if (gWL_in_name[0] != 0) wl_inf = gWL_in_name;
+      if (gWL_out_name[0] != 0) wl_outf = gWL_out_name;
         
       PotentialShifter potentialShifter;
       EvecGenerator *generator;

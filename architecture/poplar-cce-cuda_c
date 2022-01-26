@@ -1,0 +1,26 @@
+export USE_OPENMP=1
+# export USE_LIBXC=1
+# define HAS_BACKTRACE if glibc backtrace functionality is available
+# export HAS_BACKTRACE=1
+export USE_ACCELERATOR = -DACCELERATOR_CUDA_C
+
+export LIBS += 
+export ADD_LIBS += -L$(HDF5DIR) -lhdf5 -L$(CUDA_PATH)/lib64 -lcudart -lcublas -lcusolver
+export INC_PATH += -I$(HDF5INCLUDE)
+
+# export BOOST_ROOT=$(TOP_DIR)
+
+export CXX=CC -g -Ofast -std=c++14 $(USE_ACCELERATOR)
+export F77=ftn $(USE_ACCELERATOR)
+export CUDA_CXX = nvcc -x cu -g -O3 -std=c++14 -arch=sm_70 $(USE_ACCELERATOR) -I$(MPI_HOME)/include
+
+ifdef USE_OPENMP
+  export CXX += -fopenmp
+  export F77 += -fopenmp
+endif
+
+# JSON++ requires flex and bison (version>=2.4)
+export FLEX=flex
+export BISON=/usr/local/opt/bison/bin/bison
+
+export LUACXX = $(CXX)

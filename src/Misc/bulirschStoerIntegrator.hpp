@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <vector>
+#include <cmath>
 
 template<typename Rx, typename Ry>
 void modifiedMidpoint(Rx x0, Rx x1, Ry *y0,
@@ -83,6 +84,7 @@ public:
     Rh mag=Rh(0);
     for(int d=0; d<dim; d++)
       mag+=std::abs(T[idx(d,kNum-1,kNum-1)]);
+    if(mag==0.0) mag=1.0e-15;
     return error()/mag;
   }
   void estimate(Rf *f)

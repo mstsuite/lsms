@@ -1,4 +1,5 @@
-// lsms class to encapsulate a version of LSMS_1.9 for use in gWL etc.
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+// lsms class to encapsulate  LSMS for use in gWL etc.
 
 #include <mpi.h>
 #include <iostream>
@@ -13,7 +14,7 @@
 #include "PotentialIO.hpp"
 #include "Communication/distributeAtoms.hpp"
 #include "Communication/LSMSCommunication.hpp"
-#include "Core/CoreStates.hpp"
+#include "Core/calculateCoreStates.hpp"
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
@@ -21,7 +22,7 @@
 #include "Potential/calculateChargesPotential.hpp"
 #include "Potential/interpolatePotential.hpp"
 #include "Potential/PotentialShifter.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "calculateChemPot.hpp"
 #include "calculateDensities.hpp"
@@ -34,30 +35,23 @@
 #ifdef _OPENMP
 #include <omp.h>
 #else
+#ifndef LSMS_DUMMY_OPENMP
+#define LSMS_DUMMY_OPENMP
 inline int omp_get_max_threads() {return 1;}
 inline int omp_get_num_threads() {return 1;}
 inline int omp_get_thread_num() {return 0;}
+#endif
 #endif
 
 SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
 IFactors iFactors;
 
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
 // void *deviceStorage;
 DeviceStorage *deviceStorage;
-#endif
-
-#ifdef BUILDKKRMATRIX_GPU
-// void *allocateDStore(void);
-// void freeDStore(void *);
-// void *allocateDConst(void);
-// void freeDConst(void *);
-#include "Accelerator/buildKKRMatrix_gpu.hpp"
-
-std::vector<DeviceConstants> deviceConstants;
-//std::vector<void *> deviceConstants;
+DeviceConstants deviceConstants;
 #endif
 
 void initLSMSLuaInterface(lua_State *L);
@@ -117,7 +111,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   lsms.ngaussr               = 10;
   lsms.ngaussq               = 40;
   // if (comm.rank == comm.size-1) lsms.global.iprint = 0;
-  //lsms.vSpinShiftFlag = 0;
+  lsms.vSpinShiftFlag = 0;
 
   if (comm.rank == 0)
   {
@@ -153,9 +147,15 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   globalMax(comm, max_num_local);
   local.setGlobalId(comm.rank, crystal);
 
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceAtoms.resize(local.num_local);
+#endif
+
   // set up exchange correlation functionals
   if(lsms.xcFunctional[0] == 1)  // libxc functional
     lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
+  if(lsms.xcFunctional[0] == 2)  // new LSMS functional
+    lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
 
   lsms.angularMomentumIndices.init(2 * crystal.maxlmax);
   sphericalHarmonicsCoeficients.init(2 * crystal.maxlmax);
@@ -163,6 +163,11 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
   iFactors.init(lsms, crystal.maxlmax);
 
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
+#endif
+
+  
   buildLIZandCommLists(comm, lsms, crystal, local);
 
   // initialize the potential accelerators (GPU)
@@ -171,13 +176,9 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
 
   acceleratorInitialize(lsms.n_spin_cant * local.maxNrmat(), lsms.global.GPUThreads);
   local.tmatStore.pinMemory();
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // deviceStorage = allocateDStore();
   deviceStorage = new DeviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.resize(local.num_local);
-  // for(int i=0; i<local.num_local; i++) deviceConstants[i] = allocateDConst();
 #endif
 
   for(int i=0; i<local.num_local; i++)
@@ -187,6 +188,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   local.setMaxPts(lsms.global.iprpts);
   local.setMaxCore(lsms.global.ipcore);
 
+  if (lsms.global.iprint >= 0) printLSMSGlobals(stdout, lsms);
   if (lsms.global.iprint >= 0)
   {
     printLSMSSystemParameters(stdout, lsms);
@@ -271,16 +273,9 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
 LSMS::~LSMS()
 {
   local.tmatStore.unpinMemory();
-#ifdef BUILDKKRMATRIX_GPU
-  // for (int i=0; i<local.num_local; i++)
-  //   freeDConst(deviceConstants[i]);
-#endif
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // freeDStore(deviceStorage);
   delete deviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.clear();
 #endif
   acceleratorFinalize();
   // finalizeCommunication();
@@ -687,7 +682,8 @@ void LSMS::setOccupancies(int *occ) {
   MPI_Status status;
  
   // distribute occupancies to respective processes
-  if( comm.rank == 0 ) {
+  if( comm.rank == 0 )
+    {
 
     // for every atomic site
     std::vector<MPI_Request> request(crystal.num_types);
@@ -825,6 +821,7 @@ Real LSMS::oneStepEnergy(Real *eb)
   mixEvec(lsms,local,0.0);
   calculateAllLocalChargeDensities(lsms,local);
   calculateLocalCharges(lsms, local, 0);
+  checkAllLocalCharges(lsms, local);
 
   energyLoopCount++;
 
@@ -864,6 +861,7 @@ Real LSMS::multiStepEnergy()
   mixEvec(lsms,local,0.0);
   calculateAllLocalChargeDensities(lsms,local);
   calculateLocalCharges(lsms,local,0);
+  checkAllLocalCharges(lsms, local);
   
   // calculate the Zeeman contribution from the spin shift and adjust the band energy acordingly
   if(1==0)
@@ -873,6 +871,7 @@ Real LSMS::multiStepEnergy()
     mixEvec(lsms,local,0.0);
     calculateAllLocalChargeDensities(lsms,local);
     calculateLocalCharges(lsms,local,0);
+    checkAllLocalCharges(lsms, local);
     Real eZeeman=0.0;
     for(int i=0; i<local.num_local; i++)
     {
@@ -954,7 +953,13 @@ Real LSMS::scfEnergy(Real *eb)
   {
     //if (lsms.global.iprint >= 0)
     //  printf("SCF iteration %d:\n", iterationCount);
-    Real rms=0.5*(local.qrms[0]+local.qrms[1]);
+    Real rms = 0.0;
+    if(lsms.n_spin_pola > 1)
+    {
+      rms = 0.5*(local.qrms[0]+local.qrms[1]);
+    } else {
+      rms = local.qrms[0];
+    }
     // if(comm.rank==0) printf("Walker %d: On SCF iteration %d. Last RMS = %17.15f\n", myWalkerID, iterationCount, rms);
 
     energyContourIntegration(comm, lsms, local);
@@ -972,11 +977,17 @@ Real LSMS::scfEnergy(Real *eb)
     for (int i=0; i<local.num_local; i++)
     {
       local.atom[i].newConstraint();
+            
+      local.atom[i].evec[0] = local.atom[i].evecNew[0];
+      local.atom[i].evec[1] = local.atom[i].evecNew[1];
+      local.atom[i].evec[2] = local.atom[i].evecNew[2];
+      
       checkIfSpinHasFlipped(lsms, local.atom[i]);
     }
 
     calculateAllLocalChargeDensities(lsms, local);
     calculateChargesPotential(comm, lsms, local, crystal, 0);
+    checkAllLocalCharges(lsms, local);
     calculateTotalEnergy(comm, lsms, local, crystal);
 
     // calculate the Zeeman contribution from the spin shift and adjust the band energy accordingly
@@ -1007,6 +1018,8 @@ Real LSMS::scfEnergy(Real *eb)
     if (potentialShifter.vSpinShiftFlag)
       potentialShifter.restorePotentials(local);
 
+    calculateLocalQrms(lsms, local);
+
     mixing -> updateChargeDensity(comm, lsms, local.atom);
 
     // LSMS 1: lsms_main.f:2101-2116
@@ -1025,10 +1038,21 @@ Real LSMS::scfEnergy(Real *eb)
     calculateChargesPotential(comm,lsms,local,crystal,1);
     mixing -> updatePotential(comm,lsms,local.atom);
 
+    mixing -> updateMoments(comm, lsms, local.atom);
+    
     if (potentialShifter.vSpinShiftFlag)
       potentialShifter.resetPotentials(local);
 
-    rms = 0.5*(local.qrms[0]+local.qrms[1]);
+    rms = 0.0;
+    if(lsms.n_spin_pola > 1)
+    {
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
+    } else {
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, local.atom[i].qrms[0]);
+    }
+    globalMax(comm, rms);
 
     if (potentialShifter.vSpinShiftFlag)
       lsms.totalEnergy -= eZeeman;
@@ -1053,6 +1077,8 @@ Real LSMS::scfEnergy(Real *eb)
     calculateCoreStates(comm,lsms,local);
 
 // check for convergence
+    converged = rms < lsms.rmsTolerance;
+    /*
     converged = true;
     for (int i=0; i<local.num_local; i++)
     {
@@ -1060,6 +1086,7 @@ Real LSMS::scfEnergy(Real *eb)
                 && (0.5*(local.qrms[0]+local.qrms[1])<lsms.rmsTolerance);
     }
     globalAnd(comm, converged);
+    */
 
 //    if(std::abs(energyDifference)<energyTolerance && rms<lsms.rmsTolerance)
 //      converged=true;

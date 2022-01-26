@@ -1,20 +1,25 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_SYSTEM_PARAM_H
 #define LSMS_SYSTEM_PARAM_H
+
 #include <stdio.h>
 #include <string.h>
+
+#include <vector>
 
 #include "Real.hpp"
 #include "Complex.hpp"
 #include "Matrix.hpp"
+#include "LSMSMode.hpp"
 
 #include "SingleSite/AtomData.hpp"
 
 #include "Misc/Indices.hpp"
 
-
-const int numFunctionalIndices=3;
+#include "Potential/common.hpp"
 #include "Potential/libxcInterface.hpp"
+#include "Potential/newFunctionalInterface.hpp"
+
 
 class LSMSGlobals {
 public:
@@ -24,6 +29,7 @@ public:
   int iprint;
   int print_node,default_iprint;
   char istop[32];
+  unsigned int linearSolver; // use only least significant 2 bytes, the next bytes might be used for other solvers / kernel selection
 
 // for GPU only
   int GPUThreads;
@@ -44,6 +50,8 @@ class LSMSSystemParameters {
 public:
   char systemid[80];
   char title[80];
+  LSMSMode lsmsMode;
+  int rank;
   char potential_file_in[128];
   char potential_file_out[128];
   int pot_in_type,pot_out_type;
@@ -52,6 +60,8 @@ public:
   int alloy_in_type,alloy_out_type;
   char infoEvecFileIn[128];
   char infoEvecFileOut[128];
+  char localAtomDataFile[128];
+
   int mixing; // combines LSMS_1's mix_quant & mix_algor : -1 don't mix. mix_quant=mixing%4; mix_algor=mixing>>2;
               // mix_quant  0: charge, 1: potential
               // mix_algor  0: simple (linear) mixing; 1: broyden
@@ -61,6 +71,7 @@ public:
   Real rmsTolerance; // rms Convergence criterion
   int num_atoms;
   int nspin;
+  int constraint;
   Relativity relativity;
   int nrelc,nrelv;
   int n_spin_cant;
@@ -78,6 +89,7 @@ public:
                             // densityFunctional[0]=1: functionals from libxc 
   //char *xcName;
   LibxcInterface libxcFunctional;
+  NewFunctionalInterface newFunctional;
   int vSpinShiftFlag;      // if !=0 : shift the spin up and down potentials according to atom.vSpinShift
                            // this is used in WL-LSMS with moment magnitude fluctuations
   //double vSpinShift_min;   // vSpinShift_min, vSpinShift_max define the range for atom.vSpinShift
@@ -107,15 +119,21 @@ public:
   Real totalEnergy;            // Total energy
   //Real pressure;               // Pressure
 
+// repeat the MPI rank from comm for reporting purposes
+  int commRank;
+
+  Real adjustContourBottom;    // if >0.0. set ebot to largestCorestate + adjustContourBottom
+  Real largestCorestate;       // maximum of the core levels
 };
 
 extern const char *potentialTypeName[];
 
 class AtomType {
 public:
-  AtomType() : pot_in_idx(-1), store_id(-1) {}
+  AtomType() : pot_in_idx(-1), store_id(-1), forceZeroMoment(0) {}
   char name[4];
   int lmax,Z,Zc,Zs,Zv;
+  int forceZeroMoment;
   int first_instance, number_of_instances;
   Real rsteps[4];
   Real rLIZ, rad;
@@ -124,6 +142,7 @@ public:
   int pot_in_idx;
   Real conc;
   int alloy_class;
+  int lsf_functional{0};
 };
 
 class CrystalParameters {

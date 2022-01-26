@@ -1,18 +1,11 @@
-#include <vector>
-#include <cmath>
+#include "buildLIZandCommLists.hpp"
 
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
+#include <vector>
 
 #include "Real.hpp"
-#include "SystemParameters.hpp"
-#include "Communication/LSMSCommunication.hpp"
 
-class LIZInfoType{
-public:
-  int idx;
-  Real p1,p2,p3;
-  Real dSqr;
-};
 
 // for buildLIZ see LSMS_1 neighbors_c.f
 int buildLIZ(CrystalParameters &crystal, int idx,std::vector<LIZInfoType> &LIZ)
@@ -105,10 +98,7 @@ bool nodeIsInList(int val, std::vector<LIZInfoType> &list, int len, CrystalParam
   return false;
 }
 
-class NodeIdxInfo {
-public:
-  int node, localIdx, globalIdx;
-};
+
  
 bool nodeLess_NodeIndexInfo(const NodeIdxInfo &x, const NodeIdxInfo &y) {return x.node<y.node;}
 bool globalLess_NodeIndexInfo(const NodeIdxInfo &x, const NodeIdxInfo &y) {return x.globalIdx<y.globalIdx;}
@@ -123,6 +113,7 @@ bool dSqrLess_LIZInfoType(const LIZInfoType &x, const LIZInfoType &y) {return x.
 void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
                           CrystalParameters &crystal, LocalTypeInfo &local)
 {
+  int numNodes = comm.size;
   std::vector<NodeIdxInfo> toList, fromList;
   std::vector<LIZInfoType> tempLIZ;
   tempLIZ.resize(4096);
@@ -175,7 +166,9 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
         local.atom[local_id].LIZPos(1,j)=tempLIZ[j].p2;
         local.atom[local_id].LIZPos(2,j)=tempLIZ[j].p3;
 // calculate the lmax for the various shells
+        local.atom[local_id].lmax = crystal.types[type_id].lmax;
         int lkeep=crystal.types[type_id].lmax;
+        local.atom[local_id].lmax = lkeep;
         for(int n1=0; n1<4; n1++)
           if(local.atom[local_id].LIZDist[j]>crystal.types[type_id].rsteps[n1]) lkeep--;
         local.atom[local_id].LIZlmax[j]=lkeep;

@@ -11,8 +11,11 @@ c         fz - small component of regular radial solutions * r
 c         gj - large component of irregular radial solutions * r
 c         fj - small component of irregular radial solutions * r
 c
-      implicit real*8 (a-h,o-z)
+!     implicit real*8 (a-h,o-z)
+      implicit none
 c
+      real*8 socsc,vr,br,bopr,dx,rs
+      integer l,my,ns,iflag
       logical scale
 c
 !     include '../param.h'
@@ -40,6 +43,9 @@ c
       complex*16 jmat(2,2),jbmat(2,2),nmat(2,2),nbmat(2,2),gamb(2,2)
       complex*16 x1(2,2),x2(2,2),x3(2,2),x4(2,2)
 c
+      integer i,ii,jj
+      real*8 c,xnot,xl
+
       parameter (sname='spzwafu')
 
       data sqrtm1/(0.d0,1.d0)/
@@ -63,8 +69,8 @@ c
       call zeroout(jbmat,8)
       call zeroout(nmat,8)
       call zeroout(nbmat,8)
-      call zeroout(gamz,8)
-      call zeroout(gamj,8)
+!     call zeroout(gamz,8)
+!     call zeroout(gamj,8)
       call zeroout(gamb,8)
 c
       xnot=dlog(rs)-(ns-1)*dx
@@ -81,10 +87,15 @@ c
 c
       call csbf(l+1,p,rs,fb,fn,fh)
 c
-      if(iabs(my)-(2*l+1)) 1,2,3
-    3 stop ' spzwafu: my is out of range!'
+      if(iabs(my) .gt. (2*l+1)) then
+        stop ' spzwafu: my is out of range!'
+      end if
+
+!     if(iabs(my)-(2*l+1)) 1,2,3
+!   3 stop ' spzwafu: my is out of range!'
 c
-    2 continue
+!   2 continue
+      if(iabs(my).eq.(2*l+1)) then
 
 !     write(6,*) sname,2,1
 c
@@ -163,7 +174,8 @@ c       write(6,'('' gpmt irr  '',2d15.8)') ff2*rs
 c
       return 
 c
-    1 continue
+!   1 continue
+      end if
 !     write(6,*) sname,1,1
       call dirmago2op(socsc,ce,l,my,vr,br,bopr,dx,xnot,rs,ns,
      >                g1,f1,gp1,iprpts)

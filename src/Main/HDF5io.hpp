@@ -1,7 +1,8 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_HDF5_IO
 #define LSMS_HDF5_IO
 
-#define H5_USE_16_API
+// #define H5_USE_16_API
 #include <hdf5.h>
 #include <hdf5_hl.h>
 

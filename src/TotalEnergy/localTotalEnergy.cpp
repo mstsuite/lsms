@@ -1,5 +1,10 @@
-#include "Misc/integrateOneDim.cpp"
+
+#include "localTotalEnergy.hpp"
+
 #include <cmath>
+
+#include "Misc/integrateOneDim.hpp"
+#include "PhysicalConstants.hpp"
 
 extern "C"
 {
@@ -157,8 +162,8 @@ Real &energy, Real &pressure)
 
 // Exchange-Correlation energy                  -- (7)
 
-  if(lsms.xcFunctional[0]==0)  // for the built in xc functionals:
-  {
+//  if(lsms.xcFunctional[0]==0)  // for the built in xc functionals:
+//  {
     if(lsms.n_spin_pola==1)
     {
       for(int i=0; i<atom.r_mesh.size(); i++)
@@ -175,26 +180,26 @@ Real &energy, Real &pressure)
     fit.set(grid0,integrand,2);
     integrand[0]=fit(0.0);
     xcEnergy=integrateOneDim(grid0, integrand, integral, rSphere); // (7)
-  } else if(lsms.xcFunctional[0]==1) { // for libxc functionals
-    if(lsms.n_spin_pola==1)
-    {
-      for(int i=0; i<atom.r_mesh.size(); i++)
-      { 
-        integrand[i+1]=atom.exchangeCorrelationEnergy(i,0)*(atom.rhoNew(i,0));
-      }
-    } else { // spin polarized
-      for(int i=0; i<atom.r_mesh.size(); i++)
-      { 
-        integrand[i+1]=atom.exchangeCorrelationEnergy(i,0)*(atom.rhoNew(i,0)+atom.rhoNew(i,1));
-      }
-    }
-    fit.set(grid0,integrand,2);
-    integrand[0]=fit(0.0);
-    xcEnergy=integrateOneDim(grid0, integrand, integral, rSphere); // (7)
-  } else {  // unknown functional (we never should arrive here!
-    printf("Unknown xc function in localTotalEnergy!\n");
-    exit(1);
-  }
+//  } else if(lsms.xcFunctional[0]==1 || lsms.xcFunctional[0]==2) { // for libxc and new functionals
+//    if(lsms.n_spin_pola==1)
+//    {
+//      for(int i=0; i<atom.r_mesh.size(); i++)
+//      { 
+//        integrand[i+1]=atom.exchangeCorrelationEnergy(i,0)*(atom.rhoNew(i,0));
+//      }
+//    } else { // spin polarized
+//      for(int i=0; i<atom.r_mesh.size(); i++)
+//      { 
+//        integrand[i+1]=atom.exchangeCorrelationEnergy(i,0)*(atom.rhoNew(i,0)+atom.rhoNew(i,1));
+//      }
+//    }
+//    fit.set(grid0,integrand,2);
+//    integrand[0]=fit(0.0);
+//    xcEnergy=integrateOneDim(grid0, integrand, integral, rSphere); // (7)
+//  } else {  // unknown functional (we never should arrive here!
+//    printf("Unknown xc function in localTotalEnergy!\n");
+//    exit(1);
+//  }
   if (lsms.global.iprint >= 0)
   {
     printf("Exchange-Correlation Energy = %35.25lf Ry\n", xcEnergy);
@@ -202,6 +207,16 @@ Real &energy, Real &pressure)
     printf("ezpt                        = %35.25lf Ry\n\n",ezpt);
   }
 // add all energy contributions:
+
+
+ /*
+  * Longitudinal spin fluctuations
+  */
+
+  if (lsms.n_spin_pola == 2) {
+    auto mag_mom = atom.mvalws;
+    energy += -convertKtoRydberg * lsms.temperature * atom.lsf_functional.entropy(mag_mom);
+  }
 
   energy += kineticEnergy + coulombEnergy + xcEnergy + ezpt;
 }

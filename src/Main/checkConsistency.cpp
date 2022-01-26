@@ -18,6 +18,6 @@ void checkCharge(LSMSSystemParameters &lsms, AtomData &atom)
   {
     Real q = atom.xvalmt[0] + (lsms.n_spin_pola - 1) * atom.xvalmt[1];
     if (std::abs(q - atom.qvalmt) > 0.000005)
-      printf("checkCharge :: Trouble! MT q = %16.8f qvalmt = %16.8f\n",q, atom.qvalmt); 
+      printf("checkCharge [%d] :: Trouble! MT q = %16.8f qvalmt = %16.8f\n",lsms.commRank, q, atom.qvalmt); 
   }
 }

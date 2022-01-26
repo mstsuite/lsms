@@ -5,8 +5,8 @@
 
 class AngularMomentumIndices {
 public:
-  int lmax,ndlj,ndlm;
-  std::vector<int> lofk,mofk,lofj,mofj;
+  static int lmax,ndlj,ndlm;
+  static std::vector<int> lofk,mofk,lofj,mofj;
 
   void init(int _lmax)
   {

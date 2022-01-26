@@ -1,7 +1,11 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_RATIONAL_FIT_HPP
 #define LSMS_RATIONAL_FIT_HPP
 
+#include <vector>
+
 #include "Real.hpp"
+#include "Complex.hpp"
 
 /// Fit a function as a rational function with a  and quadratic denominator
 /// at point \f$ r_i\f$.
@@ -271,6 +275,8 @@ public:
   }
 };
 
+/// Given a table of function values r[i] -> f(r[i])
+/// find the interpolated value of f(x)
 template<typename T>
 T interpolate(std::vector<T> &r, std::vector<T> &f, T x)
 {
@@ -286,6 +292,17 @@ T interpolate(std::vector<T> &r, std::vector<T> &f, T x)
   RationalFit<T> fit;
   fit.set(r,f,i0);
   return fit(x);
+}
+
+// Interpolate from a table of points on a grid xOrigin to a different grid xTarget
+template<typename T>
+void interpolateTable(std::vector<T> &xOrigin, std::vector<T> &fOrigin, std::vector<T> &xTarget, std::vector<T> &fTarget)
+{
+  fTarget.resize(xTarget.size());
+  for(int i=0; i<xTarget.size(); i++)
+  {
+    fTarget[i] = interpolate(xOrigin, fOrigin, xTarget[i]);
+  }
 }
 
 template<typename T>

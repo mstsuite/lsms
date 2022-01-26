@@ -1,10 +1,11 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "read_input.hpp"
+
 #include <stdlib.h>
 
+#include <iostream>
+
 #include "lua.hpp"
-//#include "lua.h"
-//#include "lauxlib.h"
-//#include "lualib.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -15,11 +16,9 @@
 #include "SystemParameters.hpp"
 #include "mixing.hpp"
 #include "LuaInterface/LuaSupport.hpp"
-#include "../Potential/PotentialShifter.hpp"
 
-#include <iostream>
 
-void repeatBasisCell(LSMSSystemParameters &lsms, CrystalParameters &crystal, int nx, int ny, int nz, int unique)
+static void repeatBasisCell(LSMSSystemParameters &lsms, CrystalParameters &crystal, int nx, int ny, int nz, int unique)
 {
   int numBasis=crystal.num_atoms;
   int numSites=numBasis*nx*ny*nz;
@@ -87,10 +86,6 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     AlloyMixingDesc& alloyDesc)
 {
 
-// c     read in the structure  identity.................................
-//       read(10,'(a)') systemid
-//                      CHARACTER*50
-
   luaGetStrN(L,"systemid",lsms.systemid,50);
   snprintf(lsms.potential_file_in,128,"v_%s",lsms.systemid);
   snprintf(lsms.potential_file_out,128,"w_%s",lsms.systemid);
@@ -101,21 +96,14 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   lsms.pot_out_type=-1; // don't write potential
   luaGetInteger(L,"pot_out_type",&lsms.pot_out_type);
 
-// c     read in the standard output target switch.......................
-//       read(10,'(a)') output_to_screen  
-
-// c     ================================================================
-// c     read in subroutine stop level
-//       read(10,'(a)') istop
-// c     write(6,'(a)') istop
-
   char ctmp[32]; strncpy(ctmp,"main",32);
   luaGetStrN(L,"istop",ctmp,32); lsms.global.setIstop(ctmp);
 
-// c     ================================================================
-// c     read in print level for a particular node and rest of the nodes.
-//       read(10,*    ) node_print,print_instr,nprint
-// c     write(6,'(3i5)') node_print,print_instr,nprint
+  lsms.global.linearSolver=0;
+  luaGetInteger(L,"linearSolver",(int *)&lsms.global.linearSolver);
+
+  luaGetInteger(L,"iprpts",&lsms.global.iprpts);
+  luaGetInteger(L,"ipcore",&lsms.global.ipcore);
   luaGetInteger(L,"print_node",&lsms.global.print_node);
   luaGetInteger(L,"default_iprint",&lsms.global.default_iprint);
   luaGetInteger(L,"iprint",&lsms.global.iprint);
@@ -125,23 +113,14 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   lsms.global.GPUThreads=1;
 #endif
   luaGetInteger(L,"gpu_threads",&lsms.global.GPUThreads);
-// c     ================================================================
-// c     read in the number of atoms in the system.......................
-//       read(10,*    ) num_atoms
+
   lsms.num_atoms=0;
   luaGetInteger(L,"num_atoms", &lsms.num_atoms);
-//       if(num_atoms.lt.1 .or. num_atoms.gt.max_atoms) then
-//          write(6,'(/,'' RDIN_ATOM_FT::'',
-//      >               '' num_atoms exceeds the upper limit'')')
-//          write(6,'(  ''                num_atoms:'',i5)')num_atoms
-//          write(6,'(  ''                max_atoms:'',i5)')max_atoms
-//          call fstop(sname)
-//       endif
 
   lsms.relativity=scalar;
   lsms.nrelc=lsms.nrelv=0;
   char rel_str[80];
-  rel_str[0]='s'; rel_str[1]=0; // defualt is scalar relativistic
+  rel_str[0]='s'; rel_str[1]=0; // default is scalar relativistic
   luaGetStrN(L,"relativity",rel_str,40);
   switch(rel_str[0])
   {
@@ -186,6 +165,9 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   if(lsms.nspin>1) lsms.n_spin_pola=2; else lsms.n_spin_pola=1;
   if(lsms.nspin>2) lsms.n_spin_cant=2; else lsms.n_spin_cant=1;
 
+  lsms.constraint=0;
+  luaGetInteger(L,"constraint",&lsms.constraint);
+
 // read exchange correlation functional specification:
   for(int i=0; i<numFunctionalIndices; i++) lsms.xcFunctional[i]=-1;
   lsms.xcFunctional[0]=0;
@@ -195,11 +177,6 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     luaGetIntegerPositionInTable(L,"xcFunctional",i+1,&lsms.xcFunctional[i]);
   }
 
-
-//       if (nspin.lt.0 .or.(nspin.le.3.and. nspin.gt.ipspin+1)) then
-//          write(6,'('' RDIN_ATOM_FT:: Wrong input for nspin'')')
-//          call fstop(sname)
-//       endif
 
 // Read Bravais Vectors:
   for(int i=0; i<3; i++)
@@ -230,18 +207,24 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     if(!luaGetIntegerFieldFromStack(L,"type",&t) || (t-1)==i)
     {
       luaGetStrNFromStack(L,"atom",crystal.types[crystal.num_types].name,4);
+      crystal.types[crystal.num_types].pot_in_idx = -1;
       luaGetIntegerFieldFromStack(L,"pot_in_idx",&crystal.types[crystal.num_types].pot_in_idx);
       luaGetIntegerFieldFromStack(L,"lmax",&crystal.types[crystal.num_types].lmax);
       luaGetIntegerFieldFromStack(L,"Z",&crystal.types[crystal.num_types].Z);
       luaGetIntegerFieldFromStack(L,"Zc",&crystal.types[crystal.num_types].Zc);
       luaGetIntegerFieldFromStack(L,"Zs",&crystal.types[crystal.num_types].Zs);
       luaGetIntegerFieldFromStack(L,"Zv",&crystal.types[crystal.num_types].Zv);
+      crystal.types[crystal.num_types].forceZeroMoment = 0;
+      luaGetIntegerFieldFromStack(L,"forceZeroMoment",&crystal.types[crystal.num_types].forceZeroMoment);
       luaGetIntegerFieldFromStack(L,"alloy_class",&crystal.types[crystal.num_types].alloy_class);
+      luaGetIntegerFieldFromStack(L, "lsf", &crystal.types[crystal.num_types].lsf_functional);
       crystal.types[crystal.num_types].alloy_class--; // <-- zero-based indexing
       luaGetRealFieldFromStack(L,"rLIZ",&crystal.types[crystal.num_types].rLIZ);
       luaGetFieldFromStack(L,"rsteps");
       for(int j=0; j<4; j++) luaGetRealPositionFromStack(L,j+1,&crystal.types[crystal.num_types].rsteps[j]);
       lua_pop(L,1);
+      crystal.types[crystal.num_types].rad = 2.0;
+      luaGetRealFieldFromStack(L,"rad",&crystal.types[crystal.num_types].rad);
       crystal.types[crystal.num_types].first_instance=i;
       crystal.types[crystal.num_types].number_of_instances=1;
       crystal.type[i]=crystal.num_types;
@@ -313,6 +296,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 
       luaGetStrNFromStack(L,"atom",alloyDesc[i][j].name,4);
       luaGetRealFieldFromStack(L,"conc",&alloyDesc[i][j].conc);
+      luaGetIntegerFieldFromStack(L,"lmax",&alloyDesc[i][j].lmax);
       luaGetIntegerFieldFromStack(L,"Z",&alloyDesc[i][j].Z);
       luaGetIntegerFieldFromStack(L,"Zc",&alloyDesc[i][j].Zc);
       luaGetIntegerFieldFromStack(L,"Zs",&alloyDesc[i][j].Zs);
@@ -401,8 +385,37 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   lsms.energyContour.maxGroupSize=50;
   luaGetIntegerFieldInTable(L,"energyContour","maxGroupSize",&lsms.energyContour.maxGroupSize);
 
+  lsms.adjustContourBottom = -1.0;
+  luaGetReal(L,"adjustContourBottom",&lsms.adjustContourBottom);
+
   lsms.temperature = 0.0;
   luaGetReal(L,"temperature",&lsms.temperature);
+
+  // read in calculation mode. Default: main
+  lsms.lsmsMode = LSMSMode::main;
+  {
+    char h[80];
+    if(luaGetStrN(L,"lsmsMode",h,80))
+    {
+      int i=0;
+      while(h[i] != '\0' && i<80)
+      {
+        h[i] = std::tolower(h[i]);
+        i++;
+      }
+
+      if(strncmp(h,"main",80)==0) lsms.lsmsMode=LSMSMode::main;
+      else if(strncmp(h,"dos",80)==0) lsms.lsmsMode=LSMSMode::dos;
+      else if(strncmp(h,"liz0",80)==0) lsms.lsmsMode=LSMSMode::liz0;
+      else if(strncmp(h,"gf_out",80)==0) lsms.lsmsMode=LSMSMode::gf_out;
+      else if(strncmp(h,"matsubara",80)==0) lsms.lsmsMode=LSMSMode::matsubara;
+      else
+      {
+        printf("!!! Unknown lsmsMode: '%s'\n!!!  Defaulting to 'main'.\n",h);
+        lsms.lsmsMode=LSMSMode::main;
+      }
+    }
+  }
 
 // c
 // c     ================================================================
@@ -496,6 +509,9 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   snprintf(lsms.infoEvecFileOut,120,"info_evec_out");
   luaGetStrN(L,"infoEvecFileOut",lsms.infoEvecFileOut,120);
 
+  lsms.localAtomDataFile[0]=0;
+  luaGetStrN(L,"localAtomDataFile",lsms.localAtomDataFile,120);
+  
   // read default block size for zblock_lu
   lsms.zblockLUSize=0;
   luaGetInteger(L,"zblockLUSize",&lsms.zblockLUSize);

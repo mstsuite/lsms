@@ -12,7 +12,8 @@
 // we use BOOST for the random number generator
 // #include <boost/random.hpp>
 #include <random>
-#include "../../mjson/json.h"
+// #include "../../mjson/json.h"
+#include "json.h"
 #include "EvecGenerator.h"
 #include "Graph1dMoments.hpp"
 #include "../Potential/PotentialShifter.hpp"
@@ -1483,6 +1484,8 @@ MoveChoice_t WL1dEvecGenerator<RNG>::selectMoveType(bool isSpinSim, bool isOccSi
     return SpinMove;
   if( isOccSim )
     return OccupancyMove;
+
+  return SpinMove;
 }
 
 template<class RNG>

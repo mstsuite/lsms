@@ -4,11 +4,11 @@
 #include <Complex.hpp>
 #include <Matrix.hpp>
 
-extern "C" {
-void zgetrf_(int *m, int *n, Complex *a, int *lda, int *ipvt, int *info);
-void zgetrs_(const char *, int *m, int *ioff, Complex *a, int *lda, int *ipvt, Complex *b, int *ldb, int *info);
+// extern "C" {
+// void zgetrf_(int *m, int *n, Complex *a, int *lda, int *ipvt, int *info);
+// void zgetrs_(const char *, int *m, int *ioff, Complex *a, int *lda, int *ipvt, Complex *b, int *ldb, int *info);
 // void zgemm_(const char *, const char *, int *m, int *n, int *k, Complex *alpha, Complex *a, int *lda, Complex *b, int *ldb, Complex *beta, Complex *c, int *ldc);
-}
+// }
   
 // a: input matrix -> output in block 1 of a
 //
@@ -58,14 +58,14 @@ int zblock_lu_cpp(Matrix<Complex> &a, int *blk_sz, int nblk, int *ipvt, int *idc
           n=blk_sz[iblk-1];
           joff=joff-n;
 // invert the diagonal blk_sz(iblk) x blk_sz(iblk) block
-          zgetrf_(&m, &m, &a(ioff,ioff), &lda, ipvt, &info);
+          LAPACK::zgetrf_(&m, &m, &a(ioff,ioff), &lda, ipvt, &info);
           if(info!=0)
           {
             printf("zgetrf info=%d  ioff=%d\n",info,ioff);
           }
 // calculate the inverse of above multiplying the row block
 // blk_sz(iblk) x ioff
-          zgetrs_("n", &m, &ioff, &a(ioff,ioff), &lda, ipvt, &a(ioff,0), &lda, &info);
+          LAPACK::zgetrs_("n", &m, &ioff, &a(ioff,ioff), &lda, ipvt, &a(ioff,0), &lda, &info);
           if(info!=0)
           {
             printf("zgetrs info=%d  ioff=%d\n",info,ioff);

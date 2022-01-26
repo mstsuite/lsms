@@ -1,0 +1,38 @@
+export USE_OPENMP=1
+# export USE_LIBXC=1
+# define HAS_BACKTRACE if glibc backtrace functionality is available
+# export HAS_BACKTRACE=1
+
+export USE_ACCELERATOR = -DACCELERATOR_HIP
+
+export LIBS += 
+export ADD_LIBS += 
+export ADD_LIBS += -L${ROCM_PATH}/lib -lrocsolver -lhipblas -lamdhip64
+# export ADD_LIBS += -L/usr/local/lib -L$(HDF5DIR) -lhdf5 -lsci_cray \
+#                    -lgfortran
+
+export INC_PATH += 
+export INC_PATH += -I$(ROCM_PATH)/include
+export INC_PATH += -I$(HIP_PATH)/include
+export INC_PATH += -I$(HDF5_DIR)/include
+export INC_PATH += -I$(MPICH_DIR)/include
+
+export OPT_DEFINES += -D__HIP_ROCclr__ -D__HIP_ARCH_GFX908__=1 --rocm-path=${ROCM_PATH} --offload-arch=gfx908 -x hip
+
+ifdef USE_OPENMP
+  export CXX=CC -g -O3 -std=c++14 -fopenmp  $(USE_ACCELERATOR) $(OPT_DEFINES) $(INC_PATH)
+  export F77=ftn -g -O3 -fopenmp 
+  export F90=ftn -g -O3 -fopenmp 
+  export HIP_CXX=hipcc --amdgpu-target=gfx908 $(USE_ACCELERATOR) -std=c++14 -fopenmp $(INC_PATH)
+#  export HIP_CXX=$(CXX)
+  export LINKER = CC -g -O3 -std=c++14 -fopenmp  -D__HIP_ROCclr__ -D__HIP_ARCH_GFX908__=1 --rocm-path=${ROCM_PATH} --offload-arch=gfx908 --hip-link
+else
+  export CXX=CC -g -O3 -std=c++14  $(USE_ACCELERATOR) $(OPT_DEFINES) $(INC_PATH)
+  export F77=ftn -g -O3
+  export F90=ftn -g -O3
+  export HIP_CXX=hipcc --amdgpu-target=gfx908 $(USE_ACCELERATOR) -std=c++14 $(INC_PATH)
+#  export HIP_CXX=$(CXX)
+  export LINKER = CC -g -O3 -std=c++14 -D__HIP_ROCclr__ -D__HIP_ARCH_GFX908__=1 --rocm-path=${ROCM_PATH} --offload-arch=gfx908 --hip-link
+endif
+
+export LUACXX = $(CXX)

@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_LIBXCINTERFACE_HPP
 #define LSMS_LIBXCINTERFACE_HPP
 

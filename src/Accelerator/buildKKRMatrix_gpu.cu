@@ -26,9 +26,12 @@
 #ifdef _OPENMP
 #include <omp.h>
 #else
+#ifndef LSMS_DUMMY_OPENMP
+#define LSMS_DUMMY_OPENMP
 inline int omp_get_max_threads() {return 1;}
 inline int omp_get_num_threads() {return 1;}
 inline int omp_get_thread_num() {return 0;}
+#endif
 inline double omp_get_wtime() {return 0.0;}
 #endif
 
@@ -38,7 +41,7 @@ inline double omp_get_wtime() {return 0.0;}
 //#define TRANSFER
 //#define CHECK
 
-#include "buildKKRMatrix_gpu.hpp"
+// #include "buildKKRMatrix_gpu.hpp"
 
 using namespace std;
 
@@ -278,7 +281,9 @@ void printDeviceComplex(char* where, Complex* val) {
   cudaMemcpy(&h,val,sizeof(Complex),cudaMemcpyDeviceToHost);
   printf("**********************%s: %lg, %lg\n",where,h.real(),h.imag());
 }
-void buildKKRMatrix_gpu(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, Complex energy, Complex prel, int iie, Matrix<Complex> &m, DeviceConstants &d_const)
+
+// meis: not set up to use ispin for collinear spin polarized calculations
+void buildKKRMatrix_gpu(LSMSSystemParameters &lsms, LocalTypeInfo &local,AtomData &atom, int ispin, Complex energy, Complex prel, int iie, Matrix<Complex> &m, DeviceConstants &d_const)
 {
   int lmax=lsms.maxlmax;
   int kkrsz=(lmax+1)*(lmax+1);

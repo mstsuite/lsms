@@ -2,7 +2,8 @@
 #ifndef LSMS_DEVICE_VECTOR_HPP
 #define LSMS_DEVICE_VECTOR_HPP
 
-#include "cudaCheckError.hpp"
+#include "DeviceInterfaceCudaHip.hpp"
+#include "deviceCheckError.hpp"
 #include <vector>
 
   template <class T>
@@ -38,19 +39,19 @@
           this->N=N;
           allocate(num_bytes);
         }
-        cudaMemcpy(data,&in[0],num_bytes,cudaMemcpyHostToDevice);
-        cudaCheckError();
+        deviceMemcpy(data,&in[0],num_bytes,deviceMemcpyHostToDevice);
+        deviceCheckError();
       }
       
-      __inline__ void copy_async(const std::vector<T>& in,cudaStream_t s) {
+      __inline__ void copy_async(const std::vector<T>& in,deviceStream_t s) {
         size_type N=in.size(); 
         size_type num_bytes=N*sizeof(T);
         if(this->N!=N) {
           this->N=N;
           allocate(num_bytes);
         }
-        cudaMemcpyAsync(data,&in[0],num_bytes,cudaMemcpyHostToDevice,s);
-        cudaCheckError();
+        deviceMemcpyAsync(data,&in[0],num_bytes,deviceMemcpyHostToDevice,s);
+        deviceCheckError();
       }
 
       // We provide a few functions to return information about the vector
@@ -62,8 +63,8 @@
         if(num_bytes>0) {
           free();
           owner=this;
-          cudaMalloc(&data,num_bytes);
-          cudaCheckError();
+          deviceMalloc(&data,num_bytes);
+          deviceCheckError();
         }
         else {     // DANGEROUS!! Might cause memory leak!
           owner=0;
@@ -73,8 +74,8 @@
       }
       __inline__ void free() {
         if(owner==this && data!=0) {
-          cudaFree(data);
-          cudaCheckError();
+          deviceFree(data);
+          deviceCheckError();
           owner=0;
           data=0;
           N=0;

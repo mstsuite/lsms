@@ -1,7 +1,8 @@
-#include "Main/SystemParameters.hpp"
-#include "Communication/LSMSCommunication.hpp"
-#include "Misc/Coeficients.hpp"
-#include "VORPOL.hpp"
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+#include "setupVorpol.hpp"
+
+#include <cstdio>
 
 void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local,SphericalHarmonicsCoeficients &shc)
 {
@@ -37,6 +38,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
   {
     int lmax=2*local.atom[i].lmax;
     local.atom[i].rInscribed=-1.0;
+    local.atom[i].voronoi.rInscribedSphere=-1.0;
     local.atom[i].voronoi.wylm.resize((2*lmax+1)*(lmax+1),lsms.ngaussr,iprcrit-1);
     local.atom[i].voronoi.gwwylm.resize(lsms.ngaussr,iprcrit-1);
     local.atom[i].voronoi.grwylm.resize(lsms.ngaussr,iprcrit-1);
@@ -47,22 +49,41 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
                   &atom_position_2[0], &atom_position_3[0],
                   &crystal.bravais(0,0),
                   &lmax,&shc.clm[0],&lsms.ngaussq,&lsms.ngaussr,
-                  &local.atom[i].rInscribed,&local.atom[i].voronoi.omegaInt,
+                  &local.atom[i].voronoi.rInscribedSphere,&local.atom[i].voronoi.omegaInt,
                   local.atom[i].voronoi.dipint,&rad[0],
                   &ipvp,&ipnode,&ipcorn,&ipedge,&iprcrit,
                   &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.grwylm(0,0),
                   &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.wylm(0,0,0),
+                  &local.atom[i].rCircumscribed,
                   &lsms.global.iprint,lsms.global.istop,32);
+    local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
 // set rmt according to value of fixRMT
     if(lsms.fixRMT==0)
     {
       local.atom[i].rmt=local.atom[i].rInscribed;
       local.atom[i].generateNewMesh = true;
     }
+    // do we need to change rmt for mtasa==1?
 
     local.atom[i].omegaMT=sphereVolumeFactor*std::pow(local.atom[i].rmt,3);
     local.atom[i].omegaWS=local.atom[i].voronoi.omegaInt+local.atom[i].omegaMT;
     local.atom[i].rws=std::pow(local.atom[i].omegaWS/sphereVolumeFactor,1.0/3.0);
+
+    switch(lsms.mtasa)
+    {
+    case 1:
+      local.atom[i].rmt=local.atom[i].rws;
+      local.atom[i].omegaMT=local.atom[i].omegaWS;
+      local.atom[i].rInscribed=local.atom[i].rws;
+      break;
+    case 2:
+      local.atom[i].rmt=local.atom[i].rws;
+      local.atom[i].omegaMT=local.atom[i].omegaWS;
+      local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
+      break;
+    default: // MT
+      local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
+    }
  }
 }
 
@@ -95,11 +116,13 @@ void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, Cryst
 
   if(lsms.global.iprint >= 0)
   {
-    printf("\n");
-    printf("Total cell volume     = %20.13f\n", lsms.volumeTotal);
-    printf("Volume renorm. factor = %20.13f\n", lsms.volumeNorm);
-    printf("WS cell volume        = %20.13f\n", local.atom[0].omegaWS);
-    printf("Interstitial volume   = %20.13f\n", lsms.volumeInterstitial);
-    printf("WS sphere radius      = %20.13f\n", local.atom[0].rws);
+    std::printf("\n");
+    std::printf("Total cell volume     = %20.13f\n", lsms.volumeTotal);
+    std::printf("Volume renorm. factor = %20.13f\n", lsms.volumeNorm);
+    std::printf("WS cell volume        = %20.13f\n", local.atom[0].omegaWS);
+    std::printf("Interstitial volume   = %20.13f\n", lsms.volumeInterstitial);
+    std::printf("WS sphere radius      = %20.13f\n", local.atom[0].rws);
+    std::printf("Circumscribed radius  = %20.13f\n", local.atom[0].rCircumscribed);
   }
 }
+

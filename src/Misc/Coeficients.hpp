@@ -3,14 +3,17 @@
 
 #include "Complex.hpp"
 #include <vector>
+#include "Matrix.hpp"
 #include <cmath>
 #include "Array3d.hpp"
 #include "Indices.hpp"
 
+#include "Main/SystemParameters.hpp"
+
 class SphericalHarmonicsCoeficients {
 public:
-  int lmax;
-  std::vector<Real> clm;
+  static int lmax;
+  static std::vector<Real> clm;
   void init(int _lmax)
   {
     Real pi=2.0*std::asin(1.0);
@@ -54,8 +57,8 @@ void calculateGauntCoeficients(int lmax, Array3d<Real> &cgnt, AngularMomentumInd
 
 class GauntCoeficients {
 public:
-  int lmax;
-  Array3d<Real> cgnt;
+  static int lmax;
+  static Array3d<Real> cgnt;
   
   void init(LSMSSystemParameters &lsms, AngularMomentumIndices &a, SphericalHarmonicsCoeficients &s)
   {
@@ -119,10 +122,12 @@ void ifacts_(int *lmax,Complex *illp,Complex *ilp1,int *iprint, char *istop, int
 
 class IFactors {
 public:
-  Matrix<Complex> illp;
-  std::vector<Complex> ilp1;
+  static int lmax;
+  static Matrix<Complex> illp;
+  static std::vector<Complex> ilp1;
   void init(LSMSSystemParameters &lsms, int _lmax)
   {
+    lmax = _lmax;
     ilp1.resize(2*_lmax+1);
     illp.resize((_lmax+1)*(_lmax+1),(_lmax+1)*(_lmax+1));
     ifacts_(&_lmax,&illp(0,0),&ilp1[0],&lsms.global.iprint,lsms.global.istop,32);

@@ -1,0 +1,43 @@
+export USE_OPENMP=1
+export USE_ACCELERATOR = -DACCELERATOR_CUDA_C -DACCELERATOR_CUBLAS
+# export USE_ACCELERATOR = -DACCELERATOR_CUBLAS
+# export USE_LIBXC=1
+# define HAS_BACKTRACE if glibc backtrace functionality is available
+# export HAS_BACKTRACE=1
+
+export CUDA_DIR = /autofs/nccs-svm1_wombat_sw/CentOS8/spack/opt/spack/linux-centos8-thunderx2/gcc-10.2.0/cuda-11.2.1-gf2b6ujpkxlzw5pxndgflamxbjta2zvk/
+# export MPI_BASE = /usr/mpi/gcc/openmpi-4.0.2rc3
+export HDF5_BASE = /autofs/nccs-svm1_wombat_sw/CentOS8/spack/opt/spack/linux-centos8-thunderx2/gcc-10.2.0/hdf5-1.10.7-pjgrtpbamvxvtn5rbh3biiar5d3wol3a/
+
+export LIBS += 
+# export ADD_LIBS += -L$(CUDA_DIR)/lib64 -lcudart -lcublas \
+#                   -L/usr/local/lib -lhdf5 -lblas -llapack \
+#                   -lgfortran
+
+export ADD_LIBS += -L$(CUDA_DIR)/lib64 -lcudart -lcublas -lcusolver \
+                   -L$(HDF5_BASE)/lib -lhdf5
+
+
+export INC_PATH += -I$(CUDA_DIR)/include -I$(HDF5_BASE)/include -I$(MPI_BASE)/include
+
+# export BOOST_ROOT=$(TOP_DIR)
+
+# export CUDA_CXX=nvcc -arch=sm_20
+
+ifdef USE_OPENMP
+  export CXX=mpicxx -armpl -mcpu=native -g -std=c++14 $(USE_ACCELERATOR) -fopenmp -O3  $(OPT_DEFINES)
+  export F77=mpif77 -armpl -mcpu=native -g -fopenmp -O3 $(USE_ACCELERATOR)
+# export F77=gfortran -g -fopenmp -O3 -fcheck=all 
+  export CUDA_CXX=nvcc -arch=sm_72 $(USE_ACCELERATOR) -std=c++14 -Xcompiler -fopenmp
+else
+  export CXX=mpicxx -armpl -mcpu=native -g -O3 -std=c++14  $(USE_ACCELERATOR) $(OPT_DEFINES)
+  export F77=mpif77 -armpl -mcpu=native -g -O3 $(USE_ACCELERATOR)
+  export CUDA_CXX=nvcc -arch=sm_72 $(USE_ACCELERATOR) -std=c++14
+# export F77=gfortran -g -O3 -fcheck=all
+endif
+
+# JSON++ requires flex and bison (version>=2.4)
+export FLEX=flex
+export BISON=/usr/local/opt/bison/bin/bison
+
+export LUACXX = $(CXX)

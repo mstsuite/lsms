@@ -100,11 +100,30 @@ suppress the generation of an output potential.
 \subsection{\texttt{istop}}
 default: \texttt{main}
 
-\subsection{infoEvecFileOut}
+\subsection{\texttt{infoEvecFileOut}}
 default: \texttt{info\_evec\_out}
 
-\subsection{infoEvecFileIn}
+\subsection{\texttt{infoEvecFileIn}}
 default: don't read evecs from a file.
+
+\subsection{\texttt{localAtomDataFile}}
+Write a file that contains local information about the atoms in the system.
+The first line reports the total, band and Fermi energies of the full system.
+The following lines report local data for all sites in the system:
+\begin{itemize}
+\item Atomic number $Z$
+\item Global index of the site
+\item Position $x$, $y$, $z$
+\item Local charge
+\item Local magnetic moment
+\item Moment direction $e_x$, $e_y$, $e_z$
+\item Constraining field $B_x$, $B_y$, $B_z$
+\item vSpinShift
+\item Local volume $\Omega_{WS}$
+\item Local energy
+\end{itemize}
+
+default: don't write the local atom data file.
 
 \subsection{\texttt{gpu\_threads}}
 

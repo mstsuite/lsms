@@ -1,8 +1,13 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "SystemParameters.hpp"
+
 #include <stdio.h>
 #include <string>
-#include "SystemParameters.hpp"
+
+#include "LSMSMode.hpp"
 #include "Potential/getXCName.hpp"
+#include "MultipleScattering/linearSolvers.hpp"
+#include "MultipleScattering/buildKKRMatrix.hpp"
 
 const char *potentialTypeName[]=
 {
@@ -20,6 +25,10 @@ void printLSMSGlobals(FILE *f,LSMSSystemParameters &lsms)
   fprintf(f,"  default_iprint=%d\n",lsms.global.default_iprint);
   fprintf(f,"  istop=%32s\n",lsms.global.istop);
   if(lsms.zblockLUSize>0) fprintf(f,"  zblockLUSize=%d\n",lsms.zblockLUSize);
+  fprintf(f,"  linearSolver=%d \"%s\"\n",lsms.global.linearSolver,
+            linearSolverName(lsms.global.linearSolver).c_str());
+  fprintf(f,"  buildKKRMatrix=%d \"%s\"\n",lsms.global.linearSolver,
+            buildKKRMatrixName(lsms.global.linearSolver).c_str());
 }
 
 void printLSMSSystemParameters(FILE *f,LSMSSystemParameters &lsms)
@@ -45,6 +54,7 @@ void printLSMSSystemParameters(FILE *f,LSMSSystemParameters &lsms)
   case full: fprintf(f,"fully relativistic\n"); break;
   default: fprintf(f,"!!!!UNKNOWN!!!!\n");
   }
+  fprintf(f,"LSMS Mode : %s\n",lsmsModeToString(lsms.lsmsMode));
   fprintf(f,"xcFunctional:"); for(int i=0; i<numFunctionalIndices; i++) fprintf(f," %d",lsms.xcFunctional[i]);
   std::string name;
   getXCName(lsms,name);

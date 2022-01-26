@@ -1,4 +1,4 @@
-#include <mpi.h>
+
 #include "REWLCommunication.hpp"
 
 void REWLCommunication::initializeCommunication(MPI_Comm mpiCommunicator)

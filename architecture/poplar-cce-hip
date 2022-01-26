@@ -1,0 +1,27 @@
+export USE_OPENMP=1
+# export USE_LIBXC=1
+# define HAS_BACKTRACE if glibc backtrace functionality is available
+# export HAS_BACKTRACE=1
+export USE_ACCELERATOR = -DACCELERATOR_HIP
+
+export LIBS += 
+export ADD_LIBS += -L$(HDF5DIR) -lhdf5 -L$(ROCM_PATH)/lib -lhipblas -lrocsolver -lamdhip64
+export INC_PATH += -I$(HDF5INCLUDE) -I$(ROCM_PATH)/include
+
+# export BOOST_ROOT=$(TOP_DIR)
+
+export CXX=CC -g -Ofast -std=c++14 $(USE_ACCELERATOR) -D__HIP_PLATFORM_HCC__
+export F77=ftn $(USE_ACCELERATOR)
+export HIP_CXX=hipcc -g -Ofast -std=c++14 --amdgpu-target=gfx906,gfx908 -Wno-unused-command-line-argument -gcc-toolchain $(GCC_X86_64) $(USE_ACCELERATOR) -I$(MPI_HOME)/include -I$(ROCM_PATH)/include
+export LINKER=$(CXX)
+
+ifdef USE_OPENMP
+  export CXX += -fopenmp
+  export F77 += -fopenmp
+endif
+
+# JSON++ requires flex and bison (version>=2.4)
+export FLEX=flex
+export BISON=/usr/local/opt/bison/bin/bison
+
+export LUACXX = $(CXX)

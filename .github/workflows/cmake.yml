@@ -1,0 +1,45 @@
+name: CMake build
+
+on: [ push ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies on ubuntu
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install build-essential -y
+          sudo apt-get install openmpi-bin -y
+          sudo apt-get install intel-mkl -y
+          sudo apt-get install gfortran -y
+          sudo apt-get install libhdf5-dev -y
+
+      - name: Display compilers that are used
+        run: |
+          echo "$(cmake --version)"
+          echo "$(gcc --version)"
+          echo "$(gfortran --version)"
+          echo "$(mpic++ --version)"
+
+      - name: Configure CMake
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+                 -DBLA_VENDOR=Intel10_64lp \
+                 -DUSE_LIBXC=OFF -S ${{github.workspace}} -B ${{github.workspace}}/build
+
+      - name: CMake build step
+        run: cmake --build ${{github.workspace}}/build --parallel
+
+      - run: echo "This job's status is ${{ job.status }}."

@@ -1,3 +1,4 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_ATOMDATA_H
 #define LSMS_ATOMDATA_H
 
@@ -9,17 +10,13 @@
 #include "Matrix.hpp"
 #include "Array3d.hpp"
 #include "VORPOL/VORPOL.hpp"
+#include "Potential/lsf_functional.hpp"
 
 extern "C"
 {
 void spin_trafo_(Real *evec, Complex * u, Complex *ud);
 }
 
-
-#ifdef BUILDKKRMATRIX_GPU
-void * allocateDConst(void);
-void freeDConst(void *);
-#endif
 
 
 class AtomData {
@@ -166,9 +163,149 @@ public:
     nc.resize(ncs,2);
     lc.resize(ncs,2);
     kc.resize(ncs,2);
+    coreStateType.resize(ncs,2);
   }
 
+  void changeNspin(int nspinNew)
+  {
+    if(nspin == nspinNew) return;
+    if(nspinNew == 2) // extend from non spin polarized to spin polarized
+    {
+      xvalws[1] = xvalws[0];
+      xvalwsNew[1] = xvalwsNew[0];
+      xvalmt[1] = xvalmt[0];
+      for(int i=0; i<vr.l_dim(); i++)
+	vr(i,1) = vr(i,0);
+      for(int i=0; i<rhotot.l_dim(); i++)
+      {
+	rhotot(i,1) = rhotot(i,0) = 0.5*rhotot(i,0);
+      }
+      for(int i=0; i<vrNew.l_dim(); i++)
+	vrNew(i,1) = vrNew(i,0);
+      for(int i=0; i<rhoNew.l_dim(); i++)
+      {
+	rhoNew(i,1) = rhoNew(i,0) = 0.5*rhoNew(i,0);
+      }
+      for(int i=0; i<exchangeCorrelationPotential.l_dim(); i++)
+	exchangeCorrelationPotential(i,1) = exchangeCorrelationPotential(i,0);
+      for(int i=0; i<exchangeCorrelationEnergy.l_dim(); i++)
+	exchangeCorrelationEnergy(i,1) = exchangeCorrelationEnergy(i,0);
 
+      exchangeCorrelationV[1] = exchangeCorrelationV[0];
+
+      for(int i=0; i<ec.l_dim(); i++)
+	ec(i,1) = ec(i,0);
+      for(int i=0; i<nc.l_dim(); i++)
+	nc(i,1) = nc(i,0);
+      for(int i=0; i<lc.l_dim(); i++)
+	lc(i,1) = lc(i,0);
+      for(int i=0; i<kc.l_dim(); i++)
+	kc(i,1) = kc(i,0);
+
+      ecorv[1] = ecorv[0]; esemv[1] = esemv[0];
+      for(int i=0; i<corden.l_dim(); i++)
+      {
+	corden(i,1) = corden(i,0) = 0.5*corden(i,0);
+      }
+      for(int i=0; i<semcor.l_dim(); i++)
+	semcor(i,1) = semcor(i,0) = 0.5*semcor(i,0);
+      
+      nspin = 2;
+    }
+    if(nspinNew == 1) // extend from non spin polarized to spin polarized
+    {
+      xvalws[0] = 0.5*(xvalws[0]+xvalws[1]);
+      xvalwsNew[0] = 0.5*(xvalwsNew[0]+xvalwsNew[1]);
+      xvalmt[0] = 0.5*(xvalmt[0]+xvalmt[1]);
+      for(int i=0; i<vr.l_dim(); i++)
+	vr(i,0) = 0.5*(vr(i,0)+vr(i,1));;
+      for(int i=0; i<rhotot.l_dim(); i++)
+	rhotot(i,0) = 0.5*(rhotot(i,0)+rhotot(i,1));
+      for(int i=0; i<vrNew.l_dim(); i++)
+	vrNew(i,0) = 0.5*(vrNew(i,0)+vrNew(i,1));
+      for(int i=0; i<rhoNew.l_dim(); i++)
+	rhoNew(i,0) = 0.5*(rhoNew(i,0)+rhoNew(i,1));
+      
+      for(int i=0; i<exchangeCorrelationPotential.l_dim(); i++)
+	exchangeCorrelationPotential(i,0) = 0.5*(exchangeCorrelationPotential(i,0)+exchangeCorrelationPotential(i,1));
+      for(int i=0; i<exchangeCorrelationEnergy.l_dim(); i++)
+	exchangeCorrelationEnergy(i,0) = exchangeCorrelationEnergy(i,0)+exchangeCorrelationEnergy(i,1);
+
+      exchangeCorrelationV[0] = 0.5*(exchangeCorrelationV[0]+exchangeCorrelationV[1]);
+
+      /*
+      for(int i=0; i<ec.l_dim(); i++)
+	ec(i,1) = ec(i,0);
+      for(int i=0; i<nc.l_dim(); i++)
+	nc(i,1) = nc(i,0);
+      for(int i=0; i<lc.l_dim(); i++)
+	lc(i,1) = lc(i,0);
+      for(int i=0; i<kc.l_dim(); i++)
+	kc(i,1) = kc(i,0);
+      */
+
+      ecorv[0] = ecorv[0]+ecorv[1]; esemv[0] = esemv[0]+esemv[1];
+      for(int i=0; i<corden.l_dim(); i++)
+	corden(i,0) = 0.5*(corden(i,0)+corden(i,1));
+      for(int i=0; i<semcor.l_dim(); i++)
+	semcor(i,0) = 0.5*(semcor(i,0)+semcor(i,1));
+      
+      nspin = 1;
+    }
+  }
+
+  void averageSpins(void)
+  {
+    if(nspin == 1) return;
+    
+    xvalws[0] = 0.5*(xvalws[0]+xvalws[1]);
+    xvalws[1] = xvalws[0];
+    xvalwsNew[0] = 0.5*(xvalwsNew[0]+xvalwsNew[1]);
+    xvalwsNew[1] = xvalwsNew[0];
+    xvalmt[0] = 0.5*(xvalmt[0]+xvalmt[1]);
+    xvalmt[1] = xvalmt[0];
+    for(int i=0; i<vr.l_dim(); i++)
+    {
+      vr(i,0) = 0.5*(vr(i,0)+vr(i,1));
+      vr(i,1) = vr(i,0);
+    }
+    for(int i=0; i<rhotot.l_dim(); i++)
+    {
+      rhotot(i,0) = 0.5*(rhotot(i,0)+rhotot(i,1));
+      rhotot(i,1) = rhotot(i,0);
+    }
+    for(int i=0; i<vrNew.l_dim(); i++)
+    {
+      vrNew(i,0) = 0.5*(vrNew(i,0)+vrNew(i,1));
+      vrNew(i,1) = vrNew(i,0);
+    }
+    for(int i=0; i<rhoNew.l_dim(); i++)
+    {
+      rhoNew(i,0) = 0.5*(rhoNew(i,0)+rhoNew(i,1));
+      rhoNew(i,1) = rhoNew(i,0);
+    }
+      
+    for(int i=0; i<exchangeCorrelationPotential.l_dim(); i++)
+    {
+      exchangeCorrelationPotential(i,0) = 0.5*(exchangeCorrelationPotential(i,0)+exchangeCorrelationPotential(i,1));
+      exchangeCorrelationPotential(i,1) = exchangeCorrelationPotential(i,0);
+    }
+       
+    exchangeCorrelationV[0] = 0.5*(exchangeCorrelationV[0]+exchangeCorrelationV[1]);
+    exchangeCorrelationV[1] = exchangeCorrelationV[0];
+
+    for(int i=0; i<corden.l_dim(); i++)
+    {
+      corden(i,0) = 0.5*(corden(i,0)+corden(i,1));
+      corden(i,1) = corden(i,0);
+    }
+    for(int i=0; i<semcor.l_dim(); i++)
+    {
+      semcor(i,0) = 0.5*(semcor(i,0)+semcor(i,1));
+      semcor(i,1) = semcor(i,0);
+    }
+  }
+  
   AtomData &operator=(const AtomData &a)
   {
     jmt = a.jmt;
@@ -176,8 +313,14 @@ public:
     xstart = a.xstart;
     rmt = a.rmt;
     h = a.h;
-    r_mesh = a.r_mesh;
-    x_mesh = a.x_mesh;
+
+    r_mesh.resize(a.r_mesh.size());
+    x_mesh.resize(a.x_mesh.size());
+    for(int i=0; i<a.r_mesh.size(); i++)
+    {
+      r_mesh[i] = a.r_mesh[i];
+      x_mesh[i] = a.x_mesh[i];
+    }
 
     alat = a.alat;
     efermi = a.efermi;
@@ -188,8 +331,10 @@ public:
     zvalss = a.zvalss;
 
     nspin = a.nspin;
+    forceZeroMoment = a.forceZeroMoment;
     numc = a.numc;
     spinFlipped = a.spinFlipped;
+    localEnergy = a.localEnergy;
 
     evec[0] = a.evec[0];
     evec[1] = a.evec[1];
@@ -300,6 +445,7 @@ public:
   int jmt,jws;
   Real xstart,rmt,h;
   Real rInscribed; // LSMS_1.9: rins
+  Real rCircumscribed;
   std::vector<Real> r_mesh, x_mesh;
   bool generateNewMesh;
 
@@ -323,9 +469,15 @@ public:
   Real mIntComponent[3];              // Interstitial moment components
   int nspin;                          // Number of spin direction-related settings
                                       //  (determines n_spin_cant & n_spin_pola)
+  int forceZeroMoment;                // if != 0, average spin up and spin down densities
+                                      // to force zero magnetic moment
   int numc;                           // Number of core states
   bool spinFlipped;                   // Flag for antiferromagnetic condition
 
+// local energy
+  Real localEnergy;
+  Real localMadelungEnergy;
+  
 // Alloy Class
   int alloy_class;
 
@@ -353,12 +505,17 @@ public:
   Real exchangeCorrelationE;                     // Exchange-correlation energy
   Real exchangeCorrelationV[2];                  // Exchange-correlation potential for spin up/down
 
+// LSF
+  lsms::LSFFunctional lsf_functional;
+
 // Core state info
   Matrix<Real> ec;
   Matrix<int> nc, lc, kc;
   Real ecorv[2], esemv[2];
   Matrix<Real> corden, semcor;
   Real qcpsc_mt, qcpsc_ws, mcpsc_mt, mcpsc_ws;
+  Matrix<char> coreStateType;
+  int movedToValence[2];
 
 // Constraint data
   enum {None, Direction, Moment} constraintType;
@@ -366,7 +523,7 @@ public:
   Real b_basis[9];
   Real mConstraint;
 
-// vector for the energiy points in eGroup
+// vector for the energy points in eGroup
   std::vector<Matrix<Complex> > pmat_m;
 
   VoronoiPolyhedra voronoi;
@@ -399,5 +556,7 @@ public:
     dip[0]=dip[1]=dip[2]=dip[3]=dip[4]=dip[5]=0.0;
   }
 };
+
+int printAtomPotential(FILE *of, AtomData &atom);
 
 #endif

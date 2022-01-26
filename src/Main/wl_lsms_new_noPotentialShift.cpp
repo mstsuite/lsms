@@ -14,7 +14,7 @@
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "VORPOL/VORPOL.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "calculateChemPot.hpp"
 #include "lsmsClass.hpp"

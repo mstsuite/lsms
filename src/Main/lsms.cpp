@@ -4,7 +4,7 @@
 #include <string.h>
 #include <iostream>
 
-// #include <fenv.h>
+#include <fenv.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -22,20 +22,19 @@
 #include <hdf5.h>
 
 #include "lua.hpp"
-//#include "lua.h"
-//#include "lauxlib.h"
-//#include "lualib.h"
 
+
+#include "LuaInterface/LuaInterface.hpp"
 #include "SystemParameters.hpp"
 #include "PotentialIO.hpp"
 #include "Communication/distributeAtoms.hpp"
 #include "Communication/LSMSCommunication.hpp"
-#include "Core/CoreStates.hpp"
+#include "Core/calculateCoreStates.hpp"
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
 #include "VORPOL/VORPOL.hpp"
-#include "EnergyContourIntegration.hpp"
+#include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "calculateChemPot.hpp"
 #include "calculateDensities.hpp"
@@ -46,42 +45,36 @@
 #include "Potential/PotentialShifter.hpp"
 #include "TotalEnergy/calculateTotalEnergy.hpp"
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
-
+#include "VORPOL/setupVorpol.hpp"
 #include "Misc/readLastLine.hpp"
 
-#include "writeInfoEvec.cpp"
+#include "buildLIZandCommLists.hpp"
+#include "writeInfoEvec.hpp"
+#include "write_restart.hpp"
+#include "mixing_params.hpp"
+#include "read_input.hpp"
+
+#ifdef USE_NVTX
+#include <nvToolsExt.h>
+#endif
 
 SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
 IFactors iFactors;
 
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
 // void * deviceStorage;
 DeviceStorage *deviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-#include "Accelerator/buildKKRMatrix_gpu.hpp"
-
-std::vector<DeviceConstants> deviceConstants;
-// void *allocateDConst(void);
-// void freeDConst(void *);
+DeviceConstants deviceConstants;
 #endif
 // std::vector<void *> deviceConstants;
 // std::vector<void *> deviceStorage;
 
 
-void initLSMSLuaInterface(lua_State *L);
-int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &crystal, MixingParameters &mix, PotentialShifter &potentialShifter,
-     AlloyMixingDesc &alloyDesc);
-void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
-                          CrystalParameters &crystal, LocalTypeInfo &local);
-void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local,
-                 SphericalHarmonicsCoeficients &shc);
-
-void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local);
-
 /*
+ * Need portablew way to enable FP exceptions!
+ *
 static int
 feenableexcept (unsigned int excepts)
 {
@@ -98,7 +91,7 @@ feenableexcept (unsigned int excepts)
 
   return ( fesetenv (&fenv) ? -1 : old_excepts );
 }
-*/
+*/ 
 
 
 int main(int argc, char *argv[])
@@ -120,7 +113,7 @@ int main(int argc, char *argv[])
   luaL_openlibs(L);
   initLSMSLuaInterface(L);
 
-  // feenableexcept(FE_INVALID);
+  // feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
 #ifdef USE_GPTL
   GPTLinitialize();
@@ -158,8 +151,9 @@ int main(int argc, char *argv[])
     printf("Using %d OpenMP threads\n", omp_get_max_threads());
 #endif
     acceleratorPrint();
-#ifdef BUILDKKRMATRIX_GPU
-    printf("Using GPU to build KKR matrix.\n");
+#ifdef LSMS_NO_COLLECTIVES
+    printf("\nWARNING!!!\nCOLLECTIVE COMMUNICATION (ALLREDUCE etc.) ARE SKIPPED!\n");
+    printf("THIS IS FOR TESTING ONLY!\nRESULTS WILL BE WRONG!!!\n\n");
 #endif
     printf("Reading input file '%s'\n", inputFileName);
     fflush(stdout);
@@ -194,19 +188,48 @@ int main(int argc, char *argv[])
       default:
         printf("Performing Muffin-Tin (MT) calculation\n");
     }
+    fflush(stdout);
   }
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+#endif
  
   communicateParameters(comm, lsms, crystal, mix, alloyDesc);
   if (comm.rank != lsms.global.print_node)
     lsms.global.iprint = lsms.global.default_iprint;
   // printf("maxlmax=%d\n",lsms.maxlmax);
+  if(comm.rank == 0)
+  {
+    printf("communicated Parameters.\n");
+    fflush(stdout);
+  }
 
   local.setNumLocal(distributeTypes(crystal, comm));
   local.setGlobalId(comm.rank, crystal);
+     
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceAtoms.resize(local.num_local);
+#endif
+     
+  if(comm.rank == 0)
+  {
+    printf("set global ids.\n");
+    fflush(stdout);
+  }
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+// write the distribution of atoms
+  std::vector<int> atomsPerNode(comm.size);
+
+#endif
 
   // set up exchange correlation functionals
   if (lsms.xcFunctional[0] == 1)         // use libxc functional
-    lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional); 
+    lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
+  if (lsms.xcFunctional[0] == 2)         // use new LSMS functional
+    lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
 
   lsms.angularMomentumIndices.init(2*crystal.maxlmax);
   sphericalHarmonicsCoeficients.init(2*crystal.maxlmax);
@@ -214,16 +237,28 @@ int main(int argc, char *argv[])
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
   iFactors.init(lsms, crystal.maxlmax);
 
+#if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+  deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
+#endif
+
   double timeBuildLIZandCommList = MPI_Wtime();
   if (lsms.global.iprint >= 0)
+  {
     printf("building the LIZ and Communication lists [buildLIZandCommLists]\n");
+    fflush(stdout);
+  }
   buildLIZandCommLists(comm, lsms, crystal, local);
   timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
   if (lsms.global.iprint >= 0)
   {
     printf("time for buildLIZandCommLists [num_local=%d]: %lf sec\n",
            local.num_local, timeBuildLIZandCommList);
+    fflush(stdout);
   }
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+#endif
 
 // initialize the potential accelerators (GPU)
 // we need to know the max. size of the kkr matrix to invert: lsms.n_spin_cant*local.maxNrmat()
@@ -231,13 +266,9 @@ int main(int argc, char *argv[])
 
   acceleratorInitialize(lsms.n_spin_cant*local.maxNrmat(), lsms.global.GPUThreads);
   local.tmatStore.pinMemory();
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // deviceStorage = allocateDStore();
   deviceStorage = new DeviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.resize(local.num_local);
-  // for(int i=0; i<local.num_local; i++) deviceConstants[i]=allocateDConst();
 #endif
 
   for (int i=0; i<local.num_local; i++)
@@ -251,11 +282,7 @@ int main(int argc, char *argv[])
   if (lsms.global.iprint >= 0) printLSMSSystemParameters(stdout, lsms);
   if (lsms.global.iprint >= 1) printCrystalParameters(stdout, crystal);
   if (lsms.global.iprint >= 0) printAlloyParameters(stdout, alloyDesc);
-  if (lsms.global.iprint >= 0)
-  {
-    fprintf(stdout,"LIZ for atom 0 on this node\n");
-    printLIZInfo(stdout, local.atom[0]);
-  }
+
   if (lsms.global.iprint >= 1)
   {
     printCommunicationInfo(stdout, comm);
@@ -265,12 +292,62 @@ int main(int argc, char *argv[])
 //  initialAtomSetup(comm,lsms,crystal,local);
 
 // the next line is a hack for initialization of potentials from scratch to work.
-  if(lsms.pot_in_type < 0) setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+
+
+#ifdef LSMS_DEBUG
+  if(lsms.global.iprint >= 0)
+  {
+    printf("Entering the Voronoi construction BEFORE loading the potentials.\n");
+    fflush(stdout);
+  }
+  MPI_Barrier(comm.comm);
+#endif
+
+  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+
+#ifdef LSMS_DEBUG
+  if(lsms.global.iprint >= 0)
+  {
+    printf("Entering the LOADING of the potentials.\n");
+    fflush(stdout);
+  }
+  MPI_Barrier(comm.comm);
+#endif
 
   loadPotentials(comm, lsms, crystal, local);
 
-  if ( alloyDesc.size() > 0 ) 
+  if (lsms.global.iprint >= 0)
+  {
+    fprintf(stdout,"LIZ for atom 0 on this node\n");
+    printLIZInfo(stdout, local.atom[0]);
+    if(local.atom[0].forceZeroMoment) {
+      fprintf(stdout,"\nMagnetic moment of atom 0 forced to be zero!\n\n");
+    }
+  }
+
+  // Read evec file if in is define
+  if ( lsms.infoEvecFileIn[0]!=0) {
+    readInfoEvec(comm,
+                 lsms,
+                 crystal,
+                 local,
+                 lsms.infoEvecFileIn);
+    if (lsms.global.iprint >= 0)
+    {
+      fprintf(stdout,"Evec are read from: %s\n", lsms.infoEvecFileIn);
+    }
+  }
+
+
+  if ( alloyDesc.size() > 0 )
+  {
+    if(lsms.global.iprint >= 0)
+    {
+      printf("Entering the LOADING of the alloy banks.\n");
+      fflush(stdout);
+    }
     loadAlloyBank(comm,lsms,alloyDesc,alloyBank); 
+  }
 
 // for testing purposes:
 //  std::vector<Matrix<Real> > vrs;
@@ -278,7 +355,20 @@ int main(int argc, char *argv[])
 //  for(int i=0; i<local.num_local; i++) vrs[i]=local.atom[i].vr;
 // -------------------------------------
 
+#ifdef LSMS_DEBUG
+  if(lsms.global.iprint >= 0)
+  {
+    printf("Entering the Voronoi construction AFTER loading the potentials.\n");
+    fflush(stdout);
+  }
+  MPI_Barrier(comm.comm);
+#endif
+
   setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+
+#ifdef LSMS_DEBUG
+  MPI_Barrier(comm.comm);
+#endif
 
 // Generate new grids after new rmt is defined
   for (int i=0; i<local.num_local; i++)
@@ -383,6 +473,7 @@ int main(int argc, char *argv[])
 
   double timeScfLoop = MPI_Wtime();
   double timeCalcChemPot = 0.0;
+  double timeCalcPotentialsAndMixing = 0.0;
 
   int iterationStart = 0;
   int potentialWriteCounter = 0;
@@ -394,9 +485,13 @@ int main(int argc, char *argv[])
     kFile = fopen("k.out","a");
   }
 
-  for (int iteration=0; iteration<lsms.nscf && !converged; iteration++)
+  int iteration;
+#ifdef USE_NVTX
+  nvtxRangePushA("SCFLoop");
+#endif  
+  for (iteration=0; iteration<lsms.nscf && !converged; iteration++)
   {
-    if (lsms.global.iprint >= 0)
+    if (lsms.global.iprint >= -1 && comm.rank == 0)
       printf("SCF iteration %d:\n", iteration);
 
     // Calculate band energy
@@ -411,20 +506,48 @@ int main(int argc, char *argv[])
 
     // Calculate magnetic moments for each site and check if spin has flipped
     calculateEvec(lsms, local);
-    mixEvec(lsms, local, 0.0);
-    for (int i=0; i<local.num_local; i++) {
-      local.atom[i].newConstraint();
+    // mixEvec(lsms, local, 0.0);
+    mixing -> updateMoments(comm, lsms, local.atom);
+    for (int i=0; i<local.num_local; i++)
+    {
+      if(!mix.quantity[MixingParameters::moment_direction])
+        local.atom[i].newConstraint();
+      
+      local.atom[i].evec[0] = local.atom[i].evecNew[0];
+      local.atom[i].evec[1] = local.atom[i].evecNew[1];
+      local.atom[i].evec[2] = local.atom[i].evecNew[2];
+      
       checkIfSpinHasFlipped(lsms, local.atom[i]);
     }
 
+    double dTimePM = MPI_Wtime();
     // Calculate charge densities, potentials, and total energy
     calculateAllLocalChargeDensities(lsms, local);
     calculateChargesPotential(comm, lsms, local, crystal, 0);
+
+    // FILE *pf = fopen("vr_test_1.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
+    checkAllLocalCharges(lsms, local);
     calculateTotalEnergy(comm, lsms, local, crystal);
 
+    // pf = fopen("vr_test_2.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
+    // Calculate charge density rms
+    calculateLocalQrms(lsms, local);
+    
     // Mix charge density
     mixing -> updateChargeDensity(comm, lsms, local.atom);
- 
+    dTimePM = MPI_Wtime() - dTimePM;
+    timeCalcPotentialsAndMixing += dTimePM; 
+
+    // pf = fopen("vr_test_3.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
     // Recalculate core states
     // - swap core state energies for different spin channels first if spin has flipped
     //   (from LSMS 1: lsms_main.f:2101-2116)
@@ -438,20 +561,56 @@ int main(int argc, char *argv[])
     }
     calculateCoreStates(comm, lsms, local);
 
+    // pf = fopen("vr_test_4.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
+    dTimePM = MPI_Wtime();
     // If charge is mixed, recalculate potential and mix (need a flag for this from input)
     calculateChargesPotential(comm, lsms, local, crystal, 1);
+
+    // pf = fopen("vr_test_5.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
+
     mixing -> updatePotential(comm, lsms, local.atom);
+    
+    // pf = fopen("vr_test_6.dat","w");
+    // printAtomPotential(pf, local.atom[0]);
+    // fclose(pf);
 
-    Real rms = 0.5 * (local.qrms[0] + local.qrms[1]);
+    // exitLSMS(comm, 1);
 
-    // Check for convergence
+    dTimePM = MPI_Wtime() - dTimePM;
+    timeCalcPotentialsAndMixing += dTimePM;
+
+    Real rms = 0.0;
+    if(lsms.n_spin_pola > 1)
+    {
+      // rms = 0.5 * (local.qrms[0] + local.qrms[1]);
+      rms = 0.0;
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, 0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1]));
+      globalMax(comm, rms);
+    } else {
+      // rms = local.qrms[0];
+      rms = 0.0;
+      for(int i=0; i<local.num_local; i++)
+        rms = std::max(rms, local.atom[i].qrms[0]);
+      globalMax(comm, rms);
+    }
+    
+// check for convergence
+    converged = rms < lsms.rmsTolerance;
+    /*
     converged = true;
     for (int i=0; i<local.num_local; i++)
     {
       converged = converged
-                && (0.5 * (local.atom[i].qrms[0] + local.atom[i].qrms[1]) < lsms.rmsTolerance);
+                && (0.5*(local.atom[i].qrms[0]+local.atom[i].qrms[1])<lsms.rmsTolerance);
     }
     globalAnd(comm, converged);
+    */
 
     if (comm.rank == 0)
     {
@@ -459,6 +618,16 @@ int main(int argc, char *argv[])
       printf("Fermi Energy = %lf Ry\n", lsms.chempot);
       printf("Total Energy = %lf Ry\n", lsms.totalEnergy);
       printf("RMS = %lg\n",rms);
+      if(lsms.global.iprint > 0)
+      {
+        printf("  qrms[0] = %lg   qrms[1] = %lg\n",local.qrms[0], local.qrms[1]);
+        printf("  local.atom[i]:\n");
+        for (int i=0; i<local.num_local; i++)
+        {
+          printf("  %d : qrms[0] = %lg   qrms[1] = %lg\n",i,local.atom[i].qrms[0], local.atom[i].qrms[1]);
+          printf("  %d : vrms[0] = %lg   vrms[1] = %lg\n",i,local.atom[i].vrms[0], local.atom[i].vrms[1]);
+        }
+      }
     }
 
     if (kFile != NULL)
@@ -476,19 +645,29 @@ int main(int argc, char *argv[])
     if ((lsms.pot_out_type >= 0 && potentialWriteCounter >= lsms.writeSteps)
         || converged)
     {
-      if (comm.rank == 0) std::cout << "Writing new potentials.\n";
+      if (comm.rank == 0) std::cout << "Writing new potentials and restart file.\n";
       writePotentials(comm, lsms, crystal, local);
       potentialWriteCounter = 0;
+      if (comm.rank == 0)
+      { 
+        writeRestart("i_lsms.restart", lsms, crystal, mix, potentialShifter, alloyDesc);
+      }
     }
 
   }
-
+#ifdef USE_NVTX
+  nvtxRangePop();
+#endif
+  timeScfLoop = MPI_Wtime() - timeScfLoop;
+  
   writeInfoEvec(comm, lsms, crystal, local, eband, lsms.infoEvecFileOut);
+  if(lsms.localAtomDataFile[0]!=0)
+    writeLocalAtomData(comm, lsms, crystal, local, eband, lsms.localAtomDataFile);
 
   if (kFile != NULL)
     fclose(kFile);
 
-  timeScfLoop = MPI_Wtime() - timeScfLoop;
+ 
 
 // -----------------------------------------------------------------------------
 
@@ -526,10 +705,14 @@ int main(int argc, char *argv[])
   {
     if (comm.rank == 0) std::cout << "Writing new potentials.\n";
     writePotentials(comm, lsms, crystal, local);
+    if (comm.rank == 0)
+    {
+      std::cout << "Writing restart file.\n";
+      writeRestart("i_lsms.restart", lsms, crystal, mix, potentialShifter, alloyDesc);
+    }
   }
 
-
-  long fomScale = calculateFomScale(comm, local);
+  double fomScale = calculateFomScaleDouble(comm, local);
 
   if (comm.rank == 0)
   {
@@ -537,8 +720,13 @@ int main(int argc, char *argv[])
     printf("Fermi Energy = %.15lf Ry\n", lsms.chempot);
     printf("Total Energy = %.15lf Ry\n", lsms.totalEnergy);
     printf("timeScfLoop[rank==0] = %lf sec\n", timeScfLoop);
-    printf(".../lsms.nscf = %lf sec\n", timeScfLoop / (double)lsms.nscf);
-    printf("timeCalcChemPot[rank==0]/lsms.nscf = %lf sec\n", timeCalcChemPot / (double)lsms.nscf);
+    printf("     number of iteration:%d\n",iteration);
+    printf("timeScfLoop/iteration = %lf sec\n", timeScfLoop / (double)iteration);
+    // printf(".../lsms.nscf = %lf sec\n", timeScfLoop / (double)lsms.nscf);
+    printf("timeCalcChemPot[rank==0]/iteration = %lf sec\n", timeCalcChemPot / (double)iteration);
+    // printf("timeCalcChemPot[rank==0]/lsms.nscf = %lf sec\n", timeCalcChemPot / (double)lsms.nscf);
+    printf("timeCalcPotentialsAndMixing[rank==0]/iteration = %lf sec\n",
+            timeCalcPotentialsAndMixing / (double)iteration);
     printf("timeBuildLIZandCommList[rank==0]: %lf sec\n",
            timeBuildLIZandCommList);
     // fom = [ \sum_#atoms (LIZ * (lmax+1)^2)^3 ] / time per iteration
@@ -553,23 +741,20 @@ int main(int argc, char *argv[])
     }
     printf("FOM Scale = %lf\n",(double)fomScale);
     printf("Energy Contour Points = %ld\n",energyContourPoints);
-    printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
+    printf("FOM = %lg/sec\n",fomScale * (double)iteration / timeScfLoop);
+    // printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
     printf("FOM * energyContourPoints = = %lg/sec\n",
-            (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
+            (double)energyContourPoints * (double)fomScale * (double)iteration / timeScfLoop);
+    //         (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
   }
+
 
   local.tmatStore.unpinMemory();
 
-#ifdef BUILDKKRMATRIX_GPU
-  // for(int i=0; i<local.num_local; i++) freeDConst(deviceConstants[i]);
-#endif
 
-#if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C)
+#if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   // freeDStore(deviceStorage);
   delete deviceStorage;
-#endif
-#ifdef BUILDKKRMATRIX_GPU
-  deviceConstants.clear();
 #endif
 
   acceleratorFinalize();

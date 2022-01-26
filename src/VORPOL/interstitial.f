@@ -4,7 +4,7 @@
      >                     ncrit,ngaussr,
      >                     grwylm,gwwylm,wylm,
      >                     cgnt,lmax_cg,
-     >                     pzz,pzj,bj,bh)
+     >                     pzz,pzj,pzj_full,bj,bh)
 c     =================================================================
 c
       implicit   none
@@ -42,6 +42,7 @@ c
       complex*16 eiz
       complex*16 pzz((lmax+1)**2,(lmax+1)**2)
       complex*16 pzj
+      complex*16 pzj_full((lmax+1)**2)
       complex*16 zlzl
       complex*16 zljl
       complex*16 zlm1
@@ -150,6 +151,7 @@ c  cgnt(lm,lmp,lmpp)=int dO Y(lm),Y(lmp),Y(lmpp)^*
                enddo
                enddo
                pzj=pzj+zljl*zlm1*jlm1*gwwylm(ng,ir)
+               pzj_full(lm1) = zljl*zlm1*jlm1*gwwylm(ng,ir)
             enddo
             enddo
 	    endif  !  rgauss.gt.zero

@@ -1,5 +1,5 @@
 #include "calculateTotalEnergy.hpp"
-#include "localTotalEnergy.cpp"
+#include "localTotalEnergy.hpp"
 
 void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local, CrystalParameters &crystal)
 {
@@ -96,10 +96,12 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
                 &lsms.global.iprint, lsms.global.istop, 32);
       }
 
+      local.atom[i].localEnergy = energy;
       totalEnergy += energy * local.n_per_type[i];
       totalPressure += pressure * local.n_per_type[i];
     } else { // new energy calculation
       localTotalEnergy(lsms, local.atom[i], energyNew, pressureNew);
+      local.atom[i].localEnergy = energyNew;
       totalEnergyNew += energyNew * local.n_per_type[i];
       totalPressureNew += pressureNew * local.n_per_type[i];
     }
@@ -159,6 +161,12 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
     totalEnergy += emad[is];
     totalPressure += emadp[is];
   }
+  for (int i=0; i<local.num_local; i++)
+  {
+    for (int is=0; is<lsms.n_spin_pola; is++)
+      local.atom[i].localEnergy += emad[is]/Real(lsms.num_atoms);
+  }
+  
 
   totalEnergy += lsms.u0;
   totalPressure += lsms.u0;

@@ -106,11 +106,11 @@ c
 c
 
 ! for the time beeing i set dipole to zero:
-      call zeroout(dipole,6*4*2)
+      call czeroout(dipole,6*4)
 
 !     gfill & gafill are now called from zplanint_d
-!     call gfill
-!     call gafill
+      call gfill
+      call gafill
 
       pi=fnpi()
 
@@ -257,7 +257,7 @@ c
  
 ! for the time beeing it seems that we don't need the orbital monent
 ! densities, so I just set them to zero...
-      call zeroout(dens_orb,2*jws*3)
+      call czeroout(dens_orb,jws*3)
 
 !     call magnetic_dens(lmax,kkrsz,
 !    >                jmt,gz,fz,gj,fj,nuz,indz,tau00,

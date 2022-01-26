@@ -2,7 +2,10 @@
 #define LSMS_DEVICE_MATRIX_HPP
 
 #include "Matrix.hpp"
-#include "cudaCheckError.hpp"
+
+#include "DeviceInterfaceCudaHip.hpp"
+
+#include "deviceCheckError.hpp"
 #include <cstdio>
   template <class T>
   struct DeviceMatrix {
@@ -41,7 +44,7 @@
       __inline__ DeviceMatrix<T> &operator=(Matrix<T>& mat) {
         //TODO BACK TO ASYNC
         copy_async(mat,0);
-        cudaCheckError();
+        deviceCheckError();
         return *this;
       }
 
@@ -57,10 +60,10 @@
           }
           else { free(); nRow=0; nCol=0; lDim=0; } 
         }
-        cudaMemcpy(data,&mat[0],num_bytes,cudaMemcpyHostToDevice);
+        deviceMemcpy(data,&mat[0],num_bytes,deviceMemcpyHostToDevice);
       }
 
-      __inline__ void copy_async(Matrix<T> &mat, cudaStream_t s) {
+      __inline__ void copy_async(Matrix<T> &mat, deviceStream_t s) {
         size_type curSize=lDim*nCol;
         nRow=mat.n_row(); nCol=mat.n_col(); lDim=mat.l_dim(); 
         size_type num_bytes=sizeof(T)*lDim*nCol;
@@ -72,7 +75,7 @@
           }
           else { nRow=0; nCol=0; lDim=0; data=0;} 
         }
-        cudaMemcpyAsync(data,&mat[0],num_bytes,cudaMemcpyHostToDevice,s);
+        deviceMemcpyAsync(data,&mat[0],num_bytes,deviceMemcpyHostToDevice,s);
       }
 
 
@@ -94,8 +97,8 @@
         if(num_bytes>0) {
           free();
           owner=this;
-          cudaMalloc(&data,num_bytes);
-          cudaCheckError();
+          deviceMalloc((void **)&data,num_bytes);
+          deviceCheckError();
         }
         else {      // DANGEROUS!! Might cause memory leak!
           owner = 0;
@@ -107,7 +110,7 @@
       }
       __inline__ void free() {
         if(owner==this && data!=0) {
-          cudaFree(data);
+          deviceFree(data);
         }
         owner=0;
         data=0;

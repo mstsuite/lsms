@@ -2,7 +2,7 @@
 
 void calculateEvec(LSMSSystemParameters &lsms, LocalTypeInfo &local)
 {
-  Real tolerance = 1.0e-8;
+  const Real tolerance = 1.0e-8;
 
   for (int i=0; i<local.num_local; i++)
   {
@@ -20,9 +20,19 @@ void calculateEvec(LSMSSystemParameters &lsms, LocalTypeInfo &local)
       Real evecMagnitude = std::sqrt(moment[0] * moment[0] + \
                                      moment[1] * moment[1] + \
                                      moment[2] * moment[2]);
-      if (lsms.global.iprint > 0)
+      if (lsms.global.iprint >= 0)
       {
-        printf(" GETEVEC: moment = (%12.8f, %12.8f, %12.8f) magnitude = %12.8f\n", moment[0], moment[1], moment[2], evecMagnitude);
+        printf(" GETDOS:  moment = (%12.8f, %12.8f, %12.8f)\n", local.atom[i].dosckint[1],
+               local.atom[i].dosckint[2], local.atom[i].dosckint[3]);
+        printf(" GETCS:   moment = (%12.8f, %12.8f, %12.8f)\n",
+               local.atom[i].evec[0] * local.atom[i].mcpsc_mt,
+               local.atom[i].evec[1] * local.atom[i].mcpsc_mt,
+               local.atom[i].evec[2] * local.atom[i].mcpsc_mt);
+        printf(" GETEVEC: moment = (%12.8f, %12.8f, %12.8f) magnitude = %12.8f\n",
+               moment[0],
+               moment[1],
+               moment[2],
+               evecMagnitude);
       }
   
       if (evecMagnitude > tolerance)
@@ -61,9 +71,18 @@ void calculateEvec(LSMSSystemParameters &lsms, LocalTypeInfo &local)
     Not yet implemented. (need to see where evec_out and mm_out are used for)
     */
 
+    if (lsms.global.iprint >= 0)
+    {
+      printf(" EVEC OLD: moment = %12.8f, %12.8f, %12.8f\n", local.atom[i].evecOut[0], local.atom[i].evecOut[1],local.atom[i].evecOut[2]);
+      printf(" EVEC FIX: moment = %12.8f, %12.8f, %12.8f\n", local.atom[i].evec[0], local.atom[i].evec[1],local.atom[i].evec[2]);
+      printf(" EVEC NEW: moment = %12.8f, %12.8f, %12.8f\n", local.atom[i].evecNew[0], local.atom[i].evecNew[1],local.atom[i].evecNew[2]);
+    }
+
     local.atom[i].evecOut[0] = local.atom[i].evecNew[0];
     local.atom[i].evecOut[1] = local.atom[i].evecNew[1];
     local.atom[i].evecOut[2] = local.atom[i].evecNew[2];
+
+    // local.atom[i].magneticMomentOut = evecMagnitude;
 
   }
   

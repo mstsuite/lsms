@@ -22,7 +22,8 @@ YingWai  (Dec 5, 13):
 #include <sstream>
 #include <limits>
 // Try MJSON instead:
-#include "../../mjson/json.h"
+// #include "../../mjson/json.h"
+#include "json.h"
 #include "EvecGenerator.h"
 
 class ExhaustiveIsing1dEvecGenerator : public EvecGenerator

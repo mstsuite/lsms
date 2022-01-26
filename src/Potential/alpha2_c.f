@@ -152,7 +152,7 @@ c     exchange-correlation potential
 c
 c
   20  continue
-      if(incof.ne.0) go to 30
+!      if(incof.ne.0) go to 30
       incof=2
 c
 c     vosko-wilk-nusair exch-corr potential

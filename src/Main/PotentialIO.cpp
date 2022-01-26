@@ -1,11 +1,15 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+#include "PotentialIO.hpp"
+
 #include <stdio.h>
+
 #include <hdf5.h>
+
 #include "Main/SystemParameters.hpp"
 #include "Communication/LSMSCommunication.hpp"
 #include "SingleSite/AtomData.hpp"
 #include "SingleSite/readSingleAtomData.hpp"
 #include "SingleSite/writeSingleAtomData.hpp"
-#include "PotentialIO.hpp"
 #include "HDF5io.hpp"
 #include "Main/initializeAtom.hpp"
 
@@ -19,6 +23,16 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
   {
     pot_data.resizePotential(lsms.global.iprpts);
     pot_data.resizeCore(lsms.global.ipcore);
+  }
+
+  // safe the input rmt, jmt, jws:
+  Real rfixgrid[local.num_local];
+  int jmtIn[local.num_local], jwsIn[local.num_local];
+  for(int i=0; i<local.num_local; i++)
+  {
+    rfixgrid[i] = local.atom[i].rmt;
+    jmtIn[i] = local.atom[i].jmt;
+    jwsIn[i] = local.atom[i].jws;
   }
 
   if(comm.rank==0)
@@ -103,6 +117,11 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
         }
       }
     }
+    // close the file
+    if(lsms.pot_in_type==0)
+    {
+      H5Fclose(fid);
+    }
   } else { // comm.rank!=0
     int local_id;
     for(int i=0; i<local.num_local; i++)
@@ -115,6 +134,18 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
 // adjust the local potentials:
   for(int i=0; i<local.num_local; i++)
   {
+    if(local.atom[i].nspin != lsms.n_spin_pola)
+    {
+      printf("Input potential: %d spins != lsms setting: %d spins\n",
+             local.atom[i].nspin, lsms.n_spin_pola);
+      local.atom[i].changeNspin(lsms.n_spin_pola);
+    }
+    local.atom[i].forceZeroMoment = crystal.types[local.global_id[i]].forceZeroMoment;
+    // if(local.atom[i].forceZeroMoment)
+    // {
+    //   local.atom[i].averageSpins();
+    // }
+
     local.atom[i].generateRadialMesh();
     local.atom[i].ztotss=(Real)crystal.types[local.global_id[i]].Z;
     local.atom[i].zcorss=(Real)crystal.types[local.global_id[i]].Zc;
@@ -124,9 +155,19 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
     local.atom[i].lmax=crystal.types[local.global_id[i]].lmax;
     local.atom[i].kkrsz=(local.atom[i].lmax+1)*
                         (local.atom[i].lmax+1);
+
+    // LSF
+    auto lsf_functional = crystal.types[local.global_id[i]].lsf_functional;
+    local.atom[i].lsf_functional = lsms::LSFFunctional(
+        lsms.temperature, lsms::LSFTypeMap[lsf_functional]);
+
     if(lsms.fixRMT==0)
     {
       local.atom[i].rmt=local.atom[i].rInscribed;
+    }
+    if(lsms.mtasa == 1)
+    {
+      local.atom[i].jmt = local.atom[i].jws;
     }
 // define potential past old grid as constant
     for(int is=0; is<lsms.n_spin_pola; is++)
@@ -190,6 +231,13 @@ void initialAtomSetup(LSMSCommunication &comm,LSMSSystemParameters &lsms, Crysta
   lsms.chempot=fspace[1]/Real(lsms.num_atoms);
 }
 
+void updateCrystalFromAtom(LSMSSystemParameters &lsms, CrystalParameters &crystal, AtomData &atom, int crystalID)
+{
+  crystal.evecs(0,crystalID) = atom.evec[0];
+  crystal.evecs(1,crystalID) = atom.evec[1];
+  crystal.evecs(2,crystalID) = atom.evec[2];
+}
+
 int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local)
 {
   AtomData pot_data;
@@ -235,9 +283,13 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
         if(crystal.types[i].node==comm.rank)
         {
           writeSingleAtomData_hdf5(fid_1,local.atom[crystal.types[i].local_id],i+1);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, local.atom[crystal.types[i].local_id], i);
         } else {
           communicateSingleAtomData(comm, crystal.types[i].node, comm.rank, crystal.types[i].local_id, pot_data,i);
           writeSingleAtomData_hdf5(fid_1,pot_data,i+1);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, pot_data, i);
         }
         H5Gclose(fid_1);
       } else if(lsms.pot_out_type==1) { // BIGCELL style Text
@@ -247,14 +299,24 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
         if(crystal.types[i].node==comm.rank)
         {
           writeSingleAtomData_bigcell(fname,local.atom[crystal.types[i].local_id]);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, local.atom[crystal.types[i].local_id], i);
         } else {
           int local_id;
           communicateSingleAtomData(comm, crystal.types[i].node, comm.rank, local_id, pot_data,i);
           if(local_id!=crystal.types[i].local_id) printf("WARNING: local_id doesn't match in writePotentials!\n");
           writeSingleAtomData_bigcell(fname,pot_data);
+          // update evec in crystal
+          updateCrystalFromAtom(lsms, crystal, pot_data, i);
         }
       }
     }
+    // close the file
+    if(lsms.pot_out_type==0)
+    {
+      H5Fclose(fid);
+    }
+    
   } else { // comm.rank!=0
     for(int i=0; i<local.num_local; i++)
     {

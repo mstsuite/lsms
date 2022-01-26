@@ -66,3 +66,43 @@ c        if(rhot.gt.zero) then
 c
       return
       end
+
+
+c     cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      subroutine get_rho(rho_in,
+     >                  rho_out, stride,
+     >                  r_mesh,jmt)
+c     ================================================================
+c
+      implicit   none
+c
+      integer    n_spin_pola
+      integer    jmt
+      integer   stride
+c
+      integer    ir
+c
+      real*8     rho_in(jmt)
+      real*8     rho_out(stride*jmt)
+      real*8     r_mesh(jmt)
+c
+      real*8     ro3r
+      real*8     pi
+      real*8     four
+      real*8     three
+      real*8     third
+c
+      parameter  (three=3.0d0)
+      parameter  (third=1.0d0/three)
+      parameter  (four = 4.0d0)
+c
+c     -------------------------------------------------------------
+      pi = 4.d0*datan(1.d0)
+      
+      do ir=1,jmt
+           ro3r=(three*r_mesh(ir)**2/rho_in(ir))**third
+           rho_out(stride*(ir-1)+1) = three / (four * pi * ro3r**3)
+      enddo
+c
+      return
+      end

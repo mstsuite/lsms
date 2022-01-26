@@ -1,11 +1,7 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "SingleSiteScattering.hpp"
 
-extern "C"
-{
-  void trltog_(int *, int *, Complex *, Complex *, Complex *, Complex *, Complex *);
-  void gjinv_(Complex *a, int *n, int *nmax, Complex *detl);
-  void tripmt_(Complex *u, Complex *b, Complex *ust, int *ndi1, int *ind2, int *ndim);
-}
+
 
 void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom,
                                       Matrix<Real> &vr,
@@ -109,8 +105,17 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
    Real soscal =1.0;
    Real v0 = 0.0;
    int ir = atom.jws; // +1;
-   // if(lsms.mtasa==0) ir=atom.jmt+1;
+    if(lsms.mtasa==0) ir=atom.jmt+1;
    if(atom.ztotss<0.5) vacuumId=0;
+
+   solution.gz.resize(iprpts, 2, kmymax);
+   solution.gj.resize(iprpts, 2, kmymax);
+   solution.fz.resize(iprpts, 2, kmymax);
+   solution.fj.resize(iprpts, 2, kmymax);
+
+   printf("iprpts = %d    ir = %d\n", iprpts, ir);
+   // exit(1);
+   
    single_scatterer_rel_(&energy, &psq, &atom.lmax, &kmymax,
                          &vacuumId, &v0,
                          &vrr[0], &brr[0], &boprr(0,0),
@@ -120,6 +125,17 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
                          &solution.gj(0,0,0), &solution.fj(0,0,0),
                          &solution.nuz[0], &solution.indz(0,0), &iflag, &soscal,
                          &iprpts, &lsms.global.iprint,lsms.global.istop,32);
+
+    for(int j1=0; j1<solution.gz.n_row(); j1++)
+      for(int j2=0; j2<solution.gz.n_col(); j2++)
+        for(int j3=0; j3<solution.gz.n_slice(); j3++)
+        {
+          printf("gz(%d,%d,%d) = %f %f\n",j1,j2,j3,solution.gz(j1,j2,j3).real(), solution.gz(j1,j2,j3).imag());
+          printf("gj(%d,%d,%d) = %f %f\n",j1,j2,j3,solution.gj(j1,j2,j3).real(), solution.gj(j1,j2,j3).imag());
+          printf("fz(%d,%d,%d) = %f %f\n",j1,j2,j3,solution.fz(j1,j2,j3).real(), solution.fz(j1,j2,j3).imag());
+          printf("fj(%d,%d,%d) = %f %f\n",j1,j2,j3,solution.fj(j1,j2,j3).real(), solution.fj(j1,j2,j3).imag());
+        }
+   exit(0);
    // now we have tinv but we need t:
    Complex detl;
    gjinv_(&solution.tmat_g(0,0), &kmymax, &kmymax,&detl);
