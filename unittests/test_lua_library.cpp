@@ -2,12 +2,18 @@
 // Created by F.Moitzi on 18.09.2021.
 //
 
+#include <gtest/gtest.h>
+
 #include <cstring>
 #include <cstdlib>
 
+#include <array>
+#include <vector>
+
 #include <lua.hpp>
 
-int main(int argc, char *argv[]) {
+TEST(LuaTest, LuaScripting1) {
+
   // initialization
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
@@ -30,13 +36,10 @@ int main(int argc, char *argv[]) {
       lua_pop(L, 1);
     }
 
-    if (sumval != 11.0) {
-      return EXIT_FAILURE;
-    }
+    ASSERT_EQ(sumval, 11.0);
+
 
   }
 
-  // cleanup
   lua_close(L);
-  return EXIT_SUCCESS;
 }
