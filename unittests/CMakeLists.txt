@@ -44,7 +44,7 @@ target_link_libraries(test_lua_library PUBLIC Lua::Lua)
 target_link_libraries(test_lua_library PUBLIC gtest_main)
 
 # 2. Test
-add_test(test_math lsmscore)
+#add_test(test_math lsmscore)
 
 
 # Discover all tests
