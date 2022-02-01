@@ -35,7 +35,7 @@ function(add_test test_name library_target)
     #target_compile_options(${exename} PUBLIC ${_compile_opts})
     #endif ()
 
-endmacro()
+endfunction()
 
 
 # 1. Test Lua Libraries
