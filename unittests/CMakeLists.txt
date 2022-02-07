@@ -1,16 +1,16 @@
 
 
-function(add_test test_name library_target)
+#function(add_test test_name library_target)
 
-    add_executable(${testname} ${testname})
+    #add_executable(${testname} ${testname})
 
-    target_link_libraries(test_math PUBLIC gtest_main)
+    #target_link_libraries(test_math PUBLIC gtest_main)
 
-    if (TARGET ${library_target})
+    #if (TARGET ${library_target})
 
-    else ()
-        message(FATAL_ERROR "Target doesn't exists")
-    endif ()
+    #else ()
+    #    message(FATAL_ERROR "Target doesn't exists")
+    #endif ()
 
     #get_target_property(LIB_INCLUDES ${library_target} INCLUDE_DIRECTORIES)
     #if (_LIB_INCLUDES)
@@ -35,7 +35,7 @@ function(add_test test_name library_target)
     #target_compile_options(${exename} PUBLIC ${_compile_opts})
     #endif ()
 
-endmacro()
+#endmacro()
 
 
 # 1. Test Lua Libraries
@@ -44,7 +44,9 @@ target_link_libraries(test_lua_library PUBLIC Lua::Lua)
 target_link_libraries(test_lua_library PUBLIC gtest_main)
 
 # 2. Test
-add_test(test_math lsmscore)
+add_executable(test_math test_math.cpp)
+target_link_libraries(test_math PUBLIC lsmscore)
+target_link_libraries(test_math PUBLIC gtest_main)
 
 
 # Discover all tests

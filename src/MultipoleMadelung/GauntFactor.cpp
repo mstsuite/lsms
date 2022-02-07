@@ -17,7 +17,9 @@ lsms::math::GauntFactor::GauntFactor(int lmax) {
 
   nj3 = lsms::NDArray<int, 2>(kmax_mad, kmax_mad);
 
-  kj3 = lsms::NDArray<int, 3>(kmax_mad, kmax_mad);
+  kj3 = lsms::NDArray<int, 3>(lmax + 1, kmax_mad, kmax_mad);
+
+
 
 
   gaunt_factor(&lmax, cgnt.data(), kj3.data(), nj3.data());
