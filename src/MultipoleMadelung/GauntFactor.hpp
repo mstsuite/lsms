@@ -36,6 +36,8 @@ namespace lsms {
        *
        *  Important is that the second index is the complex one
        *
+       *  https://www.theoretical-physics.net/dev/math/spherical-harmonics.html
+       *
        */
       double table(int k1, int k2, int k3) const;
 
