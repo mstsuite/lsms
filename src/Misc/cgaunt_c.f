@@ -10,7 +10,7 @@ c
       implicit   none
 c
       character  sname*20
-      character  istop*32
+      character  istop*28
 c
       integer    lmax
       integer    iprint
@@ -100,10 +100,10 @@ c
          enddo
       enddo
 c
-      if(istop.eq.sname) then
-         call fstop(sname)
-      else
-         return
-      endif
+c      if(istop.eq.sname) then
+c         call fstop(sname)
+c      else
+c         return
+c      endif
 c
       end

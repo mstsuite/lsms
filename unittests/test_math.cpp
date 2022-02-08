@@ -68,3 +68,28 @@ TEST(MathTests, GauntCoeffiencents1) {
   }
 
 }
+
+TEST(MathTests, GauntCoeffiencents2) {
+
+  int lmax = 3;
+
+  lsms::math::GauntFactor gaunt_factor(lmax);
+
+  {
+    auto l1 = 3;
+    auto l2 = 3;
+    auto l3 = 3;
+
+    auto m1 = 0;
+    auto m2 = 0;
+    auto m3 = 0;
+
+    auto k1 = l1 * l1 + l1 - m1;
+    auto k2 = l2 * l2 + l2 - m2;
+    auto k3 = l3 * l3 + l3 - m3;
+
+    gaunt_factor.table(k1, k2, k3);
+  }
+
+
+}

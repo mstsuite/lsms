@@ -557,6 +557,7 @@ public:
     dos_real=0.0;
     greenint=0.0;
     greenlast=0.0;
+    std::fill(multipole_moms.begin(), multipole_moms.end(), 0.0);
     doslast[0]=doslast[1]=doslast[2]=doslast[3]=0.0;
     doscklast[0]=doscklast[1]=doscklast[2]=doscklast[3]=0.0;
     evalsum[0]=evalsum[1]=evalsum[2]=evalsum[3]=0.0;

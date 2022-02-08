@@ -210,7 +210,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       crystal.types[crystal.num_types].pot_in_idx = -1;
 
       // Multipole moment parameters
-      crystal.types[crystal.num_types].lmax_mom = 0;
+      crystal.types[crystal.num_types].lmax_mom = -1;
       luaGetIntegerFieldFromStack(L, "lmax_mom", &crystal.types[crystal.num_types].lmax_mom);
 
       luaGetIntegerFieldFromStack(L,"pot_in_idx",&crystal.types[crystal.num_types].pot_in_idx);
