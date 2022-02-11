@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <mpi.h>
+#include <iostream>
 #include <complex>
 #include "Complex.hpp"
 
@@ -514,17 +515,6 @@ void energyContourIntegration(LSMSCommunication &comm, LSMSSystemParameters &lsm
                                                             local.atom[i].lmax_mom,
                                                             local.atom[i].lmax);
 
-              if (lsms.global.iprint >= 0) {
-                auto k = 0;
-                for (auto l = 0; l <= local.atom[i].lmax_mom; l++) {
-                  for (auto m = -l; m <= l; m++) {
-                    std::printf("MM [%d] %2d (%2d,%2d) %lf %lf\n", i, ie, l, m,
-                                std::real(mm_e[k]), std::imag(mm_e[k]));
-                    k++;
-                  }
-                }
-              }
-
 
               lsms::multi_moms::integrateMultipoleMoments(lsms,
                                                           0,
@@ -752,6 +742,8 @@ void energyContourIntegration(LSMSCommunication &comm, LSMSSystemParameters &lsm
   if (lsms.global.iprint >= 0) {
 
     for (int i = 0; i < local.num_local; i++) {
+
+      std::cout << "-----: " << local.atom[i].lmax_mom << std::endl;
 
       if (local.atom[i].lmax_mom >= 0) {
 

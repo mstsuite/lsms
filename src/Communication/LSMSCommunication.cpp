@@ -229,6 +229,13 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     if(crystal.types[i].lmax>crystal.maxlmax) crystal.maxlmax=crystal.types[i].lmax; 
   lsms.maxlmax=crystal.maxlmax;
 
+// get maximum lmax momentum
+  crystal.maxlmax_mom=0;
+  for(int i=0; i<crystal.num_types; i++) {
+    if(crystal.types[i].lmax_mom>crystal.maxlmax_mom) crystal.maxlmax_mom=crystal.types[i].lmax_mom;
+  }
+  lsms.maxlmax_mom=crystal.maxlmax_mom;
+
   for(int i = 0; i < alloyDesc.size(); i++)
   {
     for(int j = 0; j < alloyDesc[i].size(); j++)

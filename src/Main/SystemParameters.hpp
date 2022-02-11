@@ -100,6 +100,7 @@ public:
   Real temperature;
   Real clight;
   int maxlmax;
+  int maxlmax_mom;
   LSMSGlobals global;
   AngularMomentumIndices angularMomentumIndices;
   EnergyContourParameters energyContour;
@@ -149,6 +150,7 @@ public:
 class CrystalParameters {
 public:
   int maxlmax;
+  int maxlmax_mom;
   CrystalParameters() : bravais(3,3) {}
   void resize(size_t n) {type.resize(n); position.resize(3,n); evecs.resize(3,n);}
   void resizeTypes(size_t n) {types.resize(n);}

@@ -203,6 +203,8 @@ int main(int argc, char *argv[])
   if(comm.rank == 0)
   {
     printf("communicated Parameters.\n");
+    std::printf("maxlmax=%d\n",lsms.maxlmax);
+    std::printf("maxlmax_mom=%d\n",lsms.maxlmax_mom);
     fflush(stdout);
   }
 
