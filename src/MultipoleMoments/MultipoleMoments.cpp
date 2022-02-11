@@ -47,52 +47,67 @@ std::vector<std::complex<double>> lsms::multi_moms::multipole_mom_e(
 
           std::vector<std::complex<double>> factor(jmt);
 
-          for (auto idx = 0; idx < jmt; idx++) {
+          auto gaunt_coeff = gaunt_factor.table(l, m, l_p, m_p, l_pp, m_pp);
 
-            auto gaunt_coeff = gaunt_factor.table(l, m, l_p, m_p, l_pp, m_pp);
+          if (gaunt_coeff != 0.0) {
 
+            std::complex<double> ss_terms{0.0};
 
-            if (gaunt_coeff != 0.0) {
+            if (k_p == k_pp) {
 
-              std::complex<double> ss_terms{0.0};
-
-              if (k_p == k_pp) {
-
-                factor[idx] = std::pow(rmesh[idx], l) *
-                              solution.zlr(idx, l_p, ispin) *
-                              std::conj(solution.jlr(idx, l_pp, ispin));
-
-                ss_terms = 4 * M_PI * lsms::simpson_nonuniform(rmesh, factor, jmt);
-
+              for (auto idx = 0; idx < jmt; idx++) {
+                if (l != 0) {
+                  factor[idx] = std::pow(rmesh[idx], l + 2) *
+                                solution.zlr(idx, l_p, ispin) *
+                                solution.jlr(idx, l_pp, ispin);
+                } else {
+                  factor[idx] = rmesh[idx] * rmesh[idx] *
+                                solution.zlr(idx, l_p, ispin) *
+                                solution.jlr(idx, l_pp,
+                                             ispin); // Almost certain that this is already the complex conjugate
+                }
               }
 
-              factor[idx] = std::pow(rmesh[idx], l) *
-                            solution.zlr(idx, l_p, ispin)
-                            * tau00_l(k_p, k_pp) *
-                            std::conj(solution.zlr(idx, l_pp, ispin));
+              ss_terms = lsms::simpson_nonuniform(rmesh, factor, jmt);
 
-              std::complex<double> ms_terms =
-                  4 * M_PI * lsms::simpson_nonuniform(rmesh, factor, jmt);
-
-              // Z * tau * Z^* - Z * J^*
-              value += gaunt_factor.table(l, m, l_p, m_p, l_pp, m_pp) *
-                       (-ss_terms + ms_terms) * std::sqrt(4.0 * M_PI) / (2.0 * l + 1.0);
-
-              //std::printf("%d %d, %d %d, %d %d: %lf\n", l, m, l_p, m_p, l_pp, m_pp, value);
+              //std::printf("%2d %2d %2d,%2d %2d,%2d %2d: %18.10e %18.10e\n", k_p, l, m, l_p, m_p, l_pp, m_pp,
+              //            std::real(ss_terms), std::imag(ss_terms));
 
             }
-          }
 
+            for (auto idx = 0; idx < jmt; idx++) {
+              factor[idx] = std::pow(rmesh[idx], l + 2) *
+                            solution.zlr(idx, l_p, ispin)
+              solution.zlr(idx, l_pp, ispin);
+            }
+
+            std::complex<double> ms_terms = lsms::simpson_nonuniform(rmesh, factor, jmt);
+
+            std::printf("%2d %2d %2d,%2d %2d,%2d %2d: %18.10e %18.10e\n", k_p, l, m, l_p, m_p, l_pp, m_pp,
+                        std::real(ss_terms), std::imag(ss_terms));
+
+            // Z * tau * Z^* - Z * J^*
+            value += gaunt_coeff *
+                     (-ss_terms + ms_terms * tau00_l(k_p, k_pp)
+                     ) * std::sqrt(4.0 * M_PI) / (2.0 * l + 1.0);
+
+            //std::printf("%d %d, %d %d, %d %d: %lf %lf\n", l, m, l_p, m_p, l_pp, m_pp, value, gaunt_coeff);
+
+          }
         }
+
       }
 
-      //std::printf("%d %d: %lf %lf\n", l, m, std::real(value), std::imag(value));
-
-      multi_mom_e[k] = value;
+      multi_mom_e[k] = value * 2.0 / M_PI;
 
       k++;
+
     }
+
+    //std::printf("%d %d: %lf %lf\n", l, m, std::real(value), std::imag(value));
+
   }
+
 
   return multi_mom_e;
 }
