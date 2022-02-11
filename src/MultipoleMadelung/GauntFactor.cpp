@@ -45,13 +45,17 @@ double lsms::math::GauntFactorWrapper::table(int l1, int m1,
                                              int l3, int m3) const {
   double cg = 0.0;
 
+  // short spherical harmonics L1
+  auto k1 = l1 * l1 + l1 - m1;
+
+  // Conjugate spherical harmonics L2
   auto k2 = l2 * l2 + l2 - m2;
-  auto k3 = l3 * l3 + l3 - m3;
 
-  auto w1 = l1 / 2;
+  // Long spherical harmonics L3
+  auto w3 = l3 / 2;
 
-  if (m1 + m2 == m3) {
-    cg = cgnt(w1, k2, k3);
+  if (m3 + m1 == m2 && (l1 + l2 + l3) % 2 == 0) {
+    cg = cgnt(w3, k1, k2);
   }
 
 

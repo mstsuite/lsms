@@ -169,13 +169,6 @@ subroutine int_zz_zj(mtasa, zj_flag, lmax, kkrsz, &
       !        -------------------------------------------------------------
       write(6, '(/,'' INT_ZZ_ZJ:: pzj Muffin-tin'',1p2e18.8)') pzjck
       !        -------------------------------------------------------------
-      lm = 0
-      do l = 0, lmax
-         do m = -l, l
-            lm = lm + 1
-            write(6, *) lm, l, m, pzjckout(lm)
-         end do
-      end do
    endif
 
    call czeroout(dzz, kkrsz * kkrsz * 3)
@@ -271,6 +264,8 @@ subroutine int_zz_zj(mtasa, zj_flag, lmax, kkrsz, &
    !     printout if needed...............................................
    if (iprint.ge.1.and.iprint.lt.100) then
       write(6, '(/,'' INT_ZZ_ZJ:: pzz total cell'')')
+
+
       !        -------------------------------------------------------------
       call wrtmtx(pzz, kkrsz, istop)
       !        -------------------------------------------------------------
