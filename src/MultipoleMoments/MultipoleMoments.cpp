@@ -70,7 +70,7 @@ std::vector<std::complex<double>> lsms::multi_moms::multipole_mom_e(
 
               ss_terms = lsms::simpson_nonuniform(rmesh, factor, jmt);
 
-              std::printf("%2d %2d %2d,%2d %2d,%2d %2d: %18.10e %18.10e\n", k_p, l, m, l_p, m_p, l_pp, m_pp,
+              std::printf("%2d %2d: %18.10e %18.10e\n", k_p, k_pp,
                           std::real(ss_terms), std::imag(ss_terms));
 
             }
@@ -88,8 +88,9 @@ std::vector<std::complex<double>> lsms::multi_moms::multipole_mom_e(
 
             // Z * tau * Z^* - Z * J^*
             value += gaunt_coeff *
-                     (-ss_terms + ms_terms * tau00_l(k_p, k_pp)
+                     (-ss_terms + ms_terms * tau00_l(k_p, 0) // TODO: fix the array here
                      ) * std::sqrt(4.0 * M_PI) / (2.0 * l + 1.0);
+
 
             //std::printf("%d %d, %d %d, %d %d: %lf %lf\n", l, m, l_p, m_p, l_pp, m_pp, value, gaunt_coeff);
 
@@ -104,7 +105,7 @@ std::vector<std::complex<double>> lsms::multi_moms::multipole_mom_e(
 
     }
 
-    //std::printf("%d %d: %lf %lf\n", l, m, std::real(value), std::imag(value));
+    std::printf("DOSCK2 %lf %lf\n", std::real(multi_mom_e[0]), std::imag(multi_mom_e[0]));
 
   }
 

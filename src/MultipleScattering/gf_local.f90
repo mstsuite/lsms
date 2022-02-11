@@ -146,6 +146,7 @@ subroutine gf_local(mtasa, zj_flag, lmax, kkrsz, &
    !     ----------------------------------------------------------------
    call mdosms(zj_flag, kkrsz * kkrsz, dosck, pzzck, pzjck, tau00, pi, &
       iprint, istop)
+
    !     ----------------------------------------------------------------
    if(iprint.ge.1 .and. zj_flag.eq.1) then
       write(6, '('' e,n(e)_mt:'',2d16.8,2f18.13)') pnrel * pnrel, dosck
@@ -153,6 +154,7 @@ subroutine gf_local(mtasa, zj_flag, lmax, kkrsz, &
    !     ----------------------------------------------------------------
    call mdosms(zj_flag, kkrsz * kkrsz, dos, pzz, pzj, tau00, pi, &
       iprint_dos, istop)
+
    !     ----------------------------------------------------------------
    if(iprint.ge.1 .and. zj_flag.eq.1) then
       write(6, '('' e,n(e)_ws:'',2d16.8,2f18.13)') pnrel * pnrel, dos

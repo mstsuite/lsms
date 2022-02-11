@@ -23,7 +23,7 @@ target_sources(lsmscore
         green_function.f90
         gf_local.f90
         int_zz_zj.f90
-        mdosms_c.f
+        mdosms_c.f90
         mgreen_c.f
         green_function_rel.f
         write_kkrmat.f
