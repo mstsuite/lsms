@@ -51,6 +51,11 @@ lsms::MultipoleMadelung::MultipoleMadelung(
   kncut = lsms::kn_trunc_radius(k_brav, lmax, eta, k_nm);
   nknlat = num_latt_vectors(k_brav, kncut, k_nm);
 
+#ifdef LSMS_DEBUG
+  std::printf("%d %d %d: %lf %d\n", r_nm[0], r_nm[1], r_nm[2], rscut, nrslat);
+  std::printf("%d %d %d: %lf %d\n", k_nm[0], k_nm[1], k_nm[2], kncut, nknlat);
+#endif
+
   // 3. Create the lattices
   matrix<double> rslat;
   std::vector<double> rslatsq;
@@ -60,6 +65,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(
 
   std::tie(rslat, rslatsq) =
       lsms::create_lattice_and_sq(r_brav, rscut, r_nm, nrslat);
+
   std::tie(knlat, knlatsq) =
       lsms::create_lattice_and_sq(k_brav, kncut, k_nm, nknlat);
 

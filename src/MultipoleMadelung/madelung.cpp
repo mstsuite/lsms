@@ -100,8 +100,8 @@ int lsms::num_latt_vectors(const lsms::matrix<double> &brav, double cut,
     for (int y = -nm[1]; y <= nm[1]; y++) {
       for (int z = -nm[2]; z <= nm[2]; z++) {
         vn[0] = x * brav(0, 0) + y * brav(0, 1) + z * brav(0, 2);
-        vn[1] = x * brav(1, 0) + y * brav(1, 1) + z * brav(0, 2);
-        vn[2] = x * brav(2, 0) + y * brav(2, 1) + z * brav(0, 2);
+        vn[1] = x * brav(1, 0) + y * brav(1, 1) + z * brav(1, 2);
+        vn[2] = x * brav(2, 0) + y * brav(2, 1) + z * brav(2, 2);
 
         auto norm = norm_sq(vn.begin(), vn.end());
 

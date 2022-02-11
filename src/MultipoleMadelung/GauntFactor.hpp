@@ -9,42 +9,37 @@
 
 namespace lsms {
 
-  namespace math {
+namespace math {
 
-    class GauntFactor {
+class GauntFactor {
+ public:
+  lsms::NDArray<double, 3> cgnt;
+  lsms::NDArray<int, 2> nj3;
+  lsms::NDArray<int, 3> kj3;
 
-    public:
+ public:
+  explicit GauntFactor(int lmax);
 
-      lsms::NDArray<double, 3> cgnt;
-      lsms::NDArray<int, 2> nj3;
-      lsms::NDArray<int, 3> kj3;
+  /*
+   *
+   *                   L       4pi  ->   ->   * ->     ->
+   *  cgnt(j,L',L") = C      = int do*Y (o )*Y (o )*Y (o )
+   *                   L',L"    0      L      L'     L"
+   *
+   *  L', L" <= lmax
+   *
+   *  L = kj3(j,L',L"), j=1,2,...,nj3(L',L") <= lmax+1
+   *
+   *  Important is that the second index is the complex one
+   *
+   *  https://www.theoretical-physics.net/dev/math/spherical-harmonics.html
+   *
+   */
+  double table(int k1, int k2, int k3) const;
+};
 
+}  // namespace math
 
-    public:
+}  // namespace lsms
 
-      explicit GauntFactor(int lmax);
-
-      /*
-       *
-       *                   L       4pi  ->   ->   * ->     ->
-       *  cgnt(j,L',L") = C      = int do*Y (o )*Y (o )*Y (o )
-       *                   L',L"    0      L      L'     L"
-       *
-       *  L', L" <= lmax
-       *
-       *  L = kj3(j,L',L"), j=1,2,...,nj3(L',L") <= lmax+1
-       *
-       *  Important is that the second index is the complex one
-       *
-       *  https://www.theoretical-physics.net/dev/math/spherical-harmonics.html
-       *
-       */
-      double table(int k1, int k2, int k3) const;
-
-    };
-
-  }
-
-}
-
-#endif //LSMS_GAUNTFACTOR_HPP
+#endif  // LSMS_GAUNTFACTOR_HPP
