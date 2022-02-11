@@ -234,11 +234,11 @@ int main(int argc, char *argv[])
   if (lsms.xcFunctional[0] == 2)         // use new LSMS functional
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
 
-  lsms.angularMomentumIndices.init(2*crystal.maxlmax);
-  sphericalHarmonicsCoeficients.init(2*crystal.maxlmax);
+  lsms.angularMomentumIndices.init(2*std::max(crystal.maxlmax_mom, crystal.maxlmax));
+  sphericalHarmonicsCoeficients.init(2*std::max(crystal.maxlmax_mom, crystal.maxlmax));
 
   gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
-  iFactors.init(lsms, crystal.maxlmax);
+  iFactors.init(lsms, std::max(crystal.maxlmax_mom, crystal.maxlmax));
 
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);

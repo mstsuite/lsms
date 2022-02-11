@@ -506,8 +506,7 @@ void energyContourIntegration(LSMSCommunication &comm, LSMSSystemParameters &lsm
 
             if (local.atom[i].lmax_mom >= 0) {
 
-              lsms::math::GauntFactor gaunt_factor(std::max(local.atom[i].lmax_mom,
-                                                            local.atom[i].lmax));
+              lsms::math::GauntFactorWrapper gaunt_factor(gauntCoeficients.cgnt);
 
               auto mm_e = lsms::multi_moms::multipole_mom_e(solutionNonRel[iie][i],
                                                             tau00_l,
@@ -743,10 +742,9 @@ void energyContourIntegration(LSMSCommunication &comm, LSMSSystemParameters &lsm
 
     for (int i = 0; i < local.num_local; i++) {
 
-      std::cout << "-----: " << local.atom[i].lmax_mom << std::endl;
+      std::printf("atom %2i: lmax %2i\n", i, local.atom[i].lmax_mom);
 
       if (local.atom[i].lmax_mom >= 0) {
-
 
         auto k = 0;
         for (auto l = 0; l <= local.atom[i].lmax_mom; l++) {

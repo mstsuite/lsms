@@ -5,40 +5,42 @@
 #ifndef LSMS_GAUNTFACTOR_HPP
 #define LSMS_GAUNTFACTOR_HPP
 
+#include "Array3d.hpp"
 #include "NDArray.hpp"
 
 namespace lsms {
 
-namespace math {
+  namespace math {
 
-class GauntFactor {
- public:
-  lsms::NDArray<double, 3> cgnt;
-  lsms::NDArray<int, 2> nj3;
-  lsms::NDArray<int, 3> kj3;
+    class GauntFactorBase {
+    public:
+      virtual double table(int l1, int m1, int l2, int m2, int l3,
+                           int m3) const = 0;
+    };
 
- public:
-  explicit GauntFactor(int lmax);
+    class GauntFactor : public GauntFactorBase {
+    public:
+      lsms::NDArray<double, 3> cgnt;
+      lsms::NDArray<int, 2> nj3;
+      lsms::NDArray<int, 3> kj3;
 
-  /*
-   *
-   *                   L       4pi  ->   ->   * ->     ->
-   *  cgnt(j,L',L") = C      = int do*Y (o )*Y (o )*Y (o )
-   *                   L',L"    0      L      L'     L"
-   *
-   *  L', L" <= lmax
-   *
-   *  L = kj3(j,L',L"), j=1,2,...,nj3(L',L") <= lmax+1
-   *
-   *  Important is that the second index is the complex one
-   *
-   *  https://www.theoretical-physics.net/dev/math/spherical-harmonics.html
-   *
-   */
-  double table(int k1, int k2, int k3) const;
-};
+    public:
+      explicit GauntFactor(int lmax);
 
-}  // namespace math
+      double table(int l1, int m1, int l2, int m2, int l3, int m3) const;
+    };
+
+    class GauntFactorWrapper : public GauntFactorBase {
+    private:
+      const Array3d<double> &cgnt;
+
+    public:
+      explicit GauntFactorWrapper(const Array3d<double> & cgnt) : cgnt( cgnt ) {};
+
+      double table(int l1, int m1, int l2, int m2, int l3, int m3) const;
+    };
+
+  }  // namespace math
 
 }  // namespace lsms
 

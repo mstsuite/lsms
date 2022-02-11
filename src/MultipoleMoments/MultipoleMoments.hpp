@@ -28,7 +28,7 @@ using size_t = std::size_t;
 std::vector<std::complex<double>> multipole_mom_e(
     const NonRelativisticSingleScattererSolution &solution,
     const Matrix<std::complex<double>> &tau00_l,
-    const lsms::math::GauntFactor &gaunt_factor, unsigned int lmax_mm,
+    const lsms::math::GauntFactorBase &gaunt_factor, unsigned int lmax_mm,
     unsigned int lmax);
 
 /**

@@ -40,15 +40,16 @@
 
 # 1. Test Lua Libraries
 add_executable(test_lua_library test_lua_library.cpp)
-target_link_libraries(test_lua_library PUBLIC Lua::Lua)
-target_link_libraries(test_lua_library PUBLIC gtest_main)
+target_link_libraries(test_lua_library Lua::Lua)
+target_link_libraries(test_lua_library test_main)
 
 # 2. Test
 add_executable(test_math test_math.cpp)
-target_link_libraries(test_math PUBLIC lsmscore)
-target_link_libraries(test_math PUBLIC gtest_main)
+target_link_libraries(test_math lsmscore)
+target_link_libraries(test_math gtest_main)
 
 
 # Discover all tests
 include(GoogleTest)
 gtest_discover_tests(test_lua_library)
+gtest_discover_tests(test_math)

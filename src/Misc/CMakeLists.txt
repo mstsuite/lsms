@@ -10,7 +10,7 @@ target_sources(lsmscore
         bulirschStoerIntegrator.hpp
         calculateGauntCoeficients.cpp
         calculateGaussLegendrePoints.hpp
-        cgaunt_c.f
+        cgaunt_c.f90
         clock_time.c
         cgc.h
         cinterp.f
