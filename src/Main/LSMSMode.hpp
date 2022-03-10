@@ -7,7 +7,8 @@ X(main) \
 X(liz0) \
 X(dos) \
 X(gf_out) \
-X(matsubara)
+X(matsubara) \
+X(kkrmat)
 
 #define X(name) name,
  
