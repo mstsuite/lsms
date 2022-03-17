@@ -408,6 +408,9 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
   // -----------------------------------------------------------------------
   // make sure that the kkr matrix m is in the right place in memory
   // -----------------------------------------------------------------------
+  if(lsms.lsmsMode == LSMSMode::kkrmat)
+    linearSolver = MST_LINEAR_SOLVER_ZGETRF; // make sure that the marix is on the CPU side!
+   
   switch(buildKKRMatrixKernel)
   {
   case MST_BUILD_KKR_MATRIX_F77:
@@ -522,6 +525,33 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomDa
 
   timeBuildKKRMatrix=MPI_Wtime()-timeBuildKKRMatrix;
   if(lsms.global.iprint>=0) printf("  timeBuildKKRMatrix=%lf\n",timeBuildKKRMatrix);
+
+// Write the kkrmatrix?
+  if(lsms.lsmsMode == LSMSMode::kkrmat)
+  {
+    if(lsms.global.iprint >= 0)
+    {
+      FILE *f1=fopen("kkrmat.out","w");
+      FILE *f2=fopen("kkrmat.pattern","w");
+      fprintf(f1, "# %6d x %6d\n", nrmat_ns, nrmat_ns);
+      for(int i=0; i<nrmat_ns; i++)
+      {
+        fprintf(f2,"%5d ",i);
+        for(int j=0; j<nrmat_ns; j++)
+        {
+          fprintf(f1,"%6d %6d %lg %lg\n",i,j,std::real(m(i,j)),std::imag(m(i,j)));
+          if(std::abs(m(i,j))<0.000001) fprintf(f2,".");
+          else fprintf(f2,"x");
+        }
+        fprintf(f2,"\n");
+      }
+      fclose(f1); fclose(f2);
+    }
+    // exitLSMS(comm, 0);
+    exit(0);
+  }
+
+  
 #ifdef USE_NVTX
   nvtxRangePushA("linearSolver");
 #endif
