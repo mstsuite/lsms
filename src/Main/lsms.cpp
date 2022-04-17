@@ -47,6 +47,8 @@
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
 #include "VORPOL/setupVorpol.hpp"
 #include "Misc/readLastLine.hpp"
+#include "Potential/XCBase.hpp"
+#include "Potential/XCLibxc.hpp"
 
 #include "buildLIZandCommLists.hpp"
 #include "writeInfoEvec.hpp"
@@ -226,10 +228,13 @@ int main(int argc, char *argv[])
 #endif
 
   // set up exchange correlation functionals
-  if (lsms.xcFunctional[0] == 1)         // use libxc functional
+  if (lsms.xcFunctional[0] == 1)  {
+    lsms.exch_corr = std::make_shared<lsms::XCLibxc>(lsms.n_spin_pola, lsms.xcFunctional);
     lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
-  if (lsms.xcFunctional[0] == 2)         // use new LSMS functional
+  }       // use libxc functional
+  if (lsms.xcFunctional[0] == 2) {         // use new LSMS functional
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
+  }
 
   lsms.angularMomentumIndices.init(2*crystal.maxlmax);
   sphericalHarmonicsCoeficients.init(2*crystal.maxlmax);
@@ -497,7 +502,7 @@ int main(int argc, char *argv[])
       printf("SCF iteration %d:\n", iteration);
 
     oldTotalEnergy = lsms.totalEnergy;
-    
+
     // Calculate band energy
     energyContourIntegration(comm, lsms, local);
     double dTimeCCP = MPI_Wtime();
@@ -619,7 +624,7 @@ int main(int argc, char *argv[])
       energyConverged = std::abs((lsms.totalEnergy - oldTotalEnergy)/lsms.totalEnergy) < lsms.energyTolerance;
     else
       energyConverged = true;
-    
+
     if (comm.rank == 0)
     {
       printf("Band Energy = %lf Ry %10s", eband, "");

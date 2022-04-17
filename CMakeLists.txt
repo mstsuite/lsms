@@ -67,12 +67,12 @@ include(mjson)
 #
 # Enable Testing with CTest
 #
-option(BUILD_TESTING "Build the testing tree." OFF)
+option(BUILD_TESTING "Build the testing tree." ON)
 if (BUILD_TESTING)
     include(CTest)
     enable_testing()
     message(STATUS "Testing is " ${BUILD_TESTING})
-    add_subdirectory(unittests)
+    add_subdirectory(Test)
 endif ()
 
 #

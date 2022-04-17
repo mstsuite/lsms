@@ -1,0 +1,360 @@
+//
+// Created by F.Moitzi on 24.04.2022.
+//
+
+#include "XCLibxc.hpp"
+#include "rationalFit.hpp"
+
+#include <stdexcept>
+
+lsms::XCLibxc::XCLibxc(int nSpin, int xcFunctional[3])
+    : XCBase(nSpin, xcFunctional) {
+  needGradients = false;
+  needLaplacian = false;
+  needGradients = false;
+  needKineticEnergyDensity = false;
+  needExactExchange = false;
+  numFunctionals = 0;
+
+  if (xcFunctional[0] != 1) {
+    throw std::runtime_error("Not a `libxc` functional");
+  }
+
+  for (int i = 1; i < _xcFunctional.size(); i++) {
+    int nspin = XC_UNPOLARIZED;
+    if (nSpin > 1) nspin = XC_POLARIZED;
+
+    if (xcFunctional[i] > 0) {
+      functionals.emplace_back(nspin, xcFunctional[i]);
+
+      switch (functionals[numFunctionals].get_functional().info->family) {
+        case XC_FAMILY_LDA:
+          break;
+        case XC_FAMILY_GGA:
+          needGradients = true;
+          break;
+        case XC_FAMILY_HYB_GGA:
+          needGradients = true;
+          needExactExchange = true;
+          break;
+        case XC_FAMILY_MGGA:
+          needGradients = true;
+          needLaplacian = true;
+          needKineticEnergyDensity = true;
+          break;
+        default:
+          throw std::runtime_error(
+              "Unknown Functional family in `libxc` for functional!");
+      }
+
+      numFunctionals++;
+    }
+  }
+}
+
+lsms::XCLibxc::XCLibxc(int nSpin, std::vector<int> xcFunctional)
+    : XCBase(nSpin, xcFunctional) {
+  needGradients = false;
+  needLaplacian = false;
+  needGradients = false;
+  needKineticEnergyDensity = false;
+  needExactExchange = false;
+  numFunctionals = 0;
+
+  if (xcFunctional[0] != 1) {
+    throw std::runtime_error("Not a `libxc` functional");
+  }
+
+  for (int i = 1; i < xcFunctional.size(); i++) {
+    int nspin = XC_UNPOLARIZED;
+    if (nSpin > 1) nspin = XC_POLARIZED;
+
+    if (xcFunctional[i] > 0) {
+      functionals.emplace_back(nspin, xcFunctional[i]);
+
+      switch (functionals[numFunctionals].get_functional().info->family) {
+        case XC_FAMILY_LDA:
+          break;
+        case XC_FAMILY_GGA:
+          needGradients = true;
+          break;
+        case XC_FAMILY_HYB_GGA:
+          needGradients = true;
+          needExactExchange = true;
+          break;
+        case XC_FAMILY_MGGA:
+          needGradients = true;
+          needLaplacian = true;
+          needKineticEnergyDensity = true;
+          break;
+        default:
+          throw std::runtime_error(
+              "Unknown Functional family in `libxc` for functional!");
+      }
+
+      numFunctionals++;
+    }
+  }
+}
+
+void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
+                             const Matrix<Real> &rhoIn, int jmt,
+                             Matrix<Real> &xcEnergyOut,
+                             Matrix<Real> &xcPotOut) {
+  /*
+   * note: rho in lsms is stored as 4*pi * r^2 * rho
+   */
+
+  // Calculate spin channel size
+  int nSigma;
+  if (_nSpin == 1) {
+    nSigma = 1;
+  } else {
+    nSigma = 3;
+  }
+
+  Matrix<double> g_xc(jmt, _nSpin);
+
+  std::vector<Real> rho(_nSpin *jmt);
+  std::vector<Real> drho(_nSpin *jmt);
+
+  std::vector<Real> xcEnergy(jmt);
+
+  std::vector<Real> sigma(nSigma * jmt);
+  std::vector<Real> xcPot(nSigma * jmt);
+  std::vector<Real> vSigma(nSigma * jmt);
+
+  xcEnergyOut = 0.0;
+  xcPotOut = 0.0;
+  g_xc = 0.0;
+
+  if (_nSpin == 1) {
+    // Non spin-polarized case
+
+    for (int ir = 0; ir < jmt; ir++) {
+      rho[ir] = rhoIn(ir, 0) / (4.0 * M_PI * rMesh[ir] * rMesh[ir]);
+    }
+
+  } else {
+    // Spin-polarized case
+
+    for (int ir = 0; ir < jmt; ir++) {
+      rho[ir * 2] = rhoIn(ir, 0) / (4.0 * M_PI * rMesh[ir] * rMesh[ir]);
+      rho[ir * 2 + 1] = rhoIn(ir, 1) / (4.0 * M_PI * rMesh[ir] * rMesh[ir]);
+    }
+  }
+
+  if (needGradients) {
+    if (_nSpin == 1) {
+      calculateDerivative(&rMesh[0], &rho[0], &drho[0], jmt + 1);
+      for (int ir = 0; ir <= jmt; ir++) {
+        sigma[ir] = drho[ir] * drho[ir];
+      }
+    } else {
+
+      calculateDerivative(&rMesh[0], &rho[0], &drho[0], jmt, 2, 2);
+      calculateDerivative(&rMesh[0], &rho[1], &drho[1], jmt, 2, 2);
+      for (int ir = 0; ir < jmt; ir++) {
+        sigma[ir * 3] = drho[ir * 2] * drho[ir * 2];
+        sigma[ir * 3 + 1] = drho[ir * 2] * drho[ir * 2 + 1];
+        sigma[ir * 3 + 2] = drho[ir * 2 + 1] * drho[ir * 2 + 1];
+      }
+
+    }
+  }
+
+  for (int i = 0; i < numFunctionals; i++) {
+
+    switch (functionals[i].get_functional().info->family) {
+      case XC_FAMILY_LDA:
+        xc_lda_exc_vxc(&functionals[i].get_functional(), jmt, rho.data(),
+                       xcEnergy.data(), xcPot.data());
+        break;
+      case XC_FAMILY_GGA:
+        xc_gga_exc_vxc(&functionals[i].get_functional(), jmt, rho.data(),
+                       sigma.data(), xcEnergy.data(), xcPot.data(),
+                       vSigma.data());
+        break;
+    }
+
+
+    if (needGradients) {
+
+      if (_nSpin == 1) {
+        // non-spin polarized
+
+        auto isp = 0;
+        for (int ir = 0; ir < jmt; ir++) {
+          g_xc(ir, isp) += -2.0 * vSigma[ir] * 2.0 * drho[ir];
+        }
+
+      } else {
+
+        int isp;
+
+        // Spin-up channel
+        isp = 0;
+        for (int ir = 0; ir < jmt; ir++) {
+
+          g_xc(ir, isp) +=
+              -2.0 * vSigma[ir * 3] * drho[ir * 2]
+              - vSigma[ir * 3 + 1] * drho[ir * 2 + 1];
+
+        }
+
+        // Spin-down channel
+        isp = 1;
+        for (int ir = 0; ir < jmt; ir++) {
+
+          g_xc(ir, isp) +=
+              -2.0 * vSigma[ir * 3 + 2] * drho[ir * 2 + 1]
+              - vSigma[ir * 3 + 1] * drho[ir * 2];
+
+        }
+
+
+      }
+
+
+    }
+
+    /*
+     * LDA Part
+     */
+
+    //  Conversion from Hartree to Rydberg
+    if (_nSpin == 1) {
+      // Non spin-polarized case
+
+      for (int ir = 0; ir < jmt; ir++) {
+        xcEnergyOut(ir, 0) += 2.0 * xcEnergy[ir];
+        xcPotOut(ir, 0) += 2.0 * xcPot[ir];
+      }
+
+    } else {
+      for (int ir = 0; ir < jmt; ir++) {
+        xcEnergyOut(ir, 0) += 2.0 * xcEnergy[ir];
+        xcPotOut(ir, 0) += 2.0 * xcPot[ir * 2];
+
+        xcEnergyOut(ir, 1) += 2.0 * xcEnergy[ir];
+        xcPotOut(ir, 1) += 2.0 * xcPot[ir * 2 + 1];
+      }
+    }
+  }
+
+  if (needGradients) {
+    /*
+     * GGA Part
+     */
+
+
+    if (_nSpin == 1) {
+
+      std::vector<double> v_grad_corr(jmt);
+
+      int isp;
+
+      isp = 0;
+      calculateDerivative(rMesh.data(), &g_xc(0, isp), v_grad_corr.data(), jmt);
+
+      for (int ir = 0; ir < jmt; ir++) {
+        xcPotOut(ir, isp) += 2.0 * (
+            2.0 * g_xc(ir, isp) / rMesh[ir]
+            + v_grad_corr[ir]);
+      }
+
+    } else {
+
+      std::vector<double> v_grad_corr(jmt + 1);
+
+      int isp;
+
+      isp = 0;
+      calculateDerivative(rMesh.data(), &g_xc(0, isp), v_grad_corr.data(), jmt);
+
+      for (int ir = 0; ir < jmt; ir++) {
+        xcPotOut(ir, isp) += 2.0 * (
+            2.0 * g_xc(ir, isp) / rMesh[ir]
+            + v_grad_corr[ir]);
+      }
+
+      isp = 1;
+      calculateDerivative(rMesh.data(), &g_xc(0, isp), v_grad_corr.data(), jmt);
+
+      for (int ir = 0; ir < jmt; ir++) {
+        xcPotOut(ir, isp) += 2.0 * (
+            2.0 * g_xc(ir, isp) / rMesh[ir]
+            + v_grad_corr[ir]);
+      }
+
+    }
+
+
+  }
+
+
+}
+
+void lsms::XCLibxc::evaluate(const Real rhoIn[2], Real &xcEnergyOut,
+                             Real xcPotOut[2]) {
+  /*
+   * note: rho in lsms is stored as 4*pi * r^2 * rho
+   */
+
+  // Calculate spin channel size
+  int nSigma;
+  if (_nSpin == 1) {
+    nSigma = 1;
+  } else {
+    nSigma = 3;
+  }
+
+  Real xcEnergy;
+  std::vector<Real> sigma(nSigma, 0.0);
+  std::vector<Real> vSigma(nSigma);
+  std::vector<Real> xcPot(_nSpin);
+
+  xcEnergyOut = 0.0;
+
+  if (_nSpin == 1) {
+    xcPotOut[0] = 0.0;
+  } else {
+    xcPotOut[0] = 0.0;
+    xcPotOut[1] = 0.0;
+  }
+
+  if (needGradients) {
+    // Calculate gradient
+  }
+
+  for (int i = 0; i < numFunctionals; i++) {
+    switch (functionals[i].get_functional().info->family) {
+      case XC_FAMILY_LDA:
+        xc_lda_exc_vxc(&functionals[i].get_functional(), 1, rhoIn, &xcEnergy,
+                       xcPot.data());
+        break;
+      case XC_FAMILY_GGA:
+        xc_gga_exc_vxc(&functionals[i].get_functional(), 1, rhoIn, sigma.data(),
+                       &xcEnergy, xcPot.data(), vSigma.data());
+        break;
+    }
+
+    //  Conversion from Hartree to Rydberg
+    if (_nSpin == 1) {
+      xcEnergyOut += 2.0 * xcEnergy;
+      xcPotOut[0] += 2.0 * xcPot[0];
+    } else {
+      xcEnergyOut += 2.0 * xcEnergy;
+      xcPotOut[0] += 2.0 * xcPot[0];
+      xcPotOut[1] += 2.0 * xcPot[1];
+    }
+  }
+}
+
+const std::vector<lsms::XCFuncType> &lsms::XCLibxc::get_functionals() const {
+  return functionals;
+}
+
+const xc_func_type &lsms::XCFuncType::get_functional() const {
+  return _func_type;
+}

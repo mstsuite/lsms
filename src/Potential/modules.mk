@@ -5,6 +5,7 @@ local_src := $(addprefix $(local_dir)/,\
 				alpha2_c.f \
                 calculateASAro3.f \
                 calculateChargesPotential.cpp \
+                XCBase.cpp \
                 epcorr.f \
                 getqm_mt.f \
                 getvmt.cpp \

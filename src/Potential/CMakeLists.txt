@@ -25,6 +25,11 @@ target_sources(lsmscore
         newFunctionalInterface.cpp
         newFunctionalInterface.hpp
         common.hpp
+
+        XCLibxc.cpp
+        XCLibxc.hpp
+        XCBase.cpp
+        XCBase.hpp
         )
 
 target_include_directories(
