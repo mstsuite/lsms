@@ -67,11 +67,11 @@ if (NOT libxc_FOUND)
     ExternalProject_Add(libxc
             SOURCE_DIR ${_src}
             BUILD_IN_SOURCE true
-            #CONFIGURE_COMMAND find . -type f -print0 | xargs -0 dos2unix
             CONFIGURE_COMMAND ${AUTORECONF_EXECUTABLE} -i
             COMMAND ./configure --prefix=${_install} CC=${CMAKE_C_COMPILER}
             BUILD_COMMAND ${MAKE_EXECUTABLE}
             INSTALL_COMMAND ${MAKE_EXECUTABLE} install
+            BUILD_BYPRODUCTS ${_install}/lib/libxc.a
             )
 
 
