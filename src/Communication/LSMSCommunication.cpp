@@ -166,7 +166,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,&lsms.mixing,1,MPI_INT,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.alphaDV,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.rmsTolerance,1,MPI_DOUBLE,comm.comm);
-    MPI_Unpack(buf,s,&lsms.energyTolerance,1,MPI_DOUBLE,comm.comm);
+    MPI_Unpack(buf,s,&pos,&lsms.energyTolerance,1,MPI_DOUBLE,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.zblockLUSize,1,MPI_INT,comm.comm);
 
     MPI_Unpack(buf,s,&pos,&lsms.global.iprpts,1,MPI_INT,comm.comm);
