@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
 #ifdef USE_NVTX
   nvtxRangePushA("SCFLoop");
 #endif  
-  for (iteration=0; iteration<lsms.nscf && !converged && !energyConverged; iteration++)
+  for (iteration=0; iteration<lsms.nscf && !(converged && energyConverged); iteration++)
   {
     if (lsms.global.iprint >= -1 && comm.rank == 0)
       printf("SCF iteration %d:\n", iteration);
