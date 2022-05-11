@@ -485,6 +485,8 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
 
   lsms.rmsTolerance = 1.0e-8;
   luaGetReal(L,"rmsTolerance",&lsms.rmsTolerance);
+  lsms.energyTolerance = 1.0e-6;
+  luaGetReal(L,"energyTolerance",&lsms.energyTolerance);
 
   int potentialShiftSwitch = 0;
   potentialShifter.vSpinShiftFlag = false;
