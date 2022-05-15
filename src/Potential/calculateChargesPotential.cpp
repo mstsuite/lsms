@@ -887,6 +887,7 @@ C        dz=mint/qint
 
 
           lsms.exch_corr->evaluate(local.atom[i].r_mesh,
+                                   local.atom[i].dr_mesh,
                                    local.atom[i].rhotot, jws,
                                    local.atom[i].exchangeCorrelationEnergy,
                                    local.atom[i].exchangeCorrelationPotential);
@@ -913,6 +914,7 @@ C        dz=mint/qint
 
 
           lsms.exch_corr->evaluate(local.atom[i].r_mesh,
+                                   local.atom[i].dr_mesh,
                                    local.atom[i].rhotot, jws,
                                    local.atom[i].exchangeCorrelationEnergy,
                                    local.atom[i].exchangeCorrelationPotential);

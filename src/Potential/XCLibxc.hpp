@@ -55,7 +55,9 @@ class XCLibxc : public XCBase {
 
   XCLibxc(int nSpin, int xcFunctional[3]);
 
-  void evaluate(std::vector<Real> &rMesh, const Matrix<Real> &rhoIn,
+  void evaluate(std::vector<Real> &rMesh,
+                std::vector<Real> &drMesh,
+                const Matrix<Real> &rhoIn,
                 int jmt, Matrix<Real> &xcEnergyOut,
                 Matrix<Real> &xcPotOut) override;
 
