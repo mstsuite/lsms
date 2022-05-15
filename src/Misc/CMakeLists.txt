@@ -68,6 +68,7 @@ target_sources(lsmscore
         utils.hpp
         integrator.hpp
         poisson.hpp
+        diff.hpp
         )
 
 if(USE_ESSL)

@@ -93,3 +93,12 @@ endforeach ()
 
 gtest_discover_tests(test_integrate_energy)
 ##################################################################
+
+##################################################################
+# 6. Test differentation
+add_executable(test_diff test_diff.cpp)
+target_link_libraries(test_diff PUBLIC gtest_main)
+target_link_libraries(test_diff PRIVATE lsmscore)
+
+gtest_discover_tests(test_diff)
+##################################################################
