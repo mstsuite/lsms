@@ -3,29 +3,35 @@
 
 #include <cmath>
 
-#include "Misc/integrateOneDim.hpp"
 #include "Misc/integrator.hpp"
 #include "PhysicalConstants.hpp"
-#include "poisson.hpp"
+#include "Misc/poisson.hpp"
 
 extern "C" {
 void zeropt_(Real *ezpt, Real *tpzpt, Real *atvol, Real *ztotss);
 }
 
+/**
+ * Calculates the total energy `energy` for each site
+ *
+ * @param lsms system parameters
+ * @param atom atom object
+ * @param energy total energy
+ * @param pressure total pressure
+ */
 void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
-    // output:
                       Real &energy, Real &pressure) {
+
   Real eigenvalueSum = 0.0;
   Real kineticEnergy = 0.0;
   Real coulombEnergy = 0.0;
   Real xcEnergy = 0.0;
   Real ezpt = 0.0;
   Real tpzpt = 0.0;
-  std::vector<Real> integral(atom.r_mesh.size() + 1);
-  std::vector<Real> integrand(atom.r_mesh.size() + 1);
-  std::vector<Real> grid0(atom.r_mesh.size() + 1);
-  std::vector<Real> gridSqrt(atom.r_mesh.size() + 1);
-  std::vector<Real> gridCbrt(atom.r_mesh.size() + 1);
+  Real lsf_energy = 0.0;
+  std::vector<Real> integral(atom.r_mesh.size());
+  std::vector<Real> integrand(atom.r_mesh.size());
+
   energy = 0.0;
   pressure = 0.0;
 
@@ -41,10 +47,9 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
       rSphere = atom.rInscribed;
   }
 
-  //        ============================================================
-  //        calculate the zeropoint energy...........................
-  //        ============================================================
-  //        ------------------------------------------------------------
+  /**
+   * Calculate the zeropoint energy
+   */
   zeropt_(&ezpt, &tpzpt, &atom.omegaWS, &atom.ztotss);
 
   // calculate kinetic energy T:
@@ -53,21 +58,19 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
   //   - \int \rho(r) (v_{Coulomb} + v_{xc}) d^3r   -- (3)
   //   + \int m(r) (B_{xc} + B_{external}) d^3      -- (4)
 
+  /**
+   * Kinetic energy contributions
+   */
   if (lsms.n_spin_pola == 1) {
     eigenvalueSum = atom.evalsum[0] + atom.esemv[0];
 
     kineticEnergy = atom.ecorv[0] + atom.esemv[0];  // (1)
     kineticEnergy += atom.evalsum[0];               // (2)
 
-    // set up integrand for (3)
     for (int i = 0; i < atom.r_mesh.size(); i++) {
-      grid0[i + 1] = atom.r_mesh[i];
-      gridSqrt[i + 1] = std::sqrt(atom.r_mesh[i]);
-      gridCbrt[i + 1] = std::cbrt(atom.r_mesh[i]);
-      integrand[i + 1] = (atom.rhoNew(i, 0) * atom.vr(i, 0)) / (atom.r_mesh[i]);
-      // integrand[i+1]=2.0*gridSqrt[i+1]*(atom.rhoNew(i,0)*atom.vr(i,0))/(atom.r_mesh[i]);
-      // integrand[i+1]=3.0*gridCbrt[i+1]*gridCbrt[i+1]*(atom.rhoNew(i,0)*atom.vr(i,0))/(atom.r_mesh[i]);
+      integrand[i] = (atom.rhoNew(i, 0) * atom.vr(i, 0)) / (atom.r_mesh[i]);
     }
+
   } else {  // spin polarized
     eigenvalueSum =
         atom.evalsum[0] + atom.evalsum[1] + atom.esemv[0] + atom.esemv[1];
@@ -76,26 +79,16 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
         atom.ecorv[0] + atom.ecorv[1] + atom.esemv[0] + atom.esemv[1];  // (1)
     kineticEnergy += atom.evalsum[0] + atom.evalsum[1];                 // (2)
 
-    // set up integrand for (3)
     for (int i = 0; i < atom.r_mesh.size(); i++) {
-      integrand[i + 1] = (atom.rhoNew(i, 0) * atom.vr(i, 0) +
-                          atom.rhoNew(i, 1) * atom.vr(i, 1)) /
-                         (atom.r_mesh[i]);
-      grid0[i + 1] = atom.r_mesh[i];
-      gridSqrt[i + 1] = std::sqrt(atom.r_mesh[i]);
+      integrand[i] = (atom.rhoNew(i, 0) * atom.vr(i, 0) +
+                      atom.rhoNew(i, 1) * atom.vr(i, 1)) /
+                     (atom.r_mesh[i]);
     }
   }
 
-  grid0[0] = gridSqrt[0] = 0.0;
-  RationalFit<Real> fit;
-  fit.set(grid0, integrand, 2);
-  // fit.set(gridSqrt,integrand,2);
-  // fit.set(gridCbrt, integrand, 2);
-  integrand[0] = fit(0.0);
-  kineticEnergy -= integrateOneDim(grid0, integrand, integral, rSphere);  // (3)
-  // kineticEnergy -= integrateOneDim<0>(gridSqrt, integrand, integral,
-  // std::sqrt(rSphere)); // (3) kineticEnergy -= integrateOneDim<11>(gridCbrt,
-  // integrand, integral, std::cbrt(rSphere)); // (3)
+
+  kineticEnergy -= lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
+
   if (lsms.global.iprint >= 0) {
     printf("evssum                      = %35.25lf Ry\n", eigenvalueSum);
     printf("kinetic Energy              = %35.25lf Ry\n", kineticEnergy);
@@ -110,7 +103,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
   //      = \int \rho(r) \int^r rho(r')/r' dr' dr -- (5a)
   //      + \int rho(r) Z/r dr                    -- (5b)
 
-  /*
+  /**
    * Calculation of Coulomb contribution (5a)
    */
   std::vector<double> vhartreederiv(atom.r_mesh.size(), 0.0);
@@ -119,21 +112,21 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
 
   if (lsms.n_spin_pola == 1) {
     for (auto i = 0; i < atom.r_mesh.size(); i++) {
-      density[i] =  atom.rhoNew(i, 0);
+      density[i] = atom.rhoNew(i, 0);
     }
   } else {
     for (auto i = 0; i < atom.r_mesh.size(); i++) {
-      density[i] =  (atom.rhoNew(i, 0) + atom.rhoNew(i, 1));
+      density[i] = (atom.rhoNew(i, 0) + atom.rhoNew(i, 1));
     }
   }
   std::vector<double> radial_mesh_deriv(atom.r_mesh.size(), 0.0);
 
   for (auto i = 0; i < atom.r_mesh.size(); i++) {
-    radial_mesh_deriv[i] =  atom.r_mesh[i] * atom.h;
+    radial_mesh_deriv[i] = atom.r_mesh[i] * atom.h;
   }
 
   lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, radial_mesh_deriv,
-                 density, atom.jmt);
+                       density, atom.jmt);
 
   if (lsms.n_spin_pola == 1) {
     for (auto i = 0; i < atom.r_mesh.size(); i++) {
@@ -151,7 +144,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
     printf("erho                        = %35.25lf Ry\n", erho);
   }
 
-  /*
+  /**
    * Calculation of the Coulomb contribution (5b)
    */
   if (lsms.n_spin_pola == 1) {
@@ -166,25 +159,18 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
   }
   Real ezrho = -lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
 
-  /*
-   * DEBUG
-   */
 
-  std::cout << "JMT: " << atom.jmt << std::endl;
-
-  FILE *fp;
-  fp = fopen("example.txt","w");
-
-  for(int ir = 0; ir < atom.r_mesh.size(); ir++) {
-    std::fprintf(fp, "%.20e %.20e\n", integrand[ir], atom.r_mesh[ir]);
-  }
+//  FILE *fp;
+//  fp = fopen("example.txt","w");
+//  for(int ir = 0; ir < atom.r_mesh.size(); ir++) {
+//    std::fprintf(fp, "%.30e %.30e\n", integrand[ir], atom.r_mesh[ir]);
+//  }
+//  std::fclose(fp);
 
 
-  std::fclose(fp);
-
-
-  if (lsms.global.iprint >= 0)
+  if (lsms.global.iprint >= 0) {
     printf("ezrho                       = %35.25lf Ry\n", ezrho);
+  }
 
   coulombEnergy = erho + ezrho;  // (5)
   if (lsms.global.iprint >= 0)
@@ -211,17 +197,19 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
     printf("Exchange-Correlation Energy = %35.25lf Ry\n", xcEnergy);
     printf("ezpt                        = %35.25lf Ry\n\n", ezpt);
   }
-  // add all energy contributions:
 
-  /*
+  /**
    * Longitudinal spin fluctuations
    */
-
   if (lsms.n_spin_pola == 2) {
     auto mag_mom = atom.mvalws;
-    energy += -convertKtoRydberg * lsms.temperature *
-              atom.lsf_functional.entropy(mag_mom);
+    lsf_energy += -convertKtoRydberg * lsms.temperature *
+                  atom.lsf_functional.entropy(mag_mom);
   }
 
-  energy += kineticEnergy + coulombEnergy + xcEnergy + ezpt;
+  if (lsms.global.iprint >= 0) {
+    printf("LSF energy                  = %35.25lf Ry\n\n", lsf_energy);
+  }
+
+  energy += kineticEnergy + coulombEnergy + xcEnergy + ezpt + lsf_energy;
 }

@@ -64,3 +64,23 @@ add_test(
         COMMAND $<TARGET_FILE:test_poisson>
 )
 ###################################################################
+
+##################################################################
+# 5. Test Integration of local energy
+add_executable(test_integrate_energy test_integrate_energy.cpp)
+target_link_libraries(test_integrate_energy PUBLIC gtest_main)
+target_link_libraries(test_integrate_energy PRIVATE lsmscore)
+
+
+foreach (ref_file "ezrho1.out" "ezrho2.out" "ezrho3.out")
+    add_custom_command(
+            TARGET test_integrate_energy
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_SOURCE_DIR}/${ref_file}"
+            "${CMAKE_CURRENT_BINARY_DIR}/${ref_file}")
+endforeach ()
+
+
+gtest_discover_tests(test_integrate_energy)
+##################################################################
