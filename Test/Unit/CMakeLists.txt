@@ -42,6 +42,15 @@ target_link_libraries(test_xc PRIVATE lsmscore)
 target_include_directories(test_xc PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(test_xc PUBLIC libxc::libxc)
 
+foreach (ref_file "result_pbe_libxc.out" "result_pbe.out")
+    add_custom_command(
+            TARGET test_xc
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_SOURCE_DIR}/${ref_file}"
+            "${CMAKE_CURRENT_BINARY_DIR}/${ref_file}")
+endforeach ()
+
 gtest_discover_tests(test_xc)
 ##################################################################
 
