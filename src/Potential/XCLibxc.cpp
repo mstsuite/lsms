@@ -119,8 +119,11 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
 
   std::vector<Real> rho(_nSpin *jmt);
 
-  std::vector<Real> drho_up;
-  std::vector<Real> drho_down;
+  std::vector<Real> rho_up(jmt);
+  std::vector<Real> rho_down(jmt);
+
+  std::vector<Real> drho_up(jmt);
+  std::vector<Real> drho_down(jmt);
 
   std::vector<Real> xcEnergy(jmt);
 
@@ -144,14 +147,16 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
 
     for (int ir = 0; ir < jmt; ir++) {
       rho[ir * 2] = rhoIn(ir, 0) / (4.0 * M_PI * rMesh[ir] * rMesh[ir]);
+      rho_up[ir] = rho[ir * 2];
       rho[ir * 2 + 1] = rhoIn(ir, 1) / (4.0 * M_PI * rMesh[ir] * rMesh[ir]);
+      rho_down[ir] = rho[ir * 2 + 1];
     }
   }
 
   if (needGradients) {
     if (_nSpin == 1) {
 
-      drho_up = lsms::derivative<double>(&rhoIn(0, 0), jmt);
+      drho_up = lsms::derivative<double>(rho.data(), jmt);
 
       for (int ir = 0; ir <= jmt; ir++) {
         sigma[ir] = drho_up[ir] * drho_up[ir] / (drMesh[ir] * drMesh[ir]);
@@ -159,8 +164,8 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
 
     } else {
 
-      drho_up = lsms::derivative<double>(&rhoIn(0, 0), jmt);
-      drho_down = lsms::derivative<double>(&rhoIn(0, 1), jmt);
+      drho_up = lsms::derivative<double>(rho_up.data(), jmt);
+      drho_down = lsms::derivative<double>(rho_down.data(), jmt);
 
       for (int ir = 0; ir < jmt; ir++) {
         sigma[ir * 3] = drho_up[ir] * drho_up[ir] / (drMesh[ir] * drMesh[ir]);
@@ -193,7 +198,7 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
 
         auto isp = 0;
         for (int ir = 0; ir < jmt; ir++) {
-          g_xc(ir, isp) += -2.0 * vSigma[ir] * 2.0 * drho_up[ir];
+          g_xc(ir, isp) += -2.0 * vSigma[ir] * drho_up[ir] / drMesh[ir];
         }
 
       } else {
@@ -205,8 +210,8 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
         for (int ir = 0; ir < jmt; ir++) {
 
           g_xc(ir, isp) +=
-              -2.0 * vSigma[ir * 3] * drho_up[ir]
-              - vSigma[ir * 3 + 1] * drho_down[ir];
+              -2.0 * vSigma[ir * 3] * drho_up[ir] / drMesh[ir]
+              - vSigma[ir * 3 + 1] * drho_down[ir] / drMesh[ir];
 
         }
 
@@ -215,8 +220,8 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
         for (int ir = 0; ir < jmt; ir++) {
 
           g_xc(ir, isp) +=
-              -2.0 * vSigma[ir * 3 + 2] * drho_down[ir]
-              - vSigma[ir * 3 + 1] * drho_up[ir];
+              -2.0 * vSigma[ir * 3 + 2] * drho_down[ir] / drMesh[ir]
+              - vSigma[ir * 3 + 1] * drho_up[ir] / drMesh[ir];
 
         }
 
@@ -258,11 +263,12 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
 
     if (_nSpin == 1) {
 
+      std::vector<double> v_grad_corr(jmt);
 
       int isp;
 
       isp = 0;
-      auto v_grad_corr = lsms::derivative<double>(&g_xc(0, isp), jmt);
+      v_grad_corr = lsms::derivative<double>(&g_xc(0, isp), jmt);
 
       for (int ir = 0; ir < jmt; ir++) {
         xcPotOut(ir, isp) += 2.0 * (
@@ -291,7 +297,7 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
       for (int ir = 0; ir < jmt; ir++) {
         xcPotOut(ir, isp) += 2.0 * (
             2.0 * g_xc(ir, isp) / rMesh[ir]
-            + v_grad_corr[ir] / drMesh[ir]);
+            + v_grad_corr[ir]);
       }
 
     }
