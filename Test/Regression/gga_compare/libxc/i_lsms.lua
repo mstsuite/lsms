@@ -23,7 +23,7 @@ default_iprint = -1
 print_node = 0
 istop = "main"
 
-nscf = 100
+nscf = 3
 rmsTolerance = 1.0e-16
 
 xRepeat = 1
@@ -31,7 +31,7 @@ yRepeat = 1
 zRepeat = 1
 makeTypesUnique = 1
 
-energyContour = { npts = 34, grid = 2, ebot = -0.5, etop = 0.0, eitop = 0.825, eibot = 0.0025 }
+energyContour = { npts = 24, grid = 2, ebot = -0.3, etop = 0.0, eitop = 0.825, eibot = 0.0025 }
 
 a = 4.05 / 0.529177
 
