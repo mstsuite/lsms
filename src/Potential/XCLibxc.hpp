@@ -65,6 +65,16 @@ class XCLibxc : public XCBase {
                 Real xcPotOut[2]) override;
 
   const std::vector<XCFuncType> &get_functionals() const;
+
+
+  template <typename Cnt1, typename Cnt2>
+  void addData(const Cnt1& yData, Cnt2 xData) // is pass-by-value intended?
+  {
+    using std::begin;
+    using std::end;
+    typedef decltype(*begin(yData)) T;
+  }
+
 };
 
 }  // namespace lsms
