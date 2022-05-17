@@ -17,14 +17,14 @@ num_atoms=1
 nspin=2
 mtasa=0
 
-xcFunctional = { 1, 1, 7 }
+xcFunctional = { 1, 101, 130 }
 
 iprint=-1
 default_iprint=-1
 print_node=0
 istop="main"
 
-nscf=10
+nscf=40
 rmsTolerance=1.0e-16
 
 xRepeat=1
