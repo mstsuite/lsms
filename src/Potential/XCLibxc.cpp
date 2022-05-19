@@ -10,92 +10,18 @@
 
 lsms::XCLibxc::XCLibxc(int nSpin, int xcFunctional[3])
     : XCBase(nSpin, xcFunctional) {
-  needGradients = false;
-  needLaplacian = false;
-  needGradients = false;
-  needKineticEnergyDensity = false;
-  needExactExchange = false;
-  numFunctionals = 0;
 
-  if (xcFunctional[0] != 1) {
-    throw std::runtime_error("Not a `libxc` functional");
-  }
+  setup(nSpin, xcFunctional, xcFunctional + 3);
 
-  for (int i = 1; i < _xcFunctional.size(); i++) {
-    int nspin = XC_UNPOLARIZED;
-    if (nSpin > 1) nspin = XC_POLARIZED;
 
-    if (xcFunctional[i] > 0) {
-      functionals.emplace_back(nspin, xcFunctional[i]);
-
-      switch (functionals[numFunctionals].get_functional().info->family) {
-        case XC_FAMILY_LDA:
-          break;
-        case XC_FAMILY_GGA:
-          needGradients = true;
-          break;
-        case XC_FAMILY_HYB_GGA:
-          needGradients = true;
-          needExactExchange = true;
-          break;
-        case XC_FAMILY_MGGA:
-          needGradients = true;
-          needLaplacian = true;
-          needKineticEnergyDensity = true;
-          break;
-        default:
-          throw std::runtime_error(
-              "Unknown Functional family in `libxc` for functional!");
-      }
-
-      numFunctionals++;
-    }
-  }
 }
 
 lsms::XCLibxc::XCLibxc(int nSpin, std::vector<int> xcFunctional)
     : XCBase(nSpin, xcFunctional) {
-  needGradients = false;
-  needLaplacian = false;
-  needGradients = false;
-  needKineticEnergyDensity = false;
-  needExactExchange = false;
-  numFunctionals = 0;
 
-  if (xcFunctional[0] != 1) {
-    throw std::runtime_error("Not a `libxc` functional");
-  }
+  setup(nSpin, std::begin(xcFunctional), std::end(xcFunctional));
 
-  for (int i = 1; i < xcFunctional.size(); i++) {
-    int nspin = XC_UNPOLARIZED;
-    if (nSpin > 1) nspin = XC_POLARIZED;
 
-    if (xcFunctional[i] > 0) {
-      functionals.emplace_back(nspin, xcFunctional[i]);
-
-      switch (functionals[numFunctionals].get_functional().info->family) {
-        case XC_FAMILY_LDA:
-          break;
-        case XC_FAMILY_GGA:
-          needGradients = true;
-          break;
-        case XC_FAMILY_HYB_GGA:
-          needGradients = true;
-          needExactExchange = true;
-          break;
-        case XC_FAMILY_MGGA:
-          needGradients = true;
-          needLaplacian = true;
-          needKineticEnergyDensity = true;
-          break;
-        default:
-          throw std::runtime_error(
-              "Unknown Functional family in `libxc` for functional!");
-      }
-
-      numFunctionals++;
-    }
-  }
 }
 
 void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
