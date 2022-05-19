@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <lua.hpp>
 
 int main(int argc, char *argv[]) {

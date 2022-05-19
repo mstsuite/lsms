@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <vector>
 
 #include "Misc/integrateOneDim.hpp"
