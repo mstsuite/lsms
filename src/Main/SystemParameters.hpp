@@ -18,7 +18,6 @@
 #include "Misc/Indices.hpp"
 
 #include "Potential/common.hpp"
-#include "Potential/libxcInterface.hpp"
 #include "Potential/newFunctionalInterface.hpp"
 #include "Potential/XCBase.hpp"
 
@@ -107,7 +106,6 @@ public:
   std::shared_ptr<lsms::XCBase> exch_corr;
 
   //char *xcName;
-  LibxcInterface libxcFunctional;
   NewFunctionalInterface newFunctional;
   int vSpinShiftFlag;      // if !=0 : shift the spin up and down potentials according to atom.vSpinShift
   // this is used in WL-LSMS with moment magnitude fluctuations

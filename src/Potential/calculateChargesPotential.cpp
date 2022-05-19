@@ -5,8 +5,6 @@
 
 #ifdef USE_LIBXC
 
-#include "libxcInterface.hpp"
-
 #endif
 
 void calculateChargesPotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local,

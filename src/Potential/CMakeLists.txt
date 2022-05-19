@@ -13,8 +13,7 @@ target_sources(lsmscore
         getXCName.hpp
         interpolatePotential.cpp
         interpolatePotential.hpp
-        libxcInterface.cpp
-        libxcInterface.hpp
+
         newexchg.f
         newpot_c.f
         PotentialShifter.hpp

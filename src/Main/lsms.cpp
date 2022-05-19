@@ -230,7 +230,6 @@ int main(int argc, char *argv[])
   // set up exchange correlation functionals
   if (lsms.xcFunctional[0] == 1)  {
     lsms.exch_corr = std::make_shared<lsms::XCLibxc>(lsms.n_spin_pola, lsms.xcFunctional);
-    lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
   }       // use libxc functional
   if (lsms.xcFunctional[0] == 2) {         // use new LSMS functional
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);

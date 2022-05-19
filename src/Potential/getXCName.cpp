@@ -1,7 +1,8 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-#include "Main/SystemParameters.hpp"
-#include "Potential/libxcInterface.hpp"
 #include "getXCName.hpp"
+
+#include "Main/SystemParameters.hpp"
+
 #include <string>
 
 bool getXCName(LSMSSystemParameters &lsms, std::string &name)
@@ -16,15 +17,7 @@ bool getXCName(LSMSSystemParameters &lsms, std::string &name)
     name="Illegal Exchange-Correlation Functional (built in)!"; return false;
   } else if(lsms.xcFunctional[0]==1) { // libxc functionals
 #ifdef USE_LIBXC
-    name="";
-    
-    if(lsms.libxcFunctional.numFunctionals==0) name="none";
-    for(int i=0; i<lsms.libxcFunctional.numFunctionals; i++)
-    {
-      name.append(lsms.libxcFunctional.functional[i].info->name);
-      if(i!=lsms.libxcFunctional.numFunctionals-1) name.append(" + ");
-    }
-    name.append(" (libxc)");
+    name = lsms.exch_corr->get_name();
     return true;
 #else
     name="Illegal Exchange-Correlation Functional (LSMS not linked to libXC)!"; return false;

@@ -66,6 +66,7 @@ namespace lsms {
 
     const std::vector<XCFuncType> &get_functionals() const;
 
+    std::string get_name() override;
 
   private:
 
@@ -118,9 +119,6 @@ namespace lsms {
           numFunctionals++;
         }
       }
-
-      std::cout << "+" << functionals.size() << std::endl;
-
 
     }
 

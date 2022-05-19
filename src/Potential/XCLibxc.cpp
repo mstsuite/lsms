@@ -294,6 +294,22 @@ const std::vector<lsms::XCFuncType> &lsms::XCLibxc::get_functionals() const {
   return functionals;
 }
 
+std::string lsms::XCLibxc::get_name() {
+
+  std::stringstream ss;
+
+  for (auto &xc: functionals) {
+    ss << xc.get_functional().info->name;
+
+    if (&xc != &functionals.back()) { ss << "+"; };
+
+  }
+
+  ss << " (libxc)";
+
+  return ss.str();
+}
+
 const xc_func_type &lsms::XCFuncType::get_functional() const {
   return _func_type;
 }

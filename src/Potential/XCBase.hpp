@@ -29,6 +29,9 @@ class XCBase {
 
   virtual void evaluate(const Real rhoIn[2], Real &xcEnergyOut,
                         Real xcPotOut[2]) = 0;
+
+  virtual std::string get_name() = 0;
+
 };
 
 }  // namespace lsms

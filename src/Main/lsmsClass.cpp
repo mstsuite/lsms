@@ -29,6 +29,8 @@
 #include "calculateEvec.hpp"
 #include "TotalEnergy/calculateTotalEnergy.hpp"
 #include "SingleSite/checkAntiFerromagneticStatus.hpp"
+#include "Potential/XCBase.hpp"
+#include "Potential/XCLibxc.hpp"
 
 #include "lsmsClass.hpp"
 
@@ -153,7 +155,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
 
   // set up exchange correlation functionals
   if(lsms.xcFunctional[0] == 1)  // libxc functional
-    lsms.libxcFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
+    lsms.exch_corr = std::make_shared<lsms::XCLibxc>(lsms.n_spin_pola, lsms.xcFunctional);
   if(lsms.xcFunctional[0] == 2)  // new LSMS functional
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
 
