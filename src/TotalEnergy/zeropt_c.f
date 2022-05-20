@@ -45,6 +45,7 @@ c     ================================================================
       iz=ztotss+.1
 c     write(6,'('' zeropt:: iz,deb,grun,expv,omeg:'',2i5,3d12.4)')
 c    >                      iz,idebye(iz),grune(iz),expvol(iz),omegws
+      ezero = 0.0d0
       if(iz.lt.1 .or. iz.gt.49) then
          ezero=0.0d0
          tpvzer=0.0d0
