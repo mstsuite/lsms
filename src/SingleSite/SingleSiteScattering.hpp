@@ -22,16 +22,28 @@ public:
 
   AtomData *atom;
   Matrix<Complex> tmat_g;
+
+  virtual void init(LSMSSystemParameters &lsms, AtomData &a, Complex *tmat_g_store=NULL)
+  { printf("Call to 'SingleScattererSolution' base class not allowed!\n"); exit(1); }
+
+  virtual bool isRelativistic() {return false;}
+  virtual bool isNonRelativistic() {return false;}
+  virtual bool isSpherical() {return false;}
+  virtual bool isFullPotential() {return false;}
 };
 
 class NonRelativisticSingleScattererSolution : public SingleScattererSolution {
 public:
   NonRelativisticSingleScattererSolution() {}
 
-  NonRelativisticSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &a, Complex *tmat_g_stor = NULL) {
+  NonRelativisticSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &a, Complex *tmat_g_stor = NULL)
+  {
     init(lsms, a, tmat_g_stor);
   }
 
+  bool isNonRelativistic() {return true;}
+  bool isSpherical() {return true;}
+  
   void init(LSMSSystemParameters &lsms, AtomData &a, Complex *tmat_g_store = NULL) {
     atom = &a;
     kkrsz = a.kkrsz;
@@ -112,9 +124,13 @@ public:
 
   RelativisticSingleScattererSolution() {}
 
-  RelativisticSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &a, Complex *tmat_g_stor = NULL) {
+  RelativisticSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &a, Complex *tmat_g_stor = NULL)
+  {
     init(lsms, a, tmat_g_stor);
   }
+
+  bool isRelativistic() {return true;}
+  bool isSpherical() {return true;}
 
   void init(LSMSSystemParameters &lsms, AtomData &a, Complex *tmat_g_store = NULL) {
     atom = &a;
@@ -146,12 +162,18 @@ class NewRelativisticSingleScattererSolution : public SingleScattererSolution {
 public:
   Array3d<Complex> sineMatrixRegular, cosineMatrixRegular; // sineMatrix(ir, Lambda', Lambda)
   Array3d<Complex> sineMatrixIrregular, cosineMatrixIrregular; // sineMatrix(ir, Lambda', Lambda)
+
+  bool isRelativistic() {return true;}
+  bool isSpherical() {return true;}
 };
 
 class FullPotentialRelativisticSingleScattererSolution : public SingleScattererSolution {
 public:
   Array3d<Complex> sineMatrixRegular, cosineMatrixRegular; // sineMatrix(ir, Lambda', Lambda)
   Array3d<Complex> sineMatrixIrregular, cosineMatrixIrregular; // sineMatrix(ir, Lambda', Lambda)
+
+  bool isRelativistic() {return true;}
+  bool isFullPotential() {return true;}
 };
 
 extern "C"

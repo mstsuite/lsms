@@ -69,6 +69,7 @@ public:
               // potential, simple: 1; boyden: 5
   Real alphaDV; // mixing parameter for density or potential
   Real rmsTolerance; // rms Convergence criterion
+  Real energyTolerance;
   int num_atoms;
   int nspin;
   int constraint;

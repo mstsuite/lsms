@@ -467,6 +467,8 @@ int main(int argc, char *argv[])
 // -----------------------------------------------------------------------------
 
   bool converged = false;
+  bool energyConverged = true;
+  Real oldTotalEnergy = lsms.totalEnergy;
 
   if (lsms.global.iprint >= 0)
     printf("Total number of iterations:%d\n", lsms.nscf);
@@ -489,11 +491,13 @@ int main(int argc, char *argv[])
 #ifdef USE_NVTX
   nvtxRangePushA("SCFLoop");
 #endif  
-  for (iteration=0; iteration<lsms.nscf && !converged; iteration++)
+  for (iteration=0; iteration<lsms.nscf && !(converged && energyConverged); iteration++)
   {
     if (lsms.global.iprint >= -1 && comm.rank == 0)
       printf("SCF iteration %d:\n", iteration);
 
+    oldTotalEnergy = lsms.totalEnergy;
+    
     // Calculate band energy
     energyContourIntegration(comm, lsms, local);
     double dTimeCCP = MPI_Wtime();
@@ -611,7 +615,11 @@ int main(int argc, char *argv[])
     }
     globalAnd(comm, converged);
     */
-
+    if(lsms.energyTolerance > 0)
+      energyConverged = std::abs((lsms.totalEnergy - oldTotalEnergy)/lsms.totalEnergy) < lsms.energyTolerance;
+    else
+      energyConverged = true;
+    
     if (comm.rank == 0)
     {
       printf("Band Energy = %lf Ry %10s", eband, "");

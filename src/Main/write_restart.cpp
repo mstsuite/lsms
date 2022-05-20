@@ -30,6 +30,7 @@ int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalPar
   fprintf(of,"nscf=%d\n", lsms.nscf);
   fprintf(of,"writeSteps=%d\n\n", lsms.writeSteps);
   fprintf(of,"rmsTolerance=%lg\n\n",lsms.rmsTolerance);
+  fprintf(of,"energyTolerance=%lg\n\n",lsms.energyTolerance);
 
   fprintf(of,"print_node=%d\n",lsms.global.print_node);
   fprintf(of,"default_iprint=%d\n",lsms.global.default_iprint);

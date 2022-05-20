@@ -22,7 +22,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
     atom_position_1[i]=crystal.position(0,i);
     atom_position_2[i]=crystal.position(1,i);
     atom_position_3[i]=crystal.position(2,i);
-    rad[i]=2.0; // ignore the scaling of atomic cell volumes for now
+    rad[i] = crystal.types[crystal.type[i]].rad;
   }
 
   crystal.omega=

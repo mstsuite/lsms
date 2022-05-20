@@ -190,8 +190,15 @@ target_link_libraries(lsmscore PUBLIC MPI::MPI_CXX)
 
 
 # Find HDF5
+message(STATUS "Find HDF5")
 set(HDF5_PREFER_PARALLEL false)
 find_package(HDF5 REQUIRED)
+
+message(STATUS "HDF5 C Libaries: " "${HDF5_C_LIBRARIES}")
+message(STATUS "HDF5 LIBRARIES: " "${HDF5_LIBRARIES}")
+message(STATUS "HDF5 INCLUDE DIRS: " "${HDF5_INCLUDE_DIRS}")
+message(STATUS "HDF5 Version: " "${HDF5_VERSION}")
+
 target_link_libraries(lsmscore PUBLIC HDF5::HDF5)
 
 # Linear algebra libraries
@@ -241,6 +248,17 @@ else ()
     endif ()
     target_link_libraries(lsmscore PUBLIC BLAS::BLAS)
 endif ()
+
+# Link Time optimization
+include(CheckIPOSupported)
+check_ipo_supported(RESULT supported OUTPUT error)
+
+if( supported )
+    message(STATUS "IPO / LTO supported")
+else()
+    message(STATUS "IPO / LTO not supported: <${error}>")
+endif()
+
 
 # Lua
 target_link_libraries(lsmscore PUBLIC Lua::Lua)
