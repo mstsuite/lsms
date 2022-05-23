@@ -2,9 +2,9 @@
 // Created by F.Moitzi on 18.09.2021.
 //
 
-#include <cstring>
 #include <cstdlib>
-
+#include <cstring>
+#include <iostream>
 #include <lua.hpp>
 
 int main(int argc, char *argv[]) {
@@ -13,8 +13,11 @@ int main(int argc, char *argv[]) {
   luaL_openlibs(L);
 
   // execute script
-  const char lua_script[] = "function sum(a, b) return a+b; end"; // a function that returns sum of two
-  int load_stat = luaL_loadbuffer(L, lua_script, strlen(lua_script), lua_script);
+  const char lua_script[] =
+      "function sum(a, b) return a+b; end";  // a function that returns sum of
+                                             // two
+  int load_stat =
+      luaL_loadbuffer(L, lua_script, strlen(lua_script), lua_script);
   lua_pcall(L, 0, 0, 0);
 
   // load the function from global
@@ -33,7 +36,6 @@ int main(int argc, char *argv[]) {
     if (sumval != 11.0) {
       return EXIT_FAILURE;
     }
-
   }
 
   // cleanup

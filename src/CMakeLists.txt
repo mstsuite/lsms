@@ -10,7 +10,7 @@ set_target_properties(lsms_main
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
-add_library(lsmscore STATIC)
+add_library(lsmscore)
 
 target_link_libraries(lsms_main
         PUBLIC lsmscore)
