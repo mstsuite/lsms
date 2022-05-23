@@ -131,6 +131,16 @@
       return data[j*lDim+i];
     }
 
+    // <Matrix Access@>;
+    // We provide two methods to access the lements of a matrix. The most natural one uses |operator()| with row and collumn arguments and looks simimar to a matrix access in {\bf Fortran}.
+    inline const T& operator() (size_type i, size_type j) const {
+      // ASSERT(i<nRow,
+      //        std::range_error("i>=n_row in T& Matrix<T>::operator()(size_type i,size_type j"));
+      // ASSERT(j<nCol,
+      //        std::range_error("j>=n_col in T& Matrix<T>::operator()(size_type i,size_type j"));
+      return data[j*lDim+i];
+    }
+
   // The second way to access the elements of a matrix uses the familair C |[]| operator and vies the |data| array as a continous block of memory.
     inline T& operator[](size_type i) {
       return data[i];
