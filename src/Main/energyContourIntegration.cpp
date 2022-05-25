@@ -125,7 +125,8 @@ void buildEnergyContour(int igrid,Real ebot,Real etop,Real eibot, Real eitop, Re
   }
 }
 
-void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms, LocalTypeInfo &local)
+void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms, LocalTypeInfo &local, bool storeLocalGreenInt)
+// storedGreensFunction
 {
   double timeEnergyContourIntegration_1=MPI_Wtime();
 
@@ -310,6 +311,27 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
       local.atom[i].dos_real.resize(nume,4);
   }
 
+  // DMFT: prepare the storage of the local integrated Green's functions
+  // store energy grid:
+  if( storeLocalGreenInt )
+  {
+    if (local.energyGridForGreenInt.size() != egrd.size())
+    {
+      local.energyGridForGreenInt = egrd;
+    }
+    if(local.greenIntLLp.size() != local.num_local)
+    {
+      local.greenIntLLp.resize(local.num_local);
+    }
+    for(int i=0; i<local.num_local; i++)
+    {
+      local.greenIntLLp[i].resize(local.atom[i].kkrsz * lsms.n_spin_cant,
+                                  local.atom[i].kkrsz * lsms.n_spin_cant,
+                                  egrd.size());
+    }
+  }
+
+  
   // solution{Non}Rel[energy point][local atom idx]
   std::vector<std::vector<NonRelativisticSingleScattererSolution> >solutionNonRel;
   std::vector<std::vector<RelativisticSingleScattererSolution> >solutionRel;
@@ -478,7 +500,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 // openMP here
 #pragma omp parallel for default(none)                                  \
   shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,gauntCoeficients,dele1,tau00_l,gfOutFile) \
-  firstprivate(ie,iie,pnrel,energy,nume)
+  firstprivate(ie,iie,pnrel,energy,nume,storeLocalGreenInt)
           for(int i=0; i<local.num_local; i++)
           {
             //Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
@@ -493,7 +515,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
 //        int nplmax=solutionNonRel[iie][i].zlr.l_dim2()-1;
             int nplmax=local.atom[i].lmax;
             Array3d<Complex> greenIntLLp(local.atom[i].kkrsz,local.atom[i].kkrsz,
-                                         lsms.n_spin_cant*lsms.n_spin_cant);
+                                         lsms.n_spin_cant * lsms.n_spin_pola);
             green_function_(&lsms.mtasa,&lsms.n_spin_pola,&lsms.n_spin_cant,
                             &local.atom[i].lmax, &local.atom[i].kkrsz,
                             &local.atom[i].wx[0],&local.atom[i].wy[0],&local.atom[i].wz[0],
@@ -518,12 +540,20 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                               &nprpts,&nplmax,
                               &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
                               &dos(1,i),&dosck(1,i),&green(0,1,i),&dipole(0,0,i),
-                              &greenIntLLp(0,0,0),
+                              &greenIntLLp(0,0,1),
                               &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
                               &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.wylm(0,0,0),
                               &lsms.global.iprint,lsms.global.istop,32);
             }
 
+            // DMFT: store local integrated Green's function:
+            if(storeLocalGreenInt)
+            {
+              copyFromGreenIntLLp(local.greenIntLLp[i], ie,
+                                  greenIntLLp, local.atom[i].kkrsz, lsms.n_spin_cant, lsms.n_spin_pola);
+            }
+
+            
             if(lsms.lsmsMode==LSMSMode::gf_out)
             {
               fprintf(gfOutFile[i], "Energy #%04d (%lf,%lf)\n",ie,std::real(energy),std::imag(energy));

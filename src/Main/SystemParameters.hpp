@@ -234,6 +234,10 @@ public:
 
   Real qrms[2];
   Real vrms[2];
+
+  // For DMFT we need to store the integrated local Green's function for each site:
+  std::vector<Complex> energyGridForGreenInt; // energyGridForGreenInt[ie]
+  std::vector<Array3d<Complex> > greenIntLLp; // greenIntLLp[local site index](L, Lp, ie)
 };
 
 // for Wang-Landau for metallic alloys
