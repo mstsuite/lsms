@@ -70,7 +70,15 @@ void calculateDensities(LSMSSystemParameters &lsms, int iatom, int is, int ie, i
   }
 }
 
+inline Real square(Real x)
+{
+  return x * x;
+}
 
+inline Real fourthPower(Real x)
+{
+  return square(square(x));
+}
 
 // LSMS_1.9 getchg_c.f
 void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edote,
@@ -230,7 +238,8 @@ void calculateChargeDensity(LSMSSystemParameters &lsms, AtomData &atom, Real edo
     // printf("$$$ caclculate rms\n");
     for(int ir=0; ir<atom.jws; ir++)
     {
-      w2[ir+1] = 2.0 * std::pow((rhonew(ir,is)-atom.rhotot(ir,is)),2) / std::pow(atom.r_mesh[ir],4);
+      // w2[ir+1] = 2.0 * std::pow((rhonew(ir,is)-atom.rhotot(ir,is)),2) / std::pow(atom.r_mesh[ir],4);
+      w2[ir+1] = 2.0 * square((rhonew(ir,is)-atom.rhotot(ir,is)) / square(atom.r_mesh[ir]));
       // printf("%4d  %f %f %f\n",ir,rhonew(ir,is),atom.rhotot(ir,is),w2[ir+1]);
     }
     // interp_(&atom.r_mesh[0],&w2[1],&four,&dzero,&w2[0],&dummy,&f);
@@ -276,8 +285,10 @@ void calculateLocalQrms(LSMSSystemParameters &lsms, LocalTypeInfo &local)
       // printf("$$$ caclculate rms\n");
       for(int ir = 0; ir < local.atom[i].jws; ir++)
       {
-        w2[ir+1] = 2.0 * std::pow((local.atom[i].rhoNew(ir,is) - local.atom[i].rhotot(ir,is)),2)
-          / std::pow(local.atom[i].r_mesh[ir],4);
+        // w2[ir+1] = 2.0 * std::pow((local.atom[i].rhoNew(ir,is) - local.atom[i].rhotot(ir,is)),2)
+        //  / std::pow(local.atom[i].r_mesh[ir],4);
+        w2[ir+1] = 2.0 * square((local.atom[i].rhoNew(ir,is) - local.atom[i].rhotot(ir,is))
+          / square(local.atom[i].r_mesh[ir]));
         // printf("%4d  %f %f %f\n",ir,rhonew(ir,is),atom.rhotot(ir,is),w2[ir+1]);
       }
       // interp_(&atom.r_mesh[0],&w2[1],&four,&dzero,&w2[0],&dummy,&f);
