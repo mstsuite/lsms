@@ -33,6 +33,7 @@
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
+#include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
 #include "VORPOL/VORPOL.hpp"
 #include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
@@ -390,7 +391,11 @@ int main(int argc, char *argv[])
   setupMixing(mix, mixing, lsms.global.iprint);
 
 // need to calculate madelung matrices
+#ifdef LEGACY_MONOPOLE
   calculateMadelungMatrices(lsms, crystal, local);
+#else
+  calculateMultiMadelungMatrices(lsms, crystal, local);
+#endif
 
   if (lsms.global.iprint >= 1)
   {
