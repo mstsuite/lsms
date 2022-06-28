@@ -14,6 +14,10 @@ and for calculations using Monte-Carlo simulations:
 
 * M. Eisenbach, C.-G. Zhou, D. M. C. Nicholson, G. Brown, J. Larkin, and T. C. Schulthess. _A Scalable Method for Ab Initio Computation of Free Energies in Nanoscale Systems_. Proceedings of the Conference on High Performance Computing Networking, Storage and Analysis, ACM, New York, 64 (2009)
 
+If you are using LSMS on a unit cell with over 1000 atoms, also cite:
+
+* D. M. Rogers. _Overcoming the minimum image constraint using the closest point search_. J. Mol. Graphics and Modelling **68**, 197-205 (2016).
+
 ## Installation
 
 ### CMake
