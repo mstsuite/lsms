@@ -12,6 +12,7 @@
 #include "Complex.hpp"
 #include "Matrix.hpp"
 #include "LSMSMode.hpp"
+#include "LSMSAlgorithms.hpp"
 
 #include "SingleSite/AtomData.hpp"
 
@@ -64,6 +65,7 @@ public:
   char systemid[80];
   char title[80];
   LSMSMode lsmsMode;
+  unsigned char lsmsAlgorithms[LSMSAlgorithms::numAlgorithms];
   int rank;
   char potential_file_in[128];
   char potential_file_out[128];

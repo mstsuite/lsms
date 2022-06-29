@@ -272,6 +272,10 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
   if (lsms.global.iprint >= 0)
   {
+    if(lsms.lsmsAlgorithms[LSMSAlgorithms::lizConstruction] == LSMSAlgorithms::lizConstruction_bricks)
+      printf("lizConstruction algorithm : bricks\n");
+    else printf("lizConstruction algorithm : original\n");
+
     printf("  time for cell sorting: %lf sec\n",
            timeBuildLIZandCommList);
     fflush(stdout);
@@ -301,8 +305,14 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     
     if(node==comm.rank) // local atom type
     {
-      //tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
-      tempNumLIZ=buildLIZ(crystal,i,tempLIZ, geo, cell);
+      if(lsms.lsmsAlgorithms[LSMSAlgorithms::lizConstruction] == LSMSAlgorithms::lizConstruction_bricks)
+      {
+        //tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ, geo, cell);
+      } else {
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+      }
+
 // set LIZ
       int local_id=crystal.types[type_id].local_id;
       std::sort(tempLIZ.begin(),tempLIZ.begin()+tempNumLIZ,dSqrLess_LIZInfoType);

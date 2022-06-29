@@ -418,6 +418,16 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     }
   }
 
+  // read lsmsAlgorithms
+  for(int i=0; i<LSMSAlgorithms::numAlgorithms; i++)
+    lsms.lsmsAlgorithms[i] = 0;
+  for(int j=0; j<LSMSAlgorithms::numAlgorithms; j++)
+  {
+    int tmp;
+    luaGetIntegerPositionInTable(L,"lsmsAlgorithms",j+1,&tmp);
+    lsms.lsmsAlgorithms[j] = tmp;
+  }
+
 // c
 // c     ================================================================
 // c     read in controls for performing SCF calculation:................

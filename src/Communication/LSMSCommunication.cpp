@@ -50,6 +50,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Pack(lsms.systemid,80,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(lsms.title,80,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.lsmsMode,1,MPI_INT,buf,s,&pos,comm.comm);
+    MPI_Pack(&lsms.lsmsAlgorithms,LSMSAlgorithms::numAlgorithms,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(lsms.potential_file_in,128,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(lsms.potential_file_out,128,MPI_CHAR,buf,s,&pos,comm.comm);
     MPI_Pack(&lsms.pot_in_type,1,MPI_INT,buf,s,&pos,comm.comm);
@@ -127,6 +128,7 @@ void communicateParameters(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     MPI_Unpack(buf,s,&pos,lsms.systemid,80,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,lsms.title,80,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.lsmsMode,1,MPI_INT,comm.comm);
+    MPI_Unpack(buf,s,&pos,&lsms.lsmsAlgorithms,LSMSAlgorithms::numAlgorithms,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,lsms.potential_file_in,128,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,lsms.potential_file_out,128,MPI_CHAR,comm.comm);
     MPI_Unpack(buf,s,&pos,&lsms.pot_in_type,1,MPI_INT,comm.comm);

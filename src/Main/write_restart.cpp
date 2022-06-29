@@ -25,6 +25,15 @@ int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalPar
   fprintf(of,"pot_out_type=%d\n",lsms.pot_out_type);
 
   fprintf(of,"lsmsMode=\"%s\"\n",lsmsModeToString(lsms.lsmsMode));
+
+  fprintf(of,"lsmsAlgorithms={");
+  for(int i=0; i<LSMSAlgorithms::numAlgorithms; i++)
+  {
+    fprintf(of,"%d");
+    if(i<LSMSAlgorithms::numAlgorithms-1) fprintf(of,", ");
+  }
+  fprintf(of,"}\n");
+
   fprintf(of,"istop=\"main\"\n\n");
 
   fprintf(of,"nscf=%d\n", lsms.nscf);
