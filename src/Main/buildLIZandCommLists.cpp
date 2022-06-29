@@ -251,6 +251,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   int fromCounts[4096];
   int num_store=local.num_local;
 
+  double timeBuildLIZandCommList = MPI_Wtime();
   // Begin cell sorting
   const Real Rc_target = 4.0; // set this to determine nx, ny, nz
   int nx = crystal.bravais(0,0)/Rc_target;
@@ -268,6 +269,14 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   //       into the x-axis and x-y plane, respectively!
   auto cell = sort_atoms(crystal, geo);
   // End cell sorting
+  timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("  time for cell sorting: %lf sec\n",
+           timeBuildLIZandCommList);
+    fflush(stdout);
+  }
+  timeBuildLIZandCommList = MPI_Wtime();
 
   // the first num_local entries in tmatStore contain the local tmats
   local.tmatStoreGlobalIdx.resize(4096);
@@ -344,6 +353,15 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
       }
     }
   }
+  timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("  time to build LIZs: %lf sec\n",
+           timeBuildLIZandCommList);
+    fflush(stdout);
+  }
+  timeBuildLIZandCommList = MPI_Wtime();
+
 // sort toList and fromList
   std::sort(fromList.begin(),fromList.begin()+fromListN,globalLess_NodeIndexInfo);
   std::sort(toList.begin(),toList.begin()+toListN,localLess_NodeIndexInfo);
@@ -445,4 +463,13 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   for(int i=0; i<local.num_local; i++)
     for(int j=0; j<local.atom[i].numLIZ; j++)
       local.atom[i].LIZStoreIdx[j]=crystal.types[crystal.type[local.atom[i].LIZGlobalIdx[j]]].store_id;
+
+  timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
+  if (lsms.global.iprint >= 0)
+  { 
+    printf("  time to build communication lists: %lf sec\n",
+           timeBuildLIZandCommList);
+    fflush(stdout);
+  }
+
 }
