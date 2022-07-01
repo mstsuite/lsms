@@ -448,6 +448,9 @@ public:
   std::vector<Real> LIZDist;
   Matrix<Real> LIZPos;
 
+  std::vector<int> vpClusterGlobalIdx;
+  Matrix<Real> vpClusterPos;
+
 // Mesh Data:
   int jmt,jws;
   Real xstart,rmt,h;

@@ -1,3 +1,5 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
 #include "buildLIZandCommLists.hpp"
 
 #include <cmath>
@@ -75,6 +77,58 @@ inline void relative_brick_crd(const Geom &geo, Real &x, Real &y, Real &z) {
     x -= nx*geo.h[Geom::XX] + x0;
 }
 
+/*
+void setupVPboundaries(CrystalParameters &crystal, int idx, AtomData &atom,
+		       const Geom &geo, const std::vector<std::vector<int>> &cell)
+{
+    const Real rtol = 1.0e-8;
+    const Real rcirclu = crystal.types[crystal.type[idx]].rLIZ;
+    const Real rcirclusqr = rcirclu*rcirclu;
+    NeighborCells nbr(geo, rcirclu);
+    int nrsclu = 0;
+
+
+    Real x = crystal.position(0,idx);
+    Real y = crystal.position(1,idx);
+    Real z = crystal.position(2,idx);
+    auto bin = geo.calcBinF(x, y, z); // bin of atom idx
+    int ai, aj, ak; // bin's LatticePt
+    geo.decodeBin(bin, ai, aj, ak);
+    ai += geo.n[0]; aj += geo.n[1]; ak += geo.n[2];
+
+    relative_brick_crd(geo, x, y, z); // wrap relative to bin
+
+    for(const LatticePt &pt : nbr) {
+        int cj = geo.calcBin((ai+pt.i)%geo.n[0],
+                             (aj+pt.j)%geo.n[1],
+                             (ak+pt.k)%geo.n[2]);
+
+        Real offset[3];
+        geo.offset(pt, offset); // calculate offset to far cell base pt.
+        offset[0] -= x; // make relative to ptcle at idx
+        offset[1] -= y;
+        offset[2] -= z;
+
+        for(const int j : cell[cj]) {
+            Real dx = crystal.position(0,j);
+            Real dy = crystal.position(1,j);
+            Real dz = crystal.position(2,j);
+            relative_brick_crd(geo, dx, dy, dz);
+            dx += offset[0]; // add relative bin shifts
+            dy += offset[1];
+            dz += offset[2];
+
+            const Real atdistsqr = dx*dx + dy*dy + dz*dz;
+            if(atdistsqr <= rcirclusqr) {
+                LIZ[nrsclu].idx = j; // far atom index
+                LIZ[nrsclu].p1 = dx; LIZ[nrsclu].p2 = dy; LIZ[nrsclu].p3 = dz;
+                LIZ[nrsclu++].dSqr = atdistsqr;
+            }
+        }
+    }
+    return nrsclu;
+}
+*/
 
 /* O(1) Cell-based neighbor list construction
  * written by David M. Rogers
@@ -370,6 +424,27 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
            timeBuildLIZandCommList);
     fflush(stdout);
   }
+
+  // build the vpClusterGlobalIdx for the Voronoi polyhedra construction
+  for(int i=0; i<local.num_local; i++)
+  {
+    if(local.atom[i].numLIZ > 50)
+    {
+      local.atom[i].vpClusterGlobalIdx = local.atom[i].LIZGlobalIdx;
+      local.atom[i].vpClusterPos.resize(3,local.atom[i].vpClusterGlobalIdx.size());
+      for(int j=0; j<local.atom[i].vpClusterGlobalIdx.size(); j++)
+      {
+	local.atom[i].vpClusterPos(0, j) = local.atom[i].LIZPos(0, j);
+	local.atom[i].vpClusterPos(1, j) = local.atom[i].LIZPos(1, j);
+	local.atom[i].vpClusterPos(2, j) = local.atom[i].LIZPos(2, j);
+      }
+    } else {
+      // need to construct vpCluster - for the time set it to size zero to use the old algorithm
+      local.atom[i].vpClusterGlobalIdx.clear();
+    }
+  }    
+
+  
   timeBuildLIZandCommList = MPI_Wtime();
 
 // sort toList and fromList
