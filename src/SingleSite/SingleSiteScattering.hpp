@@ -195,7 +195,7 @@ void single_scatterer_nonrel_(int *nrelv, double *clight, int *lmax, int *kkrsz,
                               double *vr, double *r_mesh, double *h, int *jmt, int *jws,
                               Complex *tmat_l, Complex *matom,
                               Complex *zlr, Complex *jlr,
-                              double *r_sph, int *iprpts, int *iprint, char *istop, int istop_len);
+                              double *r_sph, int *iprpts, int *iprint, char *istop, int *writePhaseShift, int istop_len);
 
 void single_scatterer_rel_(Complex *ce, Complex *psq, int *lmax, int *kmymax,
                            int *idpot,// idpot=identifies vauum empty sphere: idpot=0 -> Vacuum else an atomic site (can be set to Z!)

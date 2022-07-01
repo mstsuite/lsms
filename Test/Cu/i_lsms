@@ -6,6 +6,7 @@ pot_out_type=1
 num_atoms=1
 nspin=1
 mtasa=0
+lsmsMode = "phase_shifts"
 xcFunctional={0,1} -- von Barth Hedin (LSMS_1)
 -- xcFunctional={1,1,17} -- von Barth Hedin (libxc)
 -- xcFunctional={1,1,12} -- Perdew & Wang
@@ -18,7 +19,7 @@ print_node=0
 -- istop="buildKKRMatrix"
 istop="main"
 
-nscf=50
+nscf=4
 rmsTolerance=1.e-12
 
 xRepeat=1
