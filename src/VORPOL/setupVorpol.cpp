@@ -28,6 +28,16 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
   std::vector<int> nvplanesTest(local.num_local);
   
   bool useOldAlgorithm = false;
+
+  if(lsms.global.iprint >= 0)
+  {
+    if(useOldAlgorithm)
+     printf("Constructing Voronoi polyhedra using the OLD algorithm.\n");
+    else
+     printf("Constructing Voronoi polyhedra using the NEW algorithm.\n");
+  }
+
+
   for(int i=0; i<local.num_local; i++)
   {
     if(local.atom[i].vpClusterGlobalIdx.size() > maxClusterSize)
