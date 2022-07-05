@@ -1,10 +1,12 @@
+
 #include "calculateTotalEnergy.hpp"
+
 #include "localTotalEnergy.hpp"
 
 void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local, CrystalParameters &crystal)
 {
   // do we use the old or the new energy calculation?
-  // the old version (janake) only works with the build in 
+  // the old version (janake) only works with the build in
   // xc functionals.
   // For libxc functionals the new version (localTotalEnergy) has to be used.
   const bool use_old_energy_calculation = false;
@@ -64,7 +66,7 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
 */
         int komp = 1;
         Real atcon = 1.0;
-        Real ztotssTemp = local.atom[i].ztotss;     //what for? 
+        Real ztotssTemp = local.atom[i].ztotss;     //what for?
 
         Real rSphere;
         switch (lsms.mtasa)
@@ -80,19 +82,19 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
         }
 
         Real rspin = Real(lsms.n_spin_pola);
-    
+
         janake_(&local.atom[i].vr(0,isold), &local.atom[i].vrNew(0,is),
                 &rhoTotal[0], &local.atom[i].rhoNew(0,is), &local.atom[i].corden(0,isold),
                 &local.atom[i].r_mesh[0], &local.atom[i].rInscribed, &rSphere,
-                &local.atom[i].jmt, &local.atom[i].jws, 
+                &local.atom[i].jmt, &local.atom[i].jws,
                 &komp, &atcon,
                 &ztotssTemp,
                 &local.atom[i].omegaWS,
                 &local.atom[i].exchangeCorrelationPotential(0,is), &local.atom[i].exchangeCorrelationEnergy(0,is),
-                &local.atom[i].evalsum[is], 
+                &local.atom[i].evalsum[is],
                 &local.atom[i].ecorv[isold], &local.atom[i].esemv[isold],
                 &energy, &pressure, &rspin,
-                &lsms.global.iprpts, 
+                &lsms.global.iprpts,
                 &lsms.global.iprint, lsms.global.istop, 32);
       }
 
@@ -166,7 +168,7 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
     for (int is=0; is<lsms.n_spin_pola; is++)
       local.atom[i].localEnergy += emad[is]/Real(lsms.num_atoms);
   }
-  
+
 
   totalEnergy += lsms.u0;
   totalPressure += lsms.u0;
@@ -183,7 +185,55 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
 
   delete[] emad;
   delete[] emadp;
+}
 
-  return;
+void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms,
+                          LocalTypeInfo &local, CrystalParameters &crystal,
+                          lsms::DFTEnergy &dft_energy) {
+  for (int i = 0; i < local.num_local; i++) {
+    lsms::DFTEnergy local_dft_energy;
+    localTotalEnergy(lsms, local.atom[i], local_dft_energy);
+    local.atom[i].localEnergy = local_dft_energy.total;
+    dft_energy += local_dft_energy;
+  }
 
+  lsms::globalSum(comm, dft_energy);
+
+  std::vector<Real> emad(lsms.n_spin_pola, 0.0);
+
+  Real spinFactor;
+  switch (lsms.n_spin_pola) {
+    case 1:
+      spinFactor = 1.0;
+      break;
+    default:
+      spinFactor = 0.5;
+  }
+
+  for (int is = 0; is < lsms.n_spin_pola; is++) {
+    Real spin = 1.0 - 2.0 * is;
+
+    emad[is] = 0.0;
+
+    if (lsms.mtasa < 1) {
+      int i = 0;
+      emad[is] = spinFactor * (local.atom[i].qInt + spin * local.atom[i].mInt) *
+                 local.atom[i].exchangeCorrelationE;
+    }
+
+    dft_energy.total += emad[is];
+    dft_energy.madelung += emad[is];
+
+  }
+  for (int i = 0; i < local.num_local; i++) {
+    for (int is = 0; is < lsms.n_spin_pola; is++) {
+      local.atom[i].localEnergy += emad[is] / Real(lsms.num_atoms);
+    }
+  }
+
+  dft_energy.shift = lsms.u0;
+
+  dft_energy.total += lsms.u0;
+
+  lsms.totalEnergy = dft_energy.total;
 }

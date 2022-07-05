@@ -93,7 +93,7 @@ feenableexcept (unsigned int excepts)
 
   return ( fesetenv (&fenv) ? -1 : old_excepts );
 }
-*/ 
+*/
 
 
 int main(int argc, char *argv[])
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 #ifdef LSMS_DEBUG
   MPI_Barrier(comm.comm);
 #endif
- 
+
   communicateParameters(comm, lsms, crystal, mix, alloyDesc);
   if (comm.rank != lsms.global.print_node)
     lsms.global.iprint = lsms.global.default_iprint;
@@ -209,11 +209,11 @@ int main(int argc, char *argv[])
 
   local.setNumLocal(distributeTypes(crystal, comm));
   local.setGlobalId(comm.rank, crystal);
-     
+
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceAtoms.resize(local.num_local);
 #endif
-     
+
   if(comm.rank == 0)
   {
     printf("set global ids.\n");
@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
 #endif
 
   for (int i=0; i<local.num_local; i++)
-    local.atom[i].pmat_m.resize(lsms.energyContour.groupSize());  
+    local.atom[i].pmat_m.resize(lsms.energyContour.groupSize());
 
 // set maximal number of radial grid points and core states if reading from bigcell file
   local.setMaxPts(lsms.global.iprpts);
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
       printf("Entering the LOADING of the alloy banks.\n");
       fflush(stdout);
     }
-    loadAlloyBank(comm,lsms,alloyDesc,alloyBank); 
+    loadAlloyBank(comm,lsms,alloyDesc,alloyBank);
   }
 
 // for testing purposes:
@@ -494,7 +494,7 @@ int main(int argc, char *argv[])
   int iteration;
 #ifdef USE_NVTX
   nvtxRangePushA("SCFLoop");
-#endif  
+#endif
   for (iteration=0; iteration<lsms.nscf && !(converged && energyConverged); iteration++)
   {
     if (lsms.global.iprint >= -1 && comm.rank == 0)
@@ -520,11 +520,11 @@ int main(int argc, char *argv[])
     {
       if(!mix.quantity[MixingParameters::moment_direction])
         local.atom[i].newConstraint();
-      
+
       local.atom[i].evec[0] = local.atom[i].evecNew[0];
       local.atom[i].evec[1] = local.atom[i].evecNew[1];
       local.atom[i].evec[2] = local.atom[i].evecNew[2];
-      
+
       checkIfSpinHasFlipped(lsms, local.atom[i]);
     }
 
@@ -546,11 +546,11 @@ int main(int argc, char *argv[])
 
     // Calculate charge density rms
     calculateLocalQrms(lsms, local);
-    
+
     // Mix charge density
     mixing -> updateChargeDensity(comm, lsms, local.atom);
     dTimePM = MPI_Wtime() - dTimePM;
-    timeCalcPotentialsAndMixing += dTimePM; 
+    timeCalcPotentialsAndMixing += dTimePM;
 
     // pf = fopen("vr_test_3.dat","w");
     // printAtomPotential(pf, local.atom[0]);
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
     // fclose(pf);
 
     mixing -> updatePotential(comm, lsms, local.atom);
-    
+
     // pf = fopen("vr_test_6.dat","w");
     // printAtomPotential(pf, local.atom[0]);
     // fclose(pf);
@@ -607,7 +607,7 @@ int main(int argc, char *argv[])
         rms = std::max(rms, local.atom[i].qrms[0]);
       globalMax(comm, rms);
     }
-    
+
 // check for convergence
     converged = rms < lsms.rmsTolerance;
     /*
@@ -661,7 +661,7 @@ int main(int argc, char *argv[])
       writePotentials(comm, lsms, crystal, local);
       potentialWriteCounter = 0;
       if (comm.rank == 0)
-      { 
+      {
         writeRestart("i_lsms.restart", lsms, crystal, mix, potentialShifter, alloyDesc);
       }
     }
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
   nvtxRangePop();
 #endif
   timeScfLoop = MPI_Wtime() - timeScfLoop;
-  
+
   writeInfoEvec(comm, lsms, crystal, local, eband, lsms.infoEvecFileOut);
   if(lsms.localAtomDataFile[0]!=0)
     writeLocalAtomData(comm, lsms, crystal, local, eband, lsms.localAtomDataFile);
@@ -679,7 +679,17 @@ int main(int argc, char *argv[])
   if (kFile != NULL)
     fclose(kFile);
 
- 
+  /**
+   * Total energy calculation of all contributions
+   */
+
+  lsms::DFTEnergy dft_energy;
+  calculateTotalEnergy(comm, lsms, local, crystal, dft_energy);
+
+  if (comm.rank == 0)
+  {
+    lsms::print_dft_energy( dft_energy);
+  }
 
 // -----------------------------------------------------------------------------
 
