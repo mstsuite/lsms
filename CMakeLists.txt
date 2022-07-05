@@ -75,6 +75,16 @@ if (BUILD_TESTING)
     add_subdirectory(Test)
 endif ()
 
+
+#
+# Development Test Codes
+#
+option(LSMS_DEV_TESTS "Building LSMS development test programs." OFF)
+if (LSMS_DEV_TESTS)
+  message(STATUS "Building LSMS development test programs.")
+endif ()
+
+
 #
 # Add main source subdirectory
 #

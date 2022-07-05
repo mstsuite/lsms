@@ -76,3 +76,8 @@ add_subdirectory(VORPOL)
 target_link_libraries(lsms_main PUBLIC lsmscore)
 
 target_link_libraries(lsms_wl PUBLIC lsmscore)
+
+if (LSMS_DEV_TESTS)
+  add_subdirectory(Test)
+endif ()
+
