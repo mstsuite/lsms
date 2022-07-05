@@ -308,6 +308,11 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   double timeBuildLIZandCommList = MPI_Wtime();
   // Begin cell sorting
   const Real Rc_target = 4.0; // set this to determine nx, ny, nz
+  // Real Rc_target = 4.0;
+  // for(int i=0; i<local.num_local; i++)
+  //   if(Rc_target < local.atom[i].rLIZ)
+  //     Rc_target = local.atom[i].rLIZ;
+  
   int nx = crystal.bravais(0,0)/Rc_target;
   int ny = crystal.bravais(1,1)/Rc_target;
   int nz = crystal.bravais(2,2)/Rc_target;
@@ -405,7 +410,12 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
 // before building the LIZ we should first check if it is actually needed
 // i.e find min distance between atom and local atoms and compare with max liz radius
       //tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
-      tempNumLIZ=buildLIZ(crystal,i,tempLIZ, geo, cell);
+      if(lsms.lsmsAlgorithms[LSMSAlgorithms::lizConstruction] == LSMSAlgorithms::lizConstruction_bricks)
+      {
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ, geo, cell);
+      } else {
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+      }
 
       ret=0;
       while(nodeIsInList(comm.rank,tempLIZ,tempNumLIZ,crystal,ret)) // the remote node needs the tmat from our node
