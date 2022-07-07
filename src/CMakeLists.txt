@@ -18,8 +18,6 @@ endif()
 
 add_library(lsmscore)
 
-target_link_libraries(lsmscore PUBLIC span-lite)
-
 target_link_libraries(lsms_main
         PUBLIC lsmscore)
 
