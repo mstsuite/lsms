@@ -319,10 +319,14 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
+  double timeLoadPotential = MPI_Wtime();
   loadPotentials(comm, lsms, crystal, local);
-
+  timeLoadPotential = MPI_Wtime() - timeLoadPotential;
+  
   if (lsms.global.iprint >= 0)
   {
+    printf("time loadPotential: %lf sec\n\n",timeLoadPotential);
+    
     fprintf(stdout,"LIZ for atom 0 on this node\n");
     printLIZInfo(stdout, local.atom[0]);
     if(local.atom[0].forceZeroMoment) {

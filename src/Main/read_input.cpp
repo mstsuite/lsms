@@ -423,7 +423,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
     lsms.lsmsAlgorithms[i] = 0;
   for(int j=0; j<LSMSAlgorithms::numAlgorithms; j++)
   {
-    int tmp;
+    int tmp=0;
     luaGetIntegerPositionInTable(L,"lsmsAlgorithms",j+1,&tmp);
     lsms.lsmsAlgorithms[j] = tmp;
   }
