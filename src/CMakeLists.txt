@@ -10,7 +10,15 @@ set_target_properties(lsms_main
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
+option(LEGACY_MONOPOLE "Use legacy for mono poles" OFF)
+
+if(LEGACY_MONOPOLE)
+    target_compile_definitions(lsms_main PUBLIC LEGACY_MONOPOLE)
+endif()
+
 add_library(lsmscore)
+
+target_link_libraries(lsmscore PUBLIC span-lite)
 
 target_link_libraries(lsms_main
         PUBLIC lsmscore)
@@ -57,6 +65,8 @@ add_subdirectory(LuaInterface)
 add_subdirectory(Main)
 
 add_subdirectory(Madelung)
+
+add_subdirectory(MultipoleMadelung)
 
 add_subdirectory(Misc)
 

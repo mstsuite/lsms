@@ -102,3 +102,11 @@ target_link_libraries(test_diff PRIVATE lsmscore)
 
 gtest_discover_tests(test_diff)
 ##################################################################
+
+##################################################################
+add_executable(test_madelung test_madelung.cpp)
+target_link_libraries(test_madelung PUBLIC gtest_main)
+target_link_libraries(test_madelung PRIVATE lsmscore)
+
+gtest_discover_tests(test_madelung)
+##################################################################
