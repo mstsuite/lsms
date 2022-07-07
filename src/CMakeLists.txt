@@ -1,15 +1,5 @@
 
 #
-# External libaries
-#
-
-FetchContent_Declare(
-        span-lite
-        GIT_REPOSITORY https://github.com/martinmoene/span-lite.git
-)
-FetchContent_MakeAvailable(span-lite)
-
-#
 #
 #
 add_executable(lsms_main)

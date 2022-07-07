@@ -16,7 +16,6 @@ void calculateMadelungMatrices(LSMSSystemParameters &lsms, CrystalParameters &cr
     atom_position_3[i]=crystal.position(2,i);
   }
 
-
   // int lmax=1;
   // int ndlmadv=((lmax+1)*(lmax+2))/2;
   int num_atoms=crystal.num_atoms;

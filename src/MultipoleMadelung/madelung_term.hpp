@@ -30,7 +30,7 @@ namespace lsms {
  */
 template <class T>
 inline T reciprocal_space_term(matrix<T> &knlat, std::vector<T> &knlatsq,
-                               std::vector<T> aij, int nknlat, double eta,
+                               std::vector<T> &aij, int nknlat, double eta,
                                double omega) {
   auto term12 = 0.0;
   auto fac = eta * eta / 4.0;
@@ -58,7 +58,7 @@ inline T reciprocal_space_term(matrix<T> &knlat, std::vector<T> &knlatsq,
  *
  */
 template <class T>
-inline T real_space_term(matrix<T> &rslat, std::vector<T> aij, int nrslat,
+inline T real_space_term(matrix<T> &rslat, std::vector<T> &aij, int nrslat,
                          int ibegin, T eta) {
   /*
    *  subtract aij from rslat and calculate rslatmd which is used in

@@ -116,6 +116,7 @@
       return data[k*lDim12+j*lDim1+i];
     }
 
+   // Enable also const access
     inline T operator() (size_type i, size_type j, size_type k) const {
       return data[k*lDim12+j*lDim1+i];
     }

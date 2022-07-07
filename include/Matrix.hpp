@@ -131,6 +131,7 @@
       return data[j*lDim+i];
     }
 
+    // Const access to elements
     inline T operator() (size_type i, size_type j) const {
       return data[j*lDim+i];
     }

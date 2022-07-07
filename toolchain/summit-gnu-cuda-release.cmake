@@ -9,6 +9,8 @@
 
 message(STATUS "Use toolchain file")
 
+set(BUILD_TESTING OFF)
+
 set(USE_ACCELERATOR_CUDA_C ON)
 set(USE_ESSL ON)
 set(ARCH_IBM ON)
