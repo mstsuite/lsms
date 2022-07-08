@@ -46,19 +46,30 @@ TEST_P(IntegrateEnergyTestFixture, Ezrho) {
   std::vector<double> integral = integrand;
 
   int ir_max = 500;
-  double rSphere = rmesh[ir_max];
+  double rSphere = rmesh[ir_max - 100];
+
+  // Index of element that is less then `r_sphere`
+  auto iter = std::find_if(rmesh.rbegin(), rmesh.rend(), [rSphere](double d) {
+    if (std::fabs(rSphere - d) < 1e-5) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  auto end_point = std::distance(rmesh.begin(), iter.base());
 
   auto result_11 = integrateOneDim(rmesh, integrand, integral, rSphere);
-  auto result_12 = lsms::radialIntegral(integrand, rmesh, rSphere);
+  auto result_12 = lsms::radialIntegral(integrand, rmesh, end_point);
 
   std::printf("%20.10f\n", result_11);
   std::printf("%20.10f\n", result_12);
 
-  EXPECT_NEAR(result_11, 1155.7678119820619, 10e-2);
-  EXPECT_NEAR(result_12, 1155.7678119820619, 10e-8);
+  EXPECT_NEAR(result_11, 746.9981173558, 10e-2);
+  EXPECT_NEAR(result_12, 746.9981173558, 10e-8);
 }
 
-INSTANTIATE_TEST_CASE_P(IntegrateEnergyTests, IntegrateEnergyTestFixture,
+INSTANTIATE_TEST_SUITE_P(IntegrateEnergyTests, IntegrateEnergyTestFixture,
                         ::testing::Values("ezrho1.out", "ezrho2.out",
                                           "ezrho3.out"));
 
