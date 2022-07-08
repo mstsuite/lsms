@@ -192,6 +192,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
       if(lsms.mtasa==1) jmt = local.atom[i].jws;
 // here I leave out the i_vdif<0 case!
       if (lsms.constraint == 0) {
+        // Apply constrain to rotate potential
         constraint_(&jmt,&rmt,&lsms.n_spin_pola,
             &(vr_con[i])(0,0),&local.atom[i].r_mesh[0],&pi4,
            &local.atom[i].evec[0],&evec_r(0,i),local.atom[i].b_con,
@@ -216,10 +217,10 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         rGlobal[2]=1.0;
 
         if (lsms.constraint == 0) {
-          matrot1_(rGlobal,&local.atom[i].evec[0],&local.atom[i].lmax,
+          matrot1_(rGlobal,&evec_r(0,i),&local.atom[i].lmax,
                    &local.atom[i].dmat(0,0),&local.atom[i].dmatp(0,0));
         } else {
-          matrot1_(rGlobal,&evec_r(0,i),&local.atom[i].lmax,
+          matrot1_(rGlobal,&local.atom[i].evec[0],&local.atom[i].lmax,
                    &local.atom[i].dmat(0,0),&local.atom[i].dmatp(0,0));
         }
 
