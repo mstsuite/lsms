@@ -386,20 +386,38 @@ int main(int argc, char *argv[])
       interpolatePotential(lsms, local.atom[i]);
   }
 
+  double timeCalculateVolumes = MPI_Wtime();
   calculateVolumes(comm, lsms, crystal, local);
-
+  timeCalculateVolumes = MPI_Wtime() - timeCalculateVolumes;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time calculateVolumes: %lf sec\n\n",timeCalculateVolumes);
+  }
+  
 //  loadPotentials(comm,lsms,crystal,local);
 
 // initialize Mixing
+  double timeSetupMixing = MPI_Wtime();
   Mixing *mixing;
   setupMixing(mix, mixing, lsms.global.iprint);
+  timeSetupMixing = MPI_Wtime() - timeSetupMixing;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time setupMixing: %lf sec\n\n",timeSetupMixing);
+  }
 
+  double timeCalculateMadelungMatrix = MPI_Wtime();
 // need to calculate madelung matrices
 #ifdef LEGACY_MONOPOLE
   calculateMadelungMatrices(lsms, crystal, local);
 #else
   calculateMultiMadelungMatrices(lsms, crystal, local);
 #endif
+  timeCalculateMadelungMatrix = MPI_Wtime() - timeCalculateMadelungMatrix;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time calculateMultiMadelungMatrices: %lf sec\n\n",timeCalculateMadelungMatrix);
+  }
 
   if (lsms.global.iprint >= 1)
   {
@@ -408,7 +426,10 @@ int main(int argc, char *argv[])
 
   calculateCoreStates(comm, lsms, local);
   if (lsms.global.iprint >= 0)
+  {
     printf("Finished calculateCoreStates(...)\n");
+    fflush(stdout);
+  }
 
 // check that vrs have not changed ...
 //  bool vr_check=false;
@@ -449,7 +470,13 @@ int main(int argc, char *argv[])
       local.atom[i].reset_b_basis();
   }
 
+  double timeMixingPrepare = MPI_Wtime();
   mixing -> prepare(comm, lsms, local.atom);
+  timeMixingPrepare = MPI_Wtime() - timeMixingPrepare;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time Mixing->Prepare: %lf sec\n\n",timeMixingPrepare);
+  }
 
 #ifdef USE_PAPI
   #define NUM_PAPI_EVENTS 2
@@ -484,8 +511,11 @@ int main(int argc, char *argv[])
   Real oldTotalEnergy = lsms.totalEnergy;
 
   if (lsms.global.iprint >= 0)
+  {
     printf("Total number of iterations:%d\n", lsms.nscf);
-
+    fflush(stdout);
+  }
+    
   double timeScfLoop = MPI_Wtime();
   double timeCalcChemPot = 0.0;
   double timeCalcPotentialsAndMixing = 0.0;
