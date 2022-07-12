@@ -33,6 +33,7 @@
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
+#include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
 #include "VORPOL/VORPOL.hpp"
 #include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
@@ -249,6 +250,52 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
+  double timeCalculateMadelungMatrix = MPI_Wtime();
+// need to calculate madelung matrices
+// #ifdef LEGACY_MONOPOLE
+  if (lsms.global.iprint >= 0)
+  {
+    printf("Legacy Monopole Madelung Matrix\n");
+  }
+  calculateMadelungMatrices(lsms, crystal, local);
+/*
+#else
+  if (lsms.global.iprint >= 0)
+  {
+    printf("New Multipole Madelung Matrix Routine\n");
+  }
+  calculateMultiMadelungMatrices(lsms, crystal, local);
+#endif
+*/
+  timeCalculateMadelungMatrix = MPI_Wtime() - timeCalculateMadelungMatrix;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time calculateMadelungMatrices: %lf sec\n\n",timeCalculateMadelungMatrix);
+  }
+
+  timeCalculateMadelungMatrix = MPI_Wtime();
+// need to calculate madelung matrices
+/*
+#ifdef LEGACY_MONOPOLE
+  if (lsms.global.iprint >= 0)
+  {
+    printf("Legacy Monopole Madelung Matrix\n");
+  }
+  calculateMadelungMatrices(lsms, crystal, local);
+#else
+*/
+  if (lsms.global.iprint >= 0)
+  {
+    printf("New Multipole Madelung Matrix Routine\n");
+  }
+  calculateMultiMadelungMatrices(lsms, crystal, local);
+// #endif
+  timeCalculateMadelungMatrix = MPI_Wtime() - timeCalculateMadelungMatrix;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time calculateMadelungMatrices: %lf sec\n\n",timeCalculateMadelungMatrix);
+  }
+  
   finalizeCommunication();
   lua_close(L);
   return 0;
