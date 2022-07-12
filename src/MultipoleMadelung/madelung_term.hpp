@@ -66,18 +66,17 @@ inline T real_space_term(matrix<T> &rslat, std::vector<T> &aij, int nrslat,
    *  rslatmd, and aij are in the units of a0 = 1
    */
 
-  std::vector<T> rslatmd(nrslat);
-
-  for (auto i = 0; i < nrslat; i++) {
-    rslatmd[i] = std::sqrt((rslat(0, i) - aij[0]) * (rslat(0, i) - aij[0]) +
-                           (rslat(1, i) - aij[1]) * (rslat(1, i) - aij[1]) +
-                           (rslat(2, i) - aij[2]) * (rslat(2, i) - aij[2]));
-  }
-
   auto rterm = 0.0;
 
-  for (auto i = nrslat - 1; i >= ibegin; i--) {
-    rterm += std::erfc(rslatmd[i] / eta) / rslatmd[i];
+  double rslatmd;
+
+  for (auto i = ibegin; i < nrslat; i++) {
+    rslatmd = std::sqrt((rslat(0, i) - aij[0]) * (rslat(0, i) - aij[0]) +
+                           (rslat(1, i) - aij[1]) * (rslat(1, i) - aij[1]) +
+                           (rslat(2, i) - aij[2]) * (rslat(2, i) - aij[2]));
+
+    rterm += std::erfc(rslatmd / eta) / rslatmd;
+
   }
 
   return rterm;

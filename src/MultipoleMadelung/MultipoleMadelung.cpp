@@ -28,19 +28,24 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   auto eta = lsms::calculate_eta(r_brav);
 
   // Real-space cutoffs
+  double timeRealSpace = MPI_Wtime();
   r_nm = lsms::real_space_multiplication(r_brav, lmax, eta);
   rscut = lsms::rs_trunc_radius(r_brav, lmax, eta, r_nm);
   nrslat = num_latt_vectors(r_brav, rscut, r_nm);
+  timeRealSpace = MPI_Wtime() - timeRealSpace;
 
   // Reciprocal-space cutoffs
+  double timeReciprocalSpace = MPI_Wtime();
   k_nm = lsms::reciprocal_space_multiplication(k_brav, lmax, eta);
   kncut = lsms::kn_trunc_radius(k_brav, lmax, eta, k_nm);
   nknlat = num_latt_vectors(k_brav, kncut, k_nm);
+  timeReciprocalSpace = MPI_Wtime() - timeReciprocalSpace;
 
-  if (lsms.global.iprint > 1) {
-    std::printf("Madelung: %d %d %d: %lf %d\n", r_nm[0], r_nm[1], r_nm[2],
+  if (lsms.global.iprint >= 0) {
+    std::printf("Eta: %lf:\n", eta);
+    std::printf("Madelung: %4d %4d %4d: %lf %8d\n", r_nm[0], r_nm[1], r_nm[2],
                 rscut, nrslat);
-    std::printf("Madelung: %d %d %d: %lf %d\n", k_nm[0], k_nm[1], k_nm[2],
+    std::printf("Madelung: %4d %4d %4d: %lf %8d\n", k_nm[0], k_nm[1], k_nm[2],
                 kncut, nknlat);
   }
 
@@ -73,6 +78,8 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
     local.atom[j].madelungMatrix.resize(crystal.num_atoms);
   }
 
+  double timeLoopSpace = MPI_Wtime();
+
   for (auto atom_i = 0; atom_i < num_atoms; atom_i++) {
     for (auto local_i = 0; local_i < local_num_atoms; local_i++) {
       auto global_i = local.global_id[local_i];
@@ -103,6 +110,16 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
       local.atom[local_i].madelungMatrix[atom_i] =
           (term1 + term2 + r0tm + term0) / scaling_factor;
     }
+  }
+
+  timeLoopSpace = MPI_Wtime() - timeLoopSpace;
+
+  if (lsms.global.iprint >= 0) {
+
+    std::printf("Madelung: %20s %lf\n", "Real:", timeRealSpace);
+    std::printf("Madelung: %20s %lf\n", "Reciprocal:", timeReciprocalSpace);
+    std::printf("Madelung: %20s %lf\n", "Loop:", timeLoopSpace);
+
   }
 }
 

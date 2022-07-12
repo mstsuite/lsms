@@ -408,6 +408,7 @@ int main(int argc, char *argv[])
 
   double timeCalculateMadelungMatrix = MPI_Wtime();
 // need to calculate madelung matrices
+//#define LEGACY_MONOPOLE
 #ifdef LEGACY_MONOPOLE
   calculateMadelungMatrices(lsms, crystal, local);
 #else

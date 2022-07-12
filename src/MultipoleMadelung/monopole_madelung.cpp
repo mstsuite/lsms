@@ -40,6 +40,8 @@ double lsms::scaling_factor(const lsms::matrix<double> &bravais, int lmax,
 
   std::vector<int> nm(3);
 
+  bool before = true;
+
   for (int i = 0; i <= max_iter; i++) {
     r_brav = bravais;
     r_brav.scale(1 / scaling_fac);
@@ -67,16 +69,25 @@ double lsms::scaling_factor(const lsms::matrix<double> &bravais, int lmax,
     // Calculate number of lattice vectors
     auto nknlat = num_latt_vectors(k_brav, kncut, nm);
 
-#ifdef LSMS_DEBUG
+//#ifdef LSMS_DEBUG
+    std::printf("%d %lf: \n", i, fstep);
     std::printf("ALAT: %f %f %f\n", r_brav(0, 0), r_brav(1, 1), r_brav(2, 2));
     std::printf("RS: %f KN: %f RSLAT: %d KNLAT: %d SC: %f\n", rscut, kncut,
                 nrslat, nknlat, scaling_fac);
-#endif
+//#endif
 
     if (nknlat < nrslat / 2) {
+      if (!before) {
+        fstep /= 2.0;
+      }
       scaling_fac = scaling_fac - fstep;
+      before = true;
     } else if (nrslat < nknlat / 2) {
+      if (before) {
+        fstep /= 2.0;
+      }
       scaling_fac = scaling_fac + fstep;
+      before = false;
     } else {
       break;
     }
@@ -240,6 +251,9 @@ double lsms::calculate_eta(lsms::matrix<double> &bravais) {
                  bravais(2, 2) * bravais(2, 2));
 
   auto scaling_fac = std::min({a0, a1, a2});
+
+  std::cout << scaling_fac << std::endl;
+  std::cout << std::max({a0, a1, a2}) << std::endl;
 
   return 0.5 + 0.1 * std::max({a0, a1, a2}) / scaling_fac;
 }

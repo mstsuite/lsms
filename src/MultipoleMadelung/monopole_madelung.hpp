@@ -19,7 +19,7 @@ constexpr auto EPSI = 1e-14;
  * of reciprocal and real-space lattice vectors
  */
 double scaling_factor(const matrix<double> &bravais, int lmax,
-                      int max_iter = 100, double fstep = 0.02);
+                      int max_iter = 1000, double fstep = 0.1);
 
 /**
  * Number of lattice vectors
