@@ -44,6 +44,8 @@ double lsms::scaling_factor(const lsms::matrix<double> &bravais, int lmax,
   int nknlat;
   int i;
 
+  bool before = true;
+
   for (i = 0; i <= max_iter; i++) {
     r_brav = bravais;
     r_brav.scale(1 / scaling_fac);
@@ -80,9 +82,17 @@ double lsms::scaling_factor(const lsms::matrix<double> &bravais, int lmax,
 #endif
 
     if (nknlat < nrslat / 2) {
+      if (!before) {
+        fstep /= 2.0;
+      }
       scaling_fac = scaling_fac - fstep;
+      before = true;
     } else if (nrslat < nknlat / 2) {
+      if (before) {
+        fstep /= 2.0;
+      }
       scaling_fac = scaling_fac + fstep;
+      before = false;
     } else {
       break;
     }

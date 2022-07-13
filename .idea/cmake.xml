@@ -2,7 +2,7 @@
 <project version="4">
   <component name="CMakeSharedSettings">
     <configurations>
-      <configuration PROFILE_NAME="build_release_lsms" ENABLED="true" CONFIG_NAME="Release" TOOLCHAIN_NAME="WSL-gcc-10" GENERATION_OPTIONS="-DBLA_VENDOR=Generic -DCMAKE_CXX_FLAGS=&quot;-O3 -mtune=native&quot; -DCMAKE_Fortran_FLAGS=&quot;-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch&quot; -Dlibxc_LIBRARIES=/home/fmoitzi/Libraries/libxc-5.1.5/lib/libxc.a -Dlibxc_INCLUDE_DIR=/home/fmoitzi/Libraries/libxc-5.1.5/include/" />
+      <configuration PROFILE_NAME="build_release_lsms" ENABLED="true" CONFIG_NAME="Release" TOOLCHAIN_NAME="WSL-gcc-10" GENERATION_OPTIONS="-DBLA_VENDOR=Generic -DCMAKE_CXX_FLAGS=&quot;-O3 -mtune=native -fno-math-errno&quot; -DCMAKE_Fortran_FLAGS=&quot;-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch&quot; -Dlibxc_LIBRARIES=/home/fmoitzi/Libraries/libxc-5.1.5/lib/libxc.a -Dlibxc_INCLUDE_DIR=/home/fmoitzi/Libraries/libxc-5.1.5/include/" />
       <configuration PROFILE_NAME="build_debug_lsms" ENABLED="true" TOOLCHAIN_NAME="WSL-gcc-10" GENERATION_OPTIONS="-DBLA_VENDOR=Generic -DCMAKE_Fortran_FLAGS=&quot;-Og -fbacktrace -cpp -fallow-argument-mismatch&quot; -Dlibxc_LIBRARIES=/home/fmoitzi/Libraries/libxc-5.1.5/lib/libxc.a -Dlibxc_INCLUDE_DIR=/home/fmoitzi/Libraries/libxc-5.1.5/include/" />
     </configurations>
   </component>

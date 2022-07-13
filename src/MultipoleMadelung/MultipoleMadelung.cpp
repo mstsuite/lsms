@@ -67,9 +67,6 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
    */
   auto omega = lsms::omega(r_brav);
 
-  std::vector<double> aij(3);
-  double r0tm;
-  int ibegin;
 
   // Zero terms
   auto term0 = -M_PI * eta * eta / omega;
@@ -80,14 +77,24 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
   double timeLoopSpace = MPI_Wtime();
 
-  for (auto atom_i = 0; atom_i < num_atoms; atom_i++) {
-    for (auto local_i = 0; local_i < local_num_atoms; local_i++) {
-      auto global_i = local.global_id[local_i];
+  // Introduced for smaller objects
+  auto position = crystal.position;
+
+  #pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
+  for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
+    for (int local_i = 0; local_i < local_num_atoms; local_i++) {
+
+      std::vector<double> aij(3);
+      double r0tm;
+      int ibegin;
+
+      // Global index
+      int global_i = local.global_id[local_i];
 
       // a_ij in unit of a0
       for (int idx = 0; idx < 3; idx++) {
-        aij[idx] = crystal.position(idx, atom_i) / scaling_factor -
-                   crystal.position(idx, global_i) / scaling_factor;
+        aij[idx] = position(idx, atom_i) / scaling_factor -
+            position(idx, global_i) / scaling_factor;
       }
 
       // Real space terms: first terms
@@ -119,6 +126,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
     std::printf("Time: %16s %lf\n", "Reciprocal:", timeReciprocalSpace);
     std::printf("Time: %16s %lf\n", "Loop:", timeLoopSpace);
   }
+
 }
 
 double lsms::MultipoleMadelung::getScalingFactor() const {
