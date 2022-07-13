@@ -28,20 +28,25 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   auto eta = lsms::calculate_eta(r_brav);
 
   // Real-space cutoffs
+  double timeRealSpace = MPI_Wtime();
   r_nm = lsms::real_space_multiplication(r_brav, lmax, eta);
   rscut = lsms::rs_trunc_radius(r_brav, lmax, eta, r_nm);
   nrslat = num_latt_vectors(r_brav, rscut, r_nm);
+  timeRealSpace = MPI_Wtime() - timeRealSpace;
 
   // Reciprocal-space cutoffs
+  double timeReciprocalSpace = MPI_Wtime();
   k_nm = lsms::reciprocal_space_multiplication(k_brav, lmax, eta);
   kncut = lsms::kn_trunc_radius(k_brav, lmax, eta, k_nm);
   nknlat = num_latt_vectors(k_brav, kncut, k_nm);
+  timeReciprocalSpace = MPI_Wtime() - timeReciprocalSpace;
 
-  if (lsms.global.iprint > 1) {
-    std::printf("Madelung: %d %d %d: %lf %d\n", r_nm[0], r_nm[1], r_nm[2],
+  if (lsms.global.iprint >= 0) {
+    std::printf("Eta: %lf Scaling: %lf\n", eta, scaling_factor);
+    std::printf("Real space: %3d %3d %3d: %lf %8d\n", r_nm[0], r_nm[1], r_nm[2],
                 rscut, nrslat);
-    std::printf("Madelung: %d %d %d: %lf %d\n", k_nm[0], k_nm[1], k_nm[2],
-                kncut, nknlat);
+    std::printf("Reciprocal space: %3d %3d %3d: %lf %8d\n", k_nm[0], k_nm[1],
+                k_nm[2], kncut, nknlat);
   }
 
   // Create the lattice vectors
@@ -62,9 +67,6 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
    */
   auto omega = lsms::omega(r_brav);
 
-  std::vector<double> aij(3);
-  double r0tm;
-  int ibegin;
 
   // Zero terms
   auto term0 = -M_PI * eta * eta / omega;
@@ -73,14 +75,26 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
     local.atom[j].madelungMatrix.resize(crystal.num_atoms);
   }
 
-  for (auto atom_i = 0; atom_i < num_atoms; atom_i++) {
-    for (auto local_i = 0; local_i < local_num_atoms; local_i++) {
-      auto global_i = local.global_id[local_i];
+  double timeLoopSpace = MPI_Wtime();
+
+  // Introduced for smaller objects
+  auto position = crystal.position;
+
+  #pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
+  for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
+    for (int local_i = 0; local_i < local_num_atoms; local_i++) {
+
+      std::vector<double> aij(3);
+      double r0tm;
+      int ibegin;
+
+      // Global index
+      int global_i = local.global_id[local_i];
 
       // a_ij in unit of a0
       for (int idx = 0; idx < 3; idx++) {
-        aij[idx] = crystal.position(idx, atom_i) / scaling_factor -
-                   crystal.position(idx, global_i) / scaling_factor;
+        aij[idx] = position(idx, atom_i) / scaling_factor -
+            position(idx, global_i) / scaling_factor;
       }
 
       // Real space terms: first terms
@@ -104,6 +118,15 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
           (term1 + term2 + r0tm + term0) / scaling_factor;
     }
   }
+
+  timeLoopSpace = MPI_Wtime() - timeLoopSpace;
+
+  if (lsms.global.iprint >= 0) {
+    std::printf("Time: %16s %lf\n", "Real:", timeRealSpace);
+    std::printf("Time: %16s %lf\n", "Reciprocal:", timeReciprocalSpace);
+    std::printf("Time: %16s %lf\n", "Loop:", timeLoopSpace);
+  }
+
 }
 
 double lsms::MultipoleMadelung::getScalingFactor() const {
