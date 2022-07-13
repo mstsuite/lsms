@@ -72,11 +72,10 @@ inline T real_space_term(matrix<T> &rslat, std::vector<T> &aij, int nrslat,
 
   for (auto i = ibegin; i < nrslat; i++) {
     rslatmd = std::sqrt((rslat(0, i) - aij[0]) * (rslat(0, i) - aij[0]) +
-                           (rslat(1, i) - aij[1]) * (rslat(1, i) - aij[1]) +
-                           (rslat(2, i) - aij[2]) * (rslat(2, i) - aij[2]));
+                        (rslat(1, i) - aij[1]) * (rslat(1, i) - aij[1]) +
+                        (rslat(2, i) - aij[2]) * (rslat(2, i) - aij[2]));
 
     rterm += std::erfc(rslatmd / eta) / rslatmd;
-
   }
 
   return rterm;

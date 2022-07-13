@@ -42,11 +42,11 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   timeReciprocalSpace = MPI_Wtime() - timeReciprocalSpace;
 
   if (lsms.global.iprint >= 0) {
-    std::printf("Eta: %lf:\n", eta);
-    std::printf("Madelung: %4d %4d %4d: %lf %8d\n", r_nm[0], r_nm[1], r_nm[2],
+    std::printf("Eta: %lf Scaling: %lf\n", eta, scaling_factor);
+    std::printf("Real space: %3d %3d %3d: %lf %8d\n", r_nm[0], r_nm[1], r_nm[2],
                 rscut, nrslat);
-    std::printf("Madelung: %4d %4d %4d: %lf %8d\n", k_nm[0], k_nm[1], k_nm[2],
-                kncut, nknlat);
+    std::printf("Reciprocal space: %3d %3d %3d: %lf %8d\n", k_nm[0], k_nm[1],
+                k_nm[2], kncut, nknlat);
   }
 
   // Create the lattice vectors
@@ -115,11 +115,9 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   timeLoopSpace = MPI_Wtime() - timeLoopSpace;
 
   if (lsms.global.iprint >= 0) {
-
-    std::printf("Madelung: %20s %lf\n", "Real:", timeRealSpace);
-    std::printf("Madelung: %20s %lf\n", "Reciprocal:", timeReciprocalSpace);
-    std::printf("Madelung: %20s %lf\n", "Loop:", timeLoopSpace);
-
+    std::printf("Time: %16s %lf\n", "Real:", timeRealSpace);
+    std::printf("Time: %16s %lf\n", "Reciprocal:", timeReciprocalSpace);
+    std::printf("Time: %16s %lf\n", "Loop:", timeLoopSpace);
   }
 }
 

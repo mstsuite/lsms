@@ -22,27 +22,29 @@ double lsms::scaling_factor(const lsms::matrix<double> &bravais, int lmax,
   lsms::matrix<double> k_brav(3, 3);
 
   // Get the shortest axis
-  auto a0 =
+  double a0 =
       std::sqrt(bravais(0, 0) * bravais(0, 0) + bravais(1, 0) * bravais(1, 0) +
                 bravais(2, 0) * bravais(2, 0));
 
-  auto a1 =
+  double a1 =
       std::sqrt(bravais(0, 1) * bravais(0, 1) + bravais(1, 1) * bravais(1, 1) +
                 bravais(2, 1) * bravais(2, 1));
 
-  auto a2 =
+  double a2 =
       std::sqrt(bravais(0, 2) * bravais(0, 2) + bravais(1, 2) * bravais(1, 2) +
                 bravais(2, 2) * bravais(2, 2));
 
   double scaling_fac = std::min({a0, a1, a2});
-  auto eta = 0.5 + 0.1 * std::max({a0, a1, a2}) / scaling_fac;
+  double eta = 0.5 + 0.1 * std::max({a0, a1, a2}) / scaling_fac;
   scaling_fac /= 2.0 * M_PI;
 
   std::vector<int> nm(3);
 
-  bool before = true;
+  int nrslat;
+  int nknlat;
+  int i;
 
-  for (int i = 0; i <= max_iter; i++) {
+  for (i = 0; i <= max_iter; i++) {
     r_brav = bravais;
     r_brav.scale(1 / scaling_fac);
     k_brav = 0.0;
@@ -51,46 +53,43 @@ double lsms::scaling_factor(const lsms::matrix<double> &bravais, int lmax,
 
     // Radius of real space truncation sphere
     nm = real_space_multiplication(r_brav, lmax, eta);
-    auto rscut = rs_trunc_radius(r_brav, lmax, eta, nm);
+    double rscut = rs_trunc_radius(r_brav, lmax, eta, nm);
 #ifdef LSMS_DEBUG
     std::cout << nm[0] << " " << nm[1] << " " << nm[2] << std::endl;
 #endif
 
     // Calculate number of lattice vectors
-    auto nrslat = num_latt_vectors(r_brav, rscut, nm);
+    nrslat = num_latt_vectors(r_brav, rscut, nm);
 
     // Radius of reciprocal space
     nm = reciprocal_space_multiplication(k_brav, lmax, eta);
-    auto kncut = kn_trunc_radius(k_brav, lmax, eta, nm);
+    double kncut = kn_trunc_radius(k_brav, lmax, eta, nm);
 #ifdef LSMS_DEBUG
+    std::printf("%f %f %f\n", k_brav(0, 0), k_brav(1, 1), k_brav(2, 2));
     std::cout << nm[0] << " " << nm[1] << " " << nm[2] << std::endl;
 #endif
 
     // Calculate number of lattice vectors
-    auto nknlat = num_latt_vectors(k_brav, kncut, nm);
+    nknlat = num_latt_vectors(k_brav, kncut, nm);
 
-//#ifdef LSMS_DEBUG
+#ifdef LSMS_DEBUG
     std::printf("%d %lf: \n", i, fstep);
     std::printf("ALAT: %f %f %f\n", r_brav(0, 0), r_brav(1, 1), r_brav(2, 2));
     std::printf("RS: %f KN: %f RSLAT: %d KNLAT: %d SC: %f\n", rscut, kncut,
                 nrslat, nknlat, scaling_fac);
-//#endif
+#endif
 
     if (nknlat < nrslat / 2) {
-      if (!before) {
-        fstep /= 2.0;
-      }
       scaling_fac = scaling_fac - fstep;
-      before = true;
     } else if (nrslat < nknlat / 2) {
-      if (before) {
-        fstep /= 2.0;
-      }
       scaling_fac = scaling_fac + fstep;
-      before = false;
     } else {
       break;
     }
+  }
+
+  if (i == max_iter) {
+    throw std::invalid_argument("Scaling in Madelung didn't work!!!");
   }
 
   return scaling_fac;
@@ -251,9 +250,6 @@ double lsms::calculate_eta(lsms::matrix<double> &bravais) {
                  bravais(2, 2) * bravais(2, 2));
 
   auto scaling_fac = std::min({a0, a1, a2});
-
-  std::cout << scaling_fac << std::endl;
-  std::cout << std::max({a0, a1, a2}) << std::endl;
 
   return 0.5 + 0.1 * std::max({a0, a1, a2}) / scaling_fac;
 }
