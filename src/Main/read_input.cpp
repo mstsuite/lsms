@@ -410,6 +410,7 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       else if(strncmp(h,"gf_out",80)==0) lsms.lsmsMode=LSMSMode::gf_out;
       else if(strncmp(h,"matsubara",80)==0) lsms.lsmsMode=LSMSMode::matsubara;
       else if(strncmp(h,"kkrmat",80)==0) lsms.lsmsMode=LSMSMode::kkrmat;
+      else if(strncmp(h,"kubo",80)==0) lsms.lsmsMode=LSMSMode::kubo;
       else
       {
         printf("!!! Unknown lsmsMode: '%s'\n!!!  Defaulting to 'main'.\n",h);
