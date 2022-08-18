@@ -437,9 +437,7 @@ void communicatePotentialShiftParameters(LSMSCommunication &comm, PotentialShift
     MPI_Unpack(buf, s, &pos, &ps.minShift, 1, MPI_DOUBLE, comm.comm);
     MPI_Unpack(buf, s, &pos, &ps.maxShift, 1, MPI_DOUBLE, comm.comm);
 
-  }  
-
-
+  }
 }
 
 
@@ -458,6 +456,56 @@ void expectTmatCommunication(LSMSCommunication &comm, LocalTypeInfo &local)
     }
   }
 }
+
+void expectJxCommunication(LSMSCommunication &comm, LocalTypeInfo &local)
+{
+// prepost all recieves for tmats from remote nodes
+  for(int i=0; i<comm.numJFrom; i++)
+  {
+    int from=comm.JFrom[i].remoteNode;
+    for(int j=0; j<comm.JFrom[i].numJs; j++)
+    {
+      // printf("Node %d: expect tmat %d from %d\n",comm.rank,comm.tmatFrom[i].globalIdx[j],from);
+      MPI_Irecv(&local.JxStore(0,comm.JFrom[i].JStoreIdx[j]),2*local.lDimTmatStore,
+                MPI_DOUBLE,from,comm.JFrom[i].globalIdx[j],comm.comm,
+                &comm.JFrom[i].JxcommunicationRequest[j]);
+    }
+  }
+}
+
+void expectJyCommunication(LSMSCommunication &comm, LocalTypeInfo &local)
+{
+// prepost all recieves for tmats from remote nodes
+  for(int i=0; i<comm.numJFrom; i++)
+  {
+    int from=comm.JFrom[i].remoteNode;
+    for(int j=0; j<comm.JFrom[i].numJs; j++)
+    {
+      // printf("Node %d: expect tmat %d from %d\n",comm.rank,comm.tmatFrom[i].globalIdx[j],from);
+      MPI_Irecv(&local.JyStore(0,comm.JFrom[i].JStoreIdx[j]),2*local.lDimTmatStore,
+                MPI_DOUBLE,from,comm.JFrom[i].globalIdx[j],comm.comm,
+                &comm.JFrom[i].JycommunicationRequest[j]);
+    }
+  }
+}
+
+void expectJzCommunication(LSMSCommunication &comm, LocalTypeInfo &local)
+{
+// prepost all recieves for tmats from remote nodes
+  for(int i=0; i<comm.numJFrom; i++)
+  {
+    int from=comm.JFrom[i].remoteNode;
+    for(int j=0; j<comm.JFrom[i].numJs; j++)
+    {
+      // printf("Node %d: expect tmat %d from %d\n",comm.rank,comm.tmatFrom[i].globalIdx[j],from);
+      MPI_Irecv(&local.JzStore(0,comm.JFrom[i].JStoreIdx[j]),2*local.lDimTmatStore,
+                MPI_DOUBLE,from,comm.JFrom[i].globalIdx[j],comm.comm,
+                &comm.JFrom[i].JzcommunicationRequest[j]);
+    }
+  }
+}
+
+
 
 void sendTmats(LSMSCommunication &comm, LocalTypeInfo &local)
 {
@@ -478,6 +526,67 @@ void sendTmats(LSMSCommunication &comm, LocalTypeInfo &local)
     }
   }
 }
+
+void sendJx(LSMSCommunication &comm, LocalTypeInfo &local)
+{
+  for(int i=0; i<comm.numJTo; i++)
+  {
+    int to=comm.JTo[i].remoteNode;
+    for(int j=0; j<comm.JTo[i].numJs; j++)
+    {
+      // printf("Node %d: send tmat %d to %d\n",comm.rank,comm.tmatTo[i].globalIdx[j],to);
+#ifdef USE_ISEND
+      MPI_Isend(&local.JxStore(0,comm.JTo[i].JStoreIdx[j]),2*local.lDimTmatStore,
+                MPI_DOUBLE,to,comm.JTo[i].globalIdx[j],comm.comm,
+                &comm.JTo[i].JxcommunicationRequest[j]);
+#else
+      MPI_Send(&local.JxStore(0,comm.JTo[i].JStoreIdx[j]),2*local.lDimTmatStore,
+               MPI_DOUBLE,to,comm.JTo[i].globalIdx[j],comm.comm);
+#endif
+    }
+  }
+}
+
+void sendJy(LSMSCommunication &comm, LocalTypeInfo &local)
+{
+  for(int i=0; i<comm.numJTo; i++)
+  {
+    int to=comm.JTo[i].remoteNode;
+    for(int j=0; j<comm.JTo[i].numJs; j++)
+    {
+      // printf("Node %d: send tmat %d to %d\n",comm.rank,comm.tmatTo[i].globalIdx[j],to);
+#ifdef USE_ISEND
+      MPI_Isend(&local.JyStore(0,comm.JTo[i].JStoreIdx[j]),2*local.lDimTmatStore,
+                MPI_DOUBLE,to,comm.JTo[i].globalIdx[j],comm.comm,
+                &comm.JTo[i].JycommunicationRequest[j]);
+#else
+      MPI_Send(&local.JyStore(0,comm.JTo[i].JStoreIdx[j]),2*local.lDimTmatStore,
+               MPI_DOUBLE,to,comm.JTo[i].globalIdx[j],comm.comm);
+#endif
+    }
+  }
+}
+
+void sendJz(LSMSCommunication &comm, LocalTypeInfo &local)
+{
+  for(int i=0; i<comm.numJTo; i++)
+  {
+    int to=comm.JTo[i].remoteNode;
+    for(int j=0; j<comm.JTo[i].numJs; j++)
+    {
+      // printf("Node %d: send tmat %d to %d\n",comm.rank,comm.tmatTo[i].globalIdx[j],to);
+#ifdef USE_ISEND
+      MPI_Isend(&local.JzStore(0,comm.JTo[i].JStoreIdx[j]),2*local.lDimTmatStore,
+                MPI_DOUBLE,to,comm.JTo[i].globalIdx[j],comm.comm,
+                &comm.JTo[i].JzcommunicationRequest[j]);
+#else
+      MPI_Send(&local.JzStore(0,comm.JTo[i].JStoreIdx[j]),2*local.lDimTmatStore,
+               MPI_DOUBLE,to,comm.JTo[i].globalIdx[j],comm.comm);
+#endif
+    }
+  }
+}
+
 void finalizeTmatCommunication(LSMSCommunication &comm)
 {
   MPI_Status status;
@@ -498,6 +607,81 @@ void finalizeTmatCommunication(LSMSCommunication &comm)
     {
       // printf("Finalize send request %d to node %d\n",j,to);
       MPI_Wait(&comm.tmatTo[i].communicationRequest[j],&status);
+    }
+  }
+#endif
+}
+
+void finalizeJxCommunication(LSMSCommunication &comm)
+{
+  MPI_Status status;
+  for(int i=0; i<comm.numJFrom; i++)
+  {
+    int from=comm.JFrom[i].remoteNode;
+    for(int j=0; j<comm.JFrom[i].numJs; j++)
+    {
+      // printf("Finalize recieve request %d from node %d\n",j,from);
+      MPI_Wait(&comm.JFrom[i].JxcommunicationRequest[j],&status);
+    }
+  }
+#ifdef USE_ISEND
+  for(int i=0; i<comm.numJTo; i++)
+  {
+    int to=comm.JTo[i].remoteNode;
+    for(int j=0; j<comm.JTo[i].numJs; j++)
+    {
+      // printf("Finalize send request %d to node %d\n",j,to);
+      MPI_Wait(&comm.JTo[i].JxcommunicationRequest[j],&status);
+    }
+  }
+#endif
+}
+
+void finalizeJyCommunication(LSMSCommunication &comm)
+{
+  MPI_Status status;
+  for(int i=0; i<comm.numJFrom; i++)
+  {
+    int from=comm.JFrom[i].remoteNode;
+    for(int j=0; j<comm.JFrom[i].numJs; j++)
+    {
+      // printf("Finalize recieve request %d from node %d\n",j,from);
+      MPI_Wait(&comm.JFrom[i].JycommunicationRequest[j],&status);
+    }
+  }
+#ifdef USE_ISEND
+  for(int i=0; i<comm.numJTo; i++)
+  {
+    int to=comm.JTo[i].remoteNode;
+    for(int j=0; j<comm.JTo[i].numJs; j++)
+    {
+      // printf("Finalize send request %d to node %d\n",j,to);
+      MPI_Wait(&comm.JTo[i].JycommunicationRequest[j],&status);
+    }
+  }
+#endif
+}
+
+void finalizeJzCommunication(LSMSCommunication &comm)
+{
+  MPI_Status status;
+  for(int i=0; i<comm.numJFrom; i++)
+  {
+    int from=comm.JFrom[i].remoteNode;
+    for(int j=0; j<comm.JFrom[i].numJs; j++)
+    {
+      // printf("Finalize recieve request %d from node %d\n",j,from);
+      MPI_Wait(&comm.JFrom[i].JzcommunicationRequest[j],&status);
+    }
+  }
+#ifdef USE_ISEND
+  for(int i=0; i<comm.numJTo; i++)
+  {
+    int to=comm.JTo[i].remoteNode;
+    for(int j=0; j<comm.JTo[i].numJs; j++)
+    {
+      // printf("Finalize send request %d to node %d\n",j,to);
+      MPI_Wait(&comm.JTo[i].JzcommunicationRequest[j],&status);
     }
   }
 #endif
