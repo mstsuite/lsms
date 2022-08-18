@@ -12,6 +12,8 @@ target_sources(lsmscore
         calculateGaussLegendrePoints.hpp
         cgaunt_c.f
         clock_time.c
+        ClebschGordan.hpp
+        ClebschGordan.cpp
         cgc.h
         cinterp.f
         clebsch.f
