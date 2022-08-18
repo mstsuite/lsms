@@ -52,6 +52,8 @@ add_subdirectory(Communication)
 
 add_subdirectory(Core)
 
+add_subdirectory(Kubo)
+
 add_subdirectory(LuaInterface)
 
 add_subdirectory(Main)
