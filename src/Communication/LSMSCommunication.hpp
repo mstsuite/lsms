@@ -24,6 +24,17 @@ public:
   std::vector<MPI_Request> communicationRequest;
 };
 
+class JCommType {
+public:
+  int remoteNode;
+  int numJs;
+  std::vector<int> JStoreIdx;
+  std::vector<int> globalIdx;
+  std::vector<MPI_Request> JxcommunicationRequest;
+  std::vector<MPI_Request> JycommunicationRequest;
+  std::vector<MPI_Request> JzcommunicationRequest;
+};
+
 class LSMSCommunication {
 public:
   int rank;
@@ -31,7 +42,9 @@ public:
   MPI_Comm comm;
 
   int numTmatTo, numTmatFrom;
+  int numJTo, numJFrom;
   std::vector<TmatCommType> tmatTo, tmatFrom;
+  std::vector<JCommType> JTo, JFrom;
 };
 
 // mixing.hpp needs to be included after the definition of LSMSCommunication, since some mix
@@ -55,9 +68,21 @@ void communicatePotentialShiftParameters(LSMSCommunication &comm, PotentialShift
 
 void expectTmatCommunication(LSMSCommunication &comm, LocalTypeInfo &local);
 
+void expectJxCommunication(LSMSCommunication &comm, LocalTypeInfo &local);
+void expectJyCommunication(LSMSCommunication &comm, LocalTypeInfo &local);
+void expectJzCommunication(LSMSCommunication &comm, LocalTypeInfo &local);
+
 void sendTmats(LSMSCommunication &comm, LocalTypeInfo &local);
 
+void sendJx(LSMSCommunication &comm, LocalTypeInfo &local);
+void sendJy(LSMSCommunication &comm, LocalTypeInfo &local);
+void sendJz(LSMSCommunication &comm, LocalTypeInfo &local);
+
 void finalizeTmatCommunication(LSMSCommunication &comm);
+
+void finalizeJxCommunication(LSMSCommunication &comm);
+void finalizeJyCommunication(LSMSCommunication &comm);
+void finalizeJzCommunication(LSMSCommunication &comm);
 
 void printCommunicationInfo(FILE *f, LSMSCommunication &comm);
 
