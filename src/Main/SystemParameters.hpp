@@ -231,6 +231,9 @@ public:
   int lDimTmatStore, blkSizeTmatStore;
   Matrix<Complex> tmatStore;
   std::vector<int> tmatStoreGlobalIdx;
+// JStore matrices for current matrix
+// Memory allocation will only take place in kubo mode
+  Matrix<Complex> JxStore, JyStore, JzStore;
 
   Real qrms[2];
   Real vrms[2];
