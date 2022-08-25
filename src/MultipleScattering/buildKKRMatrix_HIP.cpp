@@ -335,7 +335,11 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
     {
       int lm2 = ij % kkri;
       int lm1 = ij / kkri;
-      devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] = make_hipDoubleComplex(0.0, 0.0);
+
+      auto devBgijPointer = &devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)];
+      
+      // devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] = make_hipDoubleComplex(0.0, 0.0);
+      *devBgijPointer =  make_hipDoubleComplex(0.0, 0.0);
       // bgij(iOffset + lm2, jOffset + lm1) = 0.0;
       // }
     
@@ -361,16 +365,19 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
       int m3=m2-m1;
       int llow=max(abs(m3), abs(l1-l2));
       if(hipCabs(prel)==0.0) llow=l1+l2;
+      
       for(int l3=l1+l2; l3>=llow; l3-=2)
       {
         int j=l3*(l3+1)+m3;
         // gij[lm2+lm1*kkri] = gij[lm2+lm1*kkri]+cgnt(l3/2,lm1,lm2)*dlm[j];
-        devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] =  devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)]
+        // devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] =  devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)]
+        *devBgijPointer = *devBgijPointer
           + cgnt[IDX3(l3/2,lm1,lm2,lmaxp1_cgnt,ndlj_cgnt)]
           * dlmFunction(hfn, cosmp, sinmp, plm, l3, m3); //dlm[j];
       }
       // gij[lm2+lm1*kkri]=pi4*illp(lm2,lm1)*gij[lm2+lm1*kkri];
-      devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] = devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)]
+      // devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] = devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)]
+      *devBgijPointer = *devBgijPointer
         * pi4 * illp[IDX(lm2, lm1, ndlj_illp)];
     }
 
@@ -461,9 +468,11 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
 //                     // &bgijSmall(0, 0), &kkrsz_ns, &czero,
 //                     &m(iOffset, jOffset), &nrmat_ns);
 
+    /*
     for(int j=0; j<kkr2_ns; j++)
     {
     }
+    */
         
 //    for(int i=0; i<kkr1_ns; i++)
 //      for(int j=0; j<kkr2_ns; j++)
@@ -477,11 +486,17 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
       int i = ij % kkr1_ns;
       int j = ij / kkr1_ns;
 
-      devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = make_hipDoubleComplex(0.0,0.0);
+      int ijIdx = IDX(iOffset + i, jOffset + j, nrmat_ns);
+      auto devMPointer = &devM[ijIdx];
+      // devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = make_hipDoubleComplex(0.0,0.0);
+      *devMPointer = make_hipDoubleComplex(0.0,0.0);
       for(int k=0; k<kkr1_ns ; k++)
-        devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] -
-          tmat_n[IDX(i,k,kkr1_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
+      {
+        // devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] -
+        *devMPointer = *devMPointer -
+        tmat_n[IDX(i,k,kkr1_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
           devBgij[IDX(iOffset + k, jOffset + j, nrmat_ns)];
+      }
     }
     
   }
