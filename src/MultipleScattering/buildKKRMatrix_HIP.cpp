@@ -420,7 +420,7 @@ void buildTmatNHip(int ispin, int n_spin_pola, int n_spin_cant, int iie, int blk
             for(int i=0; i<kkr1; i++)
             {
               // tmat_n[im+i] = devTmatStore[IDX(iie*blkSizeTmatStore+jm+i, lizStoreIdx, tmatStoreLDim)];
-              tmat_n[im+i] = devTmatStorei + tmatIdx0];
+              tmat_n[im+i] = devTmatStore[i + tmatIdx0];
             }
             im+=kkr1;
           }
