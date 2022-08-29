@@ -366,6 +366,8 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
       int m3=m2-m1;
       int llow=max(abs(m3), abs(l1-l2));
       if(hipCabs(prel)==0.0) llow=l1+l2;
+
+      int cgntIdx0 = IDX3(0,lm1,lm2,lmaxp1_cgnt,ndlj_cgnt);
       
       for(int l3=l1+l2; l3>=llow; l3-=2)
       {
@@ -374,7 +376,8 @@ void buildGijHipKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, deviceD
         // devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] =  devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)]
         // *devBgijPointer = *devBgijPointer
         devBgijValue = devBgijValue
-          + cgnt[IDX3(l3/2,lm1,lm2,lmaxp1_cgnt,ndlj_cgnt)]
+          // + cgnt[IDX3(l3/2,lm1,lm2,lmaxp1_cgnt,ndlj_cgnt)]
+          + cgnt[(l3 >> 1) + cgntIdx0]
           * dlmFunction(hfn, cosmp, sinmp, plm, l3, m3); //dlm[j];
       }
       // gij[lm2+lm1*kkri]=pi4*illp(lm2,lm1)*gij[lm2+lm1*kkri];
@@ -413,9 +416,11 @@ void buildTmatNHip(int ispin, int n_spin_pola, int n_spin_cant, int iie, int blk
             int jm=jsm+kkrsz_ns*j+kkrsz*is;
 //                int one=1;
 //                BLAS::zcopy_(&kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
+            int tmatIdx0 = IDX(iie*blkSizeTmatStore + jm, lizStoreIdx, tmatStoreLDim);
             for(int i=0; i<kkr1; i++)
             {
-              tmat_n[im+i] = devTmatStore[IDX(iie*blkSizeTmatStore+jm+i, lizStoreIdx, tmatStoreLDim)];
+              // tmat_n[im+i] = devTmatStore[IDX(iie*blkSizeTmatStore+jm+i, lizStoreIdx, tmatStoreLDim)];
+              tmat_n[im+i] = devTmatStorei + tmatIdx0];
             }
             im+=kkr1;
           }
@@ -432,9 +437,11 @@ void buildTmatNHip(int ispin, int n_spin_pola, int n_spin_cant, int iie, int blk
         int jm=jsm+kkrsz_ns*j;
 //           int one=1;
 //           BLAS::zcopy_(&kkr1,&local.tmatStore(iie*local.blkSizeTmatStore+jm,atom.LIZStoreIdx[ir1]),&one,&tmat_n[im],&one);
+        int tmatIdx0 = IDX(iie*blkSizeTmatStore + jm, lizStoreIdx, tmatStoreLDim);
         for(int i=0; i<kkr1; i++)
         {
-          tmat_n[im+i] = devTmatStore[IDX(iie*blkSizeTmatStore+jm+i, lizStoreIdx, tmatStoreLDim)];
+          // tmat_n[im+i] = devTmatStore[IDX(iie*blkSizeTmatStore  +jm + i, lizStoreIdx, tmatStoreLDim)];
+          tmat_n[im+i] = devTmatStore[i + tmatIdx0];
         }
         im+=kkr1;
       }
@@ -494,12 +501,17 @@ void buildKKRMatrixMultiplyKernelHip(int *LIZlmax, int *LIZStoreIdx, int *offset
       // devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = make_hipDoubleComplex(0.0,0.0);
       // *devMPointer = make_hipDoubleComplex(0.0,0.0);
       auto devMValue = make_hipDoubleComplex(0.0,0.0);
+      int devBgijIdx0 = IDX(iOffset, jOffset + j, nrmat_ns);
+      int tmat_nIdx = IDX(i,0,kkr1_ns);
       for(int k=0; k<kkr1_ns ; k++)
       {
         // devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] -
         devMValue = devMValue -
-        tmat_n[IDX(i,k,kkr1_ns)] * // tmat_n(i, k) * // local.tmatStore(iie*local.blkSizeTmatStore + , atom.LIZStoreIdx[ir1]) *
-          devBgij[IDX(iOffset + k, jOffset + j, nrmat_ns)];
+          // tmat_n[IDX(i,k,kkr1_ns)] *
+          tmat_n[tmat_nIdx] *
+          // devBgij[IDX(iOffset + k, jOffset + j, nrmat_ns)];
+          devBgij[k + devBgijIdx0];
+        tmat_nIdx += kkr1_ns;
       }
       devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devMValue;
     }
