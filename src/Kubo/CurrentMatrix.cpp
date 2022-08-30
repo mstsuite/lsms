@@ -10,7 +10,8 @@ void CurrentMatrix::init(LSMSSystemParameters &lsms, LocalTypeInfo &local,
     pnrel = sqrt(en*(1.0 + en*c2inv));
     atom = &a;
     kkrsz = a.kkrsz;
-    lmax_cg = a.lmax + 2;
+    nrmat = a.nrmat;
+    lmax_cg = 2*a.lmax;
     solutionNonRel.init(lsms, a, &local.tmatStore(0,local_index));
     ClebschGordan::init(lmax_cg);
 
@@ -23,6 +24,10 @@ void CurrentMatrix::init(LSMSSystemParameters &lsms, LocalTypeInfo &local,
     calRadialSolutionDerivative(a);
     assembleJxFromRadialIntegral(a);
     calJyzFromJx();
+
+    m.resize(nrmat, nrmat);
+    tau0.resize(kkrsz, kkrsz);
+    tau1.resize(nrmat, nrmat);
 }
 
 Complex CurrentMatrix::calPrefactor(int L, int Lp, int dir, int choice){
@@ -169,4 +174,30 @@ void CurrentMatrix::calJyzFromJx(){
         }
       }
     }
+}
+
+void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                         AtomData &a){
+     lsms.angularMomentumIndices.init(2*lsms.maxlmax);
+     buildKKRMatrix(lsms,local,a,is,energy,prel,0,m);
+     solveTauFullzgetrf(lsms,local,a,m,tau1,0);
+     /*
+     calculateTauMatrix(lsms, local, a, local_index,
+                        is, energy, prel,&tau0(0,0),m,0);
+    
+    for(int i=0;i<kkrsz;i++){
+      for (int j=0;j<kkrsz;j++){
+         std::cout << tau0(i,j) << "  ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "00 block of full matrix" << std::endl;
+    std::cout << std::endl;
+    for (int i=0; i<kkrsz;i++){
+      for (int j=0; j<kkrsz;j++){
+         std::cout << tau1(i,j) << "  ";
+      }
+      std::cout << std::endl;
+    }
+    */
 }

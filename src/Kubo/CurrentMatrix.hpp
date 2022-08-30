@@ -9,17 +9,19 @@
 #include "Main/SystemParameters.hpp"
 #include "PhysicalConstants.hpp"
 #include "SingleSite/SingleSiteScattering.hpp"
+#include "MultipleScattering/linearSolvers.hpp"
+#include "MultipleScattering/MultipleScattering.hpp"
 
 class CurrentMatrix {
 public:
     Complex sqrtm1 = (0.0,1.0);
     Complex energy,prel,pnrel;
-    int local_index, is,lmax_cg,kkrsz;
+    int local_index, is,lmax_cg,kkrsz,nrmat;
     AtomData *atom;
     NonRelativisticSingleScattererSolution solutionNonRel;
     Matrix<Complex> Jx, Jy, Jz;
     Array3d<Complex> zlrd;
-    Array3d<Complex> tau1,tau2;
+    Matrix<Complex> tau0,tau1,m;
     CurrentMatrix(){};
     void init(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &a, int lindex, Complex en, int ispin);
     void calRadialSolutionDerivative(AtomData &a);
@@ -27,5 +29,5 @@ public:
     Complex calRadialIntegral(AtomData &a, int L, int Lp, int dir, int choice);
     void assembleJxFromRadialIntegral(AtomData &a);
     void calJyzFromJx();
-    void calculateNegativeEnergyCounterparts();
+    void calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &a);
 };
