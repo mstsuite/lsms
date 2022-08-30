@@ -473,8 +473,8 @@ int main(int argc, char *argv[])
       std::cout << "Doing kubo calculation at " << Complex(lsms.chempot,0.0001) << "  " << std::endl;
     }
     // do kubo stuff and end the program
-    Conductivity sigma(lsms, comm, local);
-//    exitLSMS(comm,0);
+    Conductivity sigma(lsms, comm, local, crystal.omega);
+   // exitLSMS(comm,0);
     return 0;
   }
 
