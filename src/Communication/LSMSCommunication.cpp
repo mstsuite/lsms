@@ -466,7 +466,7 @@ void expectJxCommunication(LSMSCommunication &comm, LocalTypeInfo &local)
     for(int j=0; j<comm.JFrom[i].numJs; j++)
     {
       // printf("Node %d: expect tmat %d from %d\n",comm.rank,comm.tmatFrom[i].globalIdx[j],from);
-      MPI_Irecv(&local.JxStore(0,comm.JFrom[i].JStoreIdx[j]),2*local.lDimTmatStore,
+      MPI_Irecv(&local.JxStore(0,comm.tmatFrom[i].tmatStoreIdx[j]),2*local.lDimTmatStore,
                 MPI_DOUBLE,from,comm.JFrom[i].globalIdx[j],comm.comm,
                 &comm.JFrom[i].JxcommunicationRequest[j]);
     }
@@ -482,7 +482,7 @@ void expectJyCommunication(LSMSCommunication &comm, LocalTypeInfo &local)
     for(int j=0; j<comm.JFrom[i].numJs; j++)
     {
       // printf("Node %d: expect tmat %d from %d\n",comm.rank,comm.tmatFrom[i].globalIdx[j],from);
-      MPI_Irecv(&local.JyStore(0,comm.JFrom[i].JStoreIdx[j]),2*local.lDimTmatStore,
+      MPI_Irecv(&local.JyStore(0,comm.tmatFrom[i].tmatStoreIdx[j]),2*local.lDimTmatStore,
                 MPI_DOUBLE,from,comm.JFrom[i].globalIdx[j],comm.comm,
                 &comm.JFrom[i].JycommunicationRequest[j]);
     }
@@ -498,7 +498,7 @@ void expectJzCommunication(LSMSCommunication &comm, LocalTypeInfo &local)
     for(int j=0; j<comm.JFrom[i].numJs; j++)
     {
       // printf("Node %d: expect tmat %d from %d\n",comm.rank,comm.tmatFrom[i].globalIdx[j],from);
-      MPI_Irecv(&local.JzStore(0,comm.JFrom[i].JStoreIdx[j]),2*local.lDimTmatStore,
+      MPI_Irecv(&local.JzStore(0,comm.tmatFrom[i].tmatStoreIdx[j]),2*local.lDimTmatStore,
                 MPI_DOUBLE,from,comm.JFrom[i].globalIdx[j],comm.comm,
                 &comm.JFrom[i].JzcommunicationRequest[j]);
     }
