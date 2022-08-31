@@ -36,7 +36,35 @@ static void buildKKRSizeTMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local
     }
 
   }
+}
 
+static void buildNRMatSizeTMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie,
+                                Matrix<Complex> &tMatrix, int ispin) {
+  // assume Matrix<Complex> tMatrix(nrmat_ns, kkrsz_ns);
+  int nrmat_ns = lsms.n_spin_cant * atom.nrmat; // total size of the kkr matrix
+  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz; // size of t00 block
+  int i0 = 0; // start index of the current atom's block
+
+  tMatrix = 0.0;
+  if (lsms.n_spin_pola == lsms.n_spin_cant) { // non polarized or spin canted
+    for (int l = 0; l < atom.numLIZ; l++) {
+      for (int i = 0; i < kkrsz_ns; i++) {
+        for (int j = 0; j < kkrsz_ns; j++) {
+          tMatrix(l*kkrsz_ns + i, l*kkrsz_ns + j) = local.tmatStore(i + j * kkrsz_ns, atom.LIZStoreIdx[l]);
+        }   
+      }
+    }
+  } else {
+
+    int jsm = kkrsz_ns * kkrsz_ns * ispin;
+    for (int l = 0; l < atom.numLIZ; l++) {
+      for (int i = 0; i < kkrsz_ns; i++) {
+        for (int j = 0; j < kkrsz_ns; j++) {
+          tMatrix(l*kkrsz_ns + i, l*kkrsz_ns + j) = local.tmatStore(i + j * kkrsz_ns + jsm, atom.LIZStoreIdx[l]);
+        }
+      } 
+    }
+  }
 }
 
 // given the  m-Matrix [(blockSize*numBlocks) x (blockSize*numBlocks)] and tMatrix[0] [blockSize x blockSize]
@@ -84,6 +112,27 @@ void solveTau00zgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData
   for (int i = 0; i < kkrsz_ns; i++)
     for (int j = 0; j < kkrsz_ns; j++)
       tau00(i, j) = tau(i, j);
+}
+
+void solveTauFullzgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, Matrix<Complex> &m,
+                      Matrix<Complex> &tau, int ispin) {
+  int nrmat_ns = lsms.n_spin_cant * atom.nrmat; // total size of the kkr matrix
+  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz; // size of t00 block
+
+  // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+  // Matrix<Complex> tau(nrmat_ns, nrmat_ns);
+  // copy t[0] into the top part of tau
+  buildNRMatSizeTMatrix(lsms, local, atom, 0, tau, ispin);
+
+  int ipiv[nrmat_ns];
+  Matrix<Complex> work(nrmat_ns, kkrsz_ns);
+  std::vector<std::complex<float> > swork(nrmat_ns * (nrmat_ns + kkrsz_ns));
+  std::vector<double> rwork(nrmat_ns);
+  int info, iter;
+
+  LAPACK::zgetrf_(&nrmat_ns, &nrmat_ns, &m(0, 0), &nrmat_ns, &ipiv[0], &info);
+  LAPACK::zgetrs_("N", &nrmat_ns, &nrmat_ns, &m(0, 0), &nrmat_ns, &ipiv[0], &tau(0, 0), &nrmat_ns, &info);
+
 }
 
 #ifndef ARCH_IBM
