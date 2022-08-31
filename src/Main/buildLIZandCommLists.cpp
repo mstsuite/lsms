@@ -249,13 +249,12 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   comm.numTmatFrom=numFromNodes;
   comm.tmatFrom.resize(numFromNodes);
 
+  int k = 0;
   if (lsms.lsmsMode == LSMSMode::kubo){
     comm.numJTo=numToNodes;
     comm.JTo.resize(numToNodes);
     comm.numJFrom=numFromNodes;
     comm.JFrom.resize(numFromNodes);
-
-    int k=0;
     for(int i=0;i<numToNodes;i++){
       comm.JTo[i].JStoreIdx.resize(toCounts[i]);
       comm.JTo[i].globalIdx.resize(toCounts[i]);
@@ -285,7 +284,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     }
   }
 
-  int k=0;
+  k=0;
   for(int i=0; i<numToNodes; i++)
   {
     comm.tmatTo[i].tmatStoreIdx.resize(toCounts[i]);
