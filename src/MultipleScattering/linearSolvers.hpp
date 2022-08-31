@@ -36,6 +36,8 @@ void solveTau00zgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 #define MST_LINEAR_SOLVER_ZGETRF 2
 void solveTau00zgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local,
                       AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
+void solveTauFullzgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local, 
+                      AtomData &atom, Matrix<Complex> &m, Matrix<Complex> &tau, int ispin);
 #define MST_LINEAR_SOLVER_ZCGESV 3
 void solveTau00zcgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local,
                       AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
