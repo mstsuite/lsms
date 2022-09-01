@@ -111,6 +111,15 @@ gtest_discover_tests(test_diff)
 ##################################################################
 
 ##################################################################
+# 7. Test differentation
+add_executable(test_gaunt test_gaunt.cpp)
+target_link_libraries(test_gaunt PUBLIC gtest_main)
+target_link_libraries(test_gaunt PRIVATE lsmscore)
+
+gtest_discover_tests(test_gaunt)
+##################################################################
+
+##################################################################
 add_executable(test_madelung test_madelung.cpp)
 target_link_libraries(test_madelung PUBLIC gtest_main)
 target_link_libraries(test_madelung PRIVATE lsmscore)

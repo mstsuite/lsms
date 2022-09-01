@@ -10,6 +10,8 @@
 #include "lattice_utils.hpp"
 #include "madelung_term.hpp"
 #include "monopole_madelung.hpp"
+#include "integer_factors.hpp"
+#include "Coeficients.hpp"
 
 lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
                                            CrystalParameters &crystal,
@@ -17,6 +19,9 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
     : num_atoms{crystal.num_atoms}, lmax{0}, local_num_atoms{local.num_local} {
   auto r_brav = crystal.bravais;
   auto k_brav = crystal.bravais;
+
+  int kmax = get_kmax(lmax);
+  int jmax = get_jmax(lmax);
 
   // Scaling factors for the optimal truncation sphere
   scaling_factor = lsms::scaling_factor(crystal.bravais, lmax);
@@ -80,7 +85,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   // Introduced for smaller objects
   auto position = crystal.position;
 
-  #pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
+//#pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
   for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
     for (int local_i = 0; local_i < local_num_atoms; local_i++) {
 
@@ -94,7 +99,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
       // a_ij in unit of a0
       for (int idx = 0; idx < 3; idx++) {
         aij[idx] = position(idx, atom_i) / scaling_factor -
-            position(idx, global_i) / scaling_factor;
+                   position(idx, global_i) / scaling_factor;
       }
 
       // Real space terms: first terms
@@ -126,6 +131,65 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
     std::printf("Time: %16s %lf\n", "Reciprocal:", timeReciprocalSpace);
     std::printf("Time: %16s %lf\n", "Loop:", timeLoopSpace);
   }
+
+  /*
+   * Dl factors
+   */
+
+  if (jmax > 1) {
+
+//    // Variable
+//    lsms::matrix<double> dl_factor(kmax, jmax);
+//
+//    // 1. Prefactor
+//    std::vector<double> factmat(lmax + 1);
+//    factmat[0] = 1.0;
+//    for (int l = 1; l <= lmax; l++) {
+//      factmat[l] = factmat[l - 1] / (2.0 * l + 1.0);
+//    }
+//
+//
+
+/*
+ * 1. Find reference of this implementation
+ * 2. Test gaunt coeffiencts
+ */
+
+//
+//    auto lofj = lsms::get_lofj(lmax);
+//    auto kofj = lsms::get_kofj(lmax);
+//
+//    auto lofk = lsms::get_lofk(lmax);
+//
+//    auto mofk = lsms::get_mofk(lmax);
+//    auto mofj = lsms::get_mofj(lmax);
+//
+//    for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
+//
+//      auto l_pot = lofj[jl_pot];
+//      auto kl_pot = kofj[jl_pot];
+//
+//      for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
+//
+//        auto l_rho = lofk[kl_rho];
+//        auto l_sum = l_pot + l_rho;
+//
+//        auto m_dif = mofk[kl_rho] - mofj[jl_pot];
+//        auto kl = (l_sum + 1) * (l_sum + 1) - l_sum + m_dif - 1;
+//
+//        auto k1 = kl_pot;
+//        auto k2 =  kl_rho;
+//        auto k3 = kl;
+//        auto j3 =
+//        // j3, k1 , k3
+//
+////        dl_factor(kl_rho, jl_pot) = gaunt.cgnt( kl_pot, kl_rho) * factmat[l_pot] * factmat[l_rho];
+//      }
+//    }
+
+
+  }
+
 
 }
 

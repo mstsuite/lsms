@@ -6,6 +6,8 @@
 
 #include "MultipoleMadelung.hpp"
 
+#include "Misc/Coeficients.hpp"
+
 void calculateMultiMadelungMatrices(LSMSSystemParameters &lsms,
                                     CrystalParameters &crystal,
                                     LocalTypeInfo &local) {
@@ -14,4 +16,7 @@ void calculateMultiMadelungMatrices(LSMSSystemParameters &lsms,
   }
 
   lsms::MultipoleMadelung madelung(lsms, crystal, local);
+
+
+
 }
