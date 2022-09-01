@@ -151,7 +151,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 //
 
 /*
- * 1. Find reference of this implementation
+ * 1. Find reference of this implementation. S 218 transfer of madelung to reduced
  * 2. Test gaunt coeffiencts
  */
 
