@@ -14,12 +14,12 @@
 
 using namespace lsms;
 
-template <typename T>
+template<typename T>
 bool approx_equal(T x, T y, T epsilon) {
   return fabs(x - y) / max(fabs(x), fabs(y)) <= epsilon;
 }
 
-template <typename T>
+template<typename T>
 T relative_diff(T ref, T val) {
   return std::fabs(ref - val) / std::fabs(ref);
 }
@@ -76,9 +76,6 @@ TEST(GauntFactorTest, Lmax3) { /*
           &a.lofk[0], &a.mofk[0], &iprint, &istop[0]);
 
   EXPECT_NEAR(0.28209479177387842, cgnt(0, 0, 0), 1e-12);
-  EXPECT_NEAR(-0.28209479177387842, cgnt(0, 1, 0), 1e-12);
-  EXPECT_NEAR(0.28209479177387842, cgnt(0, 0, 1), 1e-12);
-  EXPECT_NEAR(-0.12615662610100786, cgnt(0, 1, 1), 1e-12);
-  EXPECT_NEAR(0.28209479177387842, cgnt(1, 1, 1), 1e-12);
-  EXPECT_NEAR(0.0000000000000000, cgnt(2, 2, 2), 1e-12);
+  EXPECT_NEAR(0.1802237515728685748747963944546917104709985754562351930533759359, cgnt(1, 6, 6), 1e-12);
+
 }

@@ -133,60 +133,82 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   }
 
   /*
-   * Dl factors
+   * Prefactors for the transformation of reduced Madelung constants
+   *
+   *  C^{l',m'}_{l,m},(l+l')(m+m')
+   *
+   *
    */
 
   if (jmax > 1) {
 
-//    // Variable
-//    lsms::matrix<double> dl_factor(kmax, jmax);
-//
-//    // 1. Prefactor
-//    std::vector<double> factmat(lmax + 1);
-//    factmat[0] = 1.0;
-//    for (int l = 1; l <= lmax; l++) {
-//      factmat[l] = factmat[l - 1] / (2.0 * l + 1.0);
-//    }
-//
-//
+
+    // Variable
+    lsms::matrix<double> dl_factor(kmax, jmax);
+
+    std::vector<double> factmat(lmax + 1);
+    factmat[0] = 1.0;
+    for (int l = 1; l <= lmax; l++) {
+      factmat[l] = factmat[l - 1] / (2.0 * l + 1.0);
+    }
+
 
 /*
  * 1. Find reference of this implementation. S 218 transfer of madelung to reduced
  * 2. Test gaunt coeffiencts
  */
 
-//
-//    auto lofj = lsms::get_lofj(lmax);
-//    auto kofj = lsms::get_kofj(lmax);
-//
-//    auto lofk = lsms::get_lofk(lmax);
-//
-//    auto mofk = lsms::get_mofk(lmax);
-//    auto mofj = lsms::get_mofj(lmax);
-//
-//    for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
-//
-//      auto l_pot = lofj[jl_pot];
-//      auto kl_pot = kofj[jl_pot];
-//
-//      for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
-//
-//        auto l_rho = lofk[kl_rho];
-//        auto l_sum = l_pot + l_rho;
-//
-//        auto m_dif = mofk[kl_rho] - mofj[jl_pot];
-//        auto kl = (l_sum + 1) * (l_sum + 1) - l_sum + m_dif - 1;
-//
-//        auto k1 = kl_pot;
-//        auto k2 =  kl_rho;
+
+    auto lofj = lsms::get_lofj(lmax);
+    auto kofj = lsms::get_kofj(lmax);
+
+    auto lofk = lsms::get_lofk(lmax);
+
+    auto mofk = lsms::get_mofk(lmax);
+    auto mofj = lsms::get_mofj(lmax);
+
+    for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
+
+      auto l_pot = lofj[jl_pot];
+      auto kl_pot = kofj[jl_pot];
+
+      for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
+
+        auto l_rho = lofk[kl_rho];
+
+        auto l_sum = l_pot + l_rho;
+
+        auto m_dif = mofk[kl_rho] - mofj[jl_pot];
+        auto kl = (l_sum + 1) * (l_sum + 1) - l_sum + m_dif - 1;
+
+        auto k1 = kl_pot;
+        auto k2 = kl_rho;
+
+        // l1 + l2 + l3 needs to be even
+
+        // m1 - m2 + m3 = 0
+
+        if ((l_sum + l_pot + l_rho) % 2 != 0) {
+
+          // Zero
+
+        } else {
+
+
+
+
+        }
+
+
+
 //        auto k3 = kl;
 //        auto j3 =
 //        // j3, k1 , k3
 //
 ////        dl_factor(kl_rho, jl_pot) = gaunt.cgnt( kl_pot, kl_rho) * factmat[l_pot] * factmat[l_rho];
-//      }
-//    }
+      }
 
+    }
 
   }
 
