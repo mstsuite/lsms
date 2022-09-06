@@ -10,7 +10,6 @@
 #include "lattice_utils.hpp"
 #include "madelung_term.hpp"
 #include "monopole_madelung.hpp"
-#include "integer_factors.hpp"
 #include "Coeficients.hpp"
 
 lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
@@ -121,6 +120,27 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
       // Madelung matrix contribution
       local.atom[local_i].madelungMatrix[atom_i] =
           (term1 + term2 + r0tm + term0) / scaling_factor;
+
+
+      if (jmax > 1) {
+
+        // 1. First factor for k = 0
+        dl_matrix(local_i, 0, atom_i) = local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
+
+        std::vector<std::complex<double>> dlm(kmax, 0.0);
+
+        dlm = lsms::dlsum(aij, rslat, nrslat, ibegin, knlat, nknlat, omega, lmax,
+                    kmax, eta);
+
+        // 2. Calculate all other factors
+        for (int kl = 1; kl < kmax; kl++) {
+          auto l =  lsms.angularMomentumIndices.lofk[kl];
+          dl_matrix(local_i, kl, atom_i) = dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
+        }
+
+      }
+
+
     }
   }
 
@@ -132,11 +152,13 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
     std::printf("Time: %16s %lf\n", "Loop:", timeLoopSpace);
   }
 
+
+
+
   /*
    * Prefactors for the transformation of reduced Madelung constants
    *
-   *  C^{l',m'}_{l,m},(l+l')(m+m')
-   *
+   *  C^{l',m'}_{l,m},(l+l')(m-m')
    *
    */
 
@@ -152,68 +174,37 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
       factmat[l] = factmat[l - 1] / (2.0 * l + 1.0);
     }
 
+    /**
+     * Reference: Zabloudil S. 218
+     */
 
-/*
- * 1. Find reference of this implementation. S 218 transfer of madelung to reduced
- * 2. Test gaunt coeffiencts
- */
-
-
-    auto lofj = lsms::get_lofj(lmax);
-    auto kofj = lsms::get_kofj(lmax);
-
-    auto lofk = lsms::get_lofk(lmax);
-
-    auto mofk = lsms::get_mofk(lmax);
-    auto mofj = lsms::get_mofj(lmax);
-
+    //#pragma omp parallel for collapse(2) firstprivate(jmax, kmax) default(shared)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
-
-      auto l_pot = lofj[jl_pot];
-      auto kl_pot = kofj[jl_pot];
 
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
 
-        auto l_rho = lofk[kl_rho];
+        auto l_pot = lsms.angularMomentumIndices.lofj[jl_pot];
+        auto kl_pot = lsms.angularMomentumIndices.kofj[jl_pot];
+
+        auto l_rho = lsms.angularMomentumIndices.lofk[kl_rho];
 
         auto l_sum = l_pot + l_rho;
 
-        auto m_dif = mofk[kl_rho] - mofj[jl_pot];
-        auto kl = (l_sum + 1) * (l_sum + 1) - l_sum + m_dif - 1;
-
-        auto k1 = kl_pot;
-        auto k2 = kl_rho;
-
+        // m2 - m1 = m3  otherwise zero this is always true
         // l1 + l2 + l3 needs to be even
 
-        // m1 - m2 + m3 = 0
+        int j3 = l_sum / 2;
 
-        if ((l_sum + l_pot + l_rho) % 2 != 0) {
+        dl_factor(kl_rho, jl_pot) = gauntCoeficients.cgnt(j3, kl_pot, kl_rho) * factmat[l_pot] * factmat[l_rho];
 
-          // Zero
-
-        } else {
-
-
-
-
-        }
-
-
-
-//        auto k3 = kl;
-//        auto j3 =
-//        // j3, k1 , k3
-//
-////        dl_factor(kl_rho, jl_pot) = gaunt.cgnt( kl_pot, kl_rho) * factmat[l_pot] * factmat[l_rho];
       }
 
     }
 
   }
 
-
 }
+
 
 double lsms::MultipoleMadelung::getScalingFactor() const {
   return scaling_factor;
