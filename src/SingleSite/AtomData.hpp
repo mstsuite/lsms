@@ -501,6 +501,8 @@ public:
 // Madelung matrix
   std::vector<Real> madelungMatrix;
 
+  Matrix<Complex> multipoleMadelung;
+
 // Potential and charge density
   Real vSpinShift; // relativ shift of the spin up and spin down potentials
                    // for use in WL-LSMS. Applied using the PotentialShifter class

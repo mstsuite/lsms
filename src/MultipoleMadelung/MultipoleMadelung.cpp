@@ -70,7 +70,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
    * Calculate Madelung matrix for monopoles (lmax = 0)
    */
   auto omega = lsms::omega(r_brav);
-
+  auto alat = scaling_factor * std::cbrt(3.0 * omega / (4.0 * M_PI * num_atoms));
 
   // Zero terms
   auto term0 = -M_PI * eta * eta / omega;
@@ -125,7 +125,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
       if (jmax > 1) {
 
         // 1. First factor for k = 0
-        dl_matrix(local_i, 0, atom_i) = local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
+        local.atom[local_i].multipoleMadelung(0, atom_i) = local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
 
         std::vector<std::complex<double>> dlm(kmax, 0.0);
 
@@ -135,7 +135,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
         // 2. Calculate all other factors
         for (int kl = 1; kl < kmax; kl++) {
           auto l =  lsms.angularMomentumIndices.lofk[kl];
-          dl_matrix(local_i, kl, atom_i) = dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
+          local.atom[local_i].multipoleMadelung(kl, atom_i) = dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
         }
 
       }
