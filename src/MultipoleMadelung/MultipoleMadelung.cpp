@@ -90,13 +90,29 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   // Zero terms
   auto term0 = -M_PI * eta * eta / omega;
 
+
+  /**
+   * Resize and set values to zero madelung Matrix and also multipole madelung matrix
+   */
+
   for (auto j = 0; j < local.num_local; j++) {
     local.atom[j].madelungMatrix.resize(crystal.num_atoms);
+    std::fill_n(local.atom[j].madelungMatrix.begin(), crystal.num_atoms, 0.0);
   }
+
+  if (jmax > 1) {
+
+    for (auto j = 0; j < local.num_local; j++) {
+      local.atom[j].multipoleMadelung.resize(kmax, crystal.num_atoms);
+      local.atom[j].multipoleMadelung = std::complex<double>(0.0, 0.0);
+    }
+
+  }
+
 
   double timeLoopSpace = MPI_Wtime();
 
-  // Introduced for smaller objects
+  // Smaller object for positons
   auto position = crystal.position;
 
   //#pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat,
@@ -137,7 +153,8 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
           (term1 + term2 + r0tm + term0) / scaling_factor;
 
       if (jmax > 1) {
-        // 1. First factor for k = 0
+
+        // {l,m} = 0,0
         local.atom[local_i].multipoleMadelung(0, atom_i) =
             local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
 
@@ -146,7 +163,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
         lsms::dlsum(aij, rslat, nrslat, ibegin, knlat, nknlat, omega, lmax,
                     eta, dlm);
 
-        // 2. Calculate all other factors
+        // Higher order terms
         for (int kl = 1; kl < kmax; kl++) {
           auto l = lsms.angularMomentumIndices.lofk[kl];
           local.atom[local_i].multipoleMadelung(kl, atom_i) =
