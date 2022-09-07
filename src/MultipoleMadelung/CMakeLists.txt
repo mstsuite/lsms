@@ -10,6 +10,7 @@ target_sources(lsmscore PUBLIC
         monopole_madelung.cpp
         monopole_madelung.hpp
         madelung_term.hpp
+        madelung_term.cpp
         integer_factors.hpp
         integer_factors.cpp
         utils.hpp

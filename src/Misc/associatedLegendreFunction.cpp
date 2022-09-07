@@ -1,7 +1,7 @@
-// routines to calculate the associated Legendre functions P_{lm} needed to calculate 
-// spherical harmonics
-// This also provides the coeficients c_{lm} to calculate spherical harmonics:
-// Y_{lm}(\theta, \phi) = c_{lm} P_{lm}(\cos\theta) e^{im\phi}
+// routines to calculate the associated Legendre functions P_{lm} needed to
+// calculate spherical harmonics This also provides the coeficients c_{lm} to
+// calculate spherical harmonics: Y_{lm}(\theta, \phi) = c_{lm}
+// P_{lm}(\cos\theta) e^{im\phi}
 //
 // The new routine calculates normalized versions of the Legendre polynomials
 // such that
@@ -10,19 +10,17 @@
 // i.e. c_{lm} = \sqrt{1/2}
 //
 
-#include <cmath>
 #include "associatedLegendreFunction.hpp"
 
+#include <cmath>
+
 extern "C" {
-void plm_normalized_(int *lmax, double *x, double *plm)
-{
+void plm_normalized_(int *lmax, double *x, double *plm) {
   associatedLegendreFunctionNormalized<double>(*x, *lmax, plm);
 }
 
-void ylm_coefficients_(int *lmax, double *clm)
-{
-  for(int i=0; i<((*lmax) +1)*((*lmax) +2)/2; i++)
-    clm[i]=std::sqrt(0.5);
+void ylm_coefficients_(int *lmax, double *clm) {
+  for (int i = 0; i < ((*lmax) + 1) * ((*lmax) + 2) / 2; i++)
+    clm[i] = std::sqrt(0.5);
 }
 }
-

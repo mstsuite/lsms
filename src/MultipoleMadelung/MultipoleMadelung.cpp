@@ -7,15 +7,29 @@
 #include <complex>
 #include <vector>
 
+#include "Coeficients.hpp"
 #include "lattice_utils.hpp"
 #include "madelung_term.hpp"
 #include "monopole_madelung.hpp"
-#include "Coeficients.hpp"
 
 lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
                                            CrystalParameters &crystal,
                                            LocalTypeInfo &local)
     : num_atoms{crystal.num_atoms}, lmax{0}, local_num_atoms{local.num_local} {
+
+  /**
+   * TODO:
+   *
+   * 1. Remodel the class. Initalisation should only allocate all arrays. Compute should be a
+   * different function.
+   *
+   * 2. Also add tests for the higher order moments
+   *
+   * 3. After that add the forces. Even if they are wrong
+   *
+   */
+
+
   auto r_brav = crystal.bravais;
   auto k_brav = crystal.bravais;
 
@@ -70,7 +84,8 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
    * Calculate Madelung matrix for monopoles (lmax = 0)
    */
   auto omega = lsms::omega(r_brav);
-  auto alat = scaling_factor * std::cbrt(3.0 * omega / (4.0 * M_PI * num_atoms));
+  auto alat =
+      scaling_factor * std::cbrt(3.0 * omega / (4.0 * M_PI * num_atoms));
 
   // Zero terms
   auto term0 = -M_PI * eta * eta / omega;
@@ -84,10 +99,10 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   // Introduced for smaller objects
   auto position = crystal.position;
 
-//#pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
+  //#pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat,
+  // scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
   for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
     for (int local_i = 0; local_i < local_num_atoms; local_i++) {
-
       std::vector<double> aij(3);
       double r0tm;
       int ibegin;
@@ -121,26 +136,23 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
       local.atom[local_i].madelungMatrix[atom_i] =
           (term1 + term2 + r0tm + term0) / scaling_factor;
 
-
       if (jmax > 1) {
-
         // 1. First factor for k = 0
-        local.atom[local_i].multipoleMadelung(0, atom_i) = local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
+        local.atom[local_i].multipoleMadelung(0, atom_i) =
+            local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
 
-        std::vector<std::complex<double>> dlm(kmax, 0.0);
+        std::vector<Complex> dlm(kmax, 0.0);
 
-        dlm = lsms::dlsum(aij, rslat, nrslat, ibegin, knlat, nknlat, omega, lmax,
-                    kmax, eta);
+        lsms::dlsum(aij, rslat, nrslat, ibegin, knlat, nknlat, omega, lmax,
+                    eta, dlm);
 
         // 2. Calculate all other factors
         for (int kl = 1; kl < kmax; kl++) {
-          auto l =  lsms.angularMomentumIndices.lofk[kl];
-          local.atom[local_i].multipoleMadelung(kl, atom_i) = dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
+          auto l = lsms.angularMomentumIndices.lofk[kl];
+          local.atom[local_i].multipoleMadelung(kl, atom_i) =
+              dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
         }
-
       }
-
-
     }
   }
 
@@ -152,9 +164,6 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
     std::printf("Time: %16s %lf\n", "Loop:", timeLoopSpace);
   }
 
-
-
-
   /*
    * Prefactors for the transformation of reduced Madelung constants
    *
@@ -163,8 +172,6 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
    */
 
   if (jmax > 1) {
-
-
     // Variable
     lsms::matrix<double> dl_factor(kmax, jmax);
 
@@ -178,13 +185,12 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
      * Reference: Zabloudil S. 218
      */
 
-    //#pragma omp parallel for collapse(2) firstprivate(jmax, kmax) default(shared)
+    //#pragma omp parallel for collapse(2) firstprivate(jmax, kmax)
+    // default(shared)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
-
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
-
         auto l_pot = lsms.angularMomentumIndices.lofj[jl_pot];
-        auto kl_pot = lsms.angularMomentumIndices.kofj[jl_pot];
+        auto kl_pot = 1;  // lsms.angularMomentumIndices.kofj[jl_pot];
 
         auto l_rho = lsms.angularMomentumIndices.lofk[kl_rho];
 
@@ -195,16 +201,12 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
         int j3 = l_sum / 2;
 
-        dl_factor(kl_rho, jl_pot) = gauntCoeficients.cgnt(j3, kl_pot, kl_rho) * factmat[l_pot] * factmat[l_rho];
-
+        dl_factor(kl_rho, jl_pot) = gauntCoeficients.cgnt(j3, kl_pot, kl_rho) *
+                                    factmat[l_pot] * factmat[l_rho];
       }
-
     }
-
   }
-
 }
-
 
 double lsms::MultipoleMadelung::getScalingFactor() const {
   return scaling_factor;

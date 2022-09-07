@@ -120,6 +120,15 @@ gtest_discover_tests(test_gaunt)
 ##################################################################
 
 ##################################################################
+# 9. Test differentation
+add_executable(test_spherical_harmonics test_spherical_harmonics.cpp)
+target_link_libraries(test_spherical_harmonics PUBLIC gtest_main)
+target_link_libraries(test_spherical_harmonics PRIVATE lsmscore)
+
+gtest_discover_tests(test_spherical_harmonics)
+##################################################################
+
+##################################################################
 add_executable(test_madelung test_madelung.cpp)
 target_link_libraries(test_madelung PUBLIC gtest_main)
 target_link_libraries(test_madelung PRIVATE lsmscore)
