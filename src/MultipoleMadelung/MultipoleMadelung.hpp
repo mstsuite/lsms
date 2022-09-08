@@ -32,7 +32,7 @@ class MultipoleMadelung {
   std::vector<int> k_nm;
   int nknlat;
 
- public:
+public:
   /// Angular-momentum index cutoff l
   int lmax;
 
@@ -42,7 +42,7 @@ class MultipoleMadelung {
                     LocalTypeInfo &local,
                     int lmax = 0);
 
-  double getScalingFactor() const;
+  __attribute__((unused)) double getScalingFactor() const;
 
   double getRsCut() const;
 

@@ -7,11 +7,13 @@
 #include <iostream>
 #include <vector>
 
+#include "Coeficients.hpp"
+#include "Indices.hpp"
 #include "Madelung/Madelung.hpp"
 #include "Main/SystemParameters.hpp"
 #include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
 
-template <typename T>
+template<typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
   os << "[";
   for (int i = 0; i < v.size(); ++i) {
@@ -22,12 +24,22 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
   return os;
 }
 
+SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
+GauntCoeficients gauntCoeficients;
+IFactors iFactors;
+
 TEST(MultiMadelungsTestSuite, RegularCell) {
   int num_atoms = 2;
 
   int lmax = 3;
 
   LSMSSystemParameters lsms;
+  lsms.angularMomentumIndices.init(2 * lmax);
+  sphericalHarmonicsCoeficients.init(2 * lmax);
+
+  gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
+  iFactors.init(lsms, lmax);
+
   lsms.global.iprint = -1;
 
   LocalTypeInfo local;
@@ -80,12 +92,26 @@ TEST(MultiMadelungsTestSuite, RegularCell) {
     std::cout << std::endl;
   }
 
-  //for (int i = 0; i < num_atoms; i++) {
-  //  for (int j = 0; j < num_atoms; j++) {
-  //    EXPECT_NEAR(local.atom[i].madelungMatrix[j],
-  //                local_modern.atom[i].madelungMatrix[j], 1.0e-12);
-  //  }
-  //}
+  for (int i = 0; i < num_atoms; i++) {
+    for (int j = 0; j < num_atoms; j++) {
+      EXPECT_NEAR(local.atom[i].madelungMatrix[j],
+                  local_modern.atom[i].madelungMatrix[j], 1.0e-12);
+    }
+  }
+
+
+
+  EXPECT_NEAR(0.28209479177387842, lsms.dl_factor(0, 0), 1e-12);
+  EXPECT_NEAR(9.4031597257959593E-002, lsms.dl_factor(0, 1), 1e-12);
+  EXPECT_NEAR(-9.4031597257959454E-002, lsms.dl_factor(0, 2), 1e-12);
+  EXPECT_NEAR(1.8806319451591908E-002, lsms.dl_factor(0, 3), 1e-12);
+  EXPECT_NEAR(-1.8806319451591908E-002, lsms.dl_factor(0, 4), 1e-12);
+
+  EXPECT_NEAR(-10.057957687339862, std::real(local_modern.atom[0].multipoleMadelung(0, 0)),
+              1e-12);
+  EXPECT_NEAR(0.0, std::imag(local_modern.atom[0].multipoleMadelung(0, 0)), 1e-12);
+
+
 }
 //
 ///***

@@ -16,7 +16,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
                                            CrystalParameters &crystal,
                                            LocalTypeInfo &local,
                                            int lmax
-                                           )
+)
     : num_atoms{crystal.num_atoms}, lmax{lmax}, local_num_atoms{local.num_local} {
 
   auto r_brav = crystal.bravais;
@@ -153,7 +153,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
         // Higher order terms
         for (int kl = 1; kl < kmax; kl++) {
-          auto l = lsms.angularMomentumIndices.lofk[kl];
+          auto l = AngularMomentumIndices::lofk[kl];
           local.atom[local_i].multipoleMadelung(kl, atom_i) =
               dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
         }
@@ -178,7 +178,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
   if (jmax > 1) {
     // Variable
-    lsms::matrix<double> dl_factor(kmax, jmax);
+    lsms.dl_factor.resize(kmax, jmax);
 
     std::vector<double> factmat(lmax + 1);
     factmat[0] = 1.0;
@@ -190,13 +190,13 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
      * Reference: Zabloudil S. 218
      */
 
+
 #pragma omp parallel for collapse(2) firstprivate(jmax, kmax) default(shared)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
-        auto l_pot = lsms.angularMomentumIndices.lofj[jl_pot];
-        auto kl_pot = 1;  // lsms.angularMomentumIndices.kofj[jl_pot];
-
-        auto l_rho = lsms.angularMomentumIndices.lofk[kl_rho];
+        auto l_pot = AngularMomentumIndices::lofj[jl_pot];
+        auto kl_pot = AngularMomentumIndices::kofj[jl_pot];
+        auto l_rho = AngularMomentumIndices::lofk[kl_rho];
 
         auto l_sum = l_pot + l_rho;
 
@@ -205,21 +205,22 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
         int j3 = l_sum / 2;
 
-        dl_factor(kl_rho, jl_pot) = gauntCoeficients.cgnt(j3, kl_pot, kl_rho) *
+
+        lsms.dl_factor(kl_rho, jl_pot) = GauntCoeficients::cgnt(j3, kl_pot, kl_rho) *
                                     factmat[l_pot] * factmat[l_rho];
       }
     }
   }
 }
 
-double lsms::MultipoleMadelung::getScalingFactor() const {
+__attribute__((unused)) double lsms::MultipoleMadelung::getScalingFactor() const {
   return scaling_factor;
 }
 
-double lsms::MultipoleMadelung::getRsCut() const { return rscut; }
+__attribute__((unused)) double lsms::MultipoleMadelung::getRsCut() const { return rscut; }
 
-double lsms::MultipoleMadelung::getKnCut() const { return kncut; }
+__attribute__((unused)) double lsms::MultipoleMadelung::getKnCut() const { return kncut; }
 
-std::vector<int> lsms::MultipoleMadelung::getKnSize() const { return k_nm; }
+__attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getKnSize() const { return k_nm; }
 
-std::vector<int> lsms::MultipoleMadelung::getRsSize() const { return r_nm; }
+__attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getRsSize() const { return r_nm; }
