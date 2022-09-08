@@ -63,9 +63,6 @@
 #include <nvToolsExt.h>
 #endif
 
-SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
-GauntCoeficients gauntCoeficients;
-IFactors iFactors;
 
 #if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
@@ -240,11 +237,11 @@ int main(int argc, char *argv[])
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
   }
 
-  lsms.angularMomentumIndices.init(2*crystal.maxlmax);
-  sphericalHarmonicsCoeficients.init(2*crystal.maxlmax);
+  AngularMomentumIndices::init(2*crystal.maxlmax);
+  SphericalHarmonicsCoeficients::init(2*crystal.maxlmax);
 
-  gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
-  iFactors.init(lsms, crystal.maxlmax);
+  GauntCoeficients::init(lsms);
+  IFactors::init(lsms, crystal.maxlmax);
 
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
@@ -312,7 +309,7 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
-  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local);
 
 #ifdef LSMS_DEBUG
   if(lsms.global.iprint >= 0)
@@ -377,7 +374,7 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
-  setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  setupVorpol(lsms, crystal, local);
 
 #ifdef LSMS_DEBUG
   MPI_Barrier(comm.comm);

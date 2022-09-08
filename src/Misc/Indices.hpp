@@ -5,27 +5,26 @@
 
 namespace lsms {
 
-  template<typename Integer,
-      typename = std::enable_if_t<std::is_integral<Integer>::value>>
-  Integer get_jmax(Integer lmax) {
-    return (lmax + 1) * (lmax + 2) / 2;
-  }
-
-  template<typename Integer,
-      typename = std::enable_if_t<std::is_integral<Integer>::value>>
-  Integer get_kmax(Integer lmax) {
-    return (lmax + 1) * (lmax + 1);
-  }
-
+template <typename Integer,
+          typename = std::enable_if_t<std::is_integral<Integer>::value>>
+Integer get_jmax(Integer lmax) {
+  return (lmax + 1) * (lmax + 2) / 2;
 }
 
+template <typename Integer,
+          typename = std::enable_if_t<std::is_integral<Integer>::value>>
+Integer get_kmax(Integer lmax) {
+  return (lmax + 1) * (lmax + 1);
+}
+
+}  // namespace lsms
+
 class AngularMomentumIndices {
-public:
+ public:
   static int lmax, ndlj, ndlm;
   static std::vector<int> lofk, mofk, lofj, mofj, kofj;
 
-  void init(int _lmax) {
-
+  static void init(int _lmax) {
     lmax = _lmax;
     ndlj = (lmax + 1) * (lmax + 1);
     ndlm = ((lmax + 1) * (lmax + 2)) / 2;
@@ -41,9 +40,7 @@ public:
     int k = 0;
 
     for (int l = 0; l <= lmax; l++) {
-
       for (int m = 0; m <= l; m++) {
-
         lofj[j] = l;
         mofj[j] = m;
         kofj[j] = (l + 1) * (l + 1) - l + m - 1;
@@ -52,7 +49,6 @@ public:
       }
 
       for (int m = -l; m <= l; m++) {
-
         lofk[k] = l;
         mofk[k] = m;
 
@@ -63,7 +59,6 @@ public:
     }
     // printf("k=%d\n",k);
   }
-
 };
 
 #endif

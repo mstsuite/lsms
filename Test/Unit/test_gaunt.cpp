@@ -35,7 +35,7 @@ namespace gaunt {
     int lmax = 3;
 
     int iprint = 0;
-    char istop[32];
+    char istop[256];
 
     std::vector<int> lofk, mofk, lofj, mofj, kofj;
     int ndlj, ndlm;

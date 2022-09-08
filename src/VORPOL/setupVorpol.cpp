@@ -4,7 +4,7 @@
 
 #include <cstdio>
 
-void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local,SphericalHarmonicsCoeficients &shc)
+void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local)
 {
 
   const bool testingVorpol = false;
@@ -173,7 +173,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
     */
     
     setup_vorpol_vplane_(&vplanes(0,0,i), &nvplanes[i],
-                         &lmax,&shc.clm[0],&lsms.ngaussq,&lsms.ngaussr,
+                         &lmax,&SphericalHarmonicsCoeficients::clm[0],&lsms.ngaussq,&lsms.ngaussr,
                          &local.atom[i].voronoi.rInscribedSphere,&local.atom[i].voronoi.omegaInt,
                          local.atom[i].voronoi.dipint,
                          &ipvp,&ipnode,&ipcorn,&ipedge,&iprcrit,

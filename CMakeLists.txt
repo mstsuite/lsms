@@ -91,7 +91,7 @@ if(LEGACY_MONOPOLE)
 endif()
 
 # Core `lsms` library
-add_library(lsmscore SHARED)
+add_library(lsmscore STATIC)
 
 set_target_properties(lsmscore PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
@@ -322,7 +322,6 @@ if (LSMS_DEV_TESTS)
     message(STATUS "Building LSMS development test programs.")
 endif ()
 
-#file(GENERATE OUTPUT lsms.log CONTENT $<TARGET_FILE:lsmscore>)
 
 
 

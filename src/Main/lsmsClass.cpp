@@ -19,6 +19,7 @@
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
 #include "VORPOL/VORPOL.hpp"
+#include "VORPOL/setupVorpol.hpp"
 #include "Potential/calculateChargesPotential.hpp"
 #include "Potential/interpolatePotential.hpp"
 #include "Potential/PotentialShifter.hpp"
@@ -44,10 +45,6 @@ inline int omp_get_num_threads() {return 1;}
 inline int omp_get_thread_num() {return 0;}
 #endif
 #endif
-
-SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
-GauntCoeficients gauntCoeficients;
-IFactors iFactors;
 
 #if defined(ACCELERATOR_CULA) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
@@ -159,11 +156,11 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   if(lsms.xcFunctional[0] == 2)  // new LSMS functional
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
 
-  lsms.angularMomentumIndices.init(2 * crystal.maxlmax);
-  sphericalHarmonicsCoeficients.init(2 * crystal.maxlmax);
+  AngularMomentumIndices::init(2*crystal.maxlmax);
+  SphericalHarmonicsCoeficients::init(2*crystal.maxlmax);
 
-  gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
-  iFactors.init(lsms, crystal.maxlmax);
+  GauntCoeficients::init(lsms);
+  IFactors::init(lsms, crystal.maxlmax);
 
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
@@ -205,7 +202,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   }
  
   loadPotentials(comm, lsms, crystal, local);
-  setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  setupVorpol(lsms, crystal, local);
 
   // for Wang-Landau for alloys
   if ( alloyDesc.size() > 0 ) 

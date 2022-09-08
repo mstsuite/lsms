@@ -66,9 +66,9 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
   Complex *gij = new Complex[kkrsz*kkrsz];
   Real *sinmp = new Real[2*lmax+1];
   Real *cosmp = new Real[2*lmax+1];
-  Real *plm = new Real[lsms.angularMomentumIndices.ndlm];
+  Real *plm = new Real[AngularMomentumIndices::ndlm];
   Complex *hfn = new Complex[2*lmax+1];
-  Complex *dlm = new Complex[lsms.angularMomentumIndices.ndlj];
+  Complex *dlm = new Complex[AngularMomentumIndices::ndlj];
   Complex *bgij = new Complex[4*kkrsz*kkrsz];
   Complex *tmat_n = new Complex[atom.kkrsz*atom.kkrsz*4];
 
@@ -205,12 +205,12 @@ void buildKKRMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &
         rij[2]=atom.LIZPos(2,ir1)-atom.LIZPos(2,ir2);
 
         makegij_(&atom.LIZlmax[ir1],&kkr1,&atom.LIZlmax[ir2],&kkr2,
-                 &lsms.maxlmax,&kkrsz,&lsms.angularMomentumIndices.ndlj,&lsms.angularMomentumIndices.ndlm,
+                 &lsms.maxlmax,&kkrsz,&AngularMomentumIndices::ndlj,&AngularMomentumIndices::ndlm,
                  &prel,&rij[0],sinmp,cosmp,
-                 &sphericalHarmonicsCoeficients.clm[0],plm,
-                 &gauntCoeficients.cgnt(0,0,0),&gauntCoeficients.lmax,
-                 &lsms.angularMomentumIndices.lofk[0],&lsms.angularMomentumIndices.mofk[0],
-                 &iFactors.ilp1[0],&iFactors.illp(0,0),
+                 &SphericalHarmonicsCoeficients::clm[0],plm,
+                 &GauntCoeficients::cgnt(0,0,0),&GauntCoeficients::lmax,
+                 &AngularMomentumIndices::lofk[0],&AngularMomentumIndices::mofk[0],
+                 &IFactors::ilp1[0],&IFactors::illp(0,0),
                  hfn,dlm,gij,
                  &pi4,&lsms.global.iprint,lsms.global.istop,32);
         Complex psq=prel*prel;

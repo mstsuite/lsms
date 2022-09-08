@@ -32,7 +32,10 @@ target_sources(lsmscore
         Gaunt.hpp
         getclm.f
         ifacts_c.f
+
         Indices.hpp
+        Indices.cpp
+
         initwave.f
         integrateOneDim.hpp
         interp.f

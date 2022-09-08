@@ -29,18 +29,18 @@ GauntCoeficients gauntCoeficients;
 IFactors iFactors;
 
 TEST(MultiMadelungsTestSuite, RegularCell) {
-  int num_atoms = 2;
 
+  int num_atoms = 2;
   int lmax = 3;
 
   LSMSSystemParameters lsms;
-  lsms.angularMomentumIndices.init(2 * lmax);
-  sphericalHarmonicsCoeficients.init(2 * lmax);
-
-  gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
-  iFactors.init(lsms, lmax);
-
   lsms.global.iprint = -1;
+
+  AngularMomentumIndices::init(2 * lmax);
+  SphericalHarmonicsCoeficients::init(2 * lmax);
+  GauntCoeficients::init(lsms);
+  IFactors::init(lsms, lmax);
+
 
   LocalTypeInfo local;
   local.setNumLocal(2);

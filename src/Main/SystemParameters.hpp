@@ -120,7 +120,6 @@ public:
   Real clight;
   int maxlmax;
   LSMSGlobals global;
-  AngularMomentumIndices angularMomentumIndices;
   Matrix<Real> dl_factor;
   EnergyContourParameters energyContour;
 
