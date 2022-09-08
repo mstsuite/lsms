@@ -146,7 +146,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
         local.atom[local_i].multipoleMadelung(0, atom_i) =
             local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
 
-        std::vector<Complex> dlm(kmax, 0.0);
+        std::vector<Complex> dlm(kmax, std::complex<double>(0,0));
 
         lsms::dlsum(aij, rslat, nrslat, ibegin, knlat, nknlat, omega, lmax,
                     eta, dlm);

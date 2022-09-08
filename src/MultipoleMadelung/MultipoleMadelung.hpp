@@ -42,7 +42,7 @@ public:
                     LocalTypeInfo &local,
                     int lmax = 0);
 
-  __attribute__((unused)) double getScalingFactor() const;
+  double getScalingFactor() const;
 
   double getRsCut() const;
 

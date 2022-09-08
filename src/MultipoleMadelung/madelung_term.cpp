@@ -4,32 +4,37 @@
 
 #include "madelung_term.hpp"
 
-static void spherical_harmonics(std::vector<Real> &vec, int lmax,
-                                std::vector<Complex> &ylm,
-                                std::vector<Real> &plm) {
-  using namespace std::complex_literals;
+#include "Indices.hpp"
+#include "Coeficients.hpp"
 
-  auto q2 = vec[0] * vec[0] + vec[1] * vec[1];
-  auto r = sqrt(q2 + vec[2] * vec[2]);
-  auto q = sqrt(q2);
+#include "spherical_harmonics.hpp"
 
-  Complex iphi = 1i * atan2(vec[1] / q, vec[0] / q);
-
-  associatedLegendreFunctionNormalized(vec[2] / r, lmax, plm.data());
-
-  int kl = 0;
-
-  for (int l = 0; l <= lmax; l++) {
-    ylm[kl] = plm[plmIdx(l, 0)];
-
-    for (int m = 1; m <= l; m++) {
-      ylm[kl + 1] = plm[plmIdx(l, m)] * std::exp(iphi * (Complex)m);
-      ylm[kl - 1] = std::conj(ylm[kl + 1]) * std::pow(-1, m);
-    }
-
-    kl += (l + 1) * 2;
-  }
-}
+//static void spherical_harmonics(std::vector<Real> &vec, int lmax,
+//                                std::vector<Complex> &ylm,
+//                                std::vector<Real> &plm) {
+//  using namespace std::complex_literals;
+//
+//  auto q2 = vec[0] * vec[0] + vec[1] * vec[1];
+//  auto r = sqrt(q2 + vec[2] * vec[2]);
+//  auto q = sqrt(q2);
+//
+//  Complex iphi = 1i * atan2(vec[1] / q, vec[0] / q);
+//
+//  associatedLegendreFunctionNormalized(vec[2] / r, lmax, plm.data());
+//
+//  int kl = 0;
+//
+//  for (int l = 0; l <= lmax; l++) {
+//    ylm[kl] = plm[plmIdx(l, 0)];
+//
+//    for (int m = 1; m <= l; m++) {
+//      ylm[kl + 1] = plm[plmIdx(l, m)] * std::exp(iphi * (Complex)m);
+//      ylm[kl - 1] = std::conj(ylm[kl + 1]) * std::pow(-1, m);
+//    }
+//
+//    kl += (l + 1) * 2;
+//  }
+//}
 
 void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
                  int ibegin, matrix<Real> &knlat, int nknlat, double omega,
@@ -52,20 +57,16 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
     auto vlen = norm(vec.begin(), vec.end());
 
     // Ylm
-    spherical_harmonics(vec, lmax_mad, Ylm, Plm);
+    sph_harm_1(vec.data(), &lmax_mad, Ylm.data());
 
     // Gamma
     auto gamma_l = gamma_func(vlen / eta, lmax_mad);
 
     auto vhalf = 0.5 * vlen;
 
-    auto kl = 0;
-
-    for (auto l = 0; l <= lmax_mad; l++) {
-      for (auto m = -l; m <= l; m++) {
-        dlm[kl] = dlm[kl] + gamma_l[l] * Ylm[kl] / std::pow(vhalf, l + 1);
-        kl++;
-      }
+    for (auto kl = kmax_mad - 1; kl > 0; kl--) {
+      auto l = AngularMomentumIndices::lofk[kl];
+      dlm[kl] = dlm[kl] + gamma_l[l] * Ylm[kl] / std::pow(vhalf, l + 1);
     }
   }
 
@@ -90,7 +91,7 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
     // vec[2], vlen, knlatsq);
 
     // Ylm
-    spherical_harmonics(vec, lmax_mad, Ylm, Plm);
+    sph_harm_1(vec.data(), &lmax_mad, Ylm.data());
 
     auto expfac = std::exp(rfac * knlatsq) / knlatsq;
 

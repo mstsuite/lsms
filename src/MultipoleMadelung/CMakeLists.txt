@@ -13,6 +13,8 @@ target_sources(lsmscore PUBLIC
         madelung_term.cpp
         integer_factors.hpp
         integer_factors.cpp
+        spherical_harmonics.f90
+        spherical_harmonics.hpp
         utils.hpp
         debug.hpp
         common.hpp)
