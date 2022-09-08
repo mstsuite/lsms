@@ -22,10 +22,9 @@ FortranCInterface_VERIFY(CXX)
 # Make `lsmscore` and imported library to avoid recompiling
 #
 
-
 add_library(lsmscore_imported SHARED IMPORTED)
 set_target_properties(lsmscore_imported PROPERTIES
-        IMPORTED_LOCATION "${GFALM_LIBRARY_OUTPUT_DIRECTORY}/liblsmscore.so")
+        IMPORTED_LOCATION $<TARGET_FILE:lsmscore>)
 
 get_target_property(_compile_defs lsmscore INTERFACE_COMPILE_DEFINITIONS)
 if (_compile_defs)
@@ -55,8 +54,6 @@ add_dependencies(lsmscore_imported lsmscore)
 
 
 
-
-
 ##################################################################
 # 1. Test Lua Libraries
 add_executable(test_lua_library test_lua_library.cpp)
@@ -81,7 +78,7 @@ if (USE_LIBXC)
             helpers.hpp
             )
 
-    target_link_libraries(test_xc PRIVATE lsmscore)
+    target_link_libraries(test_xc PRIVATE lsmscore_imported)
 
     target_include_directories(test_xc PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(test_xc PUBLIC libxc::libxc)
@@ -103,7 +100,7 @@ endif ()
 ##################################################################
 # 3. Test Integration Routines
 add_executable(test_integrator test_integrator.cpp)
-target_link_libraries(test_integrator PUBLIC lsmscore)
+target_link_libraries(test_integrator PUBLIC lsmscore_imported)
 target_link_libraries(test_integrator PUBLIC gtest_main)
 
 gtest_discover_tests(test_integrator)
@@ -112,7 +109,7 @@ gtest_discover_tests(test_integrator)
 ###################################################################
 # 4. Test Poisson Solver Routines
 add_executable(test_poisson test_poisson.cpp)
-target_link_libraries(test_poisson PUBLIC lsmscore)
+target_link_libraries(test_poisson PUBLIC lsmscore_imported)
 add_test(
         NAME test_poisson
         COMMAND $<TARGET_FILE:test_poisson>
@@ -123,7 +120,7 @@ add_test(
 # 5. Test Integration of local energy
 add_executable(test_integrate_energy test_integrate_energy.cpp)
 target_link_libraries(test_integrate_energy PUBLIC gtest_main)
-target_link_libraries(test_integrate_energy PRIVATE lsmscore)
+target_link_libraries(test_integrate_energy PRIVATE lsmscore_imported)
 
 
 foreach (ref_file "ezrho1.out" "ezrho2.out" "ezrho3.out")
@@ -143,7 +140,7 @@ gtest_discover_tests(test_integrate_energy)
 # 6. Test differentation
 add_executable(test_diff test_diff.cpp)
 target_link_libraries(test_diff PUBLIC gtest_main)
-target_link_libraries(test_diff PRIVATE lsmscore)
+target_link_libraries(test_diff PRIVATE lsmscore_imported)
 
 gtest_discover_tests(test_diff)
 ##################################################################
@@ -152,7 +149,7 @@ gtest_discover_tests(test_diff)
 # 7. Test differentation
 add_executable(test_gaunt test_gaunt.cpp)
 target_link_libraries(test_gaunt PUBLIC gtest_main)
-target_link_libraries(test_gaunt PRIVATE lsmscore)
+target_link_libraries(test_gaunt PRIVATE lsmscore_imported)
 
 gtest_discover_tests(test_gaunt)
 ##################################################################
@@ -161,7 +158,7 @@ gtest_discover_tests(test_gaunt)
 # 9. Test differentation
 add_executable(test_spherical_harmonics test_spherical_harmonics.cpp)
 target_link_libraries(test_spherical_harmonics PUBLIC gtest_main)
-target_link_libraries(test_spherical_harmonics PRIVATE lsmscore)
+target_link_libraries(test_spherical_harmonics PRIVATE lsmscore_imported)
 
 gtest_discover_tests(test_spherical_harmonics)
 ##################################################################
@@ -171,10 +168,10 @@ add_executable(test_madelung test_madelung.cpp)
 add_executable(test_multipole_madelung test_multipole_madelung.cpp)
 
 target_link_libraries(test_madelung PUBLIC gtest_main)
-target_link_libraries(test_madelung PRIVATE lsmscore)
+target_link_libraries(test_madelung PRIVATE lsmscore_imported)
 
-target_link_libraries(test_multipole_madelung PRIVATE lsmscore)
-target_link_libraries(test_multipole_madelung PRIVATE lsmscore)
+target_link_libraries(test_multipole_madelung PUBLIC gtest_main)
+target_link_libraries(test_multipole_madelung PRIVATE lsmscore_imported)
 
 gtest_discover_tests(test_madelung)
 gtest_discover_tests(test_multipole_madelung)

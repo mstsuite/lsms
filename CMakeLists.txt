@@ -91,26 +91,13 @@ endif()
 # Core `lsms` library
 add_library(lsmscore)
 
-target_link_libraries(lsms_main
-        PUBLIC lsmscore)
-
-
-target_link_libraries(lsms_wl
-        PUBLIC lsmscore)
-
-
-target_link_libraries(lsms_main PUBLIC lsmscore)
-
-target_link_libraries(lsms_wl PUBLIC lsmscore)
-
-#
-#
 set_target_properties(lsmscore PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
         Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
-
+target_link_libraries(lsms_main PUBLIC lsmscore)
+target_link_libraries(lsms_wl PUBLIC lsmscore)
 
 #
 # Add main source subdirectory
@@ -119,25 +106,6 @@ add_subdirectory(src)
 
 add_subdirectory(include)
 
-#
-# Enable Testing with CTest
-#
-option(BUILD_TESTING "Build the testing tree." ON)
-if (BUILD_TESTING)
-    include(CTest)
-    enable_testing()
-    message(STATUS "Testing is " ${BUILD_TESTING})
-    add_subdirectory(Test)
-endif ()
-
-
-#
-# Development Test Codes
-#
-option(LSMS_DEV_TESTS "Building LSMS development test programs." OFF)
-if (LSMS_DEV_TESTS)
-    message(STATUS "Building LSMS development test programs.")
-endif ()
 
 
 # Find OpenMP library
@@ -331,5 +299,28 @@ target_compile_definitions(lsmscore PUBLIC HAS_BACKTRACE)
 
 # Include the common files
 target_include_directories(lsmscore PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+
+#
+# Enable Testing with CTest
+#
+option(BUILD_TESTING "Build the testing tree." ON)
+if (BUILD_TESTING)
+    include(CTest)
+    enable_testing()
+    message(STATUS "Testing is " ${BUILD_TESTING})
+    add_subdirectory(Test)
+endif ()
+
+#
+# Development Test Codes
+#
+option(LSMS_DEV_TESTS "Building LSMS development test programs." OFF)
+if (LSMS_DEV_TESTS)
+    message(STATUS "Building LSMS development test programs.")
+endif ()
+
+file(GENERATE OUTPUT lsms.log CONTENT $<TARGET_FILE:lsmscore>)
+
 
 
