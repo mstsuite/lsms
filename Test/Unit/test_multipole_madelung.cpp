@@ -25,6 +25,8 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
 TEST(MultiMadelungsTestSuite, RegularCell) {
   int num_atoms = 2;
 
+  int lmax = 3;
+
   LSMSSystemParameters lsms;
   lsms.global.iprint = -1;
 
@@ -70,7 +72,7 @@ TEST(MultiMadelungsTestSuite, RegularCell) {
     std::cout << std::endl;
   }
 
-  calculateMultiMadelungMatrices(lsms, crystal, local_modern);
+  calculateMultiMadelungMatrices(lsms, crystal, local_modern, lmax);
 
   std::cout << std::endl;
   for (int i = 0; i < num_atoms; i++) {

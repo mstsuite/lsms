@@ -18,7 +18,6 @@
 #include <functional>
 #include <iostream>
 
-#include "FC.h"
 #include "Matrix.hpp"
 #include "XCBase.hpp"
 #include "XCLibxc.hpp"
@@ -30,7 +29,7 @@
  */
 extern "C" {
 
-double FC_GLOBAL(alpha2, "")(double *rs, double *dz, double *sp, int *iexch,
+double alpha2_(double *rs, double *dz, double *sp, int *iexch,
                              double *exchg);
 }
 
@@ -115,7 +114,7 @@ TEST_F(XCLDATest, BuiltInVWN) {
 
   for (int i = 0; i < N; i++) {
     auto rs = rsFromRho(rho[i]);
-    vxc[i] = FC_GLOBAL(alpha2, "")(&rs, &dz, &sp, &iexch, &exc[i]);
+    vxc[i] = alpha2_(&rs, &dz, &sp, &iexch, &exc[i]);
   }
 
   for (int i = 0; i < N; i++) {

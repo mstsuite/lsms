@@ -16,7 +16,7 @@ include(GoogleTest)
 
 include(FortranCInterface)
 FortranCInterface_HEADER(FC.h MACRO_NAMESPACE "FC_")
-FortranCInterface_VERIFY(CXX)
+#FortranCInterface_VERIFY(CXX)
 
 #
 # Make `lsmscore` and imported library to avoid recompiling

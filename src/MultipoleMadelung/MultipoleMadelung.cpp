@@ -104,8 +104,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   // Smaller object for positons
   auto position = crystal.position;
 
-  //#pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat,
-  // scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
+#pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
   for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
     for (int local_i = 0; local_i < local_num_atoms; local_i++) {
       std::vector<double> aij(3);
@@ -191,8 +190,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
      * Reference: Zabloudil S. 218
      */
 
-    //#pragma omp parallel for collapse(2) firstprivate(jmax, kmax)
-    // default(shared)
+#pragma omp parallel for collapse(2) firstprivate(jmax, kmax) default(shared)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
         auto l_pot = lsms.angularMomentumIndices.lofj[jl_pot];
