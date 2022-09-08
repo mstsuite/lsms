@@ -130,8 +130,15 @@ gtest_discover_tests(test_spherical_harmonics)
 
 ##################################################################
 add_executable(test_madelung test_madelung.cpp)
+add_executable(test_multipole_madelung test_multipole_madelung.cpp)
+
 target_link_libraries(test_madelung PUBLIC gtest_main)
 target_link_libraries(test_madelung PRIVATE lsmscore)
 
+target_link_libraries(test_multipole_madelung PRIVATE lsmscore)
+target_link_libraries(test_multipole_madelung PRIVATE lsmscore)
+
 gtest_discover_tests(test_madelung)
+gtest_discover_tests(test_multipole_madelung)
+
 ##################################################################

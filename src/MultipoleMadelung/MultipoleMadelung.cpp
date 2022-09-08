@@ -14,21 +14,10 @@
 
 lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
                                            CrystalParameters &crystal,
-                                           LocalTypeInfo &local)
-    : num_atoms{crystal.num_atoms}, lmax{0}, local_num_atoms{local.num_local} {
-
-  /**
-   * TODO:
-   *
-   * 1. Remodel the class. Initalisation should only allocate all arrays. Compute should be a
-   * different function.
-   *
-   * 2. Also add tests for the higher order moments
-   *
-   * 3. After that add the forces. Even if they are wrong
-   *
-   */
-
+                                           LocalTypeInfo &local,
+                                           int lmax
+                                           )
+    : num_atoms{crystal.num_atoms}, lmax{lmax}, local_num_atoms{local.num_local} {
 
   auto r_brav = crystal.bravais;
   auto k_brav = crystal.bravais;

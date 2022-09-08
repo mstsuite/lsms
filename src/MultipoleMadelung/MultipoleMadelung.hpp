@@ -37,8 +37,10 @@ class MultipoleMadelung {
   int lmax;
 
   /// Object for calculating the Madelung constants
-  MultipoleMadelung(LSMSSystemParameters &lsms, CrystalParameters &crystal,
-                    LocalTypeInfo &local);
+  MultipoleMadelung(LSMSSystemParameters &lsms,
+                    CrystalParameters &crystal,
+                    LocalTypeInfo &local,
+                    int lmax = 0);
 
   double getScalingFactor() const;
 

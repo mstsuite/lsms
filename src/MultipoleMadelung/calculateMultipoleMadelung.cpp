@@ -9,10 +9,13 @@
 
 void calculateMultiMadelungMatrices(LSMSSystemParameters &lsms,
                                     CrystalParameters &crystal,
-                                    LocalTypeInfo &local) {
+                                    LocalTypeInfo &local,
+                                    int lmax = 0) {
   if (lsms.global.iprint >= 0) {
     std::printf("Madelung calculations!\n");
   }
 
-  lsms::MultipoleMadelung madelung(lsms, crystal, local);
+  lsms::MultipoleMadelung madelung(lsms, crystal, local, lmax);
+
+
 }
