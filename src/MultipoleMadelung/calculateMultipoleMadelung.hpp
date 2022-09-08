@@ -7,4 +7,4 @@
 void calculateMultiMadelungMatrices(LSMSSystemParameters &lsms,
                                     CrystalParameters &crystal,
                                     LocalTypeInfo &local,
-                                    int lmax);
+                                    int lmax = 0);

@@ -15,6 +15,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Enable compilation for Accelerators
 option(USE_ACCELERATOR_CUDA_C "Use the cuda accelerator" OFF)
 # option(USE_BUILDKKRMATRIX_GPU "Build also the kkr matrix on GPU" ON)
@@ -89,7 +91,7 @@ if(LEGACY_MONOPOLE)
 endif()
 
 # Core `lsms` library
-add_library(lsmscore OBJECT)
+add_library(lsmscore SHARED)
 
 set_target_properties(lsmscore PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib

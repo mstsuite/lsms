@@ -1,31 +1,49 @@
 
 
-if (DEFINED libxc_LIBRARIES AND DEFINED libxc_INCLUDE_DIR)
-    if (EXISTS ${libxc_LIBRARIES} AND EXISTS ${libxc_INCLUDE_DIR})
-        message(STATUS "libxc path was correctly defined")
-    else()
-        message(ERROR "Specified path for libxc libaries is wrong")
-    endif ()
+#
+# Libxc libaries
+#
+
+if (DEFINED libxc_LIBRARIES)
+    get_filename_component(libxc_PARENT_PATH ${libxc_LIBRARIES} DIRECTORY )
 endif()
 
-if (NOT DEFINED libxc_LIBRARIES)
-    set(libxc_LIBRARIES
-            ${CMAKE_BINARY_DIR}/external/libxc/lib/${CMAKE_STATIC_LIBRARY_PREFIX}xc${CMAKE_STATIC_LIBRARY_SUFFIX})
 
+set(libxc_FOUND true)
+
+find_library(libxc_LIBRARIES NAMES xc PATHS ${CMAKE_BINARY_DIR}/external/libxc/lib/ ${libxc_PARENT_PATH})
+
+if (NOT libxc_LIBRARIES)
+    message(STATUS "Libxc library was not found")
+    set(libxc_FOUND false)
+    set(libxc_LIBRARIES
+            ${CMAKE_BINARY_DIR}/external/libxc/lib/${CMAKE_STATIC_LIBRARY_PREFIX}xc${CMAKE_STATIC_LIBRARY_SUFFIX}
+            CACHE FILEPATH "libxc file path" FORCE)
+endif()
+
+find_path(libxc_INCLUDE_DIR NAMES xc.h PATHS ${CMAKE_BINARY_DIR}/external/libxc/include ${libxc_INCLUDE_DIR})
+
+if (NOT libxc_INCLUDE_DIR)
+    message(STATUS "Libxc include dir was not found")
+    set(libxc_FOUND false)
     set(libxc_INCLUDE_DIR
-            ${CMAKE_BINARY_DIR}/external/libxc/include
-            )
-endif ()
+            ${CMAKE_BINARY_DIR}/external/libxc/include CACHE PATH "libxc include dir" FORCE)
+endif()
+
+message(STATUS "TEST  " ${libxc_LIBRARIES})
+message(STATUS "TEST  " ${libxc_INCLUDE_DIR})
+
 
 if (EXISTS ${libxc_LIBRARIES} AND EXISTS ${libxc_INCLUDE_DIR})
     set(libxc_FOUND true)
     message(STATUS "libxc was found")
-    message(STATUS "libxc library: " ${libxc_LIBRARIES})
-    message(STATUS "libxc include: " ${libxc_INCLUDE_DIR})
 else()
     set(libxc_FOUND false)
     message(STATUS "libxc was not found and will be installed")
 endif ()
+
+message(STATUS "libxc library: " ${libxc_LIBRARIES})
+message(STATUS "libxc include: " ${libxc_INCLUDE_DIR})
 
 if (NOT libxc_FOUND)
 
@@ -71,14 +89,14 @@ if (NOT libxc_FOUND)
             COMMAND ./configure --prefix=${_install} CC=${CMAKE_C_COMPILER}
             BUILD_COMMAND ${MAKE_EXECUTABLE}
             INSTALL_COMMAND ${MAKE_EXECUTABLE} install
-            BUILD_BYPRODUCTS ${_install}/lib/libxc.a
+            BUILD_BYPRODUCTS ${_install}/lib/libxc.a ${_install}/lib/libxc.so
             )
 
 
 endif ()
 
 
-add_library(libxc::libxc STATIC IMPORTED GLOBAL)
+add_library(libxc::libxc SHARED IMPORTED GLOBAL)
 set_target_properties(libxc::libxc PROPERTIES IMPORTED_LOCATION ${libxc_LIBRARIES})
 target_include_directories(libxc::libxc INTERFACE ${libxc_INCLUDE_DIR})
 target_compile_definitions(libxc::libxc INTERFACE USE_LIBXC)
