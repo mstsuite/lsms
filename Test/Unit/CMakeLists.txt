@@ -1,5 +1,8 @@
 
-# Add gtest
+#
+# Add GTEST
+#
+
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -14,6 +17,45 @@ include(GoogleTest)
 include(FortranCInterface)
 FortranCInterface_HEADER(FC.h MACRO_NAMESPACE "FC_")
 FortranCInterface_VERIFY(CXX)
+
+#
+# Make `lsmscore` and imported library to avoid recompiling
+#
+
+
+add_library(lsmscore_imported SHARED IMPORTED)
+set_target_properties(lsmscore_imported PROPERTIES
+        IMPORTED_LOCATION "${GFALM_LIBRARY_OUTPUT_DIRECTORY}/liblsmscore.so")
+
+get_target_property(_compile_defs lsmscore INTERFACE_COMPILE_DEFINITIONS)
+if (_compile_defs)
+    message(STATUS "Compile definitions: " ${_compile_defs})
+    set_target_properties(lsmscore_imported PROPERTIES INTERFACE_COMPILE_DEFINITIONS "${_compile_defs}")
+endif ()
+
+get_target_property(_compile_opts lsmscore INTERFACE_COMPILE_OPTIONS)
+if (_compile_opts)
+    message(STATUS "Compile options: " ${_compile_opts})
+    set_target_properties(lsmscore_imported PROPERTIES INTERFACE_COMPILE_OPTIONS "${_compile_opts}")
+endif ()
+
+get_target_property(_include_dirs lsmscore INTERFACE_INCLUDE_DIRECTORIES)
+if (_include_dirs)
+    message(STATUS "Include directories: " ${_include_dirs})
+    set_target_properties(lsmscore_imported PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_include_dirs}")
+endif ()
+
+get_target_property(_libaries lsmscore INTERFACE_LINK_LIBRARIES)
+if (_libaries)
+    message(STATUS "Linked libaries: " ${_libaries})
+    set_target_properties(lsmscore_imported PROPERTIES INTERFACE_LINK_LIBRARIES "${_libaries}")
+endif ()
+
+add_dependencies(lsmscore_imported lsmscore)
+
+
+
+
 
 ##################################################################
 # 1. Test Lua Libraries
@@ -63,10 +105,6 @@ endif ()
 add_executable(test_integrator test_integrator.cpp)
 target_link_libraries(test_integrator PUBLIC lsmscore)
 target_link_libraries(test_integrator PUBLIC gtest_main)
-add_test(
-        NAME test_integrator
-        COMMAND $<TARGET_FILE:test_integrator>
-)
 
 gtest_discover_tests(test_integrator)
 ##################################################################

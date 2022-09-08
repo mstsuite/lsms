@@ -63,6 +63,61 @@ endif ()
 # Build mjson library
 include(mjson)
 
+#
+# Define library and targets
+#
+
+add_executable(lsms_main)
+set_target_properties(lsms_main PROPERTIES OUTPUT_NAME "lsms")
+
+set_target_properties(lsms_main
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+
+add_executable(lsms_wl)
+set_target_properties(lsms_wl PROPERTIES OUTPUT_NAME "wl-lsms")
+
+set_target_properties(lsms_wl
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+option(LEGACY_MONOPOLE "Use legacy for mono poles" OFF)
+
+if(LEGACY_MONOPOLE)
+    target_compile_definitions(lsms_main PUBLIC LEGACY_MONOPOLE)
+endif()
+
+# Core `lsms` library
+add_library(lsmscore)
+
+target_link_libraries(lsms_main
+        PUBLIC lsmscore)
+
+
+target_link_libraries(lsms_wl
+        PUBLIC lsmscore)
+
+
+target_link_libraries(lsms_main PUBLIC lsmscore)
+
+target_link_libraries(lsms_wl PUBLIC lsmscore)
+
+#
+#
+set_target_properties(lsmscore PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+
+
+
+#
+# Add main source subdirectory
+#
+add_subdirectory(src)
+
+add_subdirectory(include)
 
 #
 # Enable Testing with CTest
@@ -81,20 +136,8 @@ endif ()
 #
 option(LSMS_DEV_TESTS "Building LSMS development test programs." OFF)
 if (LSMS_DEV_TESTS)
-  message(STATUS "Building LSMS development test programs.")
+    message(STATUS "Building LSMS development test programs.")
 endif ()
-
-
-#
-# Add main source subdirectory
-#
-add_subdirectory(src)
-
-add_subdirectory(include)
-
-#
-#
-#
 
 
 # Find OpenMP library
@@ -158,6 +201,7 @@ if (USE_ACCELERATOR_CUDA_C)
     else ()
         message(FATAL_ERROR "Cusolver was not defined or found")
     endif ()
+
 endif ()
 
 if (USE_ACCELERATOR_HIP)
@@ -197,7 +241,6 @@ endif ()
 # Find MPI library
 find_package(MPI REQUIRED COMPONENTS CXX OPTIONAL_COMPONENTS)
 target_link_libraries(lsmscore PUBLIC MPI::MPI_CXX)
-
 
 # Find HDF5
 message(STATUS "Find HDF5")
