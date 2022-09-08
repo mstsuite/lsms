@@ -30,10 +30,6 @@ if (NOT libxc_INCLUDE_DIR)
             ${CMAKE_BINARY_DIR}/external/libxc/include CACHE PATH "libxc include dir" FORCE)
 endif()
 
-message(STATUS "TEST  " ${libxc_LIBRARIES})
-message(STATUS "TEST  " ${libxc_INCLUDE_DIR})
-
-
 if (EXISTS ${libxc_LIBRARIES} AND EXISTS ${libxc_INCLUDE_DIR})
     set(libxc_FOUND true)
     message(STATUS "libxc was found")
