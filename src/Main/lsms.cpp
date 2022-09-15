@@ -4,6 +4,8 @@
 #include <string.h>
 #include <iostream>
 
+#include <chrono>
+
 #include <fenv.h>
 
 #ifdef _OPENMP
@@ -111,6 +113,8 @@ int main(int argc, char *argv[])
   char inputFileName[128];
 
   Real eband;
+
+  auto lsmsStartTime = std::chrono::steady_clock::now();
 
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
@@ -503,6 +507,8 @@ int main(int argc, char *argv[])
   PAPI_start_counters(papi_events, hw_counters);
 #endif
 
+  auto lsmsEndInitTime = std::chrono::steady_clock::now();
+  
 // -----------------------------------------------------------------------------
 //                                 MAIN SCF LOOP
 // -----------------------------------------------------------------------------
@@ -776,11 +782,18 @@ int main(int argc, char *argv[])
 
   double fomScale = calculateFomScaleDouble(comm, local);
 
+  auto lsmsEndTime = std::chrono::steady_clock::now();
+  std::chrono::duration<double> lsmsRuntime = lsmsEndTime - lsmsStartTime;
+  std::chrono::duration<double> lsmsInitTime = lsmsEndInitTime - lsmsStartTime;
+  
   if (comm.rank == 0)
   {
     printf("Band Energy = %.15lf Ry\n", eband);
     printf("Fermi Energy = %.15lf Ry\n", lsms.chempot);
     printf("Total Energy = %.15lf Ry\n", lsms.totalEnergy);
+    printf("\n\nTimings:\n========\n");
+    printf("LSMS Runtime = %lf sec\n", lsmsRuntime.count());
+    printf("LSMS Initialization Time = %lf sec\n", lsmsInitTime.count());
     printf("timeScfLoop[rank==0] = %lf sec\n", timeScfLoop);
     printf("     number of iteration:%d\n",iteration);
     printf("timeScfLoop/iteration = %lf sec\n", timeScfLoop / (double)iteration);
@@ -803,9 +816,9 @@ int main(int argc, char *argv[])
     }
     printf("FOM Scale = %lf\n",(double)fomScale);
     printf("Energy Contour Points = %ld\n",energyContourPoints);
-    printf("FOM = %lg/sec\n",fomScale * (double)iteration / timeScfLoop);
+    printf("FOM / energyContourPoint = %lg/sec\n",fomScale * (double)iteration / timeScfLoop);
     // printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
-    printf("FOM * energyContourPoints = = %lg/sec\n",
+    printf("FOM = %lg/sec\n",
             (double)energyContourPoints * (double)fomScale * (double)iteration / timeScfLoop);
     //         (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
   }
