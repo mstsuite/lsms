@@ -36,6 +36,9 @@ target_sources(lsmscore
         Indices.hpp
         Indices.cpp
 
+        spherical_harmonics.hpp
+        spherical_harmonics.f90
+
         initwave.f
         integrateOneDim.hpp
         interp.f

@@ -2,8 +2,8 @@
 // Created by F.Moitzi on 16.12.2021.
 //
 
-#ifndef MADELUNG_MULTIPOLEMADELUNG_HPP
-#define MADELUNG_MULTIPOLEMADELUNG_HPP
+#ifndef LSMS_MULTIPOLEMADELUNG_HPP
+#define LSMS_MULTIPOLEMADELUNG_HPP
 
 #include <complex>
 #include <vector>
@@ -53,4 +53,4 @@ class MultipoleMadelung {
 
 }  // namespace lsms
 
-#endif  // MADELUNG_MULTIPOLEMADELUNG_HPP
+#endif

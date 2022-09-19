@@ -2,8 +2,8 @@
 // Created by F.Moitzi on 07.01.2022.
 //
 
-#ifndef SRC_MADELUNG_MADELUNG_TERM_HPP
-#define SRC_MADELUNG_MADELUNG_TERM_HPP
+#ifndef LSMS_MADELUNG_TERM_HPP
+#define LSMS_MADELUNG_TERM_HPP
 
 #include <algorithm>
 #include <complex>
@@ -91,4 +91,4 @@ void dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat, int ibegin,
 
 }  // namespace lsms
 
-#endif  // SRC_MADELUNG_MADELUNG_TERM_HPP
+#endif  // LSMS_MADELUNG_TERM_HPP

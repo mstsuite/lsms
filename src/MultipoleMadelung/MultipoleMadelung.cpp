@@ -21,8 +21,8 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   auto r_brav = crystal.bravais;
   auto k_brav = crystal.bravais;
 
-  int kmax = get_kmax(lmax);
-  int jmax = get_jmax(lmax);
+  int kmax = (lmax + 1) * (lmax + 1);
+  int jmax = (lmax + 1) * (lmax + 2) / 2;
 
   // Scaling factors for the optimal truncation sphere
   scaling_factor = lsms::scaling_factor(crystal.bravais, lmax);

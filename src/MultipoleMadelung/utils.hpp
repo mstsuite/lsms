@@ -2,8 +2,8 @@
 // Created by F.Moitzi on 17.12.2021.
 //
 
-#ifndef MADELUNG_UTILS_HPP
-#define MADELUNG_UTILS_HPP
+#ifndef LSMS_UTILS_HPP
+#define LSMS_UTILS_HPP
 
 #define _USE_MATH_DEFINES
 
@@ -60,4 +60,4 @@ std::vector<T> gamma_func(const T &&a, int &lmax) {
   return gamma;
 }
 
-#endif  // MADELUNG_UTILS_HPP
+#endif  // LSMS_UTILS_HPP

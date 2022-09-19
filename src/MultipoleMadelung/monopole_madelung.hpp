@@ -2,8 +2,8 @@
 // Created by F.Moitzi on 06.01.2022.
 //
 
-#ifndef SRC_MADELUNG_MADELUNG_HPP
-#define SRC_MADELUNG_MADELUNG_HPP
+#ifndef LSMS_MONO_MADELUNG_HPP
+#define LSMS_MONO_MADELUNG_HPP
 
 #include <complex>
 #include <vector>
@@ -55,4 +55,4 @@ double calculate_eta(matrix<double> &brav);
 
 }  // namespace lsms
 
-#endif  // SRC_MADELUNG_MADELUNG_HPP
+#endif  // LSMS_MONO_MADELUNG_HPP
