@@ -29,8 +29,7 @@
  */
 extern "C" {
 
-double alpha2_(double *rs, double *dz, double *sp, int *iexch,
-                             double *exchg);
+double alpha2_(double *rs, double *dz, double *sp, int *iexch, double *exchg);
 }
 
 /**

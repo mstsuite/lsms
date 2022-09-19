@@ -70,7 +70,7 @@ TEST_P(IntegrateEnergyTestFixture, Ezrho) {
 }
 
 INSTANTIATE_TEST_SUITE_P(IntegrateEnergyTests, IntegrateEnergyTestFixture,
-                        ::testing::Values("ezrho1.out", "ezrho2.out",
-                                          "ezrho3.out"));
+                         ::testing::Values("ezrho1.out", "ezrho2.out",
+                                           "ezrho3.out"));
 
 }  // namespace integrate_energy_tests

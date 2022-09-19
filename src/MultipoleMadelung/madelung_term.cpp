@@ -4,12 +4,11 @@
 
 #include "madelung_term.hpp"
 
-#include "Indices.hpp"
 #include "Coeficients.hpp"
-
+#include "Indices.hpp"
 #include "spherical_harmonics.hpp"
 
-//static void spherical_harmonics(std::vector<Real> &vec, int lmax,
+// static void spherical_harmonics(std::vector<Real> &vec, int lmax,
 //                                std::vector<Complex> &ylm,
 //                                std::vector<Real> &plm) {
 //  using namespace std::complex_literals;
@@ -45,7 +44,7 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
 
   std::vector<Real> vec(3);
 
-  std::fill(dlm.begin(), dlm.end(), std::complex<double>(0,0));
+  std::fill(dlm.begin(), dlm.end(), std::complex<double>(0, 0));
 
   auto aij2 = std::inner_product(aij.begin(), aij.end(), aij.begin(), 0.0);
 
@@ -132,5 +131,4 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
   for (auto i = 1; i < kmax_mad; i++) {
     dlm[i] = dlm[i] + rfac * ctmp[i];
   }
-
 }

@@ -14,11 +14,10 @@
 
 lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
                                            CrystalParameters &crystal,
-                                           LocalTypeInfo &local,
-                                           int lmax
-)
-    : num_atoms{crystal.num_atoms}, lmax{lmax}, local_num_atoms{local.num_local} {
-
+                                           LocalTypeInfo &local, int lmax)
+    : num_atoms{crystal.num_atoms},
+      lmax{lmax},
+      local_num_atoms{local.num_local} {
   auto r_brav = crystal.bravais;
   auto k_brav = crystal.bravais;
 
@@ -79,9 +78,9 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   // Zero terms
   auto term0 = -M_PI * eta * eta / omega;
 
-
   /**
-   * Resize and set values to zero madelung Matrix and also multipole madelung matrix
+   * Resize and set values to zero madelung Matrix and also multipole madelung
+   * matrix
    */
 
   for (auto j = 0; j < local.num_local; j++) {
@@ -90,21 +89,20 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   }
 
   if (jmax > 1) {
-
     for (auto j = 0; j < local.num_local; j++) {
       local.atom[j].multipoleMadelung.resize(kmax, crystal.num_atoms);
       local.atom[j].multipoleMadelung = std::complex<double>(0.0, 0.0);
     }
-
   }
-
 
   double timeLoopSpace = MPI_Wtime();
 
   // Smaller object for positons
   auto position = crystal.position;
 
-#pragma omp parallel for collapse(2) firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq) default(shared)
+#pragma omp parallel for collapse(2)                                       \
+    firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, \
+                 rslat, rslatsq) default(shared)
   for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
     for (int local_i = 0; local_i < local_num_atoms; local_i++) {
       std::vector<double> aij(3);
@@ -141,15 +139,14 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
           (term1 + term2 + r0tm + term0) / scaling_factor;
 
       if (jmax > 1) {
-
         // {l,m} = 0,0
         local.atom[local_i].multipoleMadelung(0, atom_i) =
             local.atom[local_i].madelungMatrix[atom_i] * Y0inv;
 
-        std::vector<Complex> dlm(kmax, std::complex<double>(0,0));
+        std::vector<Complex> dlm(kmax, std::complex<double>(0, 0));
 
-        lsms::dlsum(aij, rslat, nrslat, ibegin, knlat, nknlat, omega, lmax,
-                    eta, dlm);
+        lsms::dlsum(aij, rslat, nrslat, ibegin, knlat, nknlat, omega, lmax, eta,
+                    dlm);
 
         // Higher order terms
         for (int kl = 1; kl < kmax; kl++) {
@@ -190,7 +187,6 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
      * Reference: Zabloudil S. 218
      */
 
-
 #pragma omp parallel for collapse(2) firstprivate(jmax, kmax) default(shared)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
@@ -205,22 +201,33 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
         int j3 = l_sum / 2;
 
-
-        lsms.dl_factor(kl_rho, jl_pot) = GauntCoeficients::cgnt(j3, kl_pot, kl_rho) *
-                                    factmat[l_pot] * factmat[l_rho];
+        lsms.dl_factor(kl_rho, jl_pot) =
+            GauntCoeficients::cgnt(j3, kl_pot, kl_rho) * factmat[l_pot] *
+            factmat[l_rho];
       }
     }
   }
 }
 
-__attribute__((unused)) double lsms::MultipoleMadelung::getScalingFactor() const {
+__attribute__((unused)) double lsms::MultipoleMadelung::getScalingFactor()
+    const {
   return scaling_factor;
 }
 
-__attribute__((unused)) double lsms::MultipoleMadelung::getRsCut() const { return rscut; }
+__attribute__((unused)) double lsms::MultipoleMadelung::getRsCut() const {
+  return rscut;
+}
 
-__attribute__((unused)) double lsms::MultipoleMadelung::getKnCut() const { return kncut; }
+__attribute__((unused)) double lsms::MultipoleMadelung::getKnCut() const {
+  return kncut;
+}
 
-__attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getKnSize() const { return k_nm; }
+__attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getKnSize()
+    const {
+  return k_nm;
+}
 
-__attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getRsSize() const { return r_nm; }
+__attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getRsSize()
+    const {
+  return r_nm;
+}

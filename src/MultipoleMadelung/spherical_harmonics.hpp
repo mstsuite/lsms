@@ -7,12 +7,9 @@
 
 #include <complex>
 
-extern "C"
-{
+extern "C" {
 
 void sph_harm_1(double *vec, int *lmax, std::complex<double> *ylm);
-
 }
 
-
-#endif //MADELUNG_SPHERICAL_HARMONICS_H
+#endif  // MADELUNG_SPHERICAL_HARMONICS_H

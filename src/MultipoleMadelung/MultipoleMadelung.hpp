@@ -32,15 +32,13 @@ class MultipoleMadelung {
   std::vector<int> k_nm;
   int nknlat;
 
-public:
+ public:
   /// Angular-momentum index cutoff l
   int lmax;
 
   /// Object for calculating the Madelung constants
-  MultipoleMadelung(LSMSSystemParameters &lsms,
-                    CrystalParameters &crystal,
-                    LocalTypeInfo &local,
-                    int lmax = 0);
+  MultipoleMadelung(LSMSSystemParameters &lsms, CrystalParameters &crystal,
+                    LocalTypeInfo &local, int lmax = 0);
 
   double getScalingFactor() const;
 
