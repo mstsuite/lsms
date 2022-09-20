@@ -197,9 +197,8 @@ subroutine legendre(lmax, x, plm)
    !
 end subroutine legendre
 
-subroutine sph_harm_1(vec, lmax, ylm) bind (C, name = "sph_harm_1")
+subroutine sph_harm_1(vec, lmax, ylm)
    use, intrinsic :: iso_fortran_env
-   use, intrinsic :: iso_c_binding
 
    implicit none
 

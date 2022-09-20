@@ -3,6 +3,10 @@
 
 target_sources(lsmscore
         PUBLIC
+
+        SphericalHarmonics.cpp
+        SphericalHarmonics.hpp
+
         associatedLegendreFunction.cpp
         associatedLegendreFunction.hpp
         bulirsch_stoer.f

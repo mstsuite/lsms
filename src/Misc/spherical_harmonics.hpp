@@ -5,11 +5,12 @@
 #ifndef MADELUNG_SPHERICAL_HARMONICS_H
 #define MADELUNG_SPHERICAL_HARMONICS_H
 
-#include <complex>
+#include "Complex.hpp"
 
 extern "C" {
 
-void sph_harm_1(double *vec, int *lmax, std::complex<double> *ylm);
+void sph_harm_1_(double *vec, int *lmax, Complex *ylm);
+
 }
 
 #endif  // MADELUNG_SPHERICAL_HARMONICS_H

@@ -6,34 +6,8 @@
 
 #include "Coeficients.hpp"
 #include "Indices.hpp"
-#include "spherical_harmonics.hpp"
+#include "SphericalHarmonics.hpp"
 
-// static void spherical_harmonics(std::vector<Real> &vec, int lmax,
-//                                std::vector<Complex> &ylm,
-//                                std::vector<Real> &plm) {
-//  using namespace std::complex_literals;
-//
-//  auto q2 = vec[0] * vec[0] + vec[1] * vec[1];
-//  auto r = sqrt(q2 + vec[2] * vec[2]);
-//  auto q = sqrt(q2);
-//
-//  Complex iphi = 1i * atan2(vec[1] / q, vec[0] / q);
-//
-//  associatedLegendreFunctionNormalized(vec[2] / r, lmax, plm.data());
-//
-//  int kl = 0;
-//
-//  for (int l = 0; l <= lmax; l++) {
-//    ylm[kl] = plm[plmIdx(l, 0)];
-//
-//    for (int m = 1; m <= l; m++) {
-//      ylm[kl + 1] = plm[plmIdx(l, m)] * std::exp(iphi * (Complex)m);
-//      ylm[kl - 1] = std::conj(ylm[kl + 1]) * std::pow(-1, m);
-//    }
-//
-//    kl += (l + 1) * 2;
-//  }
-//}
 
 void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
                  int ibegin, matrix<Real> &knlat, int nknlat, double omega,
@@ -41,6 +15,9 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
   auto kmax_mad = (lmax_mad + 1) * (lmax_mad + 1);
   std::vector<Complex> Ylm((lmax_mad + 1) * (lmax_mad + 1), Complex(0.0, 0.0));
   std::vector<Real> Plm((lmax_mad + 1) * (lmax_mad + 2) / 2, 0.0);
+
+  lsms::SphericalHarmonics sph(lmax_mad);
+
 
   std::vector<Real> vec(3);
 
@@ -56,7 +33,7 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
     auto vlen = norm(vec.begin(), vec.end());
 
     // Ylm
-    sph_harm_1(vec.data(), &lmax_mad, Ylm.data());
+    sph.computeYlm(lmax_mad, vec, Ylm);
 
     // Gamma
     auto gamma_l = gamma_func(vlen / eta, lmax_mad);
@@ -86,11 +63,9 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
     auto vlen = norm(vec.begin(), vec.end());
     auto knlatsq = norm_sq(vec.begin(), vec.end());
 
-    // std::printf("%16.12f %16.12f %16.12f %16.12f %16.12f\n", vec[0], vec[1],
-    // vec[2], vlen, knlatsq);
 
     // Ylm
-    sph_harm_1(vec.data(), &lmax_mad, Ylm.data());
+    sph.computeYlm(lmax_mad, vec, Ylm);
 
     auto expfac = std::exp(rfac * knlatsq) / knlatsq;
 
