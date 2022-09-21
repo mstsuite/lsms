@@ -98,6 +98,8 @@ int DeviceStorage::allocate(int kkrsz_max, int nspin, int numLIZ, int _nThreads)
       if (err != cudaSuccess) {
         printf("failed to allocate dev_m[%d], size=%d, err=%d\n",
                i, N * N * sizeof(Complex), err);
+	printf(". kkrsz_max = %d, nspin=%d, numLIZ=%d\n",
+	       kkrsz_max, nspin, numLIZ);
         exit(1);
       }
       cudaMalloc((void **) &dev_ipvt[i], N * sizeof(int));
