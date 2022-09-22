@@ -4,7 +4,7 @@
 
 message(STATUS "Use toolchain file generic-cuda")
 
-include_directories("/opt/amazon/openmpi/include/")
+# include_directories("/opt/amazon/openmpi/include/")
 
 set(USE_ACCELERATOR_CUDA_C ON)
 
