@@ -2,6 +2,8 @@
 // Created by F.Moitzi on 18.09.2021.
 //
 
+#include <gtest/gtest.h>
+
 #undef NDEBUG
 
 #include <assert.h>
@@ -18,10 +20,6 @@
 
 using namespace lsms;
 
-template <typename T>
-bool approx_equal(T x, T y, T epsilon) {
-  return fabs(x - y) / max(fabs(x), fabs(y)) <= epsilon;
-}
 
 template <typename T>
 T relative_diff(T ref, T val) {
@@ -35,7 +33,7 @@ T relative_diff(T ref, T val) {
  * certain cases
  *
  */
-int main(int argc, char *argv[]) {
+TEST(IntegrationPoisson, CompareDirect) {
   constexpr auto number_of_points = 800;
 
   std::vector<double> radial_mesh(number_of_points, 0.0);
@@ -82,7 +80,7 @@ int main(int argc, char *argv[]) {
                  density, number_of_points);
 
   for (auto i = 0; i < number_of_points; i++) {
-    assert(relative_diff(reference[i], vhartree[i]) < 2e-11);
+    ASSERT_TRUE(relative_diff(reference[i], vhartree[i]) < 2e-11);
   }
 
   /*
@@ -106,7 +104,7 @@ int main(int argc, char *argv[]) {
                  density, number_of_points);
 
   for (auto i = 0; i < number_of_points; i++) {
-    assert(relative_diff(reference[i], vhartree[i]) < 1e-7);
+    ASSERT_TRUE(relative_diff(reference[i], vhartree[i]) < 1e-7);
   }
 
   /*
@@ -149,10 +147,7 @@ int main(int argc, char *argv[]) {
   auto analytical_energy =
       exp(-4) * (20 * exp(4) - 192 * exp(2) + 572) * M_PI * M_PI;
 
-  assert(relative_diff(analytical_energy, reference_energy) < 3e-6);
-  assert(relative_diff(analytical_energy, energy) < 6e-8);
-
-  std::cout << "All tests have finished" << std::endl;
-
-  return EXIT_SUCCESS;
+  ASSERT_TRUE(relative_diff(analytical_energy, reference_energy) < 3e-6);
+  ASSERT_TRUE(relative_diff(analytical_energy, energy) < 6e-8)
+      << "All tests have finished";
 }

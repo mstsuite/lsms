@@ -4,8 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1
-
 #include <complex>
 #include <vector>
 

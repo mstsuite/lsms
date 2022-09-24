@@ -36,9 +36,7 @@ TEST(LuaLibrary, Test1) {
     }
 
     if (sumval != 11.0) {
-      FAIL()
-
-          << "Sum isn't correct";
+      FAIL() << "Sum isn't correct";
     }
   }
 

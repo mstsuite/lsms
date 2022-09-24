@@ -70,10 +70,10 @@ gtest_discover_tests(test_integrator)
 # 4. Test Poisson Solver Routines
 add_executable(test_poisson test_poisson.cpp)
 target_link_libraries(test_poisson PUBLIC lsmscore)
-add_test(
-        NAME test_poisson
-        COMMAND $<TARGET_FILE:test_poisson>
-)
+target_link_libraries(test_poisson PUBLIC gtest_main)
+
+gtest_discover_tests(test_poisson)
+
 ###################################################################
 
 ##################################################################

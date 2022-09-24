@@ -13,11 +13,6 @@
 using namespace lsms;
 
 template <typename T>
-bool approx_equal(T x, T y, T epsilon) {
-  return fabs(x - y) / max(fabs(x), fabs(y)) <= epsilon;
-}
-
-template <typename T>
 T relative_diff(T ref, T val) {
   return std::fabs(ref - val) / std::fabs(ref);
 }

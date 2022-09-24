@@ -16,7 +16,7 @@ namespace lsms {
 /**
  * Create all vectors in certain cutoff with a certain repeotition
  */
-matrix<double> create_lattice(const matrix<double> &brav, double cutoff,
+  __attribute__((unused)) matrix<double> create_lattice(const matrix<double> &brav, double cutoff,
                               const std::vector<int> &nm, int size);
 
 /**
