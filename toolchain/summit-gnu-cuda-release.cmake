@@ -21,8 +21,6 @@ set(CMAKE_Fortran_COMPILER "gfortran")
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS "-O3 -mtune=native -mcpu=native")
 set(CMAKE_Fortran_FLAGS "-O3 -mtune=native -mcpu=native")
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-set(CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
 set(CMAKE_Fortran_PREPROCESS TRUE)
 
 
