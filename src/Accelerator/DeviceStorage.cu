@@ -359,23 +359,21 @@ int DeviceConstants::ndlj_cgnt, DeviceConstants::lmaxp1_cgnt;
 
 int DeviceConstants::allocate()
 {
-  ndlj_illp = ifactors.illp.l_dim();
-  lmaxp1_cgnt = c.cgnt.l_dim1();
-  ndlj_cgnt = c.cgnt.l_dim2();
+  ndlj_illp = IFactors::illp.l_dim();
+  lmaxp1_cgnt = GauntCoeficients::cgnt.l_dim1();
+  ndlj_cgnt = GauntCoeficients::cgnt.l_dim2();
 
   cudaMalloc((void**)&lofk, AngularMomentumIndices::lofk.size()*sizeof(int));
   cudaMalloc((void**)&mofk, AngularMomentumIndices::mofk.size()*sizeof(int));
-
   cudaMalloc((void**)&ilp1, IFactors::ilp1.size()*sizeof(cuDoubleComplex));
-  cudaMalloc((void**)&illp, Ifactors::illp.size()*sizeof(cuDoubleComplex));
-
+  cudaMalloc((void**)&illp, IFactors::illp.size()*sizeof(cuDoubleComplex));
   cudaMalloc((void**)&cgnt, GauntCoeficients::cgnt.size()*sizeof(double));
 
-  cudaMemcpy(lofk, &am.lofk[0], AngularMomentumIndices::lofk.size()*sizeof(int), cudaMemcpyHostToDevice);
-  cudaMemcpy(mofk, &am.mofk[0], AngularMomentumIndices::mofk.size()*sizeof(int), cudaMemcpyHostToDevice);
-  cudaMemcpy(ilp1, &ifactors.ilp1[0], IFactors::ilp1.size()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
-  cudaMemcpy(illp, &ifactors.illp[0], IFactors::illp.size()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
-  cudaMemcpy(cgnt, &c.cgnt[0], GauntCoeficients::cgnt.size()*sizeof(double), cudaMemcpyHostToDevice);
+  cudaMemcpy(lofk, &AngularMomentumIndices::lofk[0], AngularMomentumIndices::lofk.size()*sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(mofk, &AngularMomentumIndices::mofk[0], AngularMomentumIndices::mofk.size()*sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(ilp1, &IFactors::ilp1[0], IFactors::ilp1.size()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
+  cudaMemcpy(illp, &IFactors::illp[0], IFactors::illp.size()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
+  cudaMemcpy(cgnt, &GauntCoeficients::cgnt[0], GauntCoeficients::cgnt.size()*sizeof(double), cudaMemcpyHostToDevice);
 
   return 0;
 }
