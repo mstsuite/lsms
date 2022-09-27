@@ -1,6 +1,6 @@
-name: CMake build
+name: Build LSMS with cmake
 
-on: [ push ]
+on: [push, pull_request]
 
 env:
   BUILD_TYPE: Release
@@ -22,30 +22,24 @@ jobs:
           sudo apt-get update -y 
           sudo apt-get install build-essential \
            openmpi-bin libopenmpi-dev \
+           ninja-build \
            libblas-dev \
            liblapack-dev \
            gfortran \
            libhdf5-dev
 
-      - name: Display compilers that are used
-        run: |
-          echo "$(cmake --version)"
-          echo "$(gcc --version)"
-          echo "$(gfortran --version)"
-          echo "$(mpic++ --version)"
-
       - name: Configure CMake
         run: |
-          cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-                -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/toolchain/generic-cpu.cmake \
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+                -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/toolchain/testing.cmake \
                 -DBUILD_TESTING=ON \
                 -S ${{github.workspace}} -B ${{github.workspace}}/build
 
-      - name: CMake build step
+      - name: Build
         run: cmake --build ${{github.workspace}}/build --parallel
 
       - name: Run CTests
-        run: |
-          ctest --test-dir ${{github.workspace}}/build 
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C ${{env.BUILD_TYPE}}
 
       - run: echo "This job's status is ${{ job.status }}."
