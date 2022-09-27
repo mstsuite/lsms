@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
   IFactors::init(lsms, crystal.maxlmax);
 
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
-  deviceConstants.allocate(AngularMomentumIndices, GauntCoeficients, IFactors);
+  deviceConstants.allocate();
 #endif
 
   double timeBuildLIZandCommList = MPI_Wtime();

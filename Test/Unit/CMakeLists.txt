@@ -32,7 +32,6 @@ if (USE_LIBXC)
     target_link_libraries(test_xc PUBLIC gtest_main)
     target_sources(test_xc PUBLIC
             ${CMAKE_SOURCE_DIR}/src/Potential/alpha2_c.f
-            ${CMAKE_CURRENT_BINARY_DIR}/FC.h
             xc.f90
             xc.hpp
             helpers.hpp
