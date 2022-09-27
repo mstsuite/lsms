@@ -19,12 +19,13 @@ jobs:
 
       - name: Install dependencies on ubuntu
         run: |
-          sudo apt-get update -y
-          sudo apt-get install build-essential -y
-          sudo apt-get install openmpi-bin -y
-          sudo apt-get install intel-mkl -y
-          sudo apt-get install gfortran -y
-          sudo apt-get install libhdf5-dev -y
+          sudo apt-get update -y 
+          sudo apt-get install build-essential \
+           openmpi-bin libopenmpi-dev \
+           libblas-dev \
+           liblapack-dev \
+           gfortran \
+           libhdf5-dev
 
       - name: Display compilers that are used
         run: |
@@ -36,10 +37,15 @@ jobs:
       - name: Configure CMake
         run: |
           cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-                 -DBLA_VENDOR=Intel10_64lp \
-                 -DUSE_LIBXC=OFF -S ${{github.workspace}} -B ${{github.workspace}}/build
+                -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/toolchain/generic-cpu.cmake \
+                -DBUILD_TESTING=ON \
+                -S ${{github.workspace}} -B ${{github.workspace}}/build
 
       - name: CMake build step
         run: cmake --build ${{github.workspace}}/build --parallel
+
+      - name: Run CTests
+        run: |
+          ctest --test-dir ${{github.workspace}}/build 
 
       - run: echo "This job's status is ${{ job.status }}."
