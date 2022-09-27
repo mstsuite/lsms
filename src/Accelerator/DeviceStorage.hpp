@@ -174,7 +174,7 @@ class DeviceConstants {
   static Real* cgnt;
   static int ndlj_cgnt, lmaxp1_cgnt;
 
-  int allocate(AngularMomentumIndices &am, GauntCoeficients &c, IFactors &ifact);
+  int allocate();
   void free();
 };
 

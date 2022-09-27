@@ -163,7 +163,7 @@ LSMS::LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_gr
   IFactors::init(lsms, crystal.maxlmax);
 
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
-  deviceConstants.allocate(AngularMomentumIndices, GauntCoeficients, IFactors);
+  deviceConstants.allocate();
 #endif
 
   
