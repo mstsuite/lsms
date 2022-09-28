@@ -1,72 +1,78 @@
+#
+# Created by Franco P. Moitzi
+#
 
+set(srcDir ${PROJECT_SOURCE_DIR}/external/lua-5.2.4/src)
 
-if (DEFINED Lua_LIBRARIES AND DEFINED Lua_INCLUDE_DIR)
-    if (EXISTS ${Lua_LIBRARIES} AND EXISTS ${Lua_INCLUDE_DIR})
-        message(STATUS "Lua path was correctly defined")
-    else()
-        message(ERROR "Specified path for lua libaries is wrong")
-    endif ()
-endif()
+set(srcFiles lapi.c lcode.c lctype.c ldebug.c ldo.c ldump.c lfunc.c lgc.c llex.c
+        lmem.c lobject.c lopcodes.c lparser.c lstate.c lstring.c ltable.c
+        ltm.c
+        lundump.c
+        lvm.c
+        lzio.c
+        lauxlib.c
+        lbaselib.c
+        lbitlib.c
+        lcorolib.c
+        ldblib.c
+        liolib.c
+        lmathlib.c
+        loslib.c
+        lstrlib.c
+        ltablib.c
+        loadlib.c
+        linit.c
+        lapi.h
+        lauxlib.h
+        lcode.h
+        lctype.h
+        ldebug.h
+        ldo.h
+        lfunc.h
+        lgc.h
+        llex.h
+        llimits.h
+        lmem.h
+        lobject.h
+        lopcodes.h
+        lparser.h
+        lstate.h
+        lstring.h
+        ltable.h
+        ltm.h
+        luaconf.h
+        lua.h
+        lualib.h
+        lundump.h
+        lvm.h
+        lzio.h)
 
-if (NOT DEFINED Lua_LIBRARIES)
-    set(Lua_LIBRARIES
-            ${CMAKE_BINARY_DIR}/external/lua/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lua${CMAKE_STATIC_LIBRARY_SUFFIX})
+list(TRANSFORM srcFiles PREPEND ${srcDir}/)
 
-    set(Lua_INCLUDE_DIR
-            ${CMAKE_BINARY_DIR}/external/lua/include
-            )
-endif ()
+add_library(lua STATIC)
 
-if (EXISTS ${Lua_LIBRARIES} AND EXISTS ${Lua_INCLUDE_DIR})
-    set(Lua_FOUND true)
-    message(STATUS "Lua was found")
-    message(STATUS "Lua library: " ${Lua_LIBRARIES})
-    message(STATUS "Lua include: " ${Lua_INCLUDE_DIR})
-else()
-    set(Lua_FOUND false)
-    message(STATUS "Lua was not found and will be installed")
-endif ()
+target_sources(lua PUBLIC
+        ${srcFiles}
+        )
 
-if (NOT Lua_FOUND)
-    find_program(MAKE_EXECUTABLE NAMES gmake make REQUIRED)
+target_compile_definitions(lua
+        PRIVATE
+        $<$<PLATFORM_ID:Linux>:LUA_USE_LINUX LUA_COMPAT_5_2>)
 
-    file(COPY ${PROJECT_SOURCE_DIR}/external/lua-5.2.4
-            DESTINATION ${CMAKE_BINARY_DIR}/external)
+target_compile_definitions(lua
+        PRIVATE
+        $<$<PLATFORM_ID:APPLE>:LUA_USE_MACOSX>)
 
-    set(_src ${CMAKE_BINARY_DIR}/external/lua-5.2.4)
-    get_filename_component(_src "${_src}" REALPATH)
+target_compile_options(lua
+        PRIVATE
+        $<$<OR:$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:GNU>>:
+        -Wextra -Wshadow -Wsign-compare -Wundef -Wwrite-strings -Wredundant-decls
+        -Wdisabled-optimization -Waggregate-return -Wdouble-promotion -Wdeclaration-after-statement
+        -Wmissing-prototypes -Wnested-externs -Wstrict-prototypes -Wc++-compat -Wold-style-definition>)
 
-    set(_install ${CMAKE_BINARY_DIR}/external/lua)
-    file(MAKE_DIRECTORY ${_install})
-    get_filename_component(_install "${_install}" REALPATH)
+target_include_directories(lua
+        INTERFACE
+        ${srcDir})
 
-    set(_include ${CMAKE_BINARY_DIR}/external/lua/include)
-    file(MAKE_DIRECTORY ${_include})
-    get_filename_component(_include "${_include}" REALPATH)
+add_library(Lua::Lua ALIAS lua)
 
-    include(ExternalProject)
-
-    ExternalProject_Add(Lua
-            SOURCE_DIR ${_src}
-            BUILD_IN_SOURCE true
-
-#            CONFIGURE_COMMAND sed -i .tmp -e "/^INSTALL_TOP/c\\\rINSTALL_TOP=${_install}" ${_src}/Makefile
-
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/replace_INSTALL_TOP.cmake ${_src}/Makefile ${_src}/Makefile ${_install}
-
-            BUILD_COMMAND ${MAKE_EXECUTABLE} -C ${_src}
-
-            INSTALL_COMMAND ${MAKE_EXECUTABLE} install -C ${_src}
-
-            BUILD_BYPRODUCTS ${_install}/lib/liblua.a
-
-            )
-endif()
-
-
-# convert files outside of a CMake project into logical targets inside of the project.
-# No build files are created. Global makes it visible every where
-add_library(Lua::Lua STATIC IMPORTED GLOBAL)
-set_target_properties(Lua::Lua PROPERTIES IMPORTED_LOCATION ${Lua_LIBRARIES})
-target_include_directories(Lua::Lua INTERFACE ${Lua_INCLUDE_DIR})
-add_dependencies(Lua::Lua Lua)
