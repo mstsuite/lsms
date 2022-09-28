@@ -1,7 +1,7 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include <chrono>
@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
   }
 
 
-  if ( alloyDesc.size() > 0 )
+  if ( !alloyDesc.empty() )
   {
     if(lsms.global.iprint >= 0)
     {
@@ -527,7 +527,7 @@ int main(int argc, char *argv[])
   int iterationStart = 0;
   int potentialWriteCounter = 0;
 
-  FILE *kFile = NULL;
+  FILE *kFile = nullptr;
   if (comm.rank == 0)
   {
     iterationStart = readNextIterationNumber("k.out");
@@ -685,7 +685,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    if (kFile != NULL)
+    if (kFile != nullptr)
     {
       fprintf(kFile,"%4d %20.12lf %12.6lf %12.6lf  %14.10lf\n",
               iterationStart+iteration, lsms.totalEnergy, lsms.chempot, local.atom[0].mtotws, rms);
@@ -719,7 +719,7 @@ int main(int argc, char *argv[])
   if(lsms.localAtomDataFile[0]!=0)
     writeLocalAtomData(comm, lsms, crystal, local, eband, lsms.localAtomDataFile);
 
-  if (kFile != NULL)
+  if (kFile != nullptr)
     fclose(kFile);
 
   /**
@@ -839,5 +839,5 @@ int main(int argc, char *argv[])
   H5close();
   finalizeCommunication();
   lua_close(L);
-  return 0;
+  return EXIT_SUCCESS;
 }
