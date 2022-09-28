@@ -6,20 +6,17 @@
 
 #undef NDEBUG
 
-#include <assert.h>
-
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
 #include <vector>
 
 #include "Misc/integrateOneDim.hpp"
-#include "integrator.hpp"
-#include "poisson.hpp"
+#include "Misc/integrator.hpp"
+#include "Misc/poisson.hpp"
+#include "accel_common.hpp"
+
+namespace poisson_tests {
 
 using namespace lsms;
-
 
 template <typename T>
 T relative_diff(T ref, T val) {
@@ -151,3 +148,5 @@ TEST(IntegrationPoisson, CompareDirect) {
   ASSERT_TRUE(relative_diff(analytical_energy, energy) < 6e-8)
       << "All tests have finished";
 }
+
+}  // namespace poisson_tests

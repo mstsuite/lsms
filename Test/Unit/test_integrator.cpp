@@ -8,7 +8,10 @@
 #include <vector>
 
 #include "Misc/integrateOneDim.hpp"
+#include "accel_common.hpp"
 #include "integrator.hpp"
+
+namespace integrator_tests {
 
 using namespace lsms;
 
@@ -128,3 +131,5 @@ TEST(IntegrationTests, CompareRoutines) {
   ASSERT_TRUE(relative_diff(reference_3_without_zero, result_23) < 1e-6);
   ASSERT_TRUE(relative_diff(reference_3_without_zero, result_24) < 1e-4);
 }
+
+}  // namespace integrator_tests

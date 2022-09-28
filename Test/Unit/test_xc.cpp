@@ -21,6 +21,7 @@
 #include "Matrix.hpp"
 #include "XCBase.hpp"
 #include "XCLibxc.hpp"
+#include "accel_common.hpp"
 #include "helpers.hpp"
 #include "xc.hpp"
 

@@ -7,10 +7,11 @@
 #include <cmath>
 #include <vector>
 
-#include "Indices.hpp"
+#include "Misc/Indices.hpp"
+#include "accel_common.hpp"
 #include "common.hpp"
 
-namespace gaunt {
+namespace gaunt_tests {
 
 using namespace lsms;
 
@@ -86,4 +87,4 @@ TEST(GauntFactorTest, Lmax3) {
       cgnt(1, 6, 6), 1e-12);
 }
 
-}  // namespace gaunt
+}  // namespace gaunt_tests

@@ -7,12 +7,13 @@
 #include <iostream>
 #include <vector>
 
-#include "Coeficients.hpp"
-#include "Indices.hpp"
 #include "Madelung/Madelung.hpp"
 #include "Main/SystemParameters.hpp"
-#include "MultipoleMadelung.hpp"
+#include "Misc/Coeficients.hpp"
+#include "Misc/Indices.hpp"
+#include "MultipoleMadelung/MultipoleMadelung.hpp"
 #include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
+#include "accel_common.hpp"
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
@@ -24,6 +25,8 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
   os << "]";
   return os;
 }
+
+namespace multipole_tests {
 
 SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
@@ -271,3 +274,5 @@ TEST(MultiMadelungsTestSuite, Structure2) {
     }
   }
 }
+
+}  // namespace multipole_tests

@@ -8,6 +8,7 @@
 
 #include "Misc/integrateOneDim.hpp"
 #include "Misc/integrator.hpp"
+#include "accel_common.hpp"
 
 /**
  * Test suite for the integration

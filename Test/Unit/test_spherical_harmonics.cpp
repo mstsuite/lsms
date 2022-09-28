@@ -10,9 +10,10 @@
 #include "Complex.hpp"
 #include "Real.hpp"
 #include "SphericalHarmonics.hpp"
+#include "accel_common.hpp"
 #include "spherical_harmonics.hpp"
 
-namespace {
+namespace spherical_harmonics_tests {
 
 TEST(SphericalHarmonics, SphHarmTest2) {
   int lmax = 8;
@@ -130,4 +131,4 @@ TEST(SphericalHarmonics, SphHarmTest5) {
   }
 }
 
-}  // namespace
+}  // namespace spherical_harmonics_tests

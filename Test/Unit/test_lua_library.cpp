@@ -9,6 +9,8 @@
 #include <iostream>
 #include <lua.hpp>
 
+namespace lua_libarary_tests {
+
 TEST(LuaLibrary, Test1) {
   // initialization
   lua_State *L = luaL_newstate();
@@ -43,3 +45,5 @@ TEST(LuaLibrary, Test1) {
   // cleanup
   lua_close(L);
 }
+
+}  // namespace lua_libarary_tests
