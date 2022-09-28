@@ -3,10 +3,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-
 #include <chrono>
-
-#include <fenv.h>
+#include <cfenv>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -22,8 +20,7 @@
 #endif
 
 #include <hdf5.h>
-
-#include "lua.hpp"
+#include <lua.hpp>
 
 
 #include "LuaInterface/LuaInterface.hpp"

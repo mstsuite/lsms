@@ -102,7 +102,8 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
 #pragma omp parallel for collapse(2)                                       \
     firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, \
-                 rslat, rslatsq) default(shared)
+                 rslat, rslatsq, term0) shared(local, eta, omega, jmax, kmax, lmax, alat) \
+                 default(none)
   for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
     for (int local_i = 0; local_i < local_num_atoms; local_i++) {
       std::vector<double> aij(3);
@@ -187,7 +188,10 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
      * Reference: Zabloudil S. 218
      */
 
-#pragma omp parallel for collapse(2) firstprivate(jmax, kmax) default(shared)
+#pragma omp parallel for collapse(2) \
+    shared(AngularMomentumIndices::lofk, AngularMomentumIndices::lofj, \
+           AngularMomentumIndices::lofk, lsms, \
+           GauntCoeficients::cgnt) firstprivate(factmat, jmax, kmax) default(none)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
         auto l_pot = AngularMomentumIndices::lofj[jl_pot];
@@ -198,19 +202,19 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
         // m2 - m1 = m3  otherwise zero this is always true
         // l1 + l2 + l3 needs to be even
-
         int j3 = l_sum / 2;
 
         lsms.dl_factor(kl_rho, jl_pot) =
             GauntCoeficients::cgnt(j3, kl_pot, kl_rho) * factmat[l_pot] *
             factmat[l_rho];
+
       }
     }
   }
 }
 
 __attribute__((unused)) double lsms::MultipoleMadelung::getScalingFactor()
-    const {
+const {
   return scaling_factor;
 }
 
@@ -223,11 +227,11 @@ __attribute__((unused)) double lsms::MultipoleMadelung::getKnCut() const {
 }
 
 __attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getKnSize()
-    const {
+const {
   return k_nm;
 }
 
 __attribute__((unused)) std::vector<int> lsms::MultipoleMadelung::getRsSize()
-    const {
+const {
   return r_nm;
 }

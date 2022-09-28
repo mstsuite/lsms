@@ -8,7 +8,7 @@
 #include <complex>
 #include <vector>
 
-#include "Coeficients.hpp"
+#include "Misc/Coeficients.hpp"
 #include "Main/SystemParameters.hpp"
 #include "common.hpp"
 

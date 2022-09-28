@@ -23,25 +23,20 @@ auto norm_sq(Iter_T first, Iter_T last) {
 }
 
 /**
+ *  @brief calculate gamma functions
  *
- *  call calGammaFunc to calculate the integral:
- *
- *         inf       2*l
- *  I(l) = int dx * x   * exp(-x**2)
- *          a
- *
- *  and store it in gamma_l(l)
+ *  I(l) = int_{a}^{\inf} * x^(2*l) * exp(-x^2) \dx
  *
  *  l = 0, 1, ..., lmax.
  *
  *  using: (2*l+1)*I(l) = 2*I(l+1) - c(l) ,
- *
  *
  *         c(l) = a**(2*l+1) * exp(-a**2)
  *
  *         I(0) = sqrt(pi)/2 * erfc(a)
  *
  *  erfc(z) = 1 - erf(z)
+ *
  */
 template <class T>
 std::vector<T> gamma_func(const T &&a, int &lmax) {
