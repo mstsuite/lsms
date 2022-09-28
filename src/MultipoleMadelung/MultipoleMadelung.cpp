@@ -189,11 +189,11 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
      */
 
 #pragma omp parallel for collapse(2) \
-    shared(AngularMomentumIndices::lofk, AngularMomentumIndices::lofj, \
-           AngularMomentumIndices::lofk, lsms, \
-           GauntCoeficients::cgnt) firstprivate(factmat, jmax, kmax) default(none)
+    shared(lsms) firstprivate(factmat, jmax, kmax) default(none)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
+
+        // Static variables are shared by default
         auto l_pot = AngularMomentumIndices::lofj[jl_pot];
         auto kl_pot = AngularMomentumIndices::kofj[jl_pot];
         auto l_rho = AngularMomentumIndices::lofk[kl_rho];
