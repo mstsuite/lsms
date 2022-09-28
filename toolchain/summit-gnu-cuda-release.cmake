@@ -4,7 +4,7 @@
 # module load gcc/9.3.0  spectrum-mpi/10.4.0.3-20210112 hdf5/1.12.1 essl cuda ninja cmake
 #
 
-message(STATUS "Use toolchain file")
+message(STATUS "Use toolchain file SUMMIT")
 
 set(BUILD_TESTING ON)
 
