@@ -33,7 +33,7 @@ static void readSingleEvec(FILE *f,int &z, int &i, Real &posX, Real &posY, Real 
 {
   Real tmp1, tmp2;
 // Z global_id x y z  qtotws  mtotws  evec_x evec_y evec_z  e_mix  B_x B_y B_z  vSpinShift
-  fscanf(f,"%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"
+  auto retval = fscanf(f,"%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"
          ,&z,&i, &posX, &posY, &posZ, &tmp1, &atom.mtotws,
          &atom.evec[0], &atom.evec[1], &atom.evec[2],
          &tmp2,
@@ -48,7 +48,7 @@ static void readSingleEvec(FILE *f, int &z, int &i,
 {
   Real tmp1, tmp2;
   // Z global_id x y z  qtotws  mtotws  evec_x evec_y evec_z  e_mix  B_x B_y B_z  vSpinShift
-  fscanf(f,"%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"
+  auto retval = fscanf(f,"%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"
          ,&z,&i, &pos[0], &pos[1], &pos[2], &tmp1, &mtotws,
          &evec[0], &evec[1], &evec[2],
          &tmp2,
@@ -112,7 +112,7 @@ int readInfoEvec(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPara
   if(comm.rank==0)
   {
     FILE *inf=fopen(name,"r");
-    fscanf(inf,"%lf %lf %lf\n", &etot, &eband, &ef);
+    auto retval = fscanf(inf,"%lf %lf %lf\n", &etot, &eband, &ef);
     
 // loop over all atom types:
     for(int i=0; i<crystal.num_types; i++)
