@@ -55,24 +55,27 @@ target_sources(lua PUBLIC
         ${srcFiles}
         )
 
-target_compile_definitions(lua
-        PRIVATE
-        $<$<PLATFORM_ID:Linux>:LUA_USE_LINUX LUA_COMPAT_5_2>)
-
-target_compile_definitions(lua
-        PRIVATE
-        $<$<PLATFORM_ID:APPLE>:LUA_USE_MACOSX>)
-
-target_compile_options(lua
-        PRIVATE
-        $<$<OR:$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:GNU>>:
-        -Wextra -Wshadow -Wsign-compare -Wundef -Wwrite-strings -Wredundant-decls
-        -Wdisabled-optimization -Waggregate-return -Wdouble-promotion -Wdeclaration-after-statement
-        -Wmissing-prototypes -Wnested-externs -Wstrict-prototypes -Wc++-compat -Wold-style-definition>)
-
 target_include_directories(lua
-        INTERFACE
+        PUBLIC    
         ${srcDir})
+
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
+    message(STATUS "Lua: Use linux and POSIX")
+
+    target_compile_definitions(lua PUBLIC LUA_USE_LINUX)
+    target_link_libraries(lua PUBLIC ${CMAKE_DL_LIBS})
+
+    find_package(Readline REQUIRED)
+    message(STATUS "Readline library: " ${Readline_LIBRARY})
+    message(STATUS "Readline include dir: " ${Readline_INCLUDE_DIR})
+
+    target_link_libraries(lua PUBLIC ${Readline_LIBRARY})
+    target_include_directories(lua PUBLIC ${Readline_INCLUDE_DIR})
+
+endif ()
+
 
 add_library(Lua::Lua ALIAS lua)
 
