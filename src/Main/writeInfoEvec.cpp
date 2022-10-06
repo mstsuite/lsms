@@ -19,14 +19,17 @@ static void writeSingleEvec(FILE *f,int z, int i, Real posX, Real posY, Real pos
 // write out the magnetism and constraint info for each site
 static void writeSingleLocalAtomData(FILE *f,int z, int i, Real posX, Real posY, Real posZ, AtomData &atom)
 {
-  // Z global_id x y z  qtotws  mtotws  evec_x evec_y evec_z  B_x B_y B_z  vSpinShift localVolume localEnergy  mtotmt  mvalmt  mvalws
-  fprintf(f,"%3d %8d  %21.15lf  %21.15lf  %21.15lf  %12.6lf %12.6lf  %21.15lf  %21.15lf  %21.15lf  %21.15lf  %21.15lf  %21.15lf  %8.4lf  %.15lf  %.15lf %21.15lf %21.15lf %21.15lf\n",
+  // Z global_id x y z  qtotws  mtotws  evec_x evec_y evec_z  B_x B_y B_z  vSpinShift localVolume localEnergy  mtotmt  mvalmt  mvalws  rmt jws
+  fprintf(f,"%3d %8d  %21.15lf  %21.15lf  %21.15lf  %12.6lf %12.6lf  %21.15lf  %21.15lf  %21.15lf  %21.15lf  %21.15lf  %21.15lf  %8.4lf  %.15lf  %.15lf %21.15lf %21.15lf %21.15lf %10.6lf %10.6lf\n",
           z,i, posX, posY, posZ,
           atom.qtotws, atom.mtotws,
           atom.evec[0], atom.evec[1], atom.evec[2],
           atom.b_con[0], atom.b_con[1], atom.b_con[2],
           atom.vSpinShift,
-          atom.omegaWS, atom.localEnergy+atom.localMadelungEnergy, atom.mtotmt, atom.mvalmt, atom.mvalws);
+          atom.omegaWS, atom.localEnergy+atom.localMadelungEnergy,
+          atom.mtotmt, atom.mvalmt, atom.mvalws,
+          atom.r_mesh[atom.jmt], atom.r_mesh[atom.jws]
+          );
 }
 
 static void readSingleEvec(FILE *f,int &z, int &i, Real &posX, Real &posY, Real &posZ, AtomData &atom)
