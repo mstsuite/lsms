@@ -49,8 +49,9 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   timeReciprocalSpace = MPI_Wtime() - timeReciprocalSpace;
 
   if (lsms.global.iprint >= 0) {
-    std::printf("Eta: %lf Scaling: %lf\n", eta, scaling_factor);
-    std::printf("Real space: %3d %3d %3d: %lf %8d\n", r_nm[0], r_nm[1], r_nm[2],
+    std::printf("Eta:     %lf\n", eta);
+    std::printf("Scaling: %lf\n", scaling_factor);
+    std::printf("Real space:       %3d %3d %3d: %lf %8d\n", r_nm[0], r_nm[1], r_nm[2],
                 rscut, nrslat);
     std::printf("Reciprocal space: %3d %3d %3d: %lf %8d\n", k_nm[0], k_nm[1],
                 k_nm[2], kncut, nknlat);
@@ -101,10 +102,9 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
   // Smaller object for positons
   auto position = crystal.position;
 
-#pragma omp parallel for collapse(2)                                       \
-    firstprivate(nknlat, nrslat, scaling_factor, position, knlatsq, knlat, \
-                 rslat, rslatsq, term0) shared(local, eta, omega, jmax, kmax, lmax, alat) \
-                 default(none)
+#pragma omp parallel for collapse(2) firstprivate(                            \
+    nknlat, nrslat, scaling_factor, position, knlatsq, knlat, rslat, rslatsq, \
+    term0) shared(local, eta, omega, jmax, kmax, lmax, alat) default(none)
   for (int atom_i = 0; atom_i < num_atoms; atom_i++) {
     for (int local_i = 0; local_i < local_num_atoms; local_i++) {
       std::vector<double> aij(3);
@@ -117,7 +117,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
       // a_ij in unit of a0
       for (int idx = 0; idx < 3; idx++) {
         aij[idx] = position(idx, atom_i) / scaling_factor -
-                   position(idx, global_i) / scaling_factor;
+            position(idx, global_i) / scaling_factor;
       }
 
       // Real space terms: first terms
@@ -189,11 +189,10 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
      * Reference: Zabloudil S. 218
      */
 
-#pragma omp parallel for collapse(2) \
-    shared(lsms) firstprivate(factmat, jmax, kmax) default(none)
+#pragma omp parallel for collapse(2) shared(lsms) \
+    firstprivate(factmat, jmax, kmax) default(none)
     for (int jl_pot = 0; jl_pot < jmax; jl_pot++) {
       for (int kl_rho = 0; kl_rho < kmax; kl_rho++) {
-
         // Static variables are shared by default
         auto l_pot = AngularMomentumIndices::lofj[jl_pot];
         auto kl_pot = AngularMomentumIndices::kofj[jl_pot];
@@ -207,8 +206,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
 
         lsms.dl_factor(kl_rho, jl_pot) =
             GauntCoeficients::cgnt(j3, kl_pot, kl_rho) * factmat[l_pot] *
-            factmat[l_rho];
-
+                factmat[l_rho];
       }
     }
   }

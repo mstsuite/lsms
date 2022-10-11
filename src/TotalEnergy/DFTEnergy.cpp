@@ -8,32 +8,31 @@
 
 #include "num_digits.hpp"
 
-
 void lsms::print_dft_energy(const DFTEnergy &energy) {
-
   int size = -1;
 
-  size = std::max(size, num_digits(static_cast<int> (energy.core_eigen)));
-  size = std::max(size, num_digits(static_cast<int> (energy.semicore_eigen)));
-  size = std::max(size, num_digits(static_cast<int> (energy.semicore_eigen + energy.core_eigen)));
-  size = std::max(size, num_digits(static_cast<int> (energy.one_ele)));
-  size = std::max(size, num_digits(static_cast<int> (energy.ks)));
-  size = std::max(size, num_digits(static_cast<int> (energy.kinetic)));
-  size = std::max(size, num_digits(static_cast<int> (energy.hartree)));
-  size = std::max(size, num_digits(static_cast<int> (energy.core_hartree)));
-  size = std::max(size, num_digits(static_cast<int> (energy.coloumb)));
-  size = std::max(size, num_digits(static_cast<int> (energy.kinetic)));
-  size = std::max(size, num_digits(static_cast<int> (energy.hartree)));
-  size = std::max(size, num_digits(static_cast<int> (energy.core_hartree)));
-  size = std::max(size, num_digits(static_cast<int> (energy.coloumb)));
-  size = std::max(size, num_digits(static_cast<int> (energy.xc)));
-  size = std::max(size, num_digits(static_cast<int> (energy.zero_point)));
-  size = std::max(size, num_digits(static_cast<int> (energy.lsf)));
-  size = std::max(size, num_digits(static_cast<int> (energy.madelung)));
-  size = std::max(size, num_digits(static_cast<int> (energy.it_madelung)));
-  size = std::max(size, num_digits(static_cast<int> (energy.it_xc)));
-  size = std::max(size, num_digits(static_cast<int> (energy.mtz)));
-  size = std::max(size, num_digits(static_cast<int> (energy.total)));
+  size = std::max(size, num_digits(static_cast<int>(energy.core_eigen)));
+  size = std::max(size, num_digits(static_cast<int>(energy.semicore_eigen)));
+  size = std::max(size, num_digits(static_cast<int>(energy.semicore_eigen +
+                                                    energy.core_eigen)));
+  size = std::max(size, num_digits(static_cast<int>(energy.one_ele)));
+  size = std::max(size, num_digits(static_cast<int>(energy.ks)));
+  size = std::max(size, num_digits(static_cast<int>(energy.kinetic)));
+  size = std::max(size, num_digits(static_cast<int>(energy.hartree)));
+  size = std::max(size, num_digits(static_cast<int>(energy.core_hartree)));
+  size = std::max(size, num_digits(static_cast<int>(energy.coloumb)));
+  size = std::max(size, num_digits(static_cast<int>(energy.kinetic)));
+  size = std::max(size, num_digits(static_cast<int>(energy.hartree)));
+  size = std::max(size, num_digits(static_cast<int>(energy.core_hartree)));
+  size = std::max(size, num_digits(static_cast<int>(energy.coloumb)));
+  size = std::max(size, num_digits(static_cast<int>(energy.xc)));
+  size = std::max(size, num_digits(static_cast<int>(energy.zero_point)));
+  size = std::max(size, num_digits(static_cast<int>(energy.lsf)));
+  size = std::max(size, num_digits(static_cast<int>(energy.madelung)));
+  size = std::max(size, num_digits(static_cast<int>(energy.it_madelung)));
+  size = std::max(size, num_digits(static_cast<int>(energy.it_xc)));
+  size = std::max(size, num_digits(static_cast<int>(energy.mtz)));
+  size = std::max(size, num_digits(static_cast<int>(energy.total)));
 
   size += 12;
 
@@ -41,7 +40,8 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
 
   std::printf("%-12s = %*.10f Ry\n", "Deepcore", size, energy.core_eigen);
   std::printf("%-12s = %*.10f Ry\n", "Semicore", size, energy.semicore_eigen);
-  std::printf("%-12s = %*.10f Ry\n", "Core", size, energy.semicore_eigen + energy.core_eigen);
+  std::printf("%-12s = %*.10f Ry\n", "Core", size,
+              energy.semicore_eigen + energy.core_eigen);
   std::printf("%-12s = %*.10f Ry\n", "One electron", size, energy.one_ele);
   std::printf("%-12s = %*.10f Ry\n", "Kohn-Sham", size, energy.ks);
   std::printf("%-12s = %*.10f Ry\n", "Kinetic", size, energy.kinetic);
@@ -53,8 +53,7 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
   std::printf("%-12s = %*.10f Ry\n", "XC", size, energy.xc);
   std::printf("%-12s = %*.10f Ry\n", "ZPE", size, energy.zero_point);
   std::printf("%-12s = %*.10f Ry\n", "LSF", size, energy.lsf);
-  std::printf("%-12s = %*.10f Ry\n", "Interstial", size, energy.u0);
-
+  std::printf("%-12s = %*.10f Ry\n", "U0", size, energy.u0);
 
   std::printf("-------------------\n");
 
@@ -68,7 +67,6 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
   std::printf("%-12s = %*.10f Ry\n", "Total energy", size, energy.total);
 
   std::printf("===================\n\n");
-
 }
 
 static void sum_dft_energies(lsms::DFTEnergy *in, lsms::DFTEnergy *inout,
@@ -110,7 +108,7 @@ void lsms::globalSum(LSMSCommunication &comm, DFTEnergy &dft_energy) {
   MPI_Get_address(&dft_energy.mtz, &displacements[15]);
   MPI_Get_address(&dft_energy.u0, &displacements[16]);
 
-  for (auto &value: displacements) {
+  for (auto &value : displacements) {
     value -= base;
   }
 

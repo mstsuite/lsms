@@ -1,13 +1,14 @@
-#include <string.h>
-#include "AtomData.hpp"
 #include <hdf5.h>
-#include "writeSingleAtomData.hpp"
+#include <string.h>
+
+#include "AtomData.hpp"
 #include "Main/HDF5io.hpp"
+#include "writeSingleAtomData.hpp"
 
 int writeSingleAtomData_hdf5(hid_t loc_id, AtomData &atom, int present_atom)
 {
   char gname[128];
-  
+
   // printf("WARNING: Writing of hdf5 potentials not implemented yet!\n");
   write_scalar<int>(loc_id,"PresentAtom",present_atom);
   write_scalar<int>(loc_id,"jmt",atom.jmt);
@@ -24,7 +25,7 @@ int writeSingleAtomData_hdf5(hid_t loc_id, AtomData &atom, int present_atom)
   // printf("Wrote Scalars\n");
   write_vector<double>(loc_id,"xvalws",&atom.xvalws[0],atom.nspin);
   // printf("Wrote xvalws (%lf %lf)\n",atom.xvalws[0],atom.xvalws[1]);
-  
+
   for(int ns=0; ns<atom.nspin; ns++)
   {
     snprintf(gname,100,"V%1d",ns+1);
@@ -60,6 +61,6 @@ int writeSingleAtomData_hdf5(hid_t loc_id, AtomData &atom, int present_atom)
     //printf("Wrote evec\n",gname);
 
     // printf("Wrote present_atom=%d\n",present_atom);
-  
+
   return 0;
 }

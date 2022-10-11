@@ -1,0 +1,21 @@
+
+
+export OMP_NUM_THREADS=1
+
+${RM} -rf k.out
+
+${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} "$<TARGET_FILE:lsms_main>" i_lsms.lua
+
+"$<TARGET_FILE:lsms_comparer>" k.out k.out.ref > /dev/null 2>&1
+
+error=$?
+
+if [ $error -eq 0 ]
+then
+   exit 0
+elif [ $error -eq 1 ]
+then
+   exit 1
+else
+   exit 1
+fi

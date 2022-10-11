@@ -11,10 +11,10 @@
 void calculateChargesPotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local,
                                CrystalParameters &crystal, int chargeSwitch) {
 
-  Real *qsub;
   Array3d<Real> rhoTemp;
 
-  qsub = new Real[crystal.num_types];
+  std::vector<double> qsub(crystal.num_types);
+
   for (int i = 0; i < crystal.num_types; i++) qsub[i] = 0.0;
 
   rhoTemp.resize(lsms.global.iprpts + 1, 2, local.num_local);
@@ -37,7 +37,6 @@ void calculateChargesPotential(LSMSCommunication &comm, LSMSSystemParameters &ls
     printf(">>> calculatePotential\n");
   calculatePotential(comm, lsms, local, crystal, qsub, rhoTemp, chargeSwitch);
 
-  delete[] qsub;
 
 }
 
@@ -55,11 +54,11 @@ void calculateLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local, int
       local.atom[i].qvalmt = local.atom[i].dosckint[0];
       local.atom[i].qvalws = local.atom[i].dosint[0];
       local.atom[i].mvalws = local.atom[i].dosint[1] * local.atom[i].evecNew[0] +
-                             local.atom[i].dosint[2] * local.atom[i].evecNew[1] +
-                             local.atom[i].dosint[3] * local.atom[i].evecNew[2];
+          local.atom[i].dosint[2] * local.atom[i].evecNew[1] +
+          local.atom[i].dosint[3] * local.atom[i].evecNew[2];
       local.atom[i].mvalmt = local.atom[i].dosckint[1] * local.atom[i].evecNew[0] +
-                             local.atom[i].dosckint[2] * local.atom[i].evecNew[1] +
-                             local.atom[i].dosckint[3] * local.atom[i].evecNew[2];
+          local.atom[i].dosckint[2] * local.atom[i].evecNew[1] +
+          local.atom[i].dosckint[3] * local.atom[i].evecNew[2];
       local.atom[i].xvalmt[0] = 0.5 * (local.atom[i].qvalmt + local.atom[i].mvalmt);
       local.atom[i].xvalwsNew[0] = 0.5 * (local.atom[i].qvalws + local.atom[i].mvalws);
       local.atom[i].xvalmt[1] = 0.5 * (local.atom[i].qvalmt - local.atom[i].mvalmt);
@@ -240,7 +239,7 @@ void calculateLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local, int
 
 void
 calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local, CrystalParameters &crystal,
-                 Real *qsub, Array3d<Real> &rhoTemp, int chargeSwitch) {
+                 std::vector<double>& qsub, Array3d<Real> &rhoTemp, int chargeSwitch) {
 
   // Compute integrated densities of states and store in xval**
   // (from mufind_c.f)
@@ -438,7 +437,7 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
       for (int i = 0; i < local.num_local; i++) {
         qmIntTotal[0] += local.atom[i].qInt * Real(local.n_per_type[i]);
         qmIntTotal[1] += local.atom[i].omegaMT *
-                         Real(local.n_per_type[i]); // in LSMS_1 it is omegmt, but this is supposedly set to omegws?
+            Real(local.n_per_type[i]); // in LSMS_1 it is omegmt, but this is supposedly set to omegws?
       }
       globalSum(comm, qmIntTotal, 2);
       for (int i = 0; i < local.num_local; i++)
@@ -568,8 +567,8 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
     switch (lsms.n_spin_cant) {
       case 2:
         local.atom[i].mInt = std::sqrt(local.atom[i].mIntComponent[0] * local.atom[i].mIntComponent[0] +
-                                       local.atom[i].mIntComponent[1] * local.atom[i].mIntComponent[1] +
-                                       local.atom[i].mIntComponent[2] * local.atom[i].mIntComponent[2]);
+            local.atom[i].mIntComponent[1] * local.atom[i].mIntComponent[1] +
+            local.atom[i].mIntComponent[2] * local.atom[i].mIntComponent[2]);
         break;
       default:
         local.atom[i].mInt = local.atom[i].mIntComponent[2];
@@ -628,7 +627,7 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
   obtain the qsub from all other nodes............................
   ----------------------------------------------------------------
 */
-  globalSum(comm, qsub, crystal.num_types);
+  globalSum(comm, qsub.data(), crystal.num_types);
 
   if (lsms.global.iprint >= 1) {
     for (int i = 0; i < local.num_local; i++) {
@@ -660,7 +659,7 @@ void calculate_asa_ro3_(int *n_spin_pola, Real *rho1, Real *rho2,
 }
 
 void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local,
-                        CrystalParameters &crystal, Real *qsub, Array3d<Real> &rhoTemp, int chargeSwitch) {
+                        CrystalParameters &crystal, std::vector<Real> &qsub, Array3d<Real> &rhoTemp, int chargeSwitch) {
 /*
   ================================================================
   calculate muffin-tin zero potential and its contribution to the
@@ -856,7 +855,7 @@ C        dz=mint/qint
       =============================================================
       calculate vxcout, the exchange-correlation potential corres-
       ponding to the interstial constant charge density, and excout,
-      the exchange-correlation energy.............................. 
+      the exchange-correlation energy..............................
       vmtz is the muffin-tin zero potential.
       emad will be used in the total energy calculation.
       emadp will be used in the pressure calculation.

@@ -3,29 +3,23 @@
 //
 
 #include "XCLibxc.hpp"
-#include "rationalFit.hpp"
-#include "diff.hpp"
 
 #include <stdexcept>
 
+#include "diff.hpp"
+#include "rationalFit.hpp"
+
 lsms::XCLibxc::XCLibxc(int nSpin, int xcFunctional[3])
     : XCBase(nSpin, xcFunctional) {
-
   setup(nSpin, xcFunctional, xcFunctional + 3);
-
-
 }
 
 lsms::XCLibxc::XCLibxc(int nSpin, std::vector<int> xcFunctional)
     : XCBase(nSpin, xcFunctional) {
-
   setup(nSpin, std::begin(xcFunctional), std::end(xcFunctional));
-
-
 }
 
-void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
-                             double h,
+void lsms::XCLibxc::evaluate(const std::vector<Real> &rMesh, double h,
                              const Matrix<Real> &rhoIn, int jmt,
                              Matrix<Real> &xcEnergyOut,
                              Matrix<Real> &xcPotOut) {
@@ -81,7 +75,6 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
 
   if (needGradients) {
     if (_nSpin == 1) {
-
       drho_up = lsms::derivative<double>(rho.data(), jmt);
 
       for (int ir = 0; ir <= jmt; ir++) {
@@ -89,21 +82,21 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
       }
 
     } else {
-
       drho_up = lsms::derivative<double>(rho_up.data(), jmt);
       drho_down = lsms::derivative<double>(rho_down.data(), jmt);
 
       for (int ir = 0; ir < jmt; ir++) {
-        sigma[ir * 3] = drho_up[ir] * drho_up[ir] / (rMesh[ir] * rMesh[ir] * h * h);
-        sigma[ir * 3 + 1] = drho_up[ir] * drho_down[ir] / (rMesh[ir] * rMesh[ir] * h * h);
-        sigma[ir * 3 + 2] = drho_down[ir] * drho_down[ir] / (rMesh[ir] * rMesh[ir] * h * h);
+        sigma[ir * 3] =
+            drho_up[ir] * drho_up[ir] / (rMesh[ir] * rMesh[ir] * h * h);
+        sigma[ir * 3 + 1] =
+            drho_up[ir] * drho_down[ir] / (rMesh[ir] * rMesh[ir] * h * h);
+        sigma[ir * 3 + 2] =
+            drho_down[ir] * drho_down[ir] / (rMesh[ir] * rMesh[ir] * h * h);
       }
-
     }
   }
 
   for (int i = 0; i < numFunctionals; i++) {
-
     switch (functionals[i].get_functional().info->family) {
       case XC_FAMILY_LDA:
         xc_lda_exc_vxc(&functionals[i].get_functional(), jmt, rho.data(),
@@ -116,9 +109,7 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
         break;
     }
 
-
     if (needGradients) {
-
       if (_nSpin == 1) {
         // non-spin polarized
 
@@ -128,33 +119,24 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
         }
 
       } else {
-
         int isp;
 
         // Spin-up channel
         isp = 0;
         for (int ir = 0; ir < jmt; ir++) {
-
           g_xc(ir, isp) +=
-              -2.0 * vSigma[ir * 3] * drho_up[ir] / (rMesh[ir] * h)
-              - vSigma[ir * 3 + 1] * drho_down[ir] / (rMesh[ir] * h);
-
+              -2.0 * vSigma[ir * 3] * drho_up[ir] / (rMesh[ir] * h) -
+                  vSigma[ir * 3 + 1] * drho_down[ir] / (rMesh[ir] * h);
         }
 
         // Spin-down channel
         isp = 1;
         for (int ir = 0; ir < jmt; ir++) {
-
           g_xc(ir, isp) +=
-              -2.0 * vSigma[ir * 3 + 2] * drho_down[ir] / (rMesh[ir] * h)
-              - vSigma[ir * 3 + 1] * drho_up[ir] / (rMesh[ir] * h);
-
+              -2.0 * vSigma[ir * 3 + 2] * drho_down[ir] / (rMesh[ir] * h) -
+                  vSigma[ir * 3 + 1] * drho_up[ir] / (rMesh[ir] * h);
         }
-
-
       }
-
-
     }
 
     /*
@@ -186,9 +168,7 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
      * GGA Part
      */
 
-
     if (_nSpin == 1) {
-
       std::vector<double> v_grad_corr(jmt);
 
       int isp;
@@ -197,13 +177,11 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
       v_grad_corr = lsms::derivative<double>(&g_xc(0, isp), jmt);
 
       for (int ir = 0; ir < jmt; ir++) {
-        xcPotOut(ir, isp) += 2.0 * (
-            2.0 * g_xc(ir, isp) / rMesh[ir]
-            + v_grad_corr[ir] / (rMesh[ir] * h));
+        xcPotOut(ir, isp) += 2.0 * (2.0 * g_xc(ir, isp) / rMesh[ir] +
+            v_grad_corr[ir] / (rMesh[ir] * h));
       }
 
     } else {
-
       std::vector<double> v_grad_corr;
 
       int isp;
@@ -212,26 +190,19 @@ void lsms::XCLibxc::evaluate(std::vector<Real> &rMesh,
       v_grad_corr = lsms::derivative<double>(&g_xc(0, isp), jmt);
 
       for (int ir = 0; ir < jmt; ir++) {
-        xcPotOut(ir, isp) += 2.0 * (
-            2.0 * g_xc(ir, isp) / rMesh[ir]
-            + v_grad_corr[ir] / (rMesh[ir] * h));
+        xcPotOut(ir, isp) += 2.0 * (2.0 * g_xc(ir, isp) / rMesh[ir] +
+            v_grad_corr[ir] / (rMesh[ir] * h));
       }
 
       isp = 1;
       v_grad_corr = lsms::derivative<double>(&g_xc(0, isp), jmt);
 
       for (int ir = 0; ir < jmt; ir++) {
-        xcPotOut(ir, isp) += 2.0 * (
-            2.0 * g_xc(ir, isp) / rMesh[ir]
-            + v_grad_corr[ir]);
+        xcPotOut(ir, isp) +=
+            2.0 * (2.0 * g_xc(ir, isp) / rMesh[ir] + v_grad_corr[ir]);
       }
-
     }
-
-
   }
-
-
 }
 
 void lsms::XCLibxc::evaluate(const Real rhoIn[2], Real &xcEnergyOut,
@@ -295,14 +266,14 @@ const std::vector<lsms::XCFuncType> &lsms::XCLibxc::get_functionals() const {
 }
 
 std::string lsms::XCLibxc::get_name() {
-
   std::stringstream ss;
 
-  for (auto &xc: functionals) {
+  for (auto &xc : functionals) {
     ss << xc.get_functional().info->name;
 
-    if (&xc != &functionals.back()) { ss << "+"; };
-
+    if (&xc != &functionals.back()) {
+      ss << "+";
+    };
   }
 
   ss << " (libxc)";
@@ -310,6 +281,26 @@ std::string lsms::XCLibxc::get_name() {
   return ss.str();
 }
 
-const xc_func_type &lsms::XCFuncType::get_functional() const {
+lsms::XCFuncType::XCFuncType(
+    int nspin, int type
+) : _nspin(nspin) {
+
+  // Initialize XC Kernel using Libxc
+  auto info = xc_func_init(&_func_type, type, nspin);
+  if (info)
+    throw std::runtime_error("Libxc Kernel Init Failed");
+
+  initialized = true;
+}
+
+lsms::XCFuncType::XCFuncType(const XCFuncType &other) :
+    XCFuncType(other._nspin, other.xc_info()->number) {}
+
+lsms::XCFuncType::~XCFuncType() noexcept {
+  if( initialized ) xc_func_end( &_func_type );
+}
+
+
+const xc_func_type & lsms::XCFuncType::get_functional() const {
   return _func_type;
 }

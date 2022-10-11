@@ -4,21 +4,21 @@
 
 namespace LSMSAlgorithms {
 
-  const size_t numAlgorithms = 2;
+const size_t numAlgorithms = 2;
 
-  ///////// lizConstruction /////////
-  const size_t lizConstruction = 0;
-  const signed char lizConstruction_original = 0;
-  const signed char lizConstruction_bricks = 1;
-  
-  const signed char lizConstruction_default = lizConstruction_original;
+///////// lizConstruction /////////
+const size_t lizConstruction = 0;
+const signed char lizConstruction_original = 0;
+const signed char lizConstruction_bricks = 1;
 
-  ///////// potentialIO /////////
-  const size_t potentialIO = 1;
-  const signed char potentialIO_serial = 0;
-  const signed char potentialIO_parallel = 1;
+const signed char lizConstruction_default = lizConstruction_original;
 
-  const signed char potentialIO_default = potentialIO_serial;
-}
+///////// potentialIO /////////
+const size_t potentialIO = 1;
+const signed char potentialIO_serial = 0;
+const signed char potentialIO_parallel = 1;
+
+const signed char potentialIO_default = potentialIO_serial;
+}  // namespace LSMSAlgorithms
 
 #endif

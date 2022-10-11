@@ -85,6 +85,9 @@ target_sources(lsmscore
         PotentialType.hpp
         num_digits.hpp
 
+        ChargePlotter.cpp
+        ChargePlotter.hpp
+
         )
 
 if(USE_ESSL)

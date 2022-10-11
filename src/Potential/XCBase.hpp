@@ -18,20 +18,18 @@ class XCBase {
   std::vector<int> _xcFunctional;
 
  public:
-  XCBase(int nSpin, int xcFunctional[3]);
+  XCBase(int n_spin, int xc_functional[3]);
 
-  XCBase(int nSpin, std::vector<int> xcFunctional);
+  XCBase(int n_spin, std::vector<int> xc_functional);
 
-  virtual void evaluate(std::vector<Real> &rMesh,
-                        double h,
-                        const Matrix<Real> &rhoIn, int jmt,
-                        Matrix<Real> &xcEnergyOut, Matrix<Real> &xcPotOut) = 0;
+  virtual void evaluate(const std::vector<Real> &r_mesh, double h,
+                        const Matrix<Real> &rho_in, int jmt,
+                        Matrix<Real> &xc_energy_out, Matrix<Real> &xc_pot_out) = 0;
 
-  virtual void evaluate(const Real rhoIn[2], Real &xcEnergyOut,
-                        Real xcPotOut[2]) = 0;
+  virtual void evaluate(const Real rho_in[2], Real &xc_energy_out,
+                        Real xc_pot_out[2]) = 0;
 
   virtual std::string get_name() = 0;
-
 };
 
 }  // namespace lsms

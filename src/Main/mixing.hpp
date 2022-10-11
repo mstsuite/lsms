@@ -3,6 +3,7 @@
 
 #include "Real.hpp"
 #include "SystemParameters.hpp"
+#include "mixing_params.hpp"
 #include "SingleSite/AtomData.hpp"
 #include "Communication/LSMSCommunication.hpp"
 

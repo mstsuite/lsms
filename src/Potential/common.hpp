@@ -7,4 +7,4 @@
 
 constexpr int numFunctionalIndices = 3;
 
-#endif //LSMS_COMMON_HPP
+#endif  // LSMS_COMMON_HPP

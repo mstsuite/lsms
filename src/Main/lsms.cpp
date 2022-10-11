@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
 #ifdef LEGACY_MONOPOLE
   calculateMadelungMatrices(lsms, crystal, local);
 #else
-  calculateMultiMadelungMatrices(lsms, crystal, local);
+  lsms::calculateMultiMadelungMatrices(lsms, crystal, local);
 #endif
   timeCalculateMadelungMatrix = MPI_Wtime() - timeCalculateMadelungMatrix;
   if (lsms.global.iprint >= 0)
@@ -424,7 +424,7 @@ int main(int argc, char *argv[])
     printLocalTypeInfo(stdout, local);
   }
 
-  calculateCoreStates(comm, lsms, local);
+  lsms::calculateCoreStates(comm, lsms, local);
   if (lsms.global.iprint >= 0)
   {
     printf("Finished calculateCoreStates(...)\n");
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
     // if(!lsms.global.checkIstop("buildKKRMatrix"))
 
     // Calculate chemical potential 
-    calculateChemPot(comm, lsms, local, eband);
+    lsms::calculateChemPot(comm, lsms, local, eband);
     dTimeCCP = MPI_Wtime() - dTimeCCP;
     timeCalcChemPot += dTimeCCP;
 
@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
           swapCoreStateEnergies(local.atom[i]);
       }
     }
-    calculateCoreStates(comm, lsms, local);
+    lsms::calculateCoreStates(comm, lsms, local);
 
     // pf = fopen("vr_test_4.dat","w");
     // printAtomPotential(pf, local.atom[0]);
@@ -704,7 +704,7 @@ int main(int argc, char *argv[])
     }
 
     // Recalculate core states for new potential if we are performing scf calculations
-    calculateCoreStates(comm, lsms, local);
+    lsms::calculateCoreStates(comm, lsms, local);
 
     // Periodically write the new potential for scf calculations 
     potentialWriteCounter++;
