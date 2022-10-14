@@ -222,7 +222,7 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     }
 
     dft_energy.total += emad[is];
-    dft_energy.madelung += emad[is];
+    dft_energy.it_xc += emad[is];
 
   }
   for (int i = 0; i < local.num_local; i++) {
@@ -231,7 +231,8 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     }
   }
 
-  dft_energy.shift = lsms.u0;
+  dft_energy.it_madelung = lsms.u0 - lsms.u0MT;
+  dft_energy.madelung = lsms.u0MT;
 
   dft_energy.total += lsms.u0;
 

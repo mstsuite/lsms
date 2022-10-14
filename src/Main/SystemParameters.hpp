@@ -135,6 +135,7 @@ public:
   Real volumeNorm;             // Volume renormalization factor
   Real volumeInterstitial;     // Total interstitial volume
   Real u0;                     // Contribution of the Muffin-tin zero potential to the Coulomb energy
+  Real u0MT;                   // Contribution of the Muffin-tin zero potential to the Coulomb energy just from MT
   Real totalEnergy;            // Total energy
   //Real pressure;               // Pressure
 

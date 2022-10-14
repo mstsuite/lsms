@@ -40,7 +40,9 @@ class DFTEnergy {
 
   Real madelung = 0.0;
 
-  Real shift = 0.0;
+  Real it_madelung = 0.0;
+
+  Real it_xc = 0.0;
 
   DFTEnergy &operator+=(const DFTEnergy &rhs) {
     this->zero_point += rhs.zero_point;
@@ -56,7 +58,8 @@ class DFTEnergy {
     this->lsf += rhs.lsf;
     this->total += rhs.total;
     this->madelung += rhs.madelung;
-    this->shift += rhs.shift;
+    this->it_madelung += rhs.it_madelung;
+    this->it_xc += rhs.it_xc;
 
     return *this;
   }

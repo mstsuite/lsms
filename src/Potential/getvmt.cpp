@@ -3,7 +3,7 @@
 // getvmt.f in LSMS 1
 // vshift still needs to be calculated somewhere else first! (now local and =0.0)
 
-void getvmt(LSMSSystemParameters lsms, AtomData &atom, CrystalParameters &crystal, Real qsub[], int &mytype, Real &vmt, Real &vmt1, Real &u0)
+void getvmt(LSMSSystemParameters lsms, AtomData &atom, CrystalParameters &crystal, Real qsub[], int &mytype, Real &vmt, Real &vmt1, Real &u0, Real &u0MT)
 {
 /*
   ================================================================
@@ -18,12 +18,15 @@ void getvmt(LSMSSystemParameters lsms, AtomData &atom, CrystalParameters &crysta
                    // (in the case of ASA-MT, vmt is the shift inside rins,
                    // and vmt1 is the shift for the whole ASA sphere.)
   u0 = 0.0;        // contribution to the total energy
+  u0MT = 0.0;      // contribution of the interstitial part
 
   for(int i=0; i<crystal.num_types; i++)
   {
     vmt1 += atom.madelungMatrix[i] * qsub[i];
     u0 += atom.madelungMatrix[i] * qsub[i] * qsub[mytype];
   }
+
+  u0MT = u0;
 
   vmt1 *= 2.0;
 /*

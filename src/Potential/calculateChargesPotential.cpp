@@ -671,6 +671,8 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
   Real vmt = 0.0;
   Real *vmt1 = new Real[local.num_local];
   Real u0Sum = 0.0;
+  Real u0MTSum = 0.0;
+  Real u0MT = 0.0;
   Real u0 = 0.0;
 
   for (int i = 0; i < local.num_local; i++) {
@@ -680,11 +682,12 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
     //  alpha_mad += local.atom[i].madelungMatrix[j];
     //alpha_mad *= 2.0 * local.atom[i].omegaWS;
 
-    getvmt(lsms, local.atom[i], crystal, qsub, local.global_id[i], vmt, vmt1[i], u0);
+    getvmt(lsms, local.atom[i], crystal, qsub, local.global_id[i], vmt, vmt1[i], u0, u0MT);
 
     //Real madterm = -(vmt1 - alpha_mad * local.atom[i].rhoInt);
     vmtSum += vmt * local.n_per_type[i];
     u0Sum += u0 * local.n_per_type[i];
+    u0MTSum += u0MT * local.n_per_type[i];
     local.atom[i].localMadelungEnergy = u0;
   }
 
@@ -703,8 +706,10 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
     case 1:                            // ASA case
       globalSum(comm, vmtSum);
       globalSum(comm, u0Sum);
+      globalSum(comm, u0MTSum);
       vmt = vmtSum / Real(lsms.num_atoms);
       lsms.u0 = u0Sum;
+      lsms.u0MT = u0MTSum;
       // not implemented
       for (int i = 0; i < local.num_local; i++) {
         int jmt = local.atom[i].jws;
@@ -777,10 +782,12 @@ C        dz=mint/qint
     default:                           // Muffin-tin case
       globalSum(comm, vmtSum);
       globalSum(comm, u0Sum);
+      globalSum(comm, u0MTSum);
 
       for (int i = 0; i < local.num_local; i++) {
         vmt = vmtSum / lsms.volumeInterstitial;
         lsms.u0 = u0Sum;
+        lsms.u0MT = u0MTSum;
 /*
         ===============================================================
         calculate the exchange-correlation potential related parameters
