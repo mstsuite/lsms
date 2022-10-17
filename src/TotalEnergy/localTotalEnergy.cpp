@@ -367,4 +367,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
 
   dft_energy.total = dft_energy.kinetic + dft_energy.coloumb + dft_energy.xc +
                      dft_energy.zero_point + dft_energy.lsf;
+
+
+
 }

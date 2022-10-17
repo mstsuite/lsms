@@ -1,4 +1,7 @@
+
 #include "getvmt.hpp"
+
+#include "Misc/PotentialType.hpp"
 
 // getvmt.f in LSMS 1
 // vshift still needs to be calculated somewhere else first! (now local and =0.0)
@@ -50,8 +53,9 @@ void getvmt(LSMSSystemParameters lsms, AtomData &atom, CrystalParameters &crysta
 
   switch (lsms.mtasa)
   {
-    case 1:                               // ASA case
+    case lsms::PotentialType::ASA:        // ASA case
       vmt = 2.0 * dq_mt / rSphere;
+      vmt1 = 2.0 * dq_mt / rSphere;
       break;
     
     default:                              // Muffin-Tin case

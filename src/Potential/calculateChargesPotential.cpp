@@ -1,6 +1,7 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "calculateChargesPotential.hpp"
 
+#include "Misc/PotentialType.hpp"
 #include "newFunctionalInterface.hpp"
 
 #ifdef USE_LIBXC
@@ -703,13 +704,15 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
   dz = new Real[local.num_local];
 
   switch (lsms.mtasa) {
-    case 1:                            // ASA case
+    case lsms::PotentialType::ASA:                            // ASA case
       globalSum(comm, vmtSum);
       globalSum(comm, u0Sum);
       globalSum(comm, u0MTSum);
       vmt = vmtSum / Real(lsms.num_atoms);
       lsms.u0 = u0Sum;
       lsms.u0MT = u0MTSum;
+      lsms.vmt = vmt;
+
       // not implemented
       for (int i = 0; i < local.num_local; i++) {
         int jmt = local.atom[i].jws;
@@ -784,10 +787,12 @@ C        dz=mint/qint
       globalSum(comm, u0Sum);
       globalSum(comm, u0MTSum);
 
+      vmt = vmtSum / lsms.volumeInterstitial;
+      lsms.u0 = u0Sum;
+      lsms.u0MT = u0MTSum;
+      lsms.vmt = vmt;
+
       for (int i = 0; i < local.num_local; i++) {
-        vmt = vmtSum / lsms.volumeInterstitial;
-        lsms.u0 = u0Sum;
-        lsms.u0MT = u0MTSum;
 /*
         ===============================================================
         calculate the exchange-correlation potential related parameters

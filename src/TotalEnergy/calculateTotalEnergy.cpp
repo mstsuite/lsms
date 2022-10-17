@@ -231,8 +231,10 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     }
   }
 
-  dft_energy.it_madelung = lsms.u0 - lsms.u0MT;
   dft_energy.madelung = lsms.u0MT;
+  dft_energy.it_madelung = lsms.u0 - lsms.u0MT;
+  dft_energy.mtz = lsms.vmt;
+  dft_energy.u0 = lsms.u0;
 
   dft_energy.total += lsms.u0;
 

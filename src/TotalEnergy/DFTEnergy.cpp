@@ -41,6 +41,7 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
   size = std::max(size, num_digits(static_cast<int> (energy.madelung)));
   size = std::max(size, num_digits(static_cast<int> (energy.it_madelung)));
   size = std::max(size, num_digits(static_cast<int> (energy.it_xc)));
+  size = std::max(size, num_digits(static_cast<int> (energy.mtz)));
   size = std::max(size, num_digits(static_cast<int> (energy.total)));
 
   size += 12;
@@ -60,11 +61,17 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
   std::printf("%-12s = %*.10f Ry\n", "XC", size, energy.xc);
   std::printf("%-12s = %*.10f Ry\n", "ZPE", size, energy.zero_point);
   std::printf("%-12s = %*.10f Ry\n", "LSF", size, energy.lsf);
+  std::printf("%-12s = %*.10f Ry\n", "Interstial", size, energy.u0);
+
+
+  std::printf("-------------------\n");
 
   std::printf("%-12s = %*.10f Ry\n", "MT Madelung", size, energy.madelung);
-
   std::printf("%-12s = %*.10f Ry\n", "IT Madelung", size, energy.it_madelung);
   std::printf("%-12s = %*.10f Ry\n", "IT XC", size, energy.it_xc);
+  std::printf("%-12s = %*.10f Ry\n", "MTZ", size, energy.mtz);
+
+  std::printf("-------------------\n");
 
   std::printf("%-12s = %*.10f Ry\n", "Total energy", size, energy.total);
 
@@ -84,7 +91,7 @@ void lsms::globalSum(LSMSCommunication &comm, DFTEnergy &dft_energy) {
 
   MPI_Datatype dft_type;
 
-  constexpr int size = 15;
+  constexpr int size = 17;
 
   std::vector<MPI_Datatype> types(size, MPI_DOUBLE);
   std::vector<int> blocks(size, 1);
@@ -104,9 +111,12 @@ void lsms::globalSum(LSMSCommunication &comm, DFTEnergy &dft_energy) {
   MPI_Get_address(&dft_energy.xc, &displacements[9]);
   MPI_Get_address(&dft_energy.lsf, &displacements[10]);
   MPI_Get_address(&dft_energy.total, &displacements[11]);
+
   MPI_Get_address(&dft_energy.madelung, &displacements[12]);
   MPI_Get_address(&dft_energy.it_madelung, &displacements[13]);
   MPI_Get_address(&dft_energy.it_xc, &displacements[14]);
+  MPI_Get_address(&dft_energy.mtz, &displacements[15]);
+  MPI_Get_address(&dft_energy.u0, &displacements[16]);
 
   for (auto &value: displacements) {
     value -= base;

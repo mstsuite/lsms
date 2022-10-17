@@ -44,6 +44,10 @@ class DFTEnergy {
 
   Real it_xc = 0.0;
 
+  Real mtz = 0.0;
+
+  Real u0 = 0.0;
+
   DFTEnergy &operator+=(const DFTEnergy &rhs) {
     this->zero_point += rhs.zero_point;
     this->core_eigen += rhs.core_eigen;
@@ -57,9 +61,10 @@ class DFTEnergy {
     this->xc += rhs.xc;
     this->lsf += rhs.lsf;
     this->total += rhs.total;
-    this->madelung += rhs.madelung;
-    this->it_madelung += rhs.it_madelung;
-    this->it_xc += rhs.it_xc;
+
+    /**
+     * There are global quantities
+     */
 
     return *this;
   }
