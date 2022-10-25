@@ -33,12 +33,14 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
 
   int end;
   switch (lsms.mtasa) {
-    case 1:
+    case 1: {
       end = atom.jws;
       break;
-    case 2:
+    }
+    case 2: {
       end = atom.jws;
       break;
+    }
     default:
       end = atom.jmt;
   }
@@ -227,12 +229,14 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
 
   int end;
   switch (lsms.mtasa) {
-    case 1:
+    case 1: {
       end = atom.jws;
       break;
-    case 2:
+    }
+    case 2: {
       end = atom.jws;
       break;
+    }
     default:
       end = atom.jmt;
   }
