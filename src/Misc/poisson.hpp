@@ -172,26 +172,6 @@ namespace lsms {
     }
 
     Vstart = radialIntegral(tmp, R, end);
-//
-//    b(1:NP_INTERPOLATION) = chd_lm % val(1:NP_INTERPOLATION, ilm_w)
-//
-//    do ir = 1, NP_INTERPOLATION
-//    do order = 1, MAX_ORDER_INTERPOLATION
-//    a(ir, order) = r_mesh % r(ir) ** order
-//    end do
-//      end do
-//
-//      call lstsq(a, b, x)
-//
-//      do order = 1, MAX_ORDER_INTERPOLATION
-//    vpot_start = vpot_start + (x(order) * &
-//        r_mesh % r(1) ** order / (l + 1 + order)) / (2.0_dp * l + 1)
-//    end do
-
-
-
-
-
     Vend = radialIntegral(density, R, end) / R[end - 1];
 
     // Starter condition
