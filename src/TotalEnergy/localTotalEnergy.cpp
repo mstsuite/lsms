@@ -297,13 +297,8 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
       density[i] = (atom.rhoNew(i, 0) + atom.rhoNew(i, 1));
     }
   }
-  std::vector<double> radial_mesh_deriv(atom.r_mesh.size(), 0.0);
 
-  for (auto i = 0; i < atom.r_mesh.size(); i++) {
-    radial_mesh_deriv[i] = atom.r_mesh[i] * atom.h;
-  }
-
-  lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, radial_mesh_deriv,
+  lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, atom.h,
                        density, end);
 
   if (lsms.n_spin_pola == 1) {
