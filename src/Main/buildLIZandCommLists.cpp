@@ -249,42 +249,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   comm.numTmatFrom=numFromNodes;
   comm.tmatFrom.resize(numFromNodes);
 
-  int k = 0;
-  if (lsms.lsmsMode == LSMSMode::kubo){
-    comm.numJTo=numToNodes;
-    comm.JTo.resize(numToNodes);
-    comm.numJFrom=numFromNodes;
-    comm.JFrom.resize(numFromNodes);
-    for(int i=0;i<numToNodes;i++){
-      comm.JTo[i].JStoreIdx.resize(toCounts[i]);
-      comm.JTo[i].globalIdx.resize(toCounts[i]);
-      comm.JTo[i].JxcommunicationRequest.resize(toCounts[i]);
-      comm.JTo[i].JycommunicationRequest.resize(toCounts[i]);
-      comm.JTo[i].JzcommunicationRequest.resize(toCounts[i]);
-      comm.JTo[i].remoteNode=toList[k].node;
-      comm.JTo[i].numJs=toCounts[i];
-      for(int j=0; j<toCounts[i];j++){
-        comm.JTo[i].globalIdx[j] = local.global_id[toList[k].localIdx];
-        comm.JTo[i].JStoreIdx[j] = toList[k++].localIdx;
-      }
-    }
-    k = 0;
-    for(int i=0;i<numFromNodes;i++){
-      comm.JFrom[i].JStoreIdx.resize(fromCounts[i]);
-      comm.JFrom[i].globalIdx.resize(fromCounts[i]);
-      comm.JFrom[i].JxcommunicationRequest.resize(fromCounts[i]);
-      comm.JFrom[i].JycommunicationRequest.resize(fromCounts[i]);
-      comm.JFrom[i].JzcommunicationRequest.resize(fromCounts[i]);
-      comm.JFrom[i].remoteNode = fromList[k].node;
-      comm.JFrom[i].numJs = fromCounts[i];
-      for(int j=0;j<fromCounts[i];j++){
-        comm.JFrom[i].globalIdx[j] = fromList[k++].globalIdx;
-        comm.JFrom[i].JStoreIdx[j] = crystal.types[fromList[k++].globalIdx].store_id;
-      } 
-    }
-  }
-
-  k=0;
+  int k=0;
   for(int i=0; i<numToNodes; i++)
   {
     comm.tmatTo[i].tmatStoreIdx.resize(toCounts[i]);
@@ -332,6 +297,41 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     local.JxStore.resize(local.lDimTmatStore, num_store);
     local.JyStore.resize(local.lDimTmatStore, num_store);
     local.JzStore.resize(local.lDimTmatStore, num_store);
+  }
+
+  k = 0;
+  if (lsms.lsmsMode == LSMSMode::kubo){
+    comm.numJTo=numToNodes;
+    comm.JTo.resize(numToNodes);
+    comm.numJFrom=numFromNodes;
+    comm.JFrom.resize(numFromNodes);
+    for(int i=0;i<numToNodes;i++){
+      comm.JTo[i].JStoreIdx.resize(toCounts[i]);
+      comm.JTo[i].globalIdx.resize(toCounts[i]);
+      comm.JTo[i].JxcommunicationRequest.resize(toCounts[i]);
+      comm.JTo[i].JycommunicationRequest.resize(toCounts[i]);
+      comm.JTo[i].JzcommunicationRequest.resize(toCounts[i]);
+      comm.JTo[i].remoteNode=toList[k].node;
+      comm.JTo[i].numJs=toCounts[i];
+      for(int j=0; j<toCounts[i];j++){
+        comm.JTo[i].globalIdx[j] = local.global_id[toList[k].localIdx];
+        comm.JTo[i].JStoreIdx[j] = toList[k++].localIdx;
+      }   
+    }   
+    k = 0;
+    for(int i=0;i<numFromNodes;i++){
+      comm.JFrom[i].JStoreIdx.resize(fromCounts[i]);
+      comm.JFrom[i].globalIdx.resize(fromCounts[i]);
+      comm.JFrom[i].JxcommunicationRequest.resize(fromCounts[i]);
+      comm.JFrom[i].JycommunicationRequest.resize(fromCounts[i]);
+      comm.JFrom[i].JzcommunicationRequest.resize(fromCounts[i]);
+      comm.JFrom[i].remoteNode = fromList[k].node;
+      comm.JFrom[i].numJs = fromCounts[i];
+      for(int j=0;j<fromCounts[i];j++){
+        comm.JFrom[i].globalIdx[j] = fromList[k++].globalIdx;
+        comm.JFrom[i].JStoreIdx[j] = crystal.types[fromList[k++].globalIdx].store_id;
+      }   
+    }   
   }
 
 // set the StorIdx for the local atom LIZs
