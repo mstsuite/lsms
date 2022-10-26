@@ -11,6 +11,7 @@ Conductivity::Conductivity(LSMSSystemParameters &lsms, LSMSCommunication &comm, 
     sigmatilde4.resize(3, 3, pola);
     sigma.resize(3, 3, pola);
     rho.resize(3, 3, pola);
+    spin_summed_rho.resize(3, 3);
 
     double timeSingleScatterers=MPI_Wtime();
     local.tmatStore=0.0;
@@ -29,22 +30,20 @@ Conductivity::Conductivity(LSMSSystemParameters &lsms, LSMSCommunication &comm, 
           cm(i,is).init(lsms, local, local.atom[i], i, efermi, is);
        }
     }
-    
 
     if(lsms.global.iprint>=2) printf("About to send t matrices\n");
-    sendTmats(comm,local);
-    if(lsms.global.iprint>=2) printf("About to finalize t matrices communication\n");
-    finalizeTmatCommunication(comm);
-    if(lsms.global.iprint>=2) printf("Recieved all t matricies\n");
-
+     sendTmats(comm,local);
     if(lsms.global.iprint>=2) printf("About to send J matrices\n");
-    sendJx(comm,local);
-    sendJy(comm,local);
-    sendJz(comm,local);
+     sendJx(comm,local);
+     sendJy(comm,local);
+     sendJz(comm,local);
+    if(lsms.global.iprint>=2) printf("About to finalize t matrices communication\n");
+      finalizeTmatCommunication(comm);
+    if(lsms.global.iprint>=1) printf("Received all t matrices");
     if(lsms.global.iprint>=2) printf("About to finalize J matrices communication\n");
-    finalizeJxCommunication(comm);
-    finalizeJyCommunication(comm);
-    finalizeJzCommunication(comm);
+      finalizeJxCommunication(comm);
+      finalizeJyCommunication(comm);
+      finalizeJzCommunication(comm);
     if(lsms.global.iprint>=2) printf("Recieved all J matricies\n");
     timeSingleScatterers=MPI_Wtime()-timeSingleScatterers;
     if(lsms.global.iprint>=0) printf("timeSingleScatteres = %lf sec\n",timeSingleScatterers);
@@ -78,14 +77,12 @@ Conductivity::Conductivity(LSMSSystemParameters &lsms, LSMSCommunication &comm, 
       }
    }
    
-   synchronizeLSMS(comm);
    timeTauMatrix=MPI_Wtime()-timeTauMatrix;
    if(lsms.global.iprint>=0) printf("timeTauMatrix = %lf sec\n",timeTauMatrix);
+   fflush(stdout);
 
    double timeConductivity=MPI_Wtime();
-   for (int is=0;is<pola;is++){
-     calSigma(comm,local,is);
-   }
+   calSigma(comm,local);
    timeConductivity=MPI_Wtime()-timeConductivity;
    if (comm.rank == 0) {
      writeSigmaTildeMat(sigmatilde1, "sigmatilde1");
@@ -262,35 +259,73 @@ Complex Conductivity::calSigmaTilde(LocalTypeInfo &local, int dir1, int dir2, in
     return -sigmatilde/(M_PI*omega);
 }
 
-void Conductivity::calSigma(LSMSCommunication &comm, LocalTypeInfo &local, int is){
-   
+void Conductivity::calSigma(LSMSCommunication &comm, LocalTypeInfo &local){   
    int dirs=3;
-   Complex temp; Matrix <Real> spin_resolved_sigma(dirs, dirs); 
+   Complex temp; Matrix <Real> spin_summed_sigma(dirs, dirs); 
    Matrix <Real> work(dirs,dirs);
    int ipiv[dirs], info;
-   for(int dir1=1;dir1<1+dirs;dir1++){
-     for(int dir2=1;dir2<1+dirs;dir2++){
-       sigmatilde1(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,1);
-       sigmatilde2(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,2);
-       sigmatilde3(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,3);
-       sigmatilde4(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,4);
-       temp = 0.25*(sigmatilde1(dir1-1,dir2-1,is) - sigmatilde2(dir1-1,dir2-1,is)
+   Real sigmatmpsum;
+
+  #pragma omp parallel for collapse(3) private(temp)
+   for(int is=0;is<pola;is++){
+     for(int dir1=1;dir1<1+dirs;dir1++){
+       for(int dir2=1;dir2<1+dirs;dir2++){
+         sigmatilde1(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,1);
+         sigmatilde2(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,2);
+         sigmatilde3(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,3);
+         sigmatilde4(dir1-1,dir2-1,is) = calSigmaTilde(local,dir1,dir2,is,4);
+         temp = 0.25*(sigmatilde1(dir1-1,dir2-1,is) - sigmatilde2(dir1-1,dir2-1,is)
                   - sigmatilde3(dir1-1,dir2-1,is) + sigmatilde4(dir1-1,dir2-1,is));
-       sigma(dir1-1,dir2-1,is) = temp.real();
+         sigma(dir1-1,dir2-1,is) = 0.0230384174*temp.real();
+       }
      }
    }
+
    globalSum(comm, &sigma(0,0,0), 9*pola);
 
    for(int i=0;i<dirs;i++){
      for(int j=0;j<dirs;j++){
-       spin_resolved_sigma(i,j) = 0.0230384174*sigma(i,j,is);
+       sigmatmpsum = 0.0;
+       for(int is=0;is<pola;is++){
+          sigmatmpsum = sigmatmpsum + sigma(i,j,is);
+       }
+       if (pola == 1) {
+          sigmatmpsum = 2*sigmatmpsum;
+       }
+       spin_summed_sigma(i,j)=sigmatmpsum;
      }
    }
-   LAPACK::dgetrf_(&dirs, &dirs, &spin_resolved_sigma(0, 0), &dirs, &ipiv[0], &info);
-   LAPACK::dgetri_(&dirs, &spin_resolved_sigma(0,0), &dirs, &ipiv[0], &work(0,0), &dirs, &info);
+ // Inverting spin-resolved conductivities
+   for (int is=0;is<pola;is++){
+     invertConductivityMatrix(is);
+   }
+
+ // Inverting spin-summed conductivity
+   LAPACK::dgetrf_(&dirs, &dirs, &spin_summed_sigma(0, 0), &dirs, &ipiv[0], &info);
+   LAPACK::dgetri_(&dirs, &spin_summed_sigma(0,0), &dirs, &ipiv[0], &work(0,0), &dirs, &info);
    for(int i=0;i<dirs;i++){
      for(int j=0;j<dirs;j++){
-       rho(i,j,is) = spin_resolved_sigma(i,j);
+       spin_summed_rho(i,j) = spin_summed_sigma(i,j);
+     }
+   }
+}
+
+void Conductivity::invertConductivityMatrix(int is){
+   int dirs = 3;
+   Matrix <Real> tmpinvert(dirs, dirs);
+   Matrix <Real> work(dirs, dirs);
+   int ipiv[dirs], info;
+
+   for(int i=0;i<dirs;i++){
+     for(int j=0;j<dirs;j++){
+       tmpinvert(i,j) = sigma(i,j,is);
+     }
+   }
+   LAPACK::dgetrf_(&dirs, &dirs, &tmpinvert(0, 0), &dirs, &ipiv[0], &info);
+   LAPACK::dgetri_(&dirs, &tmpinvert(0,0), &dirs, &ipiv[0], &work(0,0), &dirs, &info);
+   for (int i=0;i<dirs;i++){
+     for (int j=0;j<dirs;j++){
+       rho(i,j,is) = tmpinvert(i,j);
      }
    }
 }
@@ -307,6 +342,14 @@ void Conductivity::writeRhoMat(){
     }
     std::cout << std::endl;
   }
+  std::cout << "TOTAL RESISTIVITY (in microOhm-cm)" << std::endl;
+  for (int i=0;i<dirs;i++){
+    for (int j=0;j<dirs;j++){
+      std::cout << spin_summed_rho(i,j) << "   ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
 }
 
 void Conductivity::writeSigmaTildeMat(Array3d <Complex> &stm, std::string matname){
