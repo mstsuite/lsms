@@ -15,10 +15,12 @@ public:
      Complex efermi;
      Array3d <Complex> sigmatilde1, sigmatilde2, sigmatilde3, sigmatilde4;
      Array3d <Real> sigma, rho;
+     Matrix <Real> spin_summed_rho;
      Matrix <CurrentMatrix> cm;
      Conductivity(LSMSSystemParameters &lsms, LSMSCommunication &comm, LocalTypeInfo &local, Real volume);
      Complex calSigmaTilde(LocalTypeInfo &local, int dir1, int dir2, int is, int etype);
-     void calSigma(LSMSCommunication &comm, LocalTypeInfo &local, int is);
+     void calSigma(LSMSCommunication &comm, LocalTypeInfo &local);
+     void invertConductivityMatrix(int is);
      void writeSigmaTildeMat(Array3d <Complex> &stm, std::string matname);
      void writeRhoMat();
      void processTauMatrix(Matrix <Complex> &tau1, Matrix <Complex> &tau2, int m, int n, int is, int kkrsz, int etype);
