@@ -11,7 +11,7 @@
 int buildLIZ(CrystalParameters &crystal, int idx,std::vector<LIZInfoType> &LIZ)
 {
   const Real rtol=1.0e-8;
-  const int n_max=5;
+  const int n_max=10;
   int nrsclu=0;
   Real r1,r2,r3,p1,p2,p3,atdistsqr,shift_1,shift_2,shift_3;
   Real rcirclu=crystal.types[crystal.type[idx]].rLIZ;
