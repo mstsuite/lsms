@@ -897,7 +897,7 @@ C        dz=mint/qint
 
 
           lsms.exch_corr->evaluate(local.atom[i].r_mesh,
-                                   local.atom[i].dr_mesh,
+                                   local.atom[i].h,
                                    local.atom[i].rhotot, jws,
                                    local.atom[i].exchangeCorrelationEnergy,
                                    local.atom[i].exchangeCorrelationPotential);
@@ -924,8 +924,8 @@ C        dz=mint/qint
 
 
           lsms.exch_corr->evaluate(local.atom[i].r_mesh,
-                                   local.atom[i].dr_mesh,
-                                   local.atom[i].rhotot, jws,
+                                   local.atom[i].h,
+                                   local.atom[i].rhoNew, jws,
                                    local.atom[i].exchangeCorrelationEnergy,
                                    local.atom[i].exchangeCorrelationPotential);
 
@@ -993,7 +993,7 @@ C        dz=mint/qint
     }
 
 // write the xc potential, xc energy density, and rho for the first atom:
-    if (false) {
+    if constexpr(false) {
       if (i == 0) {
         FILE *of;
         of = fopen("xc_pot.out", "w");
@@ -1137,7 +1137,7 @@ C        dz=mint/qint
     }
 
     // write the new potential,  for the first atom:
-    if (false && chargeSwitch == 1) {
+    if constexpr(false && chargeSwitch == 1) {
       if (i == 0) {
         FILE *of;
         of = fopen("vr_pot.out", "w");

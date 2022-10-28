@@ -136,7 +136,6 @@ public:
 
     semcor.resize(n,2);
     r_mesh.resize(n);
-    dr_mesh.resize(n);
     x_mesh.resize(n);
 
     vrNew.resize(n,2);
@@ -316,12 +315,10 @@ public:
     h = a.h;
 
     r_mesh.resize(a.r_mesh.size());
-    dr_mesh.resize(a.dr_mesh.size());
     x_mesh.resize(a.x_mesh.size());
     for(int i=0; i<a.r_mesh.size(); i++)
     {
       r_mesh[i] = a.r_mesh[i];
-      dr_mesh[i] = a.dr_mesh[i];
       x_mesh[i] = a.x_mesh[i];
     }
 
@@ -417,7 +414,6 @@ public:
     N = std::max(N, jmt);
     if (N != r_mesh.size()) {
       r_mesh.resize(N);
-      dr_mesh.resize(N);
     }
     Real xmt = std::log(rmt);
     h = (xmt-xstart) / (jmt-1);
@@ -425,7 +421,6 @@ public:
     {
       x_mesh[j] = xstart + (Real)j*h;
       r_mesh[j] = std::exp(x_mesh[j]);
-      dr_mesh[j] = r_mesh[j] * h;
       //printf("j = %5d x_mesh = %45.40e r_mesh = %45.40e\n", j, x_mesh[j], r_mesh[j]);
     }
     generateNewMesh = false;
@@ -456,7 +451,7 @@ public:
   Real xstart{},rmt{},h{};
   Real rInscribed{}; // LSMS_1.9: rins
   Real rCircumscribed{};
-  std::vector<Real> r_mesh, x_mesh, dr_mesh;
+  std::vector<Real> r_mesh, x_mesh;
   bool generateNewMesh{};
 
 // General Data
