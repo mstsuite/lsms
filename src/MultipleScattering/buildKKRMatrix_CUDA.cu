@@ -6,18 +6,19 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
-#include "Complex.hpp"
-#include "Matrix.hpp"
 #include <vector>
 
-#include "Accelerator/DeviceStorage.hpp"
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 #include "cuComplexOperators.hpp"
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 
+#include "Complex.hpp"
+#include "Matrix.hpp"
+#include "Misc/Coeficients.hpp"
+#include "Misc/Indices.hpp"
+#include "Accelerator/DeviceStorage.hpp"
 #include "linearSolvers.hpp"
 
 // we might want to distinguish between systems where all lmax (and consequently kkrsz_ns) are the same
@@ -157,10 +158,10 @@ size_t sharedMemoryBGijCuda(LSMSSystemParameters &lsms, size_t *hfnOffset, size_
   size += sizeof(double) * (2*lsms.maxlmax + 1);
 
   *plmOffset = size;
-  size += sizeof(double) * (lsms.angularMomentumIndices.ndlm);
+  size += sizeof(double) * (AngularMomentumIndices::ndlm);
 
 //  *dlmOffset = size;
-//  size += sizeof(cuDoubleComplex) * (lsms.angularMomentumIndices.ndlj);
+//  size += sizeof(cuDoubleComplex) * (AngularMomentumIndices::ndlj);
 
   return size;
 }
@@ -245,9 +246,9 @@ void buildGijCudaKernel(Real *LIZPos, int *LIZlmax, int *lofk, int *mofk, cuDoub
     Real *sinmp = (Real *) (sharedMemory + sinmpOffset);
     // Real cosmp[2*lsms.maxlmax + 1];
     Real *cosmp = (Real *) (sharedMemory + cosmpOffset);
-    // Real plm[lsms.angularMomentumIndices.ndlm];
+    // Real plm[AngularMomentumIndices::ndlm];
     Real *plm = (Real *) (sharedMemory + plmOffset);
-    // Complex dlm[lsms.angularMomentumIndices.ndlj];
+    // Complex dlm[AngularMomentumIndices::ndlj];
     // cuDoubleComplex *dlm = (cuDoubleComplex *) (sharedMemory + dlmOffset);
 
 #if defined(COMPARE_ORIGINAL)
@@ -596,13 +597,13 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   Real testSinmp[2*lsms.maxlmax + 1];
   Real testCosmp[2*lsms.maxlmax + 1];
   // Real plm[((lsms.maxlmax+1) * (lsms.maxlmax+2)) / 2];
-  Real testPlm[lsms.angularMomentumIndices.ndlm];
-  Complex testDlm[lsms.angularMomentumIndices.ndlj];
+  Real testPlm[AngularMomentumIndices::ndlm];
+  Complex testDlm[AngularMomentumIndices::ndlj];
   cudaMemcpy(testHfn, devTestSM + hfnOffset, (2*lsms.maxlmax + 1)*sizeof(Complex), cudaMemcpyDeviceToHost);
   cudaMemcpy(testSinmp, devTestSM + sinmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), cudaMemcpyDeviceToHost);
   cudaMemcpy(testCosmp, devTestSM + cosmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), cudaMemcpyDeviceToHost);
-  cudaMemcpy(testPlm, devTestSM + plmOffset, lsms.angularMomentumIndices.ndlm*sizeof(Real), cudaMemcpyDeviceToHost);
-  cudaMemcpy(testDlm, devTestSM + dlmOffset, lsms.angularMomentumIndices.ndlj*sizeof(Complex), cudaMemcpyDeviceToHost);
+  cudaMemcpy(testPlm, devTestSM + plmOffset, AngularMomentumIndices::ndlm*sizeof(Real), cudaMemcpyDeviceToHost);
+  cudaMemcpy(testDlm, devTestSM + dlmOffset, AngularMomentumIndices::ndlj*sizeof(Complex), cudaMemcpyDeviceToHost);
 
   for(int i = 0; i < atom.numLIZ; i++)
   {
@@ -620,8 +621,8 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
   Real sinmp[2*lsms.maxlmax + 1];
   Real cosmp[2*lsms.maxlmax + 1];
   // Real plm[((lsms.maxlmax+1) * (lsms.maxlmax+2)) / 2];
-  Real plm[lsms.angularMomentumIndices.ndlm];
-  Complex dlm[lsms.angularMomentumIndices.ndlj];
+  Real plm[AngularMomentumIndices::ndlm];
+  Complex dlm[AngularMomentumIndices::ndlj];
   Real rij[3];
   Real pi4=4.0*2.0*std::asin(1.0);
   for(int ir1 = 0; ir1 < atom.numLIZ; ir1++)
@@ -646,11 +647,11 @@ void buildKKRMatrixLMaxIdenticalCuda(LSMSSystemParameters &lsms, LocalTypeInfo &
         int lmax=lsms.maxlmax;
         int kkrsz=(lmax+1)*(lmax+1);
         makegij_(&atom.LIZlmax[ir1],&kkr1,&atom.LIZlmax[ir2],&kkr2,
-                 &lsms.maxlmax,&kkrsz,&lsms.angularMomentumIndices.ndlj,&lsms.angularMomentumIndices.ndlm,
+                 &lsms.maxlmax,&kkrsz,&AngularMomentumIndices::ndlj,&AngularMomentumIndices::ndlm,
                  &prel,&rij[0],&sinmp[0],&cosmp[0],
                  &sphericalHarmonicsCoeficients.clm[0],&plm[0],
                  &gauntCoeficients.cgnt(0,0,0),&gauntCoeficients.lmax,
-                 &lsms.angularMomentumIndices.lofk[0],&lsms.angularMomentumIndices.mofk[0],
+                 &AngularMomentumIndices::lofk[0],&AngularMomentumIndices::mofk[0],
                  &iFactors.ilp1[0],&iFactors.illp(0,0),
                  &hfn[0],&dlm[0],&gijTest(0,0),
                  &pi4,&lsms.global.iprint,lsms.global.istop,32);

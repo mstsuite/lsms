@@ -29,7 +29,7 @@ int writeRestart(const char *restartName, LSMSSystemParameters &lsms, CrystalPar
   fprintf(of,"lsmsAlgorithms={");
   for(int i=0; i<LSMSAlgorithms::numAlgorithms; i++)
   {
-    fprintf(of,"%d");
+    fprintf(of,"%d", lsms.lsmsAlgorithms[i]);
     if(i<LSMSAlgorithms::numAlgorithms-1) fprintf(of,", ");
   }
   fprintf(of,"}\n");

@@ -2,8 +2,8 @@
 // Created by F.Moitzi on 13.01.2022.
 //
 
-#ifndef SRC_MADELUNG_COMMON_HPP
-#define SRC_MADELUNG_COMMON_HPP
+#ifndef MADELUNG_LSMS_COMMON_HPP
+#define MADELUNG_LSMS_COMMON_HPP
 
 #include "Array3d.hpp"
 #include "Matrix.hpp"
@@ -20,4 +20,4 @@ using array3d = Array3d<T>;
 
 }  // namespace lsms
 
-#endif  // SRC_MADELUNG_COMMON_HPP
+#endif  // MADELUNG_LSMS_COMMON_HPP

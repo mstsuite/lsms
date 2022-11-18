@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "Misc/diff.hpp"
+#include "accel_common.hpp"
 
 namespace diff_tests {
 

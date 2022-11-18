@@ -3,6 +3,10 @@
 
 target_sources(lsmscore
         PUBLIC
+
+        SphericalHarmonics.cpp
+        SphericalHarmonics.hpp
+
         associatedLegendreFunction.cpp
         associatedLegendreFunction.hpp
         bulirsch_stoer.f
@@ -10,7 +14,9 @@ target_sources(lsmscore
         bulirschStoerIntegrator.hpp
         calculateGauntCoeficients.cpp
         calculateGaussLegendrePoints.hpp
-        cgaunt_c.f
+
+        cgaunt_c.f90
+
         clock_time.c
         cgc.h
         cinterp.f
@@ -32,7 +38,13 @@ target_sources(lsmscore
         Gaunt.hpp
         getclm.f
         ifacts_c.f
+
         Indices.hpp
+        Indices.cpp
+
+        spherical_harmonics.hpp
+        spherical_harmonics.f90
+
         initwave.f
         integrateOneDim.hpp
         interp.f
@@ -69,6 +81,9 @@ target_sources(lsmscore
         integrator.hpp
         poisson.hpp
         diff.hpp
+
+        PotentialType.hpp
+
         )
 
 if(USE_ESSL)

@@ -31,16 +31,18 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
   energy = 0.0;
   pressure = 0.0;
 
-  Real rSphere;
+  int end;
   switch (lsms.mtasa) {
-    case 1:
-      rSphere = atom.rws;
+    case 1: {
+      end = atom.jws;
       break;
-    case 2:
-      rSphere = atom.rws;
+    }
+    case 2: {
+      end = atom.jws;
       break;
+    }
     default:
-      rSphere = atom.rInscribed;
+      end = atom.jmt;
   }
 
   /**
@@ -82,7 +84,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
     }
   }
 
-  ks = lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
+  ks = lsms::radialIntegral(integrand, atom.r_mesh, end);
   kineticEnergy -= ks;
 
   if (lsms.global.iprint >= 0) {
@@ -123,7 +125,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
   }
 
   lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, radial_mesh_deriv,
-                       density, atom.jmt);
+                       density, end);
 
   if (lsms.n_spin_pola == 1) {
     for (auto i = 0; i < atom.r_mesh.size(); i++) {
@@ -135,7 +137,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
     }
   }
 
-  double erho = lsms::radialIntegral(integral, atom.r_mesh, rSphere);
+  double erho = lsms::radialIntegral(integral, atom.r_mesh, end);
 
   if (lsms.global.iprint >= 0) {
     printf("erho                        = %35.25lf Ry\n", erho);
@@ -154,7 +156,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
                      atom.ztotss / (atom.r_mesh[i]);
     }
   }
-  Real ezrho = -lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
+  Real ezrho = -lsms::radialIntegral(integrand, atom.r_mesh, end);
 
   //  FILE *fp;
   //  fp = fopen("example.txt","w");
@@ -184,7 +186,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
                       atom.rhoNew(i, 1) * atom.exchangeCorrelationEnergy(i, 1));
     }
   }
-  xcEnergy = lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
+  xcEnergy = lsms::radialIntegral(integrand, atom.r_mesh, end);
 
   if (lsms.global.iprint >= 0) {
     printf("Exchange-Correlation Energy = %35.25lf Ry\n", xcEnergy);
@@ -225,16 +227,18 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
 
   int spin_channels;
 
-  Real rSphere;
+  int end;
   switch (lsms.mtasa) {
-    case 1:
-      rSphere = atom.rws;
+    case 1: {
+      end = atom.jws;
       break;
-    case 2:
-      rSphere = atom.rws;
+    }
+    case 2: {
+      end = atom.jws;
       break;
+    }
     default:
-      rSphere = atom.rInscribed;
+      end = atom.jmt;
   }
 
   /**
@@ -267,7 +271,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
     dft_energy.one_ele += atom.evalsum[spin];
   }
 
-  dft_energy.ks = lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
+  dft_energy.ks = lsms::radialIntegral(integrand, atom.r_mesh, end);
 
   dft_energy.kinetic = dft_energy.core_eigen + dft_energy.semicore_eigen +
                        dft_energy.one_ele - dft_energy.ks;
@@ -297,14 +301,9 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
       density[i] = (atom.rhoNew(i, 0) + atom.rhoNew(i, 1));
     }
   }
-  std::vector<double> radial_mesh_deriv(atom.r_mesh.size(), 0.0);
 
-  for (auto i = 0; i < atom.r_mesh.size(); i++) {
-    radial_mesh_deriv[i] = atom.r_mesh[i] * atom.h;
-  }
-
-  lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, radial_mesh_deriv,
-                       density, atom.jmt);
+  lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, atom.h,
+                       density, end);
 
   if (lsms.n_spin_pola == 1) {
     for (auto i = 0; i < atom.r_mesh.size(); i++) {
@@ -316,7 +315,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
     }
   }
 
-  double erho = lsms::radialIntegral(integral, atom.r_mesh, rSphere);
+  double erho = lsms::radialIntegral(integral, atom.r_mesh, end);
   dft_energy.hartree = erho;
 
   /**
@@ -333,7 +332,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
     }
   }
 
-  Real ezrho = -lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
+  Real ezrho = -lsms::radialIntegral(integrand, atom.r_mesh, end);
   dft_energy.core_hartree = ezrho;
 
   dft_energy.coloumb = dft_energy.core_hartree + dft_energy.hartree;
@@ -352,7 +351,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
     }
   }
 
-  xcEnergy = lsms::radialIntegral(integrand, atom.r_mesh, rSphere);
+  xcEnergy = lsms::radialIntegral(integrand, atom.r_mesh, end);
   dft_energy.xc = xcEnergy;
 
   /**
@@ -367,4 +366,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
 
   dft_energy.total = dft_energy.kinetic + dft_energy.coloumb + dft_energy.xc +
                      dft_energy.zero_point + dft_energy.lsf;
+
+
+
 }

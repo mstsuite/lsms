@@ -2,31 +2,25 @@
 // Created by F.Moitzi on 18.09.2021.
 //
 
-#undef NDEBUG
-#include <assert.h>
+#include <gtest/gtest.h>
 
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
 #include <vector>
 
 #include "Misc/integrateOneDim.hpp"
+#include "accel_common.hpp"
 #include "integrator.hpp"
 
-using namespace lsms;
+namespace integrator_tests {
 
-template <typename T>
-bool approx_equal(T x, T y, T epsilon) {
-  return fabs(x - y) / max(fabs(x), fabs(y)) <= epsilon;
-}
+using namespace lsms;
 
 template <typename T>
 T relative_diff(T ref, T val) {
   return std::fabs(ref - val) / std::fabs(ref);
 }
 
-int main(int argc, char *argv[]) {
+TEST(IntegrationTests, CompareRoutines) {
   constexpr auto number_of_points = 800;
 
   std::vector<double> radial_mesh(number_of_points, 0.0);
@@ -60,7 +54,7 @@ int main(int argc, char *argv[]) {
   constexpr auto reference_without_zero = 4.278412171945027;
 
   auto result_01 = integrateOneDim(radial_mesh, function, integral, rSphere);
-  auto result_02 = radialIntegral(function, radial_mesh, rSphere);
+  auto result_02 = radialIntegral(function, radial_mesh, number_of_points);
   auto result_03 = radialIntegral(function, radial_mesh, number_of_points);
   auto result_04 =
       radialIntegralDerivMesh(function, radial_mesh_deriv, number_of_points);
@@ -72,10 +66,10 @@ int main(int argc, char *argv[]) {
   std::printf("%30.15f\n", relative_diff(reference_without_zero, result_04));
 #endif
 
-  assert(relative_diff(reference_without_zero, result_01) < 1e-6);
-  assert(relative_diff(reference_without_zero, result_02) < 1e-8);
-  assert(relative_diff(reference_without_zero, result_03) < 1e-8);
-  assert(relative_diff(reference_without_zero, result_04) < 1e-6);
+  ASSERT_TRUE(relative_diff(reference_without_zero, result_01) < 1e-6);
+  ASSERT_TRUE(relative_diff(reference_without_zero, result_02) < 1e-8);
+  ASSERT_TRUE(relative_diff(reference_without_zero, result_03) < 1e-8);
+  ASSERT_TRUE(relative_diff(reference_without_zero, result_04) < 1e-6);
 
   /*
    * 2. Function test
@@ -90,7 +84,7 @@ int main(int argc, char *argv[]) {
   }
 
   auto result_11 = integrateOneDim(radial_mesh, function, integral, rSphere);
-  auto result_12 = radialIntegral(function, radial_mesh, rSphere);
+  auto result_12 = radialIntegral(function, radial_mesh, number_of_points);
   auto result_13 = radialIntegral(function, radial_mesh, number_of_points);
   auto result_14 =
       radialIntegralDerivMesh(function, radial_mesh_deriv, number_of_points);
@@ -102,10 +96,10 @@ int main(int argc, char *argv[]) {
   std::printf("%30.15f\n", relative_diff(reference_2_without_zero, result_14));
 #endif
 
-  assert(relative_diff(reference_2_without_zero, result_11) < 1e-6);
-  assert(relative_diff(reference_2_without_zero, result_12) < 1e-9);
-  assert(relative_diff(reference_2_without_zero, result_13) < 1e-9);
-  assert(relative_diff(reference_2_without_zero, result_14) < 1e-5);
+  ASSERT_TRUE(relative_diff(reference_2_without_zero, result_11) < 1e-6);
+  ASSERT_TRUE(relative_diff(reference_2_without_zero, result_12) < 1e-9);
+  ASSERT_TRUE(relative_diff(reference_2_without_zero, result_13) < 1e-9);
+  ASSERT_TRUE(relative_diff(reference_2_without_zero, result_14) < 1e-5);
 
   /*
    * 3. Function test
@@ -120,7 +114,7 @@ int main(int argc, char *argv[]) {
   }
 
   auto result_21 = integrateOneDim(radial_mesh, function, integral, rSphere);
-  auto result_22 = radialIntegral(function, radial_mesh, rSphere);
+  auto result_22 = radialIntegral(function, radial_mesh, number_of_points);
   auto result_23 = radialIntegral(function, radial_mesh, number_of_points);
   auto result_24 =
       radialIntegralDerivMesh(function, radial_mesh_deriv, number_of_points);
@@ -132,10 +126,10 @@ int main(int argc, char *argv[]) {
   std::printf("%30.15f\n", relative_diff(reference_3_without_zero, result_24));
 #endif
 
-  assert(relative_diff(reference_3_without_zero, result_21) < 1e-5);
-  assert(relative_diff(reference_3_without_zero, result_22) < 1e-6);
-  assert(relative_diff(reference_3_without_zero, result_23) < 1e-6);
-  assert(relative_diff(reference_3_without_zero, result_24) < 1e-4);
-
-  return EXIT_SUCCESS;
+  ASSERT_TRUE(relative_diff(reference_3_without_zero, result_21) < 1e-5);
+  ASSERT_TRUE(relative_diff(reference_3_without_zero, result_22) < 1e-6);
+  ASSERT_TRUE(relative_diff(reference_3_without_zero, result_23) < 1e-6);
+  ASSERT_TRUE(relative_diff(reference_3_without_zero, result_24) < 1e-4);
 }
+
+}  // namespace integrator_tests

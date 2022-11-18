@@ -10,8 +10,7 @@
 
 void setupVorpol(LSMSSystemParameters &lsms,
                  CrystalParameters &crystal,
-                 LocalTypeInfo &local,
-                 SphericalHarmonicsCoeficients &shc);
+                 LocalTypeInfo &local);
 
 void calculateVolumes(LSMSCommunication &comm,
                       LSMSSystemParameters &lsms,

@@ -10,6 +10,9 @@
 #include "Madelung/Madelung.hpp"
 #include "Main/SystemParameters.hpp"
 #include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
+#include "accel_common.hpp"
+
+namespace madlung_tests {
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
@@ -343,3 +346,5 @@ TEST(MadelungsTestSuite, AlongatedStructure) {
     std::cout << std::endl;
   }
 }
+
+}  // namespace madlung_tests

@@ -1,0 +1,16 @@
+
+message(STATUS "Use toolchain file generic-cpu")
+
+set(BUILD_TESTING ON)
+
+set(MST_LINEAR_SOLVER_DEFAULT 0x0005)
+set(MST_BUILD_KKR_MATRIX_DEFAULT 0x1000)
+
+set(MST_LINEAR_SOLVER_DEFAULT 0x0005)
+set(MST_BUILD_KKR_MATRIX_DEFAULT 0x1000)
+
+set(CMAKE_Fortran_FLAGS "-O2 -g -fcheck=all -fbacktrace")
+set(CMAKE_CXX_FLAGS "-O2 -g")
+
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
+set(BLA_VENDOR Generic)

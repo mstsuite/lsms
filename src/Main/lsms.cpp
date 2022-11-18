@@ -1,12 +1,10 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
-
 #include <chrono>
-
-#include <fenv.h>
+#include <cfenv>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -22,8 +20,7 @@
 #endif
 
 #include <hdf5.h>
-
-#include "lua.hpp"
+#include <lua.hpp>
 
 
 #include "LuaInterface/LuaInterface.hpp"
@@ -63,9 +60,6 @@
 #include <nvToolsExt.h>
 #endif
 
-SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
-GauntCoeficients gauntCoeficients;
-IFactors iFactors;
 
 #if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
@@ -240,14 +234,14 @@ int main(int argc, char *argv[])
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
   }
 
-  lsms.angularMomentumIndices.init(2*crystal.maxlmax);
-  sphericalHarmonicsCoeficients.init(2*crystal.maxlmax);
+  AngularMomentumIndices::init(2*crystal.maxlmax);
+  SphericalHarmonicsCoeficients::init(2*crystal.maxlmax);
 
-  gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
-  iFactors.init(lsms, crystal.maxlmax);
+  GauntCoeficients::init(lsms);
+  IFactors::init(lsms, crystal.maxlmax);
 
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
-  deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
+  deviceConstants.allocate();
 #endif
 
   double timeBuildLIZandCommList = MPI_Wtime();
@@ -312,7 +306,7 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
-  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local);
 
 #ifdef LSMS_DEBUG
   if(lsms.global.iprint >= 0)
@@ -352,7 +346,7 @@ int main(int argc, char *argv[])
   }
 
 
-  if ( alloyDesc.size() > 0 )
+  if ( !alloyDesc.empty() )
   {
     if(lsms.global.iprint >= 0)
     {
@@ -377,7 +371,7 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
-  setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  setupVorpol(lsms, crystal, local);
 
 #ifdef LSMS_DEBUG
   MPI_Barrier(comm.comm);
@@ -530,7 +524,7 @@ int main(int argc, char *argv[])
   int iterationStart = 0;
   int potentialWriteCounter = 0;
 
-  FILE *kFile = NULL;
+  FILE *kFile = nullptr;
   if (comm.rank == 0)
   {
     iterationStart = readNextIterationNumber("k.out");
@@ -688,7 +682,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    if (kFile != NULL)
+    if (kFile != nullptr)
     {
       fprintf(kFile,"%4d %20.12lf %12.6lf %12.6lf  %14.10lf\n",
               iterationStart+iteration, lsms.totalEnergy, lsms.chempot, local.atom[0].mtotws, rms);
@@ -722,7 +716,7 @@ int main(int argc, char *argv[])
   if(lsms.localAtomDataFile[0]!=0)
     writeLocalAtomData(comm, lsms, crystal, local, eband, lsms.localAtomDataFile);
 
-  if (kFile != NULL)
+  if (kFile != nullptr)
     fclose(kFile);
 
   /**
@@ -842,5 +836,5 @@ int main(int argc, char *argv[])
   H5close();
   finalizeCommunication();
   lua_close(L);
-  return 0;
+  return EXIT_SUCCESS;
 }
