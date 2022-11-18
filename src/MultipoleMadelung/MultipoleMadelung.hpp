@@ -2,12 +2,13 @@
 // Created by F.Moitzi on 16.12.2021.
 //
 
-#ifndef MADELUNG_MULTIPOLEMADELUNG_HPP
-#define MADELUNG_MULTIPOLEMADELUNG_HPP
+#ifndef LSMS_MULTIPOLEMADELUNG_HPP
+#define LSMS_MULTIPOLEMADELUNG_HPP
 
 #include <complex>
 #include <vector>
 
+#include "Misc/Coeficients.hpp"
 #include "Main/SystemParameters.hpp"
 #include "common.hpp"
 
@@ -37,7 +38,7 @@ class MultipoleMadelung {
 
   /// Object for calculating the Madelung constants
   MultipoleMadelung(LSMSSystemParameters &lsms, CrystalParameters &crystal,
-                    LocalTypeInfo &local);
+                    LocalTypeInfo &local, int lmax = 0);
 
   double getScalingFactor() const;
 
@@ -52,4 +53,4 @@ class MultipoleMadelung {
 
 }  // namespace lsms
 
-#endif  // MADELUNG_MULTIPOLEMADELUNG_HPP
+#endif

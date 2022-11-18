@@ -12,8 +12,10 @@ project(lsms LANGUAGES Fortran C CXX)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Enable compilation for Accelerators
 option(USE_ACCELERATOR_CUDA_C "Use the cuda accelerator" OFF)
@@ -63,27 +65,41 @@ endif ()
 # Build mjson library
 include(mjson)
 
-
 #
-# Enable Testing with CTest
+# Define library and targets
 #
-option(BUILD_TESTING "Build the testing tree." ON)
-if (BUILD_TESTING)
-    include(CTest)
-    enable_testing()
-    message(STATUS "Testing is " ${BUILD_TESTING})
-    add_subdirectory(Test)
-endif ()
 
+add_executable(lsms_main)
+set_target_properties(lsms_main PROPERTIES OUTPUT_NAME "lsms")
 
-#
-# Development Test Codes
-#
-option(LSMS_DEV_TESTS "Building LSMS development test programs." OFF)
-if (LSMS_DEV_TESTS)
-  message(STATUS "Building LSMS development test programs.")
-endif ()
+set_target_properties(lsms_main
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
 
+add_executable(lsms_wl)
+set_target_properties(lsms_wl PROPERTIES OUTPUT_NAME "wl-lsms")
+
+set_target_properties(lsms_wl
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+option(LEGACY_MONOPOLE "Use legacy for mono poles" OFF)
+
+if(LEGACY_MONOPOLE)
+    target_compile_definitions(lsms_main PUBLIC LEGACY_MONOPOLE)
+endif()
+
+# Core `lsms` library
+add_library(lsmscore STATIC)
+
+set_target_properties(lsmscore PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
+
+target_link_libraries(lsms_main PUBLIC lsmscore)
+target_link_libraries(lsms_wl PUBLIC lsmscore)
 
 #
 # Add main source subdirectory
@@ -92,9 +108,6 @@ add_subdirectory(src)
 
 add_subdirectory(include)
 
-#
-#
-#
 
 
 # Find OpenMP library
@@ -158,6 +171,7 @@ if (USE_ACCELERATOR_CUDA_C)
     else ()
         message(FATAL_ERROR "Cusolver was not defined or found")
     endif ()
+
 endif ()
 
 if (USE_ACCELERATOR_HIP)
@@ -197,7 +211,6 @@ endif ()
 # Find MPI library
 find_package(MPI REQUIRED COMPONENTS CXX OPTIONAL_COMPONENTS)
 target_link_libraries(lsmscore PUBLIC MPI::MPI_CXX)
-
 
 # Find HDF5
 message(STATUS "Find HDF5")
@@ -288,5 +301,27 @@ target_compile_definitions(lsmscore PUBLIC HAS_BACKTRACE)
 
 # Include the common files
 target_include_directories(lsmscore PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+
+#
+# Enable Testing with CTest
+#
+option(BUILD_TESTING "Build the testing tree." ON)
+if (BUILD_TESTING)
+    include(CTest)
+    enable_testing()
+    message(STATUS "Testing is " ${BUILD_TESTING})
+    add_subdirectory(Test)
+endif ()
+
+#
+# Development Test Codes
+#
+option(LSMS_DEV_TESTS "Building LSMS development test programs." OFF)
+if (LSMS_DEV_TESTS)
+    message(STATUS "Building LSMS development test programs.")
+endif ()
+
+
 
 

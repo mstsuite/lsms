@@ -18,10 +18,10 @@
 #include <functional>
 #include <iostream>
 
-#include "FC.h"
 #include "Matrix.hpp"
 #include "XCBase.hpp"
 #include "XCLibxc.hpp"
+#include "accel_common.hpp"
 #include "helpers.hpp"
 #include "xc.hpp"
 
@@ -30,8 +30,7 @@
  */
 extern "C" {
 
-double FC_GLOBAL(alpha2, "")(double *rs, double *dz, double *sp, int *iexch,
-                             double *exchg);
+double alpha2_(double *rs, double *dz, double *sp, int *iexch, double *exchg);
 }
 
 /**
@@ -51,7 +50,6 @@ class XCLDATest : public ::testing::Test {
   std::vector<double> rho;
   Matrix<double> rhoIn;
   std::vector<double> rmesh;
-  std::vector<double> drmesh;
 
   std::vector<double> vxc_ref;
   std::vector<double> exc_ref;
@@ -74,9 +72,7 @@ class XCLDATest : public ::testing::Test {
     rhoIn = Matrix<double>(N, nSpin);
     rho = std::vector<double>(N);
     rmesh = lsms_helper::linspace<double>(0.01, 10, N);
-    drmesh = rmesh;
     for (int i = 0; i < N; i++) {
-      drmesh[i] = rmesh[1] - rmesh[0];
       rho[i] = rmesh[i] * rmesh[i] + 0.001;
       rhoIn(i, 0) = rho[i] * rmesh[i] * rmesh[i] * 4 * M_PI;
     }
@@ -97,7 +93,7 @@ TEST_F(XCLDATest, XCInterface) {
   ASSERT_STREQ(functionals[1].get_functional().info->name,
                "Vosko, Wilk & Nusair (VWN5)");
 
-  xc.evaluate(rmesh, drmesh, rhoIn, N, xcEnergyOut, xcPotOut);
+  xc.evaluate(rmesh, 0.01, rhoIn, N, xcEnergyOut, xcPotOut);
 
   for (int i = 0; i < N; i++) {
     EXPECT_NEAR(xcEnergyOut(i, 0), exc_ref[i], 1e-7);
@@ -115,7 +111,7 @@ TEST_F(XCLDATest, BuiltInVWN) {
 
   for (int i = 0; i < N; i++) {
     auto rs = rsFromRho(rho[i]);
-    vxc[i] = FC_GLOBAL(alpha2, "")(&rs, &dz, &sp, &iexch, &exc[i]);
+    vxc[i] = alpha2_(&rs, &dz, &sp, &iexch, &exc[i]);
   }
 
   for (int i = 0; i < N; i++) {
@@ -201,6 +197,7 @@ class XCGGATest : public ::testing::Test {
 
   std::vector<double> rho;
   std::vector<double> rmesh;
+  const double h = 0.005;
   std::vector<double> drmesh;
 
   std::vector<double> vxc_ref;
@@ -227,11 +224,8 @@ class XCGGATest : public ::testing::Test {
 
     rhoIn = Matrix<double>(rho.size(), nSpin);
 
-    drmesh = rmesh;
-
     for (int ir = 0; ir < rho.size(); ir++) {
       rhoIn(ir, 0) = rho[ir];
-      drmesh[ir] = rmesh[ir] * 0.005;
     }
   }
 };
@@ -252,7 +246,7 @@ TEST_F(XCGGATest, XCInterface) {
 
   int N = 1000;
 
-  xc.evaluate(rmesh, drmesh, rhoIn, N, xcEnergyOut, xcPotOut);
+  xc.evaluate(rmesh, h, rhoIn, N, xcEnergyOut, xcPotOut);
 
   /*
    * Check if energy density is correctly calculated

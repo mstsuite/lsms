@@ -1,55 +1,8 @@
 
-#
-#
-#
-add_executable(lsms_main)
-set_target_properties(lsms_main PROPERTIES OUTPUT_NAME "lsms")
-
-set_target_properties(lsms_main
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        )
-
-option(LEGACY_MONOPOLE "Use legacy for mono poles" OFF)
-
-if(LEGACY_MONOPOLE)
-    target_compile_definitions(lsms_main PUBLIC LEGACY_MONOPOLE)
-endif()
-
-add_library(lsmscore)
-
-target_link_libraries(lsms_main
-        PUBLIC lsmscore)
-
-add_executable(lsms_wl)
-set_target_properties(lsms_wl PROPERTIES OUTPUT_NAME "wl-lsms")
-
-set_target_properties(lsms_wl
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        )
-
-target_link_libraries(lsms_wl
-        PUBLIC lsmscore)
-#
-#
-set_target_properties(lsmscore PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-        Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-
-
 target_include_directories(
         lsmscore
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-
-target_link_libraries(
-        lsmscore
-        PUBLIC
-        gfortran
 )
 
 add_subdirectory(Accelerator)
@@ -80,9 +33,6 @@ add_subdirectory(TotalEnergy)
 
 add_subdirectory(VORPOL)
 
-target_link_libraries(lsms_main PUBLIC lsmscore)
-
-target_link_libraries(lsms_wl PUBLIC lsmscore)
 
 if (LSMS_DEV_TESTS)
   add_subdirectory(Test)

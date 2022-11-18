@@ -2,14 +2,15 @@
 // Created by F.Moitzi on 07.01.2022.
 //
 
-#ifndef SRC_MADELUNG_MADELUNG_TERM_HPP
-#define SRC_MADELUNG_MADELUNG_TERM_HPP
+#ifndef LSMS_MADELUNG_TERM_HPP
+#define LSMS_MADELUNG_TERM_HPP
 
 #include <algorithm>
 #include <complex>
 #include <numeric>
 #include <vector>
 
+#include "associatedLegendreFunction.hpp"
 #include "common.hpp"
 #include "utils.hpp"
 
@@ -81,6 +82,13 @@ inline T real_space_term(matrix<T> &rslat, std::vector<T> &aij, int nrslat,
   return rterm;
 }
 
+/**
+ * Dl sum
+ */
+void dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat, int ibegin,
+           matrix<Real> &knlat, int nknlat, double omega, int lmax_mad,
+           double eta, std::vector<Complex> &dlm);
+
 }  // namespace lsms
 
-#endif  // SRC_MADELUNG_MADELUNG_TERM_HPP
+#endif  // LSMS_MADELUNG_TERM_HPP

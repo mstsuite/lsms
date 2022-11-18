@@ -102,8 +102,8 @@ void buildBGijCPU(LSMSSystemParameters &lsms, AtomData &atom, int ir1, int ir2, 
   Real sinmp[2*lsms.maxlmax + 1];
   Real cosmp[2*lsms.maxlmax + 1];
   // Real plm[((lsms.maxlmax+1) * (lsms.maxlmax+2)) / 2];
-  Real plm[lsms.angularMomentumIndices.ndlm];
-  Complex dlm[lsms.angularMomentumIndices.ndlj];
+  Real plm[AngularMomentumIndices::ndlm];
+  Complex dlm[AngularMomentumIndices::ndlj];
   Real r = std::sqrt(rij[0]*rij[0] + rij[1]*rij[1] + rij[2]*rij[2]);
   int lmax1 = atom.LIZlmax[ir1];
   int lmax2 = atom.LIZlmax[ir2];

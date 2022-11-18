@@ -2,8 +2,8 @@
 // Created by F.Moitzi on 21.12.2021.
 //
 
-#ifndef MADELUNG_LATTICE_HPP
-#define MADELUNG_LATTICE_HPP
+#ifndef LSMS_LATTICE_HPP
+#define LSMS_LATTICE_HPP
 
 #include <complex>
 #include <tuple>
@@ -16,7 +16,7 @@ namespace lsms {
 /**
  * Create all vectors in certain cutoff with a certain repeotition
  */
-matrix<double> create_lattice(const matrix<double> &brav, double cutoff,
+  __attribute__((unused)) matrix<double> create_lattice(const matrix<double> &brav, double cutoff,
                               const std::vector<int> &nm, int size);
 
 /**
@@ -45,4 +45,4 @@ void reciprocal_lattice(matrix<double> &bravais,
 
 }  // namespace lsms
 
-#endif  // MADELUNG_LATTICE_HPP
+#endif  // LSMS_LATTICE_HPP

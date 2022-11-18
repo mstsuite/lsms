@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "integer_factors.hpp"
 #include "lattice_utils.hpp"
 #include "madelung_term.hpp"
+#include "common.hpp"
 #include "utils.hpp"
 
 double lsms::scaling_factor(const lsms::matrix<double> &bravais, int lmax,

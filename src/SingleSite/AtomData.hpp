@@ -24,25 +24,25 @@ public:
 
   AtomData() {reset();}
 
-  ~AtomData() {}
+  ~AtomData() = default;
 
-  void reset(void)
+  void reset()
   {
     b_con[0] = b_con[1] = b_con[2] = 0.0;
-    for(int i=0; i<9; i++)
-      b_basis[i] = 0.0;
+    for(double & b_basi : b_basis)
+      b_basi = 0.0;
     b_basis[0] = b_basis[4] = b_basis[8] = 1.0;
     mConstraint = -1.0;
     spinFlipped = false;
   }
 
-  void reset_b_basis(void)
+  void reset_b_basis()
   {
-    for(int i=0; i<9; i++) b_basis[i] = 0.0;
+    for(double & b_basi : b_basis) b_basi = 0.0;
     b_basis[0] = b_basis[4] = b_basis[8] = 1.0;
   }
 
-  void get_b_basis(void)
+  void get_b_basis()
   {
     const Real tol=1.0e-8;
     Real norm2=evec[0]*evec[0]+evec[1]*evec[1]+evec[2]*evec[2];
@@ -70,7 +70,7 @@ public:
     b_basis[3+2] = b_basis[6+0]*b_basis[0+1] - b_basis[6+1]*b_basis[0+0];
   }
 
-  void newConstraint(void)
+  void newConstraint()
   {
     Real b_con_mag=0.0;
     Real b_con_g[3];
@@ -136,7 +136,6 @@ public:
 
     semcor.resize(n,2);
     r_mesh.resize(n);
-    dr_mesh.resize(n);
     x_mesh.resize(n);
 
     vrNew.resize(n,2);
@@ -255,7 +254,7 @@ public:
     }
   }
 
-  void averageSpins(void)
+  void averageSpins()
   {
     if(nspin == 1) return;
     
@@ -316,12 +315,10 @@ public:
     h = a.h;
 
     r_mesh.resize(a.r_mesh.size());
-    dr_mesh.resize(a.dr_mesh.size());
     x_mesh.resize(a.x_mesh.size());
     for(int i=0; i<a.r_mesh.size(); i++)
     {
       r_mesh[i] = a.r_mesh[i];
-      dr_mesh[i] = a.dr_mesh[i];
       x_mesh[i] = a.x_mesh[i];
     }
 
@@ -411,13 +408,12 @@ public:
   }
 
 
-  void generateRadialMesh(void)
+  void generateRadialMesh()
   {
     int N = std::max((int)r_mesh.size(), jws);
     N = std::max(N, jmt);
     if (N != r_mesh.size()) {
       r_mesh.resize(N);
-      dr_mesh.resize(N);
     }
     Real xmt = std::log(rmt);
     h = (xmt-xstart) / (jmt-1);
@@ -425,7 +421,6 @@ public:
     {
       x_mesh[j] = xstart + (Real)j*h;
       r_mesh[j] = std::exp(x_mesh[j]);
-      dr_mesh[j] = r_mesh[j] * h;
       //printf("j = %5d x_mesh = %45.40e r_mesh = %45.40e\n", j, x_mesh[j], r_mesh[j]);
     }
     generateNewMesh = false;
@@ -442,9 +437,9 @@ public:
 
 
 // Local Interaction Zone
-  int numLIZ;
+  int numLIZ{};
   std::vector<int> LIZGlobalIdx, LIZStoreIdx, LIZlmax;
-  int nrmat;                          // sum (LIZlmax+1)^2
+  int nrmat{};                          // sum (LIZlmax+1)^2
   std::vector<Real> LIZDist;
   Matrix<Real> LIZPos;
 
@@ -452,57 +447,59 @@ public:
   Matrix<Real> vpClusterPos;
 
 // Mesh Data:
-  int jmt,jws;
-  Real xstart,rmt,h;
-  Real rInscribed; // LSMS_1.9: rins
-  Real rCircumscribed;
-  std::vector<Real> r_mesh, x_mesh, dr_mesh;
-  bool generateNewMesh;
+  int jmt{},jws{};
+  Real xstart{},rmt{},h{};
+  Real rInscribed{}; // LSMS_1.9: rins
+  Real rCircumscribed{};
+  std::vector<Real> r_mesh, x_mesh;
+  bool generateNewMesh{};
 
 // General Data
-  char header[80];
-  int lmax, kkrsz;
-  Real alat, efermi;
-  Real ztotss, zcorss, zsemss, zvalss;
-  Real vdif, vdifNew;
-  Real evec[3], evecNew[3], evecOut[3];
+  char header[80]{};
+  int lmax{}, kkrsz{};
+  Real alat{}, efermi{};
+  Real ztotss{}, zcorss{}, zsemss{}, zvalss{};
+  Real vdif{}, vdifNew{};
+  Real evec[3]{}, evecNew[3]{}, evecOut[3]{};
   Complex ubr[4], ubrd[4];            // Spin transformation matrices
   Matrix<Complex> dmat, dmatp;        // Spin rotation matrices for the relativistic case
   Complex wx[4], wy[4], wz[4];
-  Real xvalws[2], xvalwsNew[2];
-  Real xvalmt[2];
-  Real qtotws, mtotws;
-  Real qtotmt, mtotmt;
-  Real qvalws, mvalws;
-  Real qvalmt, mvalmt;
-  Real qInt, mInt, rhoInt;            // Interstitial charge, moment and charge density
-  Real mIntComponent[3];              // Interstitial moment components
-  int nspin;                          // Number of spin direction-related settings
+  Real xvalws[2]{}, xvalwsNew[2]{};
+  Real xvalmt[2]{};
+  Real qtotws{}, mtotws{};
+  Real qtotmt{}, mtotmt{};
+  Real qvalws{}, mvalws{};
+  Real qvalmt{}, mvalmt{};
+  Real qInt{}, mInt{}, rhoInt{};            // Interstitial charge, moment and charge density
+  Real mIntComponent[3]{};              // Interstitial moment components
+  int nspin{};                          // Number of spin direction-related settings
                                       //  (determines n_spin_cant & n_spin_pola)
-  int forceZeroMoment;                // if != 0, average spin up and spin down densities
+  int forceZeroMoment{};                // if != 0, average spin up and spin down densities
                                       // to force zero magnetic moment
-  int numc;                           // Number of core states
-  bool spinFlipped;                   // Flag for antiferromagnetic condition
+  int numc{};                           // Number of core states
+  bool spinFlipped{};                   // Flag for antiferromagnetic condition
 
 // local energy
-  Real localEnergy;
-  Real localMadelungEnergy;
+  Real localEnergy{};
+  Real localMadelungEnergy{};
   
 // Alloy Class
-  int alloy_class;
+  int alloy_class{};
 
 // Volumes:
-  Real omegaMT;                       // Muffin-Tin volume
-  Real omegaWS;                       // Wigner-Seitz volume
-  Real rws;                           // Wigner-Seitz radius
+  Real omegaMT{};                       // Muffin-Tin volume
+  Real omegaWS{};                       // Wigner-Seitz volume
+  Real rws{};                           // Wigner-Seitz radius
 
 // omegaInt - interstitial volume is in voronoi.omegaInt
 
 // Madelung matrix
   std::vector<Real> madelungMatrix;
 
+  Matrix<Complex> multipoleMadelung;
+
 // Potential and charge density
-  Real vSpinShift; // relativ shift of the spin up and spin down potentials
+  Real vSpinShift{}; // relativ shift of the spin up and spin down potentials
                    // for use in WL-LSMS. Applied using the PotentialShifter class
   Matrix<Real> vr, rhotot;
 
@@ -512,8 +509,8 @@ public:
 // Exchange-correlation parameters
   Matrix<Real> exchangeCorrelationPotential;     // Exchange-correlation potential
   Matrix<Real> exchangeCorrelationEnergy;        // Exchange-correlation energy
-  Real exchangeCorrelationE;                     // Exchange-correlation energy
-  Real exchangeCorrelationV[2];                  // Exchange-correlation potential for spin up/down
+  Real exchangeCorrelationE{};                     // Exchange-correlation energy
+  Real exchangeCorrelationV[2]{};                  // Exchange-correlation potential for spin up/down
 
 // LSF
   lsms::LSFFunctional lsf_functional;
@@ -521,17 +518,17 @@ public:
 // Core state info
   Matrix<Real> ec;
   Matrix<int> nc, lc, kc;
-  Real ecorv[2], esemv[2];
+  Real ecorv[2]{0.0}, esemv[2]{0.0};
   Matrix<Real> corden, semcor;
-  Real qcpsc_mt, qcpsc_ws, mcpsc_mt, mcpsc_ws;
+  Real qcpsc_mt{}, qcpsc_ws{}, mcpsc_mt{}, mcpsc_ws{};
   Matrix<char> coreStateType;
-  int movedToValence[2];
+  int movedToValence[2]{0};
 
 // Constraint data
   enum {None, Direction, Moment} constraintType;
-  Real b_con[3];
-  Real b_basis[9];
-  Real mConstraint;
+  Real b_con[3]{0.0};
+  Real b_basis[9]{0.0};
+  Real mConstraint{0.0};
 
 // vector for the energy points in eGroup
   std::vector<Matrix<Complex> > pmat_m;
@@ -540,20 +537,20 @@ public:
 
 // local densities
   Matrix<Real> dos_real;
-  Real doslast[4];
-  Real doscklast[4];
-  Real evalsum[4];
-  Real dosint[4];
-  Real dosckint[4];
+  Real doslast[4]{0.0};
+  Real doscklast[4]{0.0};
+  Real evalsum[4]{0.0};
+  Real dosint[4]{0.0};
+  Real dosckint[4]{0.0};
   Matrix<Real> greenint;
   Matrix<Real> greenlast;
-  Real dip[6];
+  Real dip[6]{};
 
 // rms changes between iterations:
-  Real vrms[2];
-  Real qrms[2];
+  Real vrms[2]{0.0};
+  Real qrms[2]{0.0};
 
-  void resetLocalDensities(void)
+  void resetLocalDensities()
   {
     dos_real=0.0;
     greenint=0.0;
