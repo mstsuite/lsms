@@ -65,7 +65,7 @@ public:
   char systemid[80];
   char title[80];
   LSMSMode lsmsMode;
-  unsigned char lsmsAlgorithms[LSMSAlgorithms::numAlgorithms];
+  signed char lsmsAlgorithms[LSMSAlgorithms::numAlgorithms];
   int rank;
   char potential_file_in[128];
   char potential_file_out[128];
