@@ -172,13 +172,13 @@ void calculateLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local, int
         if (local.atom[i].rhotot(local.atom[i].jmt, 0) == 0.0)
           local.atom[i].rhotot(local.atom[i].jmt, 0) = local.atom[i].rhotot(local.atom[i].jmt - 1, 0);
         if (local.atom[i].rhotot(local.atom[i].jmt + 1, 0) == 0.0)
-          local.atom[i].rhotot(local.atom[i].jmt + 1, 0) = local.atom[i].rhotot(local.atom[i].jmt - 1, 0);
+          local.atom[i].rhotot(local.atom[i].jmt + 1, 0) = local.atom[i].rhotot(local.atom[i].jmt, 0);
         if (local.atom[i].rhotot(local.atom[i].jmt, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhotot(local.atom[i].jmt, lsms.n_spin_pola - 1) = local.atom[i].rhotot(local.atom[i].jmt - 1,
                                                                                                lsms.n_spin_pola - 1);
         if (local.atom[i].rhotot(local.atom[i].jmt + 1, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhotot(local.atom[i].jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(
-              local.atom[i].jmt - 1, lsms.n_spin_pola - 1);
+              local.atom[i].jmt, lsms.n_spin_pola - 1);
 
         if (lsms.global.iprint > 0) {
           printf("Spin = 1 rhotot[jmt-1], [jmt], [jmt+1] = %20.16f %20.16f %20.16f\n",
@@ -364,11 +364,11 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
         if (local.atom[i].rhotot(jmt, 0) == 0.0)
           local.atom[i].rhotot(jmt, 0) = local.atom[i].rhotot(jmt - 1, 0);
         if (local.atom[i].rhotot(jmt + 1, 0) == 0.0)
-          local.atom[i].rhotot(jmt + 1, 0) = local.atom[i].rhotot(jmt - 1, 0);
+          local.atom[i].rhotot(jmt + 1, 0) = local.atom[i].rhotot(jmt, 0);
         if (local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt - 1, lsms.n_spin_pola - 1);
         if (local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) == 0.0)
-          local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt - 1, lsms.n_spin_pola - 1);
+          local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1);
 
         if (lsms.global.iprint > 0) {
           printf("Spin = 1 rhotot[jmt-1], [jmt], [jmt+1] = %20.16f %20.16f %20.16f\n", local.atom[i].rhotot(jmt - 1, 0),
@@ -388,11 +388,11 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
         if (local.atom[i].rhoNew(local.atom[i].jmt, 0) == 0.0)
           local.atom[i].rhoNew(jmt, 0) = local.atom[i].rhoNew(jmt - 1, 0);
         if (local.atom[i].rhoNew(local.atom[i].jmt + 1, 0) == 0.0)
-          local.atom[i].rhoNew(jmt + 1, 0) = local.atom[i].rhoNew(jmt - 1, 0);
+          local.atom[i].rhoNew(jmt + 1, 0) = local.atom[i].rhoNew(jmt, 0);
         if (local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt - 1, lsms.n_spin_pola - 1);
         if (local.atom[i].rhoNew(local.atom[i].jmt + 1, lsms.n_spin_pola - 1) == 0.0)
-          local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt - 1, lsms.n_spin_pola - 1);
+          local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1);
 
         if (lsms.global.iprint > 0) {
           printf("Spin = 1 rhoNew[jmt-1], [jmt], [jmt+1] = %20.16f %20.16f %20.16f\n", local.atom[i].rhoNew(jmt - 1, 0),
@@ -467,13 +467,13 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
             local.atom[i].rhotot(jmt + 1, 0) = local.atom[i].rhotot(jmt, 0);
 
           if (local.atom[i].rhotot(jmt + 2, 0) == 0.0)
-            local.atom[i].rhotot(jmt + 2, 0) = local.atom[i].rhotot(jmt, 0);
+            local.atom[i].rhotot(jmt + 2, 0) = local.atom[i].rhotot(jmt + 1, 0);
 
           if (local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) == 0.0)
             local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1);
 
           if (local.atom[i].rhotot(jmt + 2, lsms.n_spin_pola - 1) == 0.0)
-            local.atom[i].rhotot(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1);
+            local.atom[i].rhotot(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1);
 
           getqm_mt_(&lsms.n_spin_pola, &jmt, &local.atom[i].rInscribed, &rTemp[0], &local.atom[i].rhotot(0, 0),
                     &lsms.global.iprpts, &rhoTemp(0, 0, i), &lsms.mtasa,
@@ -488,13 +488,13 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
             local.atom[i].rhoNew(jmt + 1, 0) = local.atom[i].rhoNew(jmt, 0);
 
           if (local.atom[i].rhoNew(jmt + 2, 0) == 0.0)
-            local.atom[i].rhoNew(jmt + 2, 0) = local.atom[i].rhoNew(jmt, 0);
+            local.atom[i].rhoNew(jmt + 2, 0) = local.atom[i].rhoNew(jmt + 1, 0);
 
           if (local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) == 0.0)
             local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1);
 
           if (local.atom[i].rhoNew(jmt + 2, lsms.n_spin_pola - 1) == 0.0)
-            local.atom[i].rhoNew(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1);
+            local.atom[i].rhoNew(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1);
 
           getqm_mt_(&lsms.n_spin_pola, &jmt, &local.atom[i].rInscribed, &rTemp[0], &local.atom[i].rhoNew(0, 0),
                     &lsms.global.iprpts, &rhoTemp(0, 0, i), &lsms.mtasa,
