@@ -11,6 +11,8 @@
 #include "SingleSite/SingleSiteScattering.hpp"
 #include "MultipleScattering/linearSolvers.hpp"
 #include "MultipleScattering/MultipleScattering.hpp"
+#include "Accelerator/DeviceStorage.hpp"
+extern DeviceStorage *deviceStorage;
 
 class CurrentMatrix {
 public:
@@ -22,6 +24,7 @@ public:
     Matrix<Complex> Jx, Jy, Jz;
     Array3d<Complex> zlrd;
     Matrix<Complex> tau0,tau1,m;
+    Complex *devM, *devT;
     CurrentMatrix(){};
     void init(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &a, int lindex, Complex en, int ispin);
     void calRadialSolutionDerivative(AtomData &a);

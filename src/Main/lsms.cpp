@@ -474,8 +474,8 @@ int main(int argc, char *argv[])
     }
     // do kubo stuff and end the program
     Conductivity sigma(lsms, comm, local, crystal.omega);
-   // exitLSMS(comm,0);
-    return 0;
+    exitLSMS(comm,0);
+    //return 0;
   }
 
 

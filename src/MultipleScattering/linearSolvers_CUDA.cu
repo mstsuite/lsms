@@ -120,6 +120,17 @@ __global__ void copyTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, i
   }
 }
 
+__global__ void copyAllTMatricesToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, int nrmat)
+{
+   int i = blockIdx.x*blockDim.x + threadIdx.x;
+   if (i < nrmat)
+   {
+     for(int j=0;j<nrmat;j++){
+       tau[IDX(i,j,nrmat)] = t[IDX(i,j,nrmat)];
+     }
+   }
+}
+
 
 __global__ void copyTauToTau00Cuda(cuDoubleComplex *tau00, cuDoubleComplex *tau, int kkrsz, int nrmat)
 {

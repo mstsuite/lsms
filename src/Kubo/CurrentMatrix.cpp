@@ -178,9 +178,21 @@ void CurrentMatrix::calJyzFromJx(){
 
 void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
                          AtomData &a){
+
      lsms.angularMomentumIndices.init(2*lsms.maxlmax);
-     buildKKRMatrix(lsms,local,a,is,energy,prel,0,m);
-     solveTauFullzgetrf(lsms,local,a,m,tau1,0);
+     unsigned int buildKKRMatrixKernel = lsms.global.linearSolver;
+     unsigned int linearSolver = lsms.global.linearSolver;
+     switch(linearSolver) {
+        case MST_LINEAR_SOLVER_ZGETRF:
+            buildKKRMatrix(lsms,local,a,is,energy,prel,0,m);
+            solveTauFullzgetrf(lsms,local,a,m,tau1,0); break;
+        case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
+           devM = deviceStorage->getDevM();
+           printf("entering buildKKRMatrixCuda:\n");
+           buildKKRMatrixCuda(lsms, local, atom, *deviceStorage, deviceAtoms[localAtomIndex], is, 0, energy, prel,
+                         devM);
+//         std::cout << "GPU implementation in progress!" << std::endl; break;
+     }
      /*
      calculateTauMatrix(lsms, local, a, local_index,
                         is, energy, prel,&tau0(0,0),m,0);
@@ -201,3 +213,4 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
     }
     */
 }
+
