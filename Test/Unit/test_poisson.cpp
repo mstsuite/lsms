@@ -24,7 +24,7 @@ T relative_diff(T ref, T val) {
 }
 
 /**
- * Tests for the radial poission equation
+ * Tests for the radial poisson equation
  *
  * This equation is a Euler-Cauchy equation that can be solved analytically for
  * certain cases

@@ -83,6 +83,7 @@ target_sources(lsmscore
         diff.hpp
 
         PotentialType.hpp
+        num_digits.hpp
 
         )
 

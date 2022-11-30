@@ -6,18 +6,8 @@
 
 #include <mpi.h>
 
-template<class T>
-static int num_digits(T number) {
-  int digits = 0;
+#include "num_digits.hpp"
 
-  if (number < 0) digits = 1; // remove this line if '-' counts as a digit
-
-  while (number) {
-    number /= 10;
-    digits++;
-  }
-  return digits;
-}
 
 void lsms::print_dft_energy(const DFTEnergy &energy) {
 
@@ -25,6 +15,7 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
 
   size = std::max(size, num_digits(static_cast<int> (energy.core_eigen)));
   size = std::max(size, num_digits(static_cast<int> (energy.semicore_eigen)));
+  size = std::max(size, num_digits(static_cast<int> (energy.semicore_eigen + energy.core_eigen)));
   size = std::max(size, num_digits(static_cast<int> (energy.one_ele)));
   size = std::max(size, num_digits(static_cast<int> (energy.ks)));
   size = std::max(size, num_digits(static_cast<int> (energy.kinetic)));
@@ -46,10 +37,11 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
 
   size += 12;
 
-  std::printf("===================\n");
+  std::printf("\n===================\n");
 
-  std::printf("%-12s = %*.10f Ry\n", "Core", size, energy.core_eigen);
+  std::printf("%-12s = %*.10f Ry\n", "Deepcore", size, energy.core_eigen);
   std::printf("%-12s = %*.10f Ry\n", "Semicore", size, energy.semicore_eigen);
+  std::printf("%-12s = %*.10f Ry\n", "Core", size, energy.semicore_eigen + energy.core_eigen);
   std::printf("%-12s = %*.10f Ry\n", "One electron", size, energy.one_ele);
   std::printf("%-12s = %*.10f Ry\n", "Kohn-Sham", size, energy.ks);
   std::printf("%-12s = %*.10f Ry\n", "Kinetic", size, energy.kinetic);
@@ -75,7 +67,7 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
 
   std::printf("%-12s = %*.10f Ry\n", "Total energy", size, energy.total);
 
-  std::printf("===================\n");
+  std::printf("===================\n\n");
 
 }
 
