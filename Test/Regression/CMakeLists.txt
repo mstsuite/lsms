@@ -1,33 +1,44 @@
 
+add_executable(lsms_comparer compare.cpp)
+set_target_properties(lsms_comparer
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+
 if (NOT USE_ACCELERATOR_CUDA_C AND NOT USE_ACCELERATOR_HIP)
 
     message(STATUS "Regression tests are used")
 
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/al_fcc
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    find_package(UnixCommands)
+    find_program(DIFF diff)
 
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/fe_bcc_libxc
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    list(APPEND TESTS al_fcc fe_bcc_libxc)
 
-    # 1. Regression test: Al fcc
-    add_test(NAME regtest_al_fcc
-            COMMAND
-            ${CMAKE_COMMAND} -E env OMP_NUM_THREADS=1 ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} $<TARGET_FILE:lsms_main> i_lsms.lua &&
-            ${CMAKE_COMMAND} -E rename k.out k.out.new &&
-            ${CMAKE_COMMAND} -E compare_files k.out.new k.out.ref
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/al_fcc
-            )
+    foreach(_tests IN LISTS TESTS)
 
-    # 2. Regression test: Fe bcc (LIBXC)
-    add_test(NAME regtest_fe_bcc_libxc
-            COMMAND
-            ${CMAKE_COMMAND} -E env OMP_NUM_THREADS=1 ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} $<TARGET_FILE:lsms_main> i_lsms.lua
-            ${CMAKE_COMMAND} -E rename k.out k.out.new &&
-            ${CMAKE_COMMAND} -E compare_files k.out.new k.out.ref
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fe_bcc_libxc
-            )
+        file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${_tests}
+                DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+                PATTERN test.sh.in
+                EXCLUDE
+                )
 
-else()
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${_tests}/test.sh.in
+                ${CMAKE_CURRENT_BINARY_DIR}/${_tests}/test.sh.in)
+
+        file(GENERATE
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_tests}/test.sh
+                INPUT ${CMAKE_CURRENT_BINARY_DIR}/${_tests}/test.sh.in)
+
+        add_test(NAME regtest_${_tests}
+                COMMAND
+                ${BASH} test.sh
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${_tests}
+                )
+
+    endforeach()
+
+
+else ()
 
     message(STATUS "Regression tests are not used")
 

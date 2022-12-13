@@ -40,6 +40,6 @@ jobs:
 
       - name: Run CTests
         working-directory: ${{github.workspace}}/build
-        run: ctest -C ${{env.BUILD_TYPE}}
+        run: ctest --verbose -C ${{env.BUILD_TYPE}}
 
       - run: echo "This job's status is ${{ job.status }}."

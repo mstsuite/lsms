@@ -55,6 +55,7 @@
 #include "write_restart.hpp"
 #include "mixing_params.hpp"
 #include "read_input.hpp"
+#include "num_digits.hpp"
 
 #ifdef USE_NVTX
 #include <nvToolsExt.h>
@@ -666,10 +667,23 @@ int main(int argc, char *argv[])
 
     if (comm.rank == 0)
     {
-      printf("Band Energy = %lf Ry %10s", eband, "");
-      printf("Fermi Energy = %lf Ry\n", lsms.chempot);
-      printf("Total Energy = %lf Ry\n", lsms.totalEnergy);
-      printf("RMS = %lg\n",rms);
+
+      int gap_size = 12;
+      int size = -1;
+      size = std::max(size, num_digits(static_cast<int> (eband)));
+      size = std::max(size, num_digits(static_cast<int> (lsms.totalEnergy)));
+      size = std::max(size, num_digits(static_cast<int> (lsms.chempot)));
+      size = std::max(size, num_digits(static_cast<int> (lsms.vmt)));
+
+      gap_size -= size;
+      gap_size = std::max(gap_size, 2);
+      size += 10;
+
+      std::printf("MTZ          = %*.9f Ry\n", size, lsms.vmt);
+      std::printf("Band Energy  = %*.9f Ry %*s Fermi Energy = %12.9f Ry\n", size, eband,
+                  gap_size, "", lsms.chempot);
+      std::printf("Total Energy = %*.9f Ry\n", size, lsms.totalEnergy);
+      std::printf("RMS = %lg\n",rms);
       if(lsms.global.iprint > 0)
       {
         printf("  qrms[0] = %lg   qrms[1] = %lg\n",local.qrms[0], local.qrms[1]);
@@ -782,10 +796,16 @@ int main(int argc, char *argv[])
   
   if (comm.rank == 0)
   {
-    printf("Band Energy = %.15lf Ry\n", eband);
-    printf("Fermi Energy = %.15lf Ry\n", lsms.chempot);
-    printf("Total Energy = %.15lf Ry\n", lsms.totalEnergy);
-    printf("\n\nTimings:\n========\n");
+    int size = -1;
+    size = std::max(size, num_digits(static_cast<int> (eband)));
+    size = std::max(size, num_digits(static_cast<int> (lsms.chempot)));
+    size = std::max(size, num_digits(static_cast<int> (lsms.totalEnergy)));
+    size += 17;
+
+    printf("Band Energy  = %*.15f Ry\n", size, eband);
+    printf("Fermi Energy = %*.15f Ry\n", size, lsms.chempot);
+    printf("Total Energy = %*.15f Ry\n", size, lsms.totalEnergy);
+    printf("\nTimings:\n========\n");
     printf("LSMS Runtime = %lf sec\n", lsmsRuntime.count());
     printf("LSMS Initialization Time = %lf sec\n", lsmsInitTime.count());
     printf("timeScfLoop[rank==0] = %lf sec\n", timeScfLoop);

@@ -25,6 +25,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
   Real tpzpt = 0.0;
   Real lsf_energy = 0.0;
   Real ks = 0.0;
+  Real rSphere;
   std::vector<Real> integral(atom.r_mesh.size());
   std::vector<Real> integrand(atom.r_mesh.size());
 
@@ -35,14 +36,17 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
   switch (lsms.mtasa) {
     case 1: {
       end = atom.jws;
+      rSphere = atom.rmt;
       break;
     }
     case 2: {
       end = atom.jws;
+      rSphere = atom.rmt;
       break;
     }
     default:
       end = atom.jmt;
+      rSphere = atom.rmt;
   }
 
   /**
@@ -124,7 +128,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom, Real &energy,
     radial_mesh_deriv[i] = atom.r_mesh[i] * atom.h;
   }
 
-  lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, radial_mesh_deriv,
+  lsms::radial_poisson(vhartree, vhartreederiv, atom.r_mesh, atom.h,
                        density, end);
 
   if (lsms.n_spin_pola == 1) {
@@ -222,6 +226,7 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
   Real ezpt = 0.0;
   Real tpzpt = 0.0;
   Real lsf_energy = 0.0;
+  Real rSphere = 0.0;
   std::vector<Real> integral(atom.r_mesh.size());
   std::vector<Real> integrand(atom.r_mesh.size());
 
@@ -231,14 +236,17 @@ void localTotalEnergy(LSMSSystemParameters &lsms, AtomData &atom,
   switch (lsms.mtasa) {
     case 1: {
       end = atom.jws;
+      rSphere = atom.rmt;
       break;
     }
     case 2: {
       end = atom.jws;
+      rSphere = atom.rmt;
       break;
     }
     default:
       end = atom.jmt;
+      rSphere = atom.rmt;
   }
 
   /**
