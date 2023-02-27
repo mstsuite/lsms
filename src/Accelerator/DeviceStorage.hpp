@@ -58,6 +58,8 @@ private:
   static int nThreads;
   static Complex *dev_m[MAX_THREADS], *dev_bgij[MAX_THREADS], *dev_tmat_n[MAX_THREADS];
   static Complex *dev_tau[MAX_THREADS], *dev_tau00[MAX_THREADS], *dev_t0[MAX_THREADS], *dev_t[MAX_THREADS];
+  // for conductivity
+  static Complex *dev_tauFull[MAX_THREADS], *dev_tFull[MAX_THREADS];
   static int *dev_ipvt[MAX_THREADS];
   static int *dev_info[MAX_THREADS];
 #if defined(ACCELERATOR_CUDA_C)
@@ -94,6 +96,7 @@ private:
   static bool initialized;
 public:
   int allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads);
+  int allocateAdditional(int kkrsz_max, int nspin, int numLIZ, int _nThreads);
   void free();
 
   static Complex* getDevM() { return dev_m[omp_get_thread_num()]; } 
@@ -101,9 +104,11 @@ public:
                                  return dev_bgij[omp_get_thread_num()]; } 
   static Complex* getDevTmatN() { return dev_tmat_n[omp_get_thread_num()]; } 
   static Complex* getDevTau() { return dev_tau[omp_get_thread_num()]; }
+  static Complex* getDevTauFull() { return dev_tauFull[omp_get_thread_num()]; }
   static Complex* getDevTau00() { return dev_tau00[omp_get_thread_num()]; }
   static Complex* getDevT() { return dev_t[omp_get_thread_num()]; }
   static Complex* getDevT0() { return dev_t0[omp_get_thread_num()]; }
+  static Complex* getDevTFull() { return dev_tFull[omp_get_thread_num()]; }
   static int* getDevIpvt() { return dev_ipvt[omp_get_thread_num()]; }
   static int* getDevInfo() { return dev_info[omp_get_thread_num()]; }
 #if defined (ACCELERATOR_CUDA_C)

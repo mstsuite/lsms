@@ -100,6 +100,34 @@ void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, Local
 
 }
 
+void transferFullTMatrixToGPUCUDA(Complex *devT, LSMSSystemParameters &lsms, LocalTypeInfo &local, 
+		                  AtomData &atom, int ispin)
+{
+  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz;
+  int nrmat_ns = lsms.n_spin_cant * atom.nrmat;
+  Matrix <Complex> bigT(nrmat_ns, nrmat_ns);
+  if (lsms.n_spin_pola == lsms.n_spin_cant) { // non polarized or spin canted
+    for (int l = 0; l < atom.numLIZ; l++) {
+      for (int i = 0; i < kkrsz_ns; i++) {
+        for (int j = 0; j < kkrsz_ns; j++) {
+          bigT(l*kkrsz_ns + i, l*kkrsz_ns + j) = local.tmatStore(i + j * kkrsz_ns, atom.LIZStoreIdx[l]);
+        }
+      }
+    }
+  } else {
+
+    int jsm = kkrsz_ns * kkrsz_ns * ispin;
+    for (int l = 0; l < atom.numLIZ; l++) {
+      for (int i = 0; i < kkrsz_ns; i++) {
+        for (int j = 0; j < kkrsz_ns; j++) {
+          bigT(l*kkrsz_ns + i, l*kkrsz_ns + j) = local.tmatStore(i + j * kkrsz_ns + jsm, atom.LIZStoreIdx[l]);
+        }
+      }
+    }
+  }
+  cudaMemcpy(devT, &bigT(0,0), bigT.l_dim()*bigT.n_col()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
+}
+
 void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m)
 {
   cudaMemcpy(devM, &m(0,0), m.l_dim()*m.n_col()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
@@ -107,7 +135,7 @@ void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m)
 
 void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM)
 {
-  cudaMemcpy(&m(0,0), devM,  m.l_dim()*m.n_col()*sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
+  //cudaMemcpy(&m(0,0), devM, sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
 }
 
 __global__ void copyTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, int kkrsz, int nrmat)
@@ -120,7 +148,7 @@ __global__ void copyTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, i
   }
 }
 
-__global__ void copyAllTMatricesToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, int nrmat)
+__global__ void copyBigTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, int nrmat)
 {
    int i = blockIdx.x*blockDim.x + threadIdx.x;
    if (i < nrmat)
@@ -185,6 +213,37 @@ void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, D
   deviceCheckError();
 }
 
+void solveTauFullzgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, 
+		               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau)
+{
+  cublasHandle_t cublasHandle = DeviceStorage::getCublasHandle();
+  int nrmat_ns = lsms.n_spin_cant * atom.nrmat;
+  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz;
+  cuDoubleComplex *Aarray[1], *Barray[1];
+
+  cuDoubleComplex *devTauFull = (cuDoubleComplex *)d.getDevTauFull();
+  zeroMatrixCuda(devTauFull, nrmat_ns, nrmat_ns);
+  deviceCheckError();
+  copyBigTMatrixToTauCuda<<<nrmat_ns,1>>>(devTauFull, (cuDoubleComplex *)tMatrix, nrmat_ns);
+  deviceCheckError();
+
+  Barray[0] = devTauFull;
+  Aarray[0] = (cuDoubleComplex *) devM;
+
+  int *ipivArray=d.getDevIpvt();
+  int *infoArray = d.getDevInfo();
+  int info;
+
+  cublasCheckError(cublasZgetrfBatched(cublasHandle, nrmat_ns, Aarray, nrmat_ns, ipivArray, infoArray, 1));
+  // printf("cublasZgetrsBatched\n");
+
+  cublasCheckError(cublasZgetrsBatched(cublasHandle, CUBLAS_OP_N, nrmat_ns, nrmat_ns, Aarray, nrmat_ns, ipivArray,
+                                 Barray, nrmat_ns, &info, 1));
+  
+  transferMatrixFromGPUCuda(tau, devTauFull);
+  deviceCheckError();
+}
+
 #ifndef ARCH_IBM
 void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
                                Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin)
@@ -223,6 +282,7 @@ void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 }
 #endif
 
+
 void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
                                Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin)
 {
@@ -256,6 +316,40 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   transferMatrixFromGPUCuda(tau00, devTau00);
   deviceCheckError();
 }
+
+void solveTauFullzgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau, int ispin)
+{
+  cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
+  int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
+  int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz; // size of t00 block
+  // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+  
+  int *devIpiv = d.getDevIpvt();
+  int *devInfo = d.getDevInfo();
+
+  cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
+  cuDoubleComplex *devTauFull = (cuDoubleComplex *)d.getDevTauFull();
+  zeroMatrixCuda(devTauFull, nrmat_ns, nrmat_ns);
+  deviceCheckError();
+  copyBigTMatrixToTauCuda<<<nrmat_ns,1>>>(devTauFull, (cuDoubleComplex *)tMatrix, nrmat_ns);
+  deviceCheckError();
+
+
+  cusolverCheckError(cusolverDnZgetrf(cusolverDnHandle, nrmat_ns, nrmat_ns,
+                                      (cuDoubleComplex *)devM, nrmat_ns, devWork, devIpiv,
+                                      devInfo ));
+
+
+  std::cout << nrmat_ns << "  " << std::endl;
+  printf(" %p %p %p %p\n", devM, devTauFull, devIpiv, devInfo);
+  cusolverCheckError(cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, nrmat_ns,
+                                      (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devTauFull, nrmat_ns, devInfo));
+
+  transferMatrixFromGPUCuda(tau, devTauFull);
+  deviceCheckError();
+}
+
 
 #ifdef USE_XGETRF
 void solveTau00Xgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,

@@ -187,11 +187,30 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
             buildKKRMatrix(lsms,local,a,is,energy,prel,0,m);
             solveTauFullzgetrf(lsms,local,a,m,tau1,0); break;
         case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
-           devM = deviceStorage->getDevM();
-           printf("entering buildKKRMatrixCuda:\n");
-           buildKKRMatrixCuda(lsms, local, atom, *deviceStorage, deviceAtoms[localAtomIndex], is, 0, energy, prel,
+ 	    deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
+	    deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
+	    devM = deviceStorage->getDevM();
+	    devT = deviceStorage->getDevTFull();
+	    transferFullTMatrixToGPUCUDA(devT, lsms, local, a, is);
+	    printf("entering buildKKRMatrixCuda:\n");
+            buildKKRMatrixCuda(lsms, local, a, *deviceStorage, deviceAtoms[local_index], is, 0, energy, prel,
                          devM);
-//         std::cout << "GPU implementation in progress!" << std::endl; break;
+	    printf("entering solveTauFullzgetrf_cusolver:\n");
+            //solveTauFullzgetrf_cublas(lsms, local, *deviceStorage, a, devT, devM, tau1);
+            solveTauFullzgetrf_cusolver(lsms, local, *deviceStorage, a, devT, devM, tau1, is);
+        case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
+            deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
+            deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
+            devM = deviceStorage->getDevM();
+            devT = deviceStorage->getDevTFull();
+            transferFullTMatrixToGPUCUDA(devT, lsms, local, a, is);
+            printf("entering buildKKRMatrixCuda:\n");
+            buildKKRMatrixCuda(lsms, local, a, *deviceStorage, deviceAtoms[local_index], is, 0, energy, prel,
+                         devM);
+            printf("entering solveTauFullzgetrf_cublas:\n");
+            solveTauFullzgetrf_cublas(lsms, local, *deviceStorage, a, devT, devM, tau1);
+            //solveTauFullzgetrf_cusolver(lsms, local, *deviceStorage, a, devT, devM, tau1, is);
+//        std::cout << "GPU implementation in progress!" << std::endl; break;
      }
      /*
      calculateTauMatrix(lsms, local, a, local_index,
@@ -203,6 +222,7 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
       }
       std::cout << std::endl;
     }
+    */
     std::cout << "00 block of full matrix" << std::endl;
     std::cout << std::endl;
     for (int i=0; i<kkrsz;i++){
@@ -211,6 +231,5 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
       }
       std::cout << std::endl;
     }
-    */
 }
 

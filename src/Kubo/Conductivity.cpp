@@ -92,6 +92,7 @@ Conductivity::Conductivity(LSMSSystemParameters &lsms, LSMSCommunication &comm, 
      writeRhoMat();
    }
    if(lsms.global.iprint>=0) printf("timeConductivity = %lf sec\n",timeConductivity);
+   synchronizeLSMS(comm);
 }
 
 void Conductivity::processCurrentMatrix(LocalTypeInfo &local, int index, int dir, Matrix <Complex> &Jout1, int kkrsz, int etype){

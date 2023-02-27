@@ -70,15 +70,21 @@ void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m);
 void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM);
 void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local,
                                AtomData &atom, int iie, int ispin);
+void transferFullTMatrixToGPUCUDA(Complex *devT, LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                                  AtomData &atom, int ispin);
 
 void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+void solveTauFullzgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau);
+
 
 // CUDA Solvers
 void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
                                Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
 void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
                                Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
-
+void solveTauFullzgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
 #ifdef USE_XGETRF
 void solveTau00Xgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
                                Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);

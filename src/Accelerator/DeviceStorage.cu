@@ -81,6 +81,29 @@ private:
 public:
 */
 
+int DeviceStorage::allocateAdditional(int kkrsz_max, int nspin, int numLIZ, int _nThreads) {
+   // initializing a big tau and big T matrix, needed (only) for conductivity purposes
+   int N = kkrsz_max * nspin * numLIZ;
+   int nThreads = _nThreads;
+   for (int i=0; i < nThreads; i++) {
+     cudaError_t err;
+     err = cudaMalloc((void **) &dev_tauFull[i], N * N * sizeof(Complex));
+     if (err != cudaSuccess) {
+        printf("failed to allocate dev_tauFull[%d], size=%d, err=%d\n",
+               i, N * N * sizeof(Complex), err);
+        exit(1);
+     }
+     err = cudaMalloc((void **) &dev_tFull[i], N * N * sizeof(Complex));
+     std::cout << err << std::endl;
+     if (err != cudaSuccess) {
+        printf("failed to allocate dev_tFull[%d], size=%d, err=%d\n",
+               i, N * N * sizeof(Complex), err);
+        exit(1);
+     }
+   }
+   return 0;
+}
+
 int DeviceStorage::allocate(int kkrsz_max, int nspin, int numLIZ, int _nThreads) {
   if (!initialized) {
     //printf("*************************************MEMORY IS BEING ALLOCATED\n");
@@ -276,6 +299,7 @@ int DeviceStorage::copyTmatStoreToDevice(Matrix<Complex> &tmatStore,
 bool DeviceStorage::initialized = false;
 Complex *DeviceStorage::dev_m[MAX_THREADS], *DeviceStorage::dev_bgij[MAX_THREADS], *DeviceStorage::dev_tmat_n[MAX_THREADS];
 Complex *DeviceStorage::dev_tau[MAX_THREADS], *DeviceStorage::dev_tau00[MAX_THREADS];
+Complex *DeviceStorage::dev_tauFull[MAX_THREADS], *DeviceStorage::dev_tFull[MAX_THREADS];
 Complex *DeviceStorage::dev_t0[MAX_THREADS];
 Complex *DeviceStorage::dev_t[MAX_THREADS];
 void *DeviceStorage::dev_work[MAX_THREADS];
