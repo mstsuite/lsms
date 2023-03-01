@@ -125,7 +125,16 @@ void transferFullTMatrixToGPUCUDA(Complex *devT, LSMSSystemParameters &lsms, Loc
       }
     }
   }
-  cudaMemcpy(devT, &bigT(0,0), bigT.l_dim()*bigT.n_col()*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
+  /*
+  std::cout << "00 block of bigT on the CPU" << std::endl;
+  for (int i = 0; i <kkrsz_ns; i++){
+    for (int j = 0; j < kkrsz_ns; j++){
+      std::cout << bigT(i,j) << "  ";
+    }
+    std::cout << std::endl;
+  }
+  */
+  cudaMemcpy(devT, &bigT(0,0), nrmat_ns*nrmat_ns*sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
 }
 
 void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m)
@@ -135,7 +144,7 @@ void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m)
 
 void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM)
 {
-  //cudaMemcpy(&m(0,0), devM, sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&m(0,0), devM, m.l_dim()*m.n_col()*sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
 }
 
 __global__ void copyTMatrixToTauCuda(cuDoubleComplex *tau, cuDoubleComplex *t, int kkrsz, int nrmat)
@@ -214,22 +223,23 @@ void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, D
 }
 
 void solveTauFullzgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, 
-		               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau)
+		               Complex *tMatrix, Complex *devM, Complex *devTauFull)
 {
   cublasHandle_t cublasHandle = DeviceStorage::getCublasHandle();
   int nrmat_ns = lsms.n_spin_cant * atom.nrmat;
   int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz;
   cuDoubleComplex *Aarray[1], *Barray[1];
 
-  cuDoubleComplex *devTauFull = (cuDoubleComplex *)d.getDevTauFull();
-  zeroMatrixCuda(devTauFull, nrmat_ns, nrmat_ns);
+  //cuDoubleComplex *devTauFull = (cuDoubleComplex *)d.getDevTauFull();
+  zeroMatrixCuda((cuDoubleComplex *)devTauFull, nrmat_ns, nrmat_ns);
   deviceCheckError();
-  copyBigTMatrixToTauCuda<<<nrmat_ns,1>>>(devTauFull, (cuDoubleComplex *)tMatrix, nrmat_ns);
+  copyBigTMatrixToTauCuda<<<nrmat_ns,1>>>((cuDoubleComplex *)devTauFull, (cuDoubleComplex *)tMatrix, nrmat_ns);
   deviceCheckError();
-
-  Barray[0] = devTauFull;
+  
+  Barray[0] = (cuDoubleComplex *) devTauFull;
   Aarray[0] = (cuDoubleComplex *) devM;
 
+  
   int *ipivArray=d.getDevIpvt();
   int *infoArray = d.getDevInfo();
   int info;
@@ -240,8 +250,9 @@ void solveTauFullzgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   cublasCheckError(cublasZgetrsBatched(cublasHandle, CUBLAS_OP_N, nrmat_ns, nrmat_ns, Aarray, nrmat_ns, ipivArray,
                                  Barray, nrmat_ns, &info, 1));
   
-  transferMatrixFromGPUCuda(tau, devTauFull);
+  //transferMatrixFromGPUCuda(tau, devTauFull);
   deviceCheckError();
+
 }
 
 #ifndef ARCH_IBM
@@ -318,7 +329,7 @@ void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 }
 
 void solveTauFullzgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
-                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau, int ispin)
+                               Complex *tMatrix, Complex *devM, Complex *devTauFull, int ispin)
 {
   cusolverDnHandle_t cusolverDnHandle = DeviceStorage::getCusolverDnHandle();
   int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
@@ -329,24 +340,23 @@ void solveTauFullzgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &loca
   int *devInfo = d.getDevInfo();
 
   cuDoubleComplex *devWork = (cuDoubleComplex *)d.getDevWork();
-  cuDoubleComplex *devTauFull = (cuDoubleComplex *)d.getDevTauFull();
   zeroMatrixCuda(devTauFull, nrmat_ns, nrmat_ns);
   deviceCheckError();
-  copyBigTMatrixToTauCuda<<<nrmat_ns,1>>>(devTauFull, (cuDoubleComplex *)tMatrix, nrmat_ns);
+  copyBigTMatrixToTauCuda<<<nrmat_ns,1>>>((cuDoubleComplex *)devTauFull, (cuDoubleComplex *)tMatrix, nrmat_ns);
   deviceCheckError();
-
+  
 
   cusolverCheckError(cusolverDnZgetrf(cusolverDnHandle, nrmat_ns, nrmat_ns,
                                       (cuDoubleComplex *)devM, nrmat_ns, devWork, devIpiv,
                                       devInfo ));
 
-
-  std::cout << nrmat_ns << "  " << std::endl;
-  printf(" %p %p %p %p\n", devM, devTauFull, devIpiv, devInfo);
+ 
+  //std::cout << nrmat_ns << "  " << std::endl;
+  //printf(" %p %p %p %p\n", devM, devTauFull, devIpiv, devInfo);
   cusolverCheckError(cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, nrmat_ns,
-                                      (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devTauFull, nrmat_ns, devInfo));
+                                      (cuDoubleComplex *)devM, nrmat_ns, devIpiv, (cuDoubleComplex *)devTauFull, nrmat_ns, devInfo));
 
-  transferMatrixFromGPUCuda(tau, devTauFull);
+  //transferMatrixFromGPUCuda(tau, devTauFull);
   deviceCheckError();
 }
 

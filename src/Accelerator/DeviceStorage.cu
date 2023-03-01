@@ -94,7 +94,6 @@ int DeviceStorage::allocateAdditional(int kkrsz_max, int nspin, int numLIZ, int 
         exit(1);
      }
      err = cudaMalloc((void **) &dev_tFull[i], N * N * sizeof(Complex));
-     std::cout << err << std::endl;
      if (err != cudaSuccess) {
         printf("failed to allocate dev_tFull[%d], size=%d, err=%d\n",
                i, N * N * sizeof(Complex), err);

@@ -26,8 +26,8 @@ public:
     NonRelativisticSingleScattererSolution solutionNonRel;
     Matrix<Complex> Jx, Jy, Jz;
     Array3d<Complex> zlrd;
-    Matrix<Complex> tau0,tau1,m;
-    Complex *devM, *devT, *devTau;
+    Matrix<Complex> tau0,tau1,m,bigT;
+    Complex *devM, *devT, *devTauFull;
     CurrentMatrix(){};
     void init(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &a, int lindex, Complex en, int ispin);
     void calRadialSolutionDerivative(AtomData &a);
