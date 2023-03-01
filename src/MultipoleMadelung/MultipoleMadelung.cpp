@@ -6,6 +6,7 @@
 
 #include <complex>
 #include <vector>
+#include <cmath>
 
 #include "Coeficients.hpp"
 #include "lattice_utils.hpp"
