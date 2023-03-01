@@ -154,8 +154,7 @@ lsms::MultipoleMadelung::MultipoleMadelung(LSMSSystemParameters &lsms,
         for (int kl = 1; kl < kmax; kl++) {
           auto l = AngularMomentumIndices::lofk[kl];
           local.atom[local_i].multipoleMadelung(kl, atom_i) =
-            dlm[kl] * pow(alat / scaling_factor, l) / scaling_factor;
-              // dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
+              dlm[kl] * std::pow(alat / scaling_factor, l) / scaling_factor;
         }
       }
     }
