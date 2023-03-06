@@ -103,7 +103,7 @@ int DeviceStorage::allocateAdditional(int kkrsz_max, int nspin, int numLIZ, int 
    return 0;
 }
 
-int DeviceStorage::allocate(int kkrsz_max, int nspin, int numLIZ, int _nThreads) {
+int DeviceStorage::allocate(int kkrsz_max, int nspin, int numLIZ, int _nThreads, int iskubo) {
   if (!initialized) {
     //printf("*************************************MEMORY IS BEING ALLOCATED\n");
     if (_nThreads > MAX_THREADS) {
@@ -124,11 +124,13 @@ int DeviceStorage::allocate(int kkrsz_max, int nspin, int numLIZ, int _nThreads)
       }
       cudaMalloc((void **) &dev_ipvt[i], N * sizeof(int));
       cudaMalloc((void **) &dev_info[i], nThreads * sizeof(int));
-      err = cudaMalloc((void **) &dev_bgij[i], N * N * sizeof(Complex));
-      if (err != cudaSuccess) {
-        printf("failed to allocate dev_bgij[%d], size=%d, err=%d\n",
+      if (iskubo == 0) {
+        err = cudaMalloc((void **) &dev_bgij[i], N * N * sizeof(Complex));
+        if (err != cudaSuccess) {
+          printf("failed to allocate dev_bgij[%d], size=%d, err=%d\n",
                i, N * N * sizeof(Complex), err);
-        exit(1);
+          exit(1);
+        }
       }
 
 

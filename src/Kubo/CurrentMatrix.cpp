@@ -188,13 +188,13 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
             buildKKRMatrix(lsms,local,a,is,energy,prel,0,m);
             solveTauFullzgetrf(lsms,local,a,m,tau1,0); break;
 	case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
- 	    deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
+ 	    deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads, 1);
 	    deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
 	    devM = deviceStorage->getDevM();
 	    devT = deviceStorage->getDevTFull();
 	    devTauFull = deviceStorage->getDevTauFull();
 	    transferFullTMatrixToGPUCUDA(devT, lsms, local, a, is);
-	    transferMatrixFromGPUCuda(bigT, (cuDoubleComplex *)devT);
+	    //transferMatrixFromGPUCuda(bigT, (cuDoubleComplex *)devT);
             //std::cout << "00 block of bigT" << std::endl;
             //std::cout << std::endl;
             //for (int i=0; i<kkrsz;i++){
@@ -230,7 +230,7 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
             //} 
 	    break;
 	case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
-            deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
+            deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads, 1);
             deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
             devM = deviceStorage->getDevM();
             devT = deviceStorage->getDevTFull();

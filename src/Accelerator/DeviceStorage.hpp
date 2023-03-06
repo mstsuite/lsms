@@ -95,7 +95,7 @@ private:
   static int tmatStoreLDim;
   static bool initialized;
 public:
-  int allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads);
+  int allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, int iskubo=0);
   int allocateAdditional(int kkrsz_max, int nspin, int numLIZ, int _nThreads);
   void free();
 
