@@ -1,6 +1,6 @@
 /* Neighbors - cell-based neighbor listing classes and iterators.
  * Written by David M. Rogers
- * Copyright (C) UT-Battelle, 2022
+ * Copyright (C) UT-Battelle, 2022-2023
  *
  * This source code is part of FastParticleToolkit.
  * It has been released under the same BSD-3 open-source license as the rest of LSMS.
@@ -184,6 +184,7 @@ struct NeighborCells {
                     int absk = n.k > 0 ? n.k-1 : (n.k < 0 ? -n.k-1 : 0);
                     Real dz = absk*g.h[Geom::ZZ]; // equiv. to above, fewer operations
                     R2z = Rc*Rc - dz*dz;
+                    if(R2z < 0.0f) continue; // go to next k
                     Real y0 = -n.k*g.h[Geom::ZY];
                     Real ywid = g.h[Geom::YY] + sqrt(R2z);
 
@@ -194,7 +195,7 @@ struct NeighborCells {
                 Real dy = fabs(n.j*g.h[Geom::YY] + n.k*g.h[Geom::ZY]) - g.h[Geom::YY];
                 dy -= dy*(dy < 0.0f); // max(0, dy) = dist. from y-box edge
                 Real R2y = R2z - dy*dy;
-                if(R2y < 0.0f) { n.j = j1; continue; } // goto next k
+                if(R2y < 0.0f) continue; // goto next j
                 Real x0 = -n.j*g.h[Geom::YX] - n.k*g.h[Geom::ZX]; // shifted base-pt.
                 Real xwid = g.h[Geom::XX] + sqrt(R2y);
 
