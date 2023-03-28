@@ -145,6 +145,16 @@ bool luaGetRealPositionFromStack(lua_State *L, int idx, Real *val)
   return true;
 }
 
+bool luaGetIntegerPositionFromStack(lua_State *L, int idx, int *val)
+{
+  lua_pushinteger(L,idx);
+  lua_gettable(L,-2);
+  if(!lua_isnumber(L,-1)) {lua_pop(L,1); return false;}
+  *val=lua_tointeger(L,-1);
+  lua_pop(L,1);
+  return true;
+}
+
 bool luaGetStrNFromStack(lua_State *L, const char *name, char *s, int n)
 {
   lua_pushstring(L,name);

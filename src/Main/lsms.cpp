@@ -1,10 +1,10 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
-
-#include <fenv.h>
+#include <chrono>
+#include <cfenv>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -20,8 +20,7 @@
 #endif
 
 #include <hdf5.h>
-
-#include "lua.hpp"
+#include <lua.hpp>
 
 
 #include "LuaInterface/LuaInterface.hpp"
@@ -33,6 +32,7 @@
 #include "Misc/Indices.hpp"
 #include "Misc/Coeficients.hpp"
 #include "Madelung/Madelung.hpp"
+#include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
 #include "VORPOL/VORPOL.hpp"
 #include "Kubo/Conductivity.hpp"
 #include "energyContourIntegration.hpp"
@@ -56,14 +56,12 @@
 #include "write_restart.hpp"
 #include "mixing_params.hpp"
 #include "read_input.hpp"
+#include "num_digits.hpp"
 
 #ifdef USE_NVTX
 #include <nvToolsExt.h>
 #endif
 
-SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
-GauntCoeficients gauntCoeficients;
-IFactors iFactors;
 
 #if defined(ACCELERATOR_CUBLAS) || defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
 #include "Accelerator/DeviceStorage.hpp"
@@ -94,7 +92,7 @@ feenableexcept (unsigned int excepts)
 
   return ( fesetenv (&fenv) ? -1 : old_excepts );
 }
-*/ 
+*/
 
 
 int main(int argc, char *argv[])
@@ -111,6 +109,8 @@ int main(int argc, char *argv[])
   char inputFileName[128];
 
   Real eband;
+
+  auto lsmsStartTime = std::chrono::steady_clock::now();
 
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 #ifdef LSMS_DEBUG
   MPI_Barrier(comm.comm);
 #endif
- 
+
   communicateParameters(comm, lsms, crystal, mix, alloyDesc);
   if (comm.rank != lsms.global.print_node)
     lsms.global.iprint = lsms.global.default_iprint;
@@ -210,11 +210,11 @@ int main(int argc, char *argv[])
 
   local.setNumLocal(distributeTypes(crystal, comm));
   local.setGlobalId(comm.rank, crystal);
-     
+
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceAtoms.resize(local.num_local);
 #endif
-     
+
   if(comm.rank == 0)
   {
     printf("set global ids.\n");
@@ -236,14 +236,14 @@ int main(int argc, char *argv[])
     lsms.newFunctional.init(lsms.n_spin_pola, lsms.xcFunctional);
   }
 
-  lsms.angularMomentumIndices.init(2*crystal.maxlmax);
-  sphericalHarmonicsCoeficients.init(2*crystal.maxlmax);
+  AngularMomentumIndices::init(2*crystal.maxlmax);
+  SphericalHarmonicsCoeficients::init(2*crystal.maxlmax);
 
-  gauntCoeficients.init(lsms, lsms.angularMomentumIndices, sphericalHarmonicsCoeficients);
-  iFactors.init(lsms, crystal.maxlmax);
+  GauntCoeficients::init(lsms);
+  IFactors::init(lsms, crystal.maxlmax);
 
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
-  deviceConstants.allocate(lsms.angularMomentumIndices, gauntCoeficients, iFactors);
+  deviceConstants.allocate();
 #endif
 
   double timeBuildLIZandCommList = MPI_Wtime();
@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
 #endif
 
   for (int i=0; i<local.num_local; i++)
-    local.atom[i].pmat_m.resize(lsms.energyContour.groupSize());  
+    local.atom[i].pmat_m.resize(lsms.energyContour.groupSize());
 
 // set maximal number of radial grid points and core states if reading from bigcell file
   local.setMaxPts(lsms.global.iprpts);
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
-  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  /* if(lsms.pot_in_type < 0) */ setupVorpol(lsms, crystal, local);
 
 #ifdef LSMS_DEBUG
   if(lsms.global.iprint >= 0)
@@ -319,10 +319,14 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
+  double timeLoadPotential = MPI_Wtime();
   loadPotentials(comm, lsms, crystal, local);
-
+  timeLoadPotential = MPI_Wtime() - timeLoadPotential;
+  
   if (lsms.global.iprint >= 0)
   {
+    printf("time loadPotential: %lf sec\n\n",timeLoadPotential);
+    
     fprintf(stdout,"LIZ for atom 0 on this node\n");
     printLIZInfo(stdout, local.atom[0]);
     if(local.atom[0].forceZeroMoment) {
@@ -344,14 +348,14 @@ int main(int argc, char *argv[])
   }
 
 
-  if ( alloyDesc.size() > 0 )
+  if ( !alloyDesc.empty() )
   {
     if(lsms.global.iprint >= 0)
     {
       printf("Entering the LOADING of the alloy banks.\n");
       fflush(stdout);
     }
-    loadAlloyBank(comm,lsms,alloyDesc,alloyBank); 
+    loadAlloyBank(comm,lsms,alloyDesc,alloyBank);
   }
 
 // for testing purposes:
@@ -369,7 +373,7 @@ int main(int argc, char *argv[])
   MPI_Barrier(comm.comm);
 #endif
 
-  setupVorpol(lsms, crystal, local, sphericalHarmonicsCoeficients);
+  setupVorpol(lsms, crystal, local);
 
 #ifdef LSMS_DEBUG
   MPI_Barrier(comm.comm);
@@ -382,16 +386,39 @@ int main(int argc, char *argv[])
       interpolatePotential(lsms, local.atom[i]);
   }
 
+  double timeCalculateVolumes = MPI_Wtime();
   calculateVolumes(comm, lsms, crystal, local);
-
+  timeCalculateVolumes = MPI_Wtime() - timeCalculateVolumes;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time calculateVolumes: %lf sec\n\n",timeCalculateVolumes);
+  }
+  
 //  loadPotentials(comm,lsms,crystal,local);
 
 // initialize Mixing
+  double timeSetupMixing = MPI_Wtime();
   Mixing *mixing;
   setupMixing(mix, mixing, lsms.global.iprint);
+  timeSetupMixing = MPI_Wtime() - timeSetupMixing;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time setupMixing: %lf sec\n\n",timeSetupMixing);
+  }
 
+  double timeCalculateMadelungMatrix = MPI_Wtime();
 // need to calculate madelung matrices
+//#define LEGACY_MONOPOLE
+#ifdef LEGACY_MONOPOLE
   calculateMadelungMatrices(lsms, crystal, local);
+#else
+  calculateMultiMadelungMatrices(lsms, crystal, local);
+#endif
+  timeCalculateMadelungMatrix = MPI_Wtime() - timeCalculateMadelungMatrix;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time calculateMultiMadelungMatrices: %lf sec\n\n",timeCalculateMadelungMatrix);
+  }
 
   if (lsms.global.iprint >= 1)
   {
@@ -400,7 +427,10 @@ int main(int argc, char *argv[])
 
   calculateCoreStates(comm, lsms, local);
   if (lsms.global.iprint >= 0)
+  {
     printf("Finished calculateCoreStates(...)\n");
+    fflush(stdout);
+  }
 
 // check that vrs have not changed ...
 //  bool vr_check=false;
@@ -441,7 +471,13 @@ int main(int argc, char *argv[])
       local.atom[i].reset_b_basis();
   }
 
+  double timeMixingPrepare = MPI_Wtime();
   mixing -> prepare(comm, lsms, local.atom);
+  timeMixingPrepare = MPI_Wtime() - timeMixingPrepare;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("time Mixing->Prepare: %lf sec\n\n",timeMixingPrepare);
+  }
 
 #ifdef USE_PAPI
   #define NUM_PAPI_EVENTS 2
@@ -467,6 +503,7 @@ int main(int argc, char *argv[])
   PAPI_start_counters(papi_events, hw_counters);
 #endif
 
+
   // Check if conductivity is to be done
   if (lsms.lsmsMode == LSMSMode::kubo) {
     if (comm.rank == 0) {
@@ -479,7 +516,8 @@ int main(int argc, char *argv[])
     return 0;
   }
 
-
+  auto lsmsEndInitTime = std::chrono::steady_clock::now();
+  
 // -----------------------------------------------------------------------------
 //                                 MAIN SCF LOOP
 // -----------------------------------------------------------------------------
@@ -489,8 +527,11 @@ int main(int argc, char *argv[])
   Real oldTotalEnergy = lsms.totalEnergy;
 
   if (lsms.global.iprint >= 0)
+  {
     printf("Total number of iterations:%d\n", lsms.nscf);
-
+    fflush(stdout);
+  }
+    
   double timeScfLoop = MPI_Wtime();
   double timeCalcChemPot = 0.0;
   double timeCalcPotentialsAndMixing = 0.0;
@@ -498,7 +539,7 @@ int main(int argc, char *argv[])
   int iterationStart = 0;
   int potentialWriteCounter = 0;
 
-  FILE *kFile = NULL;
+  FILE *kFile = nullptr;
   if (comm.rank == 0)
   {
     iterationStart = readNextIterationNumber("k.out");
@@ -509,7 +550,7 @@ int main(int argc, char *argv[])
   
 #ifdef USE_NVTX
   nvtxRangePushA("SCFLoop");
-#endif  
+#endif
   for (iteration=0; iteration<lsms.nscf && !(converged && energyConverged); iteration++)
   {
     if (lsms.global.iprint >= -1 && comm.rank == 0)
@@ -535,11 +576,11 @@ int main(int argc, char *argv[])
     {
       if(!mix.quantity[MixingParameters::moment_direction])
         local.atom[i].newConstraint();
-      
+
       local.atom[i].evec[0] = local.atom[i].evecNew[0];
       local.atom[i].evec[1] = local.atom[i].evecNew[1];
       local.atom[i].evec[2] = local.atom[i].evecNew[2];
-      
+
       checkIfSpinHasFlipped(lsms, local.atom[i]);
     }
 
@@ -561,11 +602,11 @@ int main(int argc, char *argv[])
 
     // Calculate charge density rms
     calculateLocalQrms(lsms, local);
-    
+
     // Mix charge density
     mixing -> updateChargeDensity(comm, lsms, local.atom);
     dTimePM = MPI_Wtime() - dTimePM;
-    timeCalcPotentialsAndMixing += dTimePM; 
+    timeCalcPotentialsAndMixing += dTimePM;
 
     // pf = fopen("vr_test_3.dat","w");
     // printAtomPotential(pf, local.atom[0]);
@@ -597,7 +638,7 @@ int main(int argc, char *argv[])
     // fclose(pf);
 
     mixing -> updatePotential(comm, lsms, local.atom);
-    
+
     // pf = fopen("vr_test_6.dat","w");
     // printAtomPotential(pf, local.atom[0]);
     // fclose(pf);
@@ -622,7 +663,7 @@ int main(int argc, char *argv[])
         rms = std::max(rms, local.atom[i].qrms[0]);
       globalMax(comm, rms);
     }
-    
+
 // check for convergence
     converged = rms < lsms.rmsTolerance;
     /*
@@ -641,10 +682,23 @@ int main(int argc, char *argv[])
 
     if (comm.rank == 0)
     {
-      printf("Band Energy = %lf Ry %10s", eband, "");
-      printf("Fermi Energy = %lf Ry\n", lsms.chempot);
-      printf("Total Energy = %lf Ry\n", lsms.totalEnergy);
-      printf("RMS = %lg\n",rms);
+
+      int gap_size = 12;
+      int size = -1;
+      size = std::max(size, num_digits(static_cast<int> (eband)));
+      size = std::max(size, num_digits(static_cast<int> (lsms.totalEnergy)));
+      size = std::max(size, num_digits(static_cast<int> (lsms.chempot)));
+      size = std::max(size, num_digits(static_cast<int> (lsms.vmt)));
+
+      gap_size -= size;
+      gap_size = std::max(gap_size, 2);
+      size += 10;
+
+      std::printf("MTZ          = %*.9f Ry\n", size, lsms.vmt);
+      std::printf("Band Energy  = %*.9f Ry %*s Fermi Energy = %12.9f Ry\n", size, eband,
+                  gap_size, "", lsms.chempot);
+      std::printf("Total Energy = %*.9f Ry\n", size, lsms.totalEnergy);
+      std::printf("RMS = %lg\n",rms);
       if(lsms.global.iprint > 0)
       {
         printf("  qrms[0] = %lg   qrms[1] = %lg\n",local.qrms[0], local.qrms[1]);
@@ -657,7 +711,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    if (kFile != NULL)
+    if (kFile != nullptr)
     {
       fprintf(kFile,"%4d %20.12lf %12.6lf %12.6lf  %14.10lf\n",
               iterationStart+iteration, lsms.totalEnergy, lsms.chempot, local.atom[0].mtotws, rms);
@@ -676,7 +730,7 @@ int main(int argc, char *argv[])
       writePotentials(comm, lsms, crystal, local);
       potentialWriteCounter = 0;
       if (comm.rank == 0)
-      { 
+      {
         writeRestart("i_lsms.restart", lsms, crystal, mix, potentialShifter, alloyDesc);
       }
     }
@@ -686,15 +740,25 @@ int main(int argc, char *argv[])
   nvtxRangePop();
 #endif
   timeScfLoop = MPI_Wtime() - timeScfLoop;
-  
+
   writeInfoEvec(comm, lsms, crystal, local, eband, lsms.infoEvecFileOut);
   if(lsms.localAtomDataFile[0]!=0)
     writeLocalAtomData(comm, lsms, crystal, local, eband, lsms.localAtomDataFile);
 
-  if (kFile != NULL)
+  if (kFile != nullptr)
     fclose(kFile);
 
- 
+  /**
+   * Total energy calculation of all contributions
+   */
+
+  lsms::DFTEnergy dft_energy;
+  calculateTotalEnergy(comm, lsms, local, crystal, dft_energy);
+
+  if (comm.rank == 0)
+  {
+    lsms::print_dft_energy( dft_energy);
+  }
 
 // -----------------------------------------------------------------------------
 
@@ -741,11 +805,24 @@ int main(int argc, char *argv[])
 
   double fomScale = calculateFomScaleDouble(comm, local);
 
+  auto lsmsEndTime = std::chrono::steady_clock::now();
+  std::chrono::duration<double> lsmsRuntime = lsmsEndTime - lsmsStartTime;
+  std::chrono::duration<double> lsmsInitTime = lsmsEndInitTime - lsmsStartTime;
+  
   if (comm.rank == 0)
   {
-    printf("Band Energy = %.15lf Ry\n", eband);
-    printf("Fermi Energy = %.15lf Ry\n", lsms.chempot);
-    printf("Total Energy = %.15lf Ry\n", lsms.totalEnergy);
+    int size = -1;
+    size = std::max(size, num_digits(static_cast<int> (eband)));
+    size = std::max(size, num_digits(static_cast<int> (lsms.chempot)));
+    size = std::max(size, num_digits(static_cast<int> (lsms.totalEnergy)));
+    size += 17;
+
+    printf("Band Energy  = %*.15f Ry\n", size, eband);
+    printf("Fermi Energy = %*.15f Ry\n", size, lsms.chempot);
+    printf("Total Energy = %*.15f Ry\n", size, lsms.totalEnergy);
+    printf("\nTimings:\n========\n");
+    printf("LSMS Runtime = %lf sec\n", lsmsRuntime.count());
+    printf("LSMS Initialization Time = %lf sec\n", lsmsInitTime.count());
     printf("timeScfLoop[rank==0] = %lf sec\n", timeScfLoop);
     printf("     number of iteration:%d\n",iteration);
     printf("timeScfLoop/iteration = %lf sec\n", timeScfLoop / (double)iteration);
@@ -768,9 +845,9 @@ int main(int argc, char *argv[])
     }
     printf("FOM Scale = %lf\n",(double)fomScale);
     printf("Energy Contour Points = %ld\n",energyContourPoints);
-    printf("FOM = %lg/sec\n",fomScale * (double)iteration / timeScfLoop);
+    printf("FOM / energyContourPoint = %lg/sec\n",fomScale * (double)iteration / timeScfLoop);
     // printf("FOM = %lg/sec\n",fomScale * (double)lsms.nscf / timeScfLoop);
-    printf("FOM * energyContourPoints = = %lg/sec\n",
+    printf("FOM = %lg/sec\n",
             (double)energyContourPoints * (double)fomScale * (double)iteration / timeScfLoop);
     //         (double)energyContourPoints * (double)fomScale * (double)lsms.nscf / timeScfLoop);
   }
@@ -794,5 +871,5 @@ int main(int argc, char *argv[])
   H5close();
   finalizeCommunication();
   lua_close(L);
-  return 0;
+  return EXIT_SUCCESS;
 }

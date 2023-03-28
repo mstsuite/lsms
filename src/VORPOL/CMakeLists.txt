@@ -16,6 +16,8 @@ target_sources(
          rcritpts.f90
          setup_boundary.f
          setup_vorpol.f
+         setup_boundary_cluster.f
+         setup_vorpol_vplane.f
          sigma.f
          sort.f
          sortidx.f

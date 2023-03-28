@@ -2,12 +2,16 @@
 // Created by F.Moitzi on 18.09.2021.
 //
 
+#include <gtest/gtest.h>
+
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <lua.hpp>
 
-int main(int argc, char *argv[]) {
+namespace lua_libarary_tests {
+
+TEST(LuaLibrary, Test1) {
   // initialization
   lua_State *L = luaL_newstate();
   luaL_openlibs(L);
@@ -15,7 +19,7 @@ int main(int argc, char *argv[]) {
   // execute script
   const char lua_script[] =
       "function sum(a, b) return a+b; end";  // a function that returns sum of
-                                             // two
+  // two
   int load_stat =
       luaL_loadbuffer(L, lua_script, strlen(lua_script), lua_script);
   lua_pcall(L, 0, 0, 0);
@@ -34,11 +38,12 @@ int main(int argc, char *argv[]) {
     }
 
     if (sumval != 11.0) {
-      return EXIT_FAILURE;
+      FAIL() << "Sum isn't correct";
     }
   }
 
   // cleanup
   lua_close(L);
-  return EXIT_SUCCESS;
 }
+
+}  // namespace lua_libarary_tests

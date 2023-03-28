@@ -12,9 +12,24 @@
 #include "SingleSite/writeSingleAtomData.hpp"
 #include "HDF5io.hpp"
 #include "Main/initializeAtom.hpp"
+#include "Main/LSMSAlgorithms.hpp"
 
 int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTypeInfo &local)
 {
+  bool loadPotentialParallel = false;
+  if(lsms.lsmsAlgorithms[LSMSAlgorithms::potentialIO] == LSMSAlgorithms::potentialIO_parallel)
+    loadPotentialParallel = true;
+
+  if(lsms.global.iprint >= 0)
+  {
+    if(loadPotentialParallel)
+      printf("Loading Potentials in Parallel.\n");
+    else
+      printf("Loading Potentials Serially.\n");
+  }
+  
+  int lsmsFileFormat = -1;
+  
   AtomData pot_data;
   if(lsms.pot_in_type>1 || lsms.pot_in_type<-1) return 1; // unknown potential type
 
@@ -35,12 +50,114 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
     jwsIn[i] = local.atom[i].jws;
   }
 
-  if(comm.rank==0)
+  if(!loadPotentialParallel)
   {
+    if(comm.rank==0)
+    {
+      hid_t fid,fid_1;
+      int id,fname_l;
+      char fname[256];
+      
+      if(lsms.pot_in_type==0) // HDF5
+      {
+        fid=H5Fopen(lsms.potential_file_in,H5F_ACC_RDONLY,H5P_DEFAULT);
+        if(fid<0)
+        {
+          printf("loadPotentials can't open HDF5 file '%s'\n",lsms.potential_file_in);
+          exit(1);
+        }
+        
+        read_scalar<int>(fid,"LSMS", lsmsFileFormat);
+        printf("Reading LSMS HDF5 input file format %d\n", lsmsFileFormat);
+        if(lsmsFileFormat!=1 || lsmsFileFormat!=2)
+        {
+          printf("Attempting to read potential file version %d\nThis version of LSMS reads version 1 and 2 only!\n",lsmsFileFormat);
+          exit(1);
+        }
+        int i=-1;
+        read_scalar<int>(fid,"NAtoms",i);
+        printf("Reading data for %d atoms.\n",i);
+        if(i!=crystal.num_types)
+        {
+          printf("Attempting to read potentials for %d atoms.\nPotential file contains %d atoms!\n",crystal.num_types,i);
+          exit(1);
+        }
+      }
+
+// loop over all atom types:
+      for(int i=0; i<crystal.num_types; i++)
+      {
+        id=crystal.types[i].pot_in_idx;
+        if(id<0) id=i;
+        // printf("reading potential (id=%d) for atom type %d.\n",id,i);
+        if(lsms.pot_in_type==0) // LSMS_1 style HDF5
+        {
+          if(lsmsFileFormat == 1)
+          {
+            // Atoms in the LSMS_1 HDF5 file are numbered starting from 000001
+            snprintf(fname,250,"%06d",i+1);
+          } else if(lsmsFileFormat == 2) {
+            snprintf(fname,250,"%09d",i+1);
+          }
+          fid_1=H5Gopen2(fid,fname,H5P_DEFAULT);
+          // printf("Reading data from group '%s'\n",fname);
+          if(fid_1<0)
+          {
+            printf("Can't open group '%s'\n",fname);
+            exit(1);
+          }
+          if(crystal.types[i].node==comm.rank)
+          {
+            readSingleAtomData_hdf5(fid_1,local.atom[crystal.types[i].local_id]);
+            local.atom[crystal.types[i].local_id].evec[0]=crystal.evecs(0,i);
+            local.atom[crystal.types[i].local_id].evec[1]=crystal.evecs(1,i);
+            local.atom[crystal.types[i].local_id].evec[2]=crystal.evecs(2,i);
+          } else {
+            readSingleAtomData_hdf5(fid_1,pot_data);
+            pot_data.evec[0]=crystal.evecs(0,i);
+            pot_data.evec[1]=crystal.evecs(1,i);
+            pot_data.evec[2]=crystal.evecs(2,i);
+            communicateSingleAtomData(comm, comm.rank, crystal.types[i].node, crystal.types[i].local_id, pot_data);
+          }
+          H5Gclose(fid_1);
+        } else if(lsms.pot_in_type==1) { // BIGCELL style Text
+          snprintf(fname,250,"%s.%d",lsms.potential_file_in,id);
+          fname_l=strlen(fname);
+          // printf("BIGCELL format file '%s'\n",fname);
+          if(crystal.types[i].node==comm.rank)
+          {
+            readSingleAtomData_bigcell(fname,local.atom[crystal.types[i].local_id]);
+            local.atom[crystal.types[i].local_id].evec[0]=crystal.evecs(0,i);
+            local.atom[crystal.types[i].local_id].evec[1]=crystal.evecs(1,i);
+            local.atom[crystal.types[i].local_id].evec[2]=crystal.evecs(2,i);
+          } else {
+            readSingleAtomData_bigcell(fname,pot_data);
+            pot_data.evec[0]=crystal.evecs(0,i);
+            pot_data.evec[1]=crystal.evecs(1,i);
+            pot_data.evec[2]=crystal.evecs(2,i);
+            communicateSingleAtomData(comm, comm.rank, crystal.types[i].node, crystal.types[i].local_id, pot_data);
+          }
+        }
+      }
+      // close the file
+      if(lsms.pot_in_type==0)
+      {
+        H5Fclose(fid);
+      }
+    } else { // comm.rank!=0
+      int local_id;
+      for(int i=0; i<local.num_local; i++)
+      {
+        communicateSingleAtomData(comm, 0, comm.rank, local_id, pot_data);
+        local.atom[local_id]=pot_data;
+      }
+    }
+  } else { // parallel load
+
     hid_t fid,fid_1;
     int id,fname_l;
     char fname[256];
-
+      
     if(lsms.pot_in_type==0) // HDF5
     {
       fid=H5Fopen(lsms.potential_file_in,H5F_ACC_RDONLY,H5P_DEFAULT);
@@ -49,34 +166,44 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
         printf("loadPotentials can't open HDF5 file '%s'\n",lsms.potential_file_in);
         exit(1);
       }
-      int i=-1;
-      read_scalar<int>(fid,"LSMS",i);
-      printf("Reading LSMS HDF5 input file format %d\n",i);
-      if(i!=1)
+        
+      read_scalar<int>(fid,"LSMS", lsmsFileFormat);
+      if(comm.rank==0)
+        printf("Reading LSMS HDF5 input file format %d\n", lsmsFileFormat);
+      if(lsmsFileFormat!=1 || lsmsFileFormat!=2)
       {
-        printf("Attempting to read potential file version %d\nThis version of LSMS reads version 1 only!\n",i);
+        if(comm.rank==0)
+          printf("Attempting to read potential file version %d\nThis version of LSMS reads version 1 and 2 only!\n", lsmsFileFormat);
         exit(1);
       }
-      i=-1;
+      int i=-1;
       read_scalar<int>(fid,"NAtoms",i);
-      printf("Reading data for %d atoms.\n",i);
+      if(comm.rank==0)
+        printf("Reading data for %d atoms.\n",i);
       if(i!=crystal.num_types)
       {
-        printf("Attempting to read potentials for %d atoms.\nPotential file contains %d atoms!\n",crystal.num_types,i);
+        if(comm.rank==0)
+          printf("Attempting to read potentials for %d atoms.\nPotential file contains %d atoms!\n",crystal.num_types,i);
         exit(1);
       }
     }
 
-// loop over all atom types:
-    for(int i=0; i<crystal.num_types; i++)
+// loop over all local atom types:
+    for(int i=0; i<local.num_local; i++)
     {
-      id=crystal.types[i].pot_in_idx;
+      int idx = local.global_id[i]; 
+      id=crystal.types[idx].pot_in_idx;
       if(id<0) id=i;
       // printf("reading potential (id=%d) for atom type %d.\n",id,i);
       if(lsms.pot_in_type==0) // LSMS_1 style HDF5
       {
-        // Atoms in the LSMS_1 HDF5 file are numbered starting from 000001
-        snprintf(fname,250,"%06d",i+1);
+        if(lsmsFileFormat == 1)
+        {
+          // Atoms in the LSMS_1 HDF5 file are numbered starting from 000001
+          snprintf(fname,250,"%06d",i+1);
+        } else if(lsmsFileFormat == 2) {
+          snprintf(fname,250,"%09d",i+1);
+        }
         fid_1=H5Gopen2(fid,fname,H5P_DEFAULT);
         // printf("Reading data from group '%s'\n",fname);
         if(fid_1<0)
@@ -84,37 +211,23 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
           printf("Can't open group '%s'\n",fname);
           exit(1);
         }
-        if(crystal.types[i].node==comm.rank)
-        {
-          readSingleAtomData_hdf5(fid_1,local.atom[crystal.types[i].local_id]);
-          local.atom[crystal.types[i].local_id].evec[0]=crystal.evecs(0,i);
-          local.atom[crystal.types[i].local_id].evec[1]=crystal.evecs(1,i);
-          local.atom[crystal.types[i].local_id].evec[2]=crystal.evecs(2,i);
-        } else {
-          readSingleAtomData_hdf5(fid_1,pot_data);
-          pot_data.evec[0]=crystal.evecs(0,i);
-          pot_data.evec[1]=crystal.evecs(1,i);
-          pot_data.evec[2]=crystal.evecs(2,i);
-          communicateSingleAtomData(comm, comm.rank, crystal.types[i].node, crystal.types[i].local_id, pot_data);
-        }
+        
+        readSingleAtomData_hdf5(fid_1,local.atom[i]);
+        local.atom[i].evec[0]=crystal.evecs(0,idx);
+        local.atom[i].evec[1]=crystal.evecs(1,idx);
+        local.atom[i].evec[2]=crystal.evecs(2,idx);
+
         H5Gclose(fid_1);
       } else if(lsms.pot_in_type==1) { // BIGCELL style Text
         snprintf(fname,250,"%s.%d",lsms.potential_file_in,id);
         fname_l=strlen(fname);
         // printf("BIGCELL format file '%s'\n",fname);
-        if(crystal.types[i].node==comm.rank)
-        {
-          readSingleAtomData_bigcell(fname,local.atom[crystal.types[i].local_id]);
-          local.atom[crystal.types[i].local_id].evec[0]=crystal.evecs(0,i);
-          local.atom[crystal.types[i].local_id].evec[1]=crystal.evecs(1,i);
-          local.atom[crystal.types[i].local_id].evec[2]=crystal.evecs(2,i);
-        } else {
-          readSingleAtomData_bigcell(fname,pot_data);
-          pot_data.evec[0]=crystal.evecs(0,i);
-          pot_data.evec[1]=crystal.evecs(1,i);
-          pot_data.evec[2]=crystal.evecs(2,i);
-          communicateSingleAtomData(comm, comm.rank, crystal.types[i].node, crystal.types[i].local_id, pot_data);
-        }
+
+        readSingleAtomData_bigcell(fname,local.atom[i]);
+        local.atom[i].evec[0]=crystal.evecs(0,idx);
+        local.atom[i].evec[1]=crystal.evecs(1,idx);
+        local.atom[i].evec[2]=crystal.evecs(2,idx);
+
       }
     }
     // close the file
@@ -122,15 +235,8 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
     {
       H5Fclose(fid);
     }
-  } else { // comm.rank!=0
-    int local_id;
-    for(int i=0; i<local.num_local; i++)
-    {
-      communicateSingleAtomData(comm, 0, comm.rank, local_id, pot_data);
-      local.atom[local_id]=pot_data;
-    }
-  }
 
+  } // parallel load
 // adjust the local potentials:
   for(int i=0; i<local.num_local; i++)
   {
@@ -244,6 +350,10 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
   if(lsms.pot_out_type<0) return 0; // don't write potential
   if(lsms.pot_out_type>1) return 1; // unknown potential type
 
+  int lsmsFileFormat = 1;
+  if(crystal.num_types > 100000)
+    lsmsFileFormat = 2;
+  
 // update the Fermi energies
   for(int i=0; i<local.num_local; i++) local.atom[i].efermi=lsms.chempot;
 
@@ -263,7 +373,7 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
         exit(1);
       }
       // create LSMS and NAtoms tags for hdf5 file
-      write_scalar<int>(fid,"LSMS",1);
+      write_scalar<int>(fid,"LSMS", lsmsFileFormat);
       write_scalar<int>(fid,"NAtoms",crystal.num_types);
 
     }
@@ -277,8 +387,13 @@ int writePotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalP
       // printf("write potential (id=%d) for atom type %d.\n",id,i);
       if(lsms.pot_out_type==0) // LSMS_1 style HDF5
       {
-        // Atoms in the LSMS_1 HDF5 file are numbered starting from 000001
-        snprintf(fname,250,"%06d",i+1);
+        if(lsmsFileFormat == 1)
+        {
+          // Atoms in the LSMS_1 HDF5 file are numbered starting from 000001
+          snprintf(fname,250,"%06d",i+1);
+        } else if(lsmsFileFormat == 2) {
+          snprintf(fname,250,"%09d",i+1);
+        }
         fid_1=H5Gcreate2(fid,fname,H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT);
         if(crystal.types[i].node==comm.rank)
         {

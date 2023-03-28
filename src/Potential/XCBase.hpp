@@ -23,7 +23,7 @@ class XCBase {
   XCBase(int nSpin, std::vector<int> xcFunctional);
 
   virtual void evaluate(std::vector<Real> &rMesh,
-                        std::vector<Real> &drMesh,
+                        double h,
                         const Matrix<Real> &rhoIn, int jmt,
                         Matrix<Real> &xcEnergyOut, Matrix<Real> &xcPotOut) = 0;
 

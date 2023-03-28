@@ -1,6 +1,6 @@
-name: CMake build
+name: Build LSMS with cmake
 
-on: [ push ]
+on: [push, pull_request]
 
 env:
   BUILD_TYPE: Release
@@ -19,27 +19,27 @@ jobs:
 
       - name: Install dependencies on ubuntu
         run: |
-          sudo apt-get update -y
-          sudo apt-get install build-essential -y
-          sudo apt-get install openmpi-bin -y
-          sudo apt-get install intel-mkl -y
-          sudo apt-get install gfortran -y
-          sudo apt-get install libhdf5-dev -y
-
-      - name: Display compilers that are used
-        run: |
-          echo "$(cmake --version)"
-          echo "$(gcc --version)"
-          echo "$(gfortran --version)"
-          echo "$(mpic++ --version)"
+          sudo apt-get update -y 
+          sudo apt-get install build-essential \
+           openmpi-bin libopenmpi-dev \
+           ninja-build \
+           libblas-dev \
+           liblapack-dev \
+           gfortran \
+           libhdf5-dev
 
       - name: Configure CMake
         run: |
-          cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-                 -DBLA_VENDOR=Intel10_64lp \
-                 -DUSE_LIBXC=OFF -S ${{github.workspace}} -B ${{github.workspace}}/build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+                -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/toolchain/testing.cmake \
+                -DBUILD_TESTING=ON \
+                -S ${{github.workspace}} -B ${{github.workspace}}/build
 
-      - name: CMake build step
+      - name: Build
         run: cmake --build ${{github.workspace}}/build --parallel
+
+      - name: Run CTests
+        working-directory: ${{github.workspace}}/build
+        run: ctest --verbose -C ${{env.BUILD_TYPE}}
 
       - run: echo "This job's status is ${{ job.status }}."

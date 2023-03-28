@@ -1,5 +1,4 @@
 #include "Coeficients.hpp"
-#include "Indices.hpp"
 
 int SphericalHarmonicsCoeficients::lmax;
 std::vector<Real> SphericalHarmonicsCoeficients::clm;
@@ -10,6 +9,7 @@ Array3d<Real> GauntCoeficients::cgnt;
 int IFactors::lmax;
 Matrix<Complex> IFactors::illp;
 std::vector<Complex> IFactors::ilp1;
+
 
 int AngularMomentumIndices::lmax;
 int AngularMomentumIndices::ndlj;

@@ -44,9 +44,8 @@ namespace lsms {
   private:
     std::vector<XCFuncType> functionals;  // functionals
     std::size_t numFunctionals;
-    bool needGradients;  // the functional needs gradients of the density (for
-    // GGAs)
-    bool needLaplacian;  // need laplacians of the density (for MetaGGAs)
+    bool needGradients;  // functional needs gradients of the density (GGA)
+    bool needLaplacian;  // need laplacians of the density (MetaGGA)
     bool needKineticEnergyDensity;  // for MetaGGAs
     bool needExactExchange;         // for Hybrid Functionals
 
@@ -56,7 +55,7 @@ namespace lsms {
     XCLibxc(int nSpin, int xcFunctional[3]);
 
     void evaluate(std::vector<Real> &rMesh,
-                  std::vector<Real> &drMesh,
+                  double h,
                   const Matrix<Real> &rhoIn,
                   int jmt, Matrix<Real> &xcEnergyOut,
                   Matrix<Real> &xcPotOut) override;

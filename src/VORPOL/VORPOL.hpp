@@ -62,6 +62,53 @@ void setup_vorpol_(int *my_atom,
                    int *iprint,
                    char *istop,
                    int istopl_len);
+
+void setup_vorpol_vplane_(Real *vp,
+                         int *nvplane,
+                         int *lmax,
+                         Real *clm,
+                         int *ngaussq,
+                         int *ngaussr,
+                         Real *rmt,
+                         Real *omegint,
+                         Complex *dipint,
+                         int *ipvp,
+                         int *ipnode,
+                         int *ipcorn,
+                         int *ipedge,
+                         int *iprcrit,
+                         Real *gwwylm,
+                         Real *grwylm,
+                         int *ncrit,
+                         Complex *wylm,
+                         Real *rcirc,
+                         int *iprint,
+                         char *istop,
+                         int istopl_len);
+
+  void setup_boundary_(int *my_atom,
+                       int *num_atoms,
+                       Real *atom_position_1,
+                       Real *atom_position_2,
+                       Real *atom_position_3,
+                       Real *bravais_1,
+                       Real *bravais_2,
+                       Real *bravais_3,
+                       Real *vplanes,
+                       int *ipvp,
+                       int *nvplanes,
+                       Real *rad);
+
+  void setup_boundary_cluster_(int *i_seed,
+                              int *num_seeds,
+                              Real *atom_position_1,
+                              Real *atom_position_2,
+                              Real *atom_position_3,
+                              Real *vplanes,
+                              int *ipvp,
+                              int *nvplanes,
+                              Real *rad);
+
 }
 
 #endif
