@@ -229,6 +229,48 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
             //  std::cout << std::endl;
             //} 
 	    break;
+	case MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER:
+            deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads, 1);
+            deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
+            devM = deviceStorage->getDevM();
+            devT = deviceStorage->getDevTFull();
+            devTauFull = deviceStorage->getDevTauFull();
+            transferFullTMatrixToGPUHip(devT, lsms, local, a, is);
+            //transferMatrixFromGPUCuda(bigT, (cuDoubleComplex *)devT);
+            //std::cout << "00 block of bigT" << std::endl;
+            //std::cout << std::endl;
+            //for (int i=0; i<kkrsz;i++){
+            //  for (int j=0; j<kkrsz;j++){
+            //     std::cout << bigT(i,j) << "  ";
+            //  }
+            //  std::cout << std::endl;
+            //}
+            //printf("entering buildKKRMatrix:\n");
+            //buildKKRMatrixCuda(lsms, local, a, *deviceStorage, deviceAtoms[local_index], is, 0, energy, prel,
+            //             (cuDoubleComplex *)devM);
+            //transferMatrixFromGPUCuda(m, (cuDoubleComplex *) devM);
+            buildKKRMatrix(lsms,local,a,is,energy,prel,0,m);
+            transferMatrixToGPUHip(devM, m);
+            //std::cout << "00 block of m" << std::endl;
+            //std::cout << std::endl;
+            //for (int i=0; i<kkrsz;i++){
+            //  for (int j=0; j<kkrsz;j++){
+            //     std::cout << m(i,j) << "  ";
+            //  }
+            //  std::cout << std::endl;
+            //}
+            printf("entering solveTauFullzgetrf_rocsolver:\n");
+            solveTauFullzgetrf_rocsolver(lsms, local, *deviceStorage, a, devT, devM, devTauFull, is);
+            transferMatrixFromGPUHip(tau1, (cuDoubleComplex *)devTauFull);
+            //std::cout << "00 block of tau" << std::endl;
+            //std::cout << std::endl;
+            //for (int i=0; i<kkrsz;i++){
+            //  for (int j=0; j<kkrsz;j++){
+            //     std::cout << tau1(i,j) << "  ";
+            //  }
+            //  std::cout << std::endl;
+            //}
+            break;
 	case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
             deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads, 1);
             deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);

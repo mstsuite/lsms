@@ -77,6 +77,43 @@ void transferT0MatrixToGPUHip(Complex *devT0, LSMSSystemParameters &lsms, LocalT
              kkrsz_ns*kkrsz_ns*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
 }
 
+void transferFullTMatrixToGPUHip(Complex *devT, LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                                  AtomData &atom, int ispin)
+{
+  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz;
+  int nrmat_ns = lsms.n_spin_cant * atom.nrmat;
+  Matrix <Complex> bigT(nrmat_ns, nrmat_ns);
+  if (lsms.n_spin_pola == lsms.n_spin_cant) { // non polarized or spin canted
+    for (int l = 0; l < atom.numLIZ; l++) {
+      for (int i = 0; i < kkrsz_ns; i++) {
+        for (int j = 0; j < kkrsz_ns; j++) {
+          bigT(l*kkrsz_ns + i, l*kkrsz_ns + j) = local.tmatStore(i + j * kkrsz_ns, atom.LIZStoreIdx[l]);
+        }
+      }
+    }
+  } else {
+
+    int jsm = kkrsz_ns * kkrsz_ns * ispin;
+    for (int l = 0; l < atom.numLIZ; l++) {
+      for (int i = 0; i < kkrsz_ns; i++) {
+        for (int j = 0; j < kkrsz_ns; j++) {
+          bigT(l*kkrsz_ns + i, l*kkrsz_ns + j) = local.tmatStore(i + j * kkrsz_ns + jsm, atom.LIZStoreIdx[l]);
+        }
+      }
+    }
+  }
+  /*
+  std::cout << "00 block of bigT on the CPU" << std::endl;
+  for (int i = 0; i <kkrsz_ns; i++){
+    for (int j = 0; j < kkrsz_ns; j++){
+      std::cout << bigT(i,j) << "  ";
+    }
+    std::cout << std::endl;
+  }
+  */
+  hipMemcpy(devT, &bigT(0,0), nrmat_ns*nrmat_ns*sizeof(cuDoubleComplex), hipMemcpyHostToDevice);
+}
+
 void transferMatrixToGPUHip(Complex *devM, Matrix<Complex> &m)
 {
   hipMemcpy(devM, &m(0,0), m.l_dim()*m.n_col()*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
@@ -95,6 +132,17 @@ __global__ void copyTMatrixToTauHip(hipDoubleComplex *tau, hipDoubleComplex *t, 
     for(int j=0; j<kkrsz; j++)
       tau[IDX(i,j,nrmat)] = t[IDX(i,j,kkrsz)];
   }
+}
+
+__global__ void copyBigTMatrixToTauHip(hipDoubleComplex *tau, hipDoubleComplex *t, int nrmat)
+{
+   int i = hipblockIdx.x*hipblockDim.x + hipthreadIdx.x;
+   if (i < nrmat)
+   {
+     for(int j=0;j<nrmat;j++){
+       tau[IDX(i,j,nrmat)] = t[IDX(i,j,nrmat)];
+     }
+   }
 }
 
 __global__ void copyTauToTau00Hip(hipDoubleComplex *tau00, hipDoubleComplex *tau, int kkrsz, int nrmat)
@@ -230,4 +278,33 @@ void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local
   transferMatrixFromGPUHip(tau00, devTau00);
   // printf("LSMS solveTau00zgetrf_rocsolver: leaving\n");
   //  fflush(stdout);
+}
+
+void solveTauFullzgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Complex *devTauFull, int ispin)
+{
+  rocblas_handle rocblashandle = DeviceStorage::getRocBlasHandle();
+  int nrmat_ns = lsms.n_spin_cant*atom.nrmat; // total size of the kkr matrix
+  int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz; // size of t00 block
+  // reference algorithm. Use LU factorization and linear solve for dense matrices in LAPACK
+
+  int *devIpiv = d.getDevIpvt();
+  int *devInfo = d.getDevInfo();
+
+  hipDoubleComplex *devWork = (hipDoubleComplex *)d.getDevWork();
+  zeroMatrixHip(devTauFull, nrmat_ns, nrmat_ns);
+  copyBigTMatrixToTauHip<<<nrmat_ns,1>>>((hipDoubleComplex *)devTauFull, (hipDoubleComplex *)tMatrix, nrmat_ns);
+
+
+  rocsolver_zgetrf(rocblashandle, nrmat_ns, nrmat_ns,
+                                      (rocblas_double_complex *)devM, nrmat_ns, devIpiv, devInfo);
+
+
+  //std::cout << nrmat_ns << "  " << std::endl;
+  //printf(" %p %p %p %p\n", devM, devTauFull, devIpiv, devInfo);
+  rocsolver_zgetrs(rocblashandle, rocblas_operation_none, nrmat_ns, nrmat_ns,
+                                      (rocblas_double_complex *)devM, nrmat_ns, devIpiv, (rocblas_double_complex *)devTauFull, nrmat_ns);
+
+  //transferMatrixFromGPUCuda(tau, devTauFull);
+  deviceCheckError();
 }

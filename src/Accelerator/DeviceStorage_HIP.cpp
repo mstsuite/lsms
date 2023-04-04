@@ -95,7 +95,29 @@ private:
 public:
 */
 
-  int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads)
+int DeviceStorage::allocateAdditional(int kkrsz_max, int nspin, int numLIZ, int _nThreads) {
+   // initializing a big tau and big T matrix, needed (only) for conductivity purposes
+   int N = kkrsz_max * nspin * numLIZ;
+   int nThreads = _nThreads;
+   for (int i=0; i < nThreads; i++) {
+     deviceError_t err;
+     err = deviceMalloc((void **) &dev_tauFull[i],(size_t)N * (size_t)N * sizeof(Complex));
+     if (err != deviceSuccess) {
+        printf("failed to allocate dev_tauFull[%d], size=%d, err=%d\n",
+               i, (size_t)N * (size_t)N * sizeof(Complex), err);
+        exit(1);
+     }
+     err = deviceMalloc((void **) &dev_tFull[i], (size_t)N * (size_t)N * sizeof(Complex));
+     if (err != deviceSuccess) {
+        printf("failed to allocate dev_tFull[%d], size=%d, err=%d\n",
+               i, (size_t)N * (size_t)N * sizeof(Complex), err);
+        exit(1);
+     }
+   }
+   return 0;
+}
+
+int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, int iskubo)
   {
     if(!initialized)
     {
@@ -121,13 +143,15 @@ public:
         }
         deviceMalloc((void**)&dev_ipvt[i],(size_t)N*sizeof(int));
 	deviceMalloc((void**)&dev_info[i],(size_t)nThreads*sizeof(int));
-	err = deviceMalloc((void**)&dev_bgij[i],(size_t)N*(size_t)N*sizeof(Complex));
-        if(err!=deviceSuccess)
-        {
-          printf("failed to allocate dev_bgij[%d], size=%zu, err=%d\n",
-                i,(size_t)N*(size_t)N*sizeof(Complex),err);
-          exit(1);
-        }
+	if (iskubo == 0){
+	  err = deviceMalloc((void**)&dev_bgij[i],(size_t)N*(size_t)N*sizeof(Complex));
+          if(err!=deviceSuccess)
+          {
+            printf("failed to allocate dev_bgij[%d], size=%zu, err=%d\n",
+                  i,(size_t)N*(size_t)N*sizeof(Complex),err);
+            exit(1);
+          }
+	}
 #ifdef BUILDKKRMATRIX_GPU
         // cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
         deviceMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
