@@ -15,4 +15,5 @@ target_sources(
          Matrix.hpp
          PhysicalConstants.hpp
          Real.hpp
+         NDArray.hpp
          TypeTraits.hpp)

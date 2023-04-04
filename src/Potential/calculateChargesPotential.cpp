@@ -1,6 +1,7 @@
 /* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #include "calculateChargesPotential.hpp"
 
+#include "Misc/PotentialType.hpp"
 #include "newFunctionalInterface.hpp"
 
 #ifdef USE_LIBXC
@@ -171,13 +172,13 @@ void calculateLocalCharges(LSMSSystemParameters &lsms, LocalTypeInfo &local, int
         if (local.atom[i].rhotot(local.atom[i].jmt, 0) == 0.0)
           local.atom[i].rhotot(local.atom[i].jmt, 0) = local.atom[i].rhotot(local.atom[i].jmt - 1, 0);
         if (local.atom[i].rhotot(local.atom[i].jmt + 1, 0) == 0.0)
-          local.atom[i].rhotot(local.atom[i].jmt + 1, 0) = local.atom[i].rhotot(local.atom[i].jmt - 1, 0);
+          local.atom[i].rhotot(local.atom[i].jmt + 1, 0) = local.atom[i].rhotot(local.atom[i].jmt, 0);
         if (local.atom[i].rhotot(local.atom[i].jmt, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhotot(local.atom[i].jmt, lsms.n_spin_pola - 1) = local.atom[i].rhotot(local.atom[i].jmt - 1,
                                                                                                lsms.n_spin_pola - 1);
         if (local.atom[i].rhotot(local.atom[i].jmt + 1, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhotot(local.atom[i].jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(
-              local.atom[i].jmt - 1, lsms.n_spin_pola - 1);
+              local.atom[i].jmt, lsms.n_spin_pola - 1);
 
         if (lsms.global.iprint > 0) {
           printf("Spin = 1 rhotot[jmt-1], [jmt], [jmt+1] = %20.16f %20.16f %20.16f\n",
@@ -363,11 +364,11 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
         if (local.atom[i].rhotot(jmt, 0) == 0.0)
           local.atom[i].rhotot(jmt, 0) = local.atom[i].rhotot(jmt - 1, 0);
         if (local.atom[i].rhotot(jmt + 1, 0) == 0.0)
-          local.atom[i].rhotot(jmt + 1, 0) = local.atom[i].rhotot(jmt - 1, 0);
+          local.atom[i].rhotot(jmt + 1, 0) = local.atom[i].rhotot(jmt, 0);
         if (local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt - 1, lsms.n_spin_pola - 1);
         if (local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) == 0.0)
-          local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt - 1, lsms.n_spin_pola - 1);
+          local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1);
 
         if (lsms.global.iprint > 0) {
           printf("Spin = 1 rhotot[jmt-1], [jmt], [jmt+1] = %20.16f %20.16f %20.16f\n", local.atom[i].rhotot(jmt - 1, 0),
@@ -387,11 +388,11 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
         if (local.atom[i].rhoNew(local.atom[i].jmt, 0) == 0.0)
           local.atom[i].rhoNew(jmt, 0) = local.atom[i].rhoNew(jmt - 1, 0);
         if (local.atom[i].rhoNew(local.atom[i].jmt + 1, 0) == 0.0)
-          local.atom[i].rhoNew(jmt + 1, 0) = local.atom[i].rhoNew(jmt - 1, 0);
+          local.atom[i].rhoNew(jmt + 1, 0) = local.atom[i].rhoNew(jmt, 0);
         if (local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1) == 0.0)
           local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt - 1, lsms.n_spin_pola - 1);
         if (local.atom[i].rhoNew(local.atom[i].jmt + 1, lsms.n_spin_pola - 1) == 0.0)
-          local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt - 1, lsms.n_spin_pola - 1);
+          local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1);
 
         if (lsms.global.iprint > 0) {
           printf("Spin = 1 rhoNew[jmt-1], [jmt], [jmt+1] = %20.16f %20.16f %20.16f\n", local.atom[i].rhoNew(jmt - 1, 0),
@@ -466,13 +467,13 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
             local.atom[i].rhotot(jmt + 1, 0) = local.atom[i].rhotot(jmt, 0);
 
           if (local.atom[i].rhotot(jmt + 2, 0) == 0.0)
-            local.atom[i].rhotot(jmt + 2, 0) = local.atom[i].rhotot(jmt, 0);
+            local.atom[i].rhotot(jmt + 2, 0) = local.atom[i].rhotot(jmt + 1, 0);
 
           if (local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) == 0.0)
             local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1);
 
           if (local.atom[i].rhotot(jmt + 2, lsms.n_spin_pola - 1) == 0.0)
-            local.atom[i].rhotot(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt, lsms.n_spin_pola - 1);
+            local.atom[i].rhotot(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhotot(jmt + 1, lsms.n_spin_pola - 1);
 
           getqm_mt_(&lsms.n_spin_pola, &jmt, &local.atom[i].rInscribed, &rTemp[0], &local.atom[i].rhotot(0, 0),
                     &lsms.global.iprpts, &rhoTemp(0, 0, i), &lsms.mtasa,
@@ -487,13 +488,13 @@ calculateCharges(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeI
             local.atom[i].rhoNew(jmt + 1, 0) = local.atom[i].rhoNew(jmt, 0);
 
           if (local.atom[i].rhoNew(jmt + 2, 0) == 0.0)
-            local.atom[i].rhoNew(jmt + 2, 0) = local.atom[i].rhoNew(jmt, 0);
+            local.atom[i].rhoNew(jmt + 2, 0) = local.atom[i].rhoNew(jmt + 1, 0);
 
           if (local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) == 0.0)
             local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1);
 
           if (local.atom[i].rhoNew(jmt + 2, lsms.n_spin_pola - 1) == 0.0)
-            local.atom[i].rhoNew(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt, lsms.n_spin_pola - 1);
+            local.atom[i].rhoNew(jmt + 2, lsms.n_spin_pola - 1) = local.atom[i].rhoNew(jmt + 1, lsms.n_spin_pola - 1);
 
           getqm_mt_(&lsms.n_spin_pola, &jmt, &local.atom[i].rInscribed, &rTemp[0], &local.atom[i].rhoNew(0, 0),
                     &lsms.global.iprpts, &rhoTemp(0, 0, i), &lsms.mtasa,
@@ -671,6 +672,8 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
   Real vmt = 0.0;
   Real *vmt1 = new Real[local.num_local];
   Real u0Sum = 0.0;
+  Real u0MTSum = 0.0;
+  Real u0MT = 0.0;
   Real u0 = 0.0;
 
   for (int i = 0; i < local.num_local; i++) {
@@ -680,11 +683,12 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
     //  alpha_mad += local.atom[i].madelungMatrix[j];
     //alpha_mad *= 2.0 * local.atom[i].omegaWS;
 
-    getvmt(lsms, local.atom[i], crystal, qsub, local.global_id[i], vmt, vmt1[i], u0);
+    getvmt(lsms, local.atom[i], crystal, qsub, local.global_id[i], vmt, vmt1[i], u0, u0MT);
 
     //Real madterm = -(vmt1 - alpha_mad * local.atom[i].rhoInt);
     vmtSum += vmt * local.n_per_type[i];
     u0Sum += u0 * local.n_per_type[i];
+    u0MTSum += u0MT * local.n_per_type[i];
     local.atom[i].localMadelungEnergy = u0;
   }
 
@@ -700,11 +704,15 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
   dz = new Real[local.num_local];
 
   switch (lsms.mtasa) {
-    case 1:                            // ASA case
+    case lsms::PotentialType::ASA:                            // ASA case
       globalSum(comm, vmtSum);
       globalSum(comm, u0Sum);
+      globalSum(comm, u0MTSum);
       vmt = vmtSum / Real(lsms.num_atoms);
       lsms.u0 = u0Sum;
+      lsms.u0MT = u0MTSum;
+      lsms.vmt = vmt;
+
       // not implemented
       for (int i = 0; i < local.num_local; i++) {
         int jmt = local.atom[i].jws;
@@ -777,10 +785,14 @@ C        dz=mint/qint
     default:                           // Muffin-tin case
       globalSum(comm, vmtSum);
       globalSum(comm, u0Sum);
+      globalSum(comm, u0MTSum);
+
+      vmt = vmtSum / lsms.volumeInterstitial;
+      lsms.u0 = u0Sum;
+      lsms.u0MT = u0MTSum;
+      lsms.vmt = vmt;
 
       for (int i = 0; i < local.num_local; i++) {
-        vmt = vmtSum / lsms.volumeInterstitial;
-        lsms.u0 = u0Sum;
 /*
         ===============================================================
         calculate the exchange-correlation potential related parameters
@@ -885,7 +897,7 @@ C        dz=mint/qint
 
 
           lsms.exch_corr->evaluate(local.atom[i].r_mesh,
-                                   local.atom[i].dr_mesh,
+                                   local.atom[i].h,
                                    local.atom[i].rhotot, jws,
                                    local.atom[i].exchangeCorrelationEnergy,
                                    local.atom[i].exchangeCorrelationPotential);
@@ -912,8 +924,8 @@ C        dz=mint/qint
 
 
           lsms.exch_corr->evaluate(local.atom[i].r_mesh,
-                                   local.atom[i].dr_mesh,
-                                   local.atom[i].rhotot, jws,
+                                   local.atom[i].h,
+                                   local.atom[i].rhoNew, jws,
                                    local.atom[i].exchangeCorrelationEnergy,
                                    local.atom[i].exchangeCorrelationPotential);
 
@@ -981,7 +993,7 @@ C        dz=mint/qint
     }
 
 // write the xc potential, xc energy density, and rho for the first atom:
-    if (false) {
+    if constexpr(false) {
       if (i == 0) {
         FILE *of;
         of = fopen("xc_pot.out", "w");
@@ -1125,7 +1137,7 @@ C        dz=mint/qint
     }
 
     // write the new potential,  for the first atom:
-    if (false && chargeSwitch == 1) {
+    if constexpr(false && chargeSwitch == 1) {
       if (i == 0) {
         FILE *of;
         of = fopen("vr_pot.out", "w");

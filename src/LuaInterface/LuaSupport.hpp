@@ -20,6 +20,7 @@ bool luaGetRealPositionInTable(lua_State *L, const char *name, int idx, Real *va
 bool luaGetIntegerPositionInTable(lua_State *L, const char *name, int idx, int *val);
 bool luaGetStrNFromStack(lua_State *L, const char *name, char *s, int n);
 bool luaGetRealPositionFromStack(lua_State *L, int idx, Real *val);
+bool luaGetIntegerPositionFromStack(lua_State *L, int idx, int *val);
 bool luaGetRealFieldFromStack(lua_State *L, const char *field, Real *val);
 bool luaGetIntegerFieldFromStack(lua_State *L, const char *field, int *val);
 

@@ -192,6 +192,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
       if(lsms.mtasa==1) jmt = local.atom[i].jws;
 // here I leave out the i_vdif<0 case!
       if (lsms.constraint == 0) {
+        // Apply constrain to rotate potential
         constraint_(&jmt,&rmt,&lsms.n_spin_pola,
             &(vr_con[i])(0,0),&local.atom[i].r_mesh[0],&pi4,
            &local.atom[i].evec[0],&evec_r(0,i),local.atom[i].b_con,
@@ -216,10 +217,10 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         rGlobal[2]=1.0;
 
         if (lsms.constraint == 0) {
-          matrot1_(rGlobal,&local.atom[i].evec[0],&local.atom[i].lmax,
+          matrot1_(rGlobal,&evec_r(0,i),&local.atom[i].lmax,
                    &local.atom[i].dmat(0,0),&local.atom[i].dmatp(0,0));
         } else {
-          matrot1_(rGlobal,&evec_r(0,i),&local.atom[i].lmax,
+          matrot1_(rGlobal,&local.atom[i].evec[0],&local.atom[i].lmax,
                    &local.atom[i].dmat(0,0),&local.atom[i].dmatp(0,0));
         }
 
@@ -477,7 +478,11 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         {
 // openMP here
 #pragma omp parallel for                                  \
-  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,gauntCoeficients,dele1,tau00_l,gfOutFile) \
+  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,dele1,tau00_l,gfOutFile) \
+// what it was before Kubo pull request - edited because gauntCoefficients in shared was giving an error
+// 
+// pragma omp parallel for default(none)                                  \
+// shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,dele1,tau00_l,gfOutFile) \
   firstprivate(ie,iie,pnrel,energy,nume)
           for(int i=0; i<local.num_local; i++)
           {
@@ -501,7 +506,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                             &pnrel,&tau00_l(0,i),&solutionNonRel[iie][i].matom(0,0),
                             &solutionNonRel[iie][i].zlr(0,0,0),&solutionNonRel[iie][i].jlr(0,0,0),
                             &nprpts,&nplmax,
-                            &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
+                            &lsms.ngaussr, &GauntCoeficients::cgnt(0,0,0), &GauntCoeficients::lmax,
                             &dos(0,i),&dosck(0,i),&green(0,0,i),&dipole(0,0,i),
                             &greenIntLLp(0,0,0),
                             &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
@@ -516,7 +521,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                               &pnrel,&tau00_l(0,i+local.num_local),&solutionNonRel[iie][i].matom(0,1),
                               &solutionNonRel[iie][i].zlr(0,0,1),&solutionNonRel[iie][i].jlr(0,0,1),
                               &nprpts,&nplmax,
-                              &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
+                              &lsms.ngaussr, &GauntCoeficients::cgnt(0,0,0), &GauntCoeficients::lmax,
                               &dos(1,i),&dosck(1,i),&green(0,1,i),&dipole(0,0,i),
                               &greenIntLLp(0,0,0),
                               &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.grwylm(0,0),
@@ -606,7 +611,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
                                 &solutionRel[iie][i].gj(0,0,0),&solutionRel[iie][i].fj(0,0,0),
                                 &solutionRel[iie][i].nuz[0],&solutionRel[iie][i].indz(0,0),
                                 &nprpts,
-                                &lsms.ngaussr, &gauntCoeficients.cgnt(0,0,0), &gauntCoeficients.lmax,
+                                &lsms.ngaussr, &GauntCoeficients::cgnt(0,0,0), &GauntCoeficients::lmax,
                                 &dos(0,i),&dosck(0,i),&green(0,0,i),&dipole(0,0,i),
                                 &dos_orb(0,i),&dosck_orb(0,i),&dens_orb(0,0,i),
                                 &lsms.global.iprint,lsms.global.istop,32);

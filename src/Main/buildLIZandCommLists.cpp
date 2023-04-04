@@ -1,3 +1,5 @@
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
 #include "buildLIZandCommLists.hpp"
 
 #include <cmath>
@@ -5,9 +7,188 @@
 #include <vector>
 
 #include "Real.hpp"
+#include "Neighbors.hpp"
+
+/** sort_atoms function, David M. Rogers
+ *
+ * Example neighbor-list construction.
+ *
+ *  const int nx=4, ny=4, nz=4;
+ *  const Real Rc = 4.0;
+ *  Geom geo(10.0, 12.0, 11.0, nx, ny, nz);
+ *  auto cell = sort_atoms(crystal, geo);
+ *  NeighborCells nbr(geo, Rc);
+ *
+ *  for(int ci=0; ci<geo.cells(); ci++) {
+ *      int ai, aj, ak;
+ *      geo.decodeBin(ci, ai, aj, ak);
+ *      for(const LatticePt &pt : nbr) {
+ *          int cj = geo.calcBin((pt.i+ai)%geo.n[0],
+ *                               (pt.j+aj)%geo.n[1],
+ *                               (pt.k+ak)%geo.n[2]);
+ *          for(const auto i : cell[ci]) {
+ *              for(const auto j : cell[cj]) {
+ *                  if(distance < Rc) {
+ *                      nbr_list[i].push_back(j);
+ *                  }
+ *              }
+ *          }
+ *      }
+ *  }
+ */
+std::vector<std::vector<int>> sort_atoms(CrystalParameters &crystal, const Geom &geo) {
+    std::vector<std::vector<int>> cell( geo.cells() );
+
+    for(int a=0; a<crystal.num_atoms; a++) {
+        Real x = crystal.position(0, a);
+        Real y = crystal.position(1, a);
+        Real z = crystal.position(2, a);
+        auto ci = geo.calcBinF(x, y, z);
+        cell[ci].push_back(a);
+    }
+    return cell;
+}
+
+// Relative brick coordinates shifts x,y,z relative
+// to their closest brick origin. - written by David M. Rogers
+inline void relative_brick_crd(const Geom &geo, Real &x, Real &y, Real &z) {
+    // 1. wrap into range [0,Lz)
+    const Real wz = floor(z / geo.L[Geom::ZZ]);
+    z -= wz*geo.L[Geom::ZZ];
+    y -= wz*geo.L[Geom::ZY];
+    x -= wz*geo.L[Geom::ZX];
+    const int nz = z/geo.h[Geom::ZZ];
+
+    // 2. wrap into range y_0(nz) + [0,Ly)
+    const Real y0 = nz*geo.h[Geom::ZY];
+    const auto wy = floor((y-y0) / geo.L[Geom::YY]);
+    y -= wy*geo.L[Geom::YY];
+    x -= wy*geo.L[Geom::YX];
+    const int ny = (y - y0)/geo.h[Geom::YY];
+
+    // 3. wrap into range x_0(ny,nz) + [0,Lx)
+    const Real x0 = nz*geo.h[Geom::ZX] + ny*geo.h[Geom::ZY];
+    x -= geo.L[Geom::XX]*floor((x - x0)/geo.L[Geom::XX]);
+    const int nx = (x - x0)/geo.h[Geom::XX];
+
+    // make x, y, z positions relative to box base crd.
+    z -= nz*geo.h[Geom::ZZ];
+    y -= ny*geo.h[Geom::YY] + y0;
+    x -= nx*geo.h[Geom::XX] + x0;
+}
+
+/*
+void setupVPboundaries(CrystalParameters &crystal, int idx, AtomData &atom,
+		       const Geom &geo, const std::vector<std::vector<int>> &cell)
+{
+    const Real rtol = 1.0e-8;
+    const Real rcirclu = crystal.types[crystal.type[idx]].rLIZ;
+    const Real rcirclusqr = rcirclu*rcirclu;
+    NeighborCells nbr(geo, rcirclu);
+    int nrsclu = 0;
 
 
-// for buildLIZ see LSMS_1 neighbors_c.f
+    Real x = crystal.position(0,idx);
+    Real y = crystal.position(1,idx);
+    Real z = crystal.position(2,idx);
+    auto bin = geo.calcBinF(x, y, z); // bin of atom idx
+    int ai, aj, ak; // bin's LatticePt
+    geo.decodeBin(bin, ai, aj, ak);
+    ai += geo.n[0]; aj += geo.n[1]; ak += geo.n[2];
+
+    relative_brick_crd(geo, x, y, z); // wrap relative to bin
+
+    for(const LatticePt &pt : nbr) {
+        int cj = geo.calcBin((ai+pt.i)%geo.n[0],
+                             (aj+pt.j)%geo.n[1],
+                             (ak+pt.k)%geo.n[2]);
+
+        Real offset[3];
+        geo.offset(pt, offset); // calculate offset to far cell base pt.
+        offset[0] -= x; // make relative to ptcle at idx
+        offset[1] -= y;
+        offset[2] -= z;
+
+        for(const int j : cell[cj]) {
+            Real dx = crystal.position(0,j);
+            Real dy = crystal.position(1,j);
+            Real dz = crystal.position(2,j);
+            relative_brick_crd(geo, dx, dy, dz);
+            dx += offset[0]; // add relative bin shifts
+            dy += offset[1];
+            dz += offset[2];
+
+            const Real atdistsqr = dx*dx + dy*dy + dz*dz;
+            if(atdistsqr <= rcirclusqr) {
+                LIZ[nrsclu].idx = j; // far atom index
+                LIZ[nrsclu].p1 = dx; LIZ[nrsclu].p2 = dy; LIZ[nrsclu].p3 = dz;
+                LIZ[nrsclu++].dSqr = atdistsqr;
+            }
+        }
+    }
+    return nrsclu;
+}
+*/
+
+/* O(1) Cell-based neighbor list construction
+ * written by David M. Rogers
+ */
+int buildLIZ(CrystalParameters &crystal, int idx, std::vector<LIZInfoType> &LIZ,
+             const Geom &geo, const std::vector<std::vector<int>> &cell) {
+    const Real rtol = 1.0e-8;
+    const Real rcirclu = crystal.types[crystal.type[idx]].rLIZ;
+    const Real rcirclusqr = rcirclu*rcirclu;
+    NeighborCells nbr(geo, rcirclu);
+    int nrsclu = 0;
+
+    if(std::abs(rcirclu) < rtol) { // special case: a one atom LIZ
+        LIZ[0].idx = idx; LIZ[0].dSqr = 0.0;
+        LIZ[0].p1 = 0.0; LIZ[0].p2 = 0.0; LIZ[0].p3 = 0.0;
+        nrsclu = 1;
+        return nrsclu;
+    }
+
+    Real x = crystal.position(0,idx);
+    Real y = crystal.position(1,idx);
+    Real z = crystal.position(2,idx);
+    auto bin = geo.calcBinF(x, y, z); // bin of atom idx
+    int ai, aj, ak; // bin's LatticePt
+    geo.decodeBin(bin, ai, aj, ak);
+    ai += geo.n[0]; aj += geo.n[1]; ak += geo.n[2];
+
+    relative_brick_crd(geo, x, y, z); // wrap relative to bin
+
+    for(const LatticePt &pt : nbr) {
+        int cj = geo.calcBin((ai+pt.i)%geo.n[0],
+                             (aj+pt.j)%geo.n[1],
+                             (ak+pt.k)%geo.n[2]);
+
+        Real offset[3];
+        geo.offset(pt, offset); // calculate offset to far cell base pt.
+        offset[0] -= x; // make relative to ptcle at idx
+        offset[1] -= y;
+        offset[2] -= z;
+
+        for(const int j : cell[cj]) {
+            Real dx = crystal.position(0,j);
+            Real dy = crystal.position(1,j);
+            Real dz = crystal.position(2,j);
+            relative_brick_crd(geo, dx, dy, dz);
+            dx += offset[0]; // add relative bin shifts
+            dy += offset[1];
+            dz += offset[2];
+
+            const Real atdistsqr = dx*dx + dy*dy + dz*dz;
+            if(atdistsqr <= rcirclusqr) {
+                LIZ[nrsclu].idx = j; // far atom index
+                LIZ[nrsclu].p1 = dx; LIZ[nrsclu].p2 = dy; LIZ[nrsclu].p3 = dz;
+                LIZ[nrsclu++].dSqr = atdistsqr;
+            }
+        }
+    }
+    return nrsclu;
+}
+
 int buildLIZ(CrystalParameters &crystal, int idx,std::vector<LIZInfoType> &LIZ)
 {
   const Real rtol=1.0e-8;
@@ -124,7 +305,43 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   int fromCounts[4096];
   int num_store=local.num_local;
 
-// the first num_local entries in tmatStore contain the local tmats
+  double timeBuildLIZandCommList = MPI_Wtime();
+  // Begin cell sorting
+  const Real Rc_target = 4.0; // set this to determine nx, ny, nz
+  // Real Rc_target = 4.0;
+  // for(int i=0; i<local.num_local; i++)
+  //   if(Rc_target < local.atom[i].rLIZ)
+  //     Rc_target = local.atom[i].rLIZ;
+  
+  int nx = crystal.bravais(0,0)/Rc_target;
+  int ny = crystal.bravais(1,1)/Rc_target;
+  int nz = crystal.bravais(2,2)/Rc_target;
+  if(nx < 1) nx = 1;
+  if(ny < 1) ny = 1;
+  if(nz < 1) nz = 1;
+
+  Geom geo(crystal.bravais(0,0), crystal.bravais(1,1), crystal.bravais(2,2),
+           nx, ny, nz,
+           crystal.bravais(0,1), crystal.bravais(0,2), crystal.bravais(1,2));
+  // Note: crystal.bravais(1,0), crystal.bravais(2,0), crystal.bravais(2,1)
+  //       must all be zero, or a whole-cell rotation is needed to axis-align a and b
+  //       into the x-axis and x-y plane, respectively!
+  auto cell = sort_atoms(crystal, geo);
+  // End cell sorting
+  timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
+  if (lsms.global.iprint >= 0)
+  {
+    if(lsms.lsmsAlgorithms[LSMSAlgorithms::lizConstruction] == LSMSAlgorithms::lizConstruction_bricks)
+      printf("lizConstruction algorithm : bricks\n");
+    else printf("lizConstruction algorithm : original\n");
+
+    printf("  time for cell sorting: %lf sec\n",
+           timeBuildLIZandCommList);
+    fflush(stdout);
+  }
+  timeBuildLIZandCommList = MPI_Wtime();
+
+  // the first num_local entries in tmatStore contain the local tmats
   local.tmatStoreGlobalIdx.resize(4096);
 
   for(int i=0; i<local.num_local; i++)
@@ -147,7 +364,14 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     
     if(node==comm.rank) // local atom type
     {
-      tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+      if(lsms.lsmsAlgorithms[LSMSAlgorithms::lizConstruction] == LSMSAlgorithms::lizConstruction_bricks)
+      {
+        //tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ, geo, cell);
+      } else {
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+      }
+
 // set LIZ
       int local_id=crystal.types[type_id].local_id;
       std::sort(tempLIZ.begin(),tempLIZ.begin()+tempNumLIZ,dSqrLess_LIZInfoType);
@@ -185,7 +409,13 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     } else { // non local atom
 // before building the LIZ we should first check if it is actually needed
 // i.e find min distance between atom and local atoms and compare with max liz radius
-      tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+      //tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+      if(lsms.lsmsAlgorithms[LSMSAlgorithms::lizConstruction] == LSMSAlgorithms::lizConstruction_bricks)
+      {
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ, geo, cell);
+      } else {
+        tempNumLIZ=buildLIZ(crystal,i,tempLIZ);
+      }
 
       ret=0;
       while(nodeIsInList(comm.rank,tempLIZ,tempNumLIZ,crystal,ret)) // the remote node needs the tmat from our node
@@ -197,6 +427,36 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
       }
     }
   }
+  timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
+  if (lsms.global.iprint >= 0)
+  {
+    printf("  time to build LIZs: %lf sec\n",
+           timeBuildLIZandCommList);
+    fflush(stdout);
+  }
+
+  // build the vpClusterGlobalIdx for the Voronoi polyhedra construction
+  for(int i=0; i<local.num_local; i++)
+  {
+    if(local.atom[i].numLIZ > 50)
+    {
+      local.atom[i].vpClusterGlobalIdx = local.atom[i].LIZGlobalIdx;
+      local.atom[i].vpClusterPos.resize(3,local.atom[i].vpClusterGlobalIdx.size());
+      for(int j=0; j<local.atom[i].vpClusterGlobalIdx.size(); j++)
+      {
+	local.atom[i].vpClusterPos(0, j) = local.atom[i].LIZPos(0, j);
+	local.atom[i].vpClusterPos(1, j) = local.atom[i].LIZPos(1, j);
+	local.atom[i].vpClusterPos(2, j) = local.atom[i].LIZPos(2, j);
+      }
+    } else {
+      // need to construct vpCluster - for the time set it to size zero to use the old algorithm
+      local.atom[i].vpClusterGlobalIdx.clear();
+    }
+  }    
+
+  
+  timeBuildLIZandCommList = MPI_Wtime();
+
 // sort toList and fromList
   std::sort(fromList.begin(),fromList.begin()+fromListN,globalLess_NodeIndexInfo);
   std::sort(toList.begin(),toList.begin()+toListN,localLess_NodeIndexInfo);
@@ -338,4 +598,13 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   for(int i=0; i<local.num_local; i++)
     for(int j=0; j<local.atom[i].numLIZ; j++)
       local.atom[i].LIZStoreIdx[j]=crystal.types[crystal.type[local.atom[i].LIZGlobalIdx[j]]].store_id;
+
+  timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
+  if (lsms.global.iprint >= 0)
+  { 
+    printf("  time to build communication lists: %lf sec\n",
+           timeBuildLIZandCommList);
+    fflush(stdout);
+  }
+
 }

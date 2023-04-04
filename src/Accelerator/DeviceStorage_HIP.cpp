@@ -1,6 +1,10 @@
 // -*- mode: c++; -*-
 
 #include <stdlib.h>
+#include <iostream>
+
+#include <hip/hip_runtime.h>
+
 #include "Real.hpp"
 #include "Complex.hpp"
 #include "Matrix.hpp"
@@ -9,9 +13,8 @@
 #include "DeviceArray3d.hpp"
 #include "DeviceVector.hpp"
 #include "Main/SystemParameters.hpp"
-
-#include <hip/hip_runtime.h>
-#include <iostream>
+#include "Misc/Coeficients.hpp"
+#include "Misc/Indices.hpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -322,23 +325,23 @@ int DeviceConstants::ndlj_illp;
 Real* DeviceConstants::cgnt;
 int DeviceConstants::ndlj_cgnt, DeviceConstants::lmaxp1_cgnt;
 
-int DeviceConstants::allocate(AngularMomentumIndices &am, GauntCoeficients &c, IFactors &ifactors)
+int DeviceConstants::allocate()
 {
-  ndlj_illp = ifactors.illp.l_dim();
-  lmaxp1_cgnt = c.cgnt.l_dim1();
-  ndlj_cgnt = c.cgnt.l_dim2();
+  ndlj_illp = IFactors::illp.l_dim();
+  lmaxp1_cgnt = GauntCoeficients::cgnt.l_dim1();
+  ndlj_cgnt = GauntCoeficients::cgnt.l_dim2();
 
-  deviceMalloc((void**)&lofk, am.lofk.size()*sizeof(int));
-  deviceMalloc((void**)&mofk, am.mofk.size()*sizeof(int));
-  deviceMalloc((void**)&ilp1, ifactors.ilp1.size()*sizeof(deviceDoubleComplex));
-  deviceMalloc((void**)&illp, ifactors.illp.size()*sizeof(deviceDoubleComplex));
-  deviceMalloc((void**)&cgnt, c.cgnt.size()*sizeof(double));
+  deviceMalloc((void**)&lofk, AngularMomentumIndices::lofk.size()*sizeof(int));
+  deviceMalloc((void**)&mofk, AngularMomentumIndices::mofk.size()*sizeof(int));
+  deviceMalloc((void**)&ilp1, IFactors::ilp1.size()*sizeof(deviceDoubleComplex));
+  deviceMalloc((void**)&illp, IFactors::illp.size()*sizeof(deviceDoubleComplex));
+  deviceMalloc((void**)&cgnt, GauntCoeficients::cgnt.size()*sizeof(double));
 
-  deviceMemcpy(lofk, &am.lofk[0], am.lofk.size()*sizeof(int), deviceMemcpyHostToDevice);
-  deviceMemcpy(mofk, &am.mofk[0], am.mofk.size()*sizeof(int), deviceMemcpyHostToDevice);
-  deviceMemcpy(ilp1, &ifactors.ilp1[0], ifactors.ilp1.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
-  deviceMemcpy(illp, &ifactors.illp[0], ifactors.illp.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
-  deviceMemcpy(cgnt, &c.cgnt[0], c.cgnt.size()*sizeof(double), deviceMemcpyHostToDevice);
+  deviceMemcpy(lofk, &AngularMomentumIndices::lofk[0], AngularMomentumIndices::lofk.size()*sizeof(int), deviceMemcpyHostToDevice);
+  deviceMemcpy(mofk, &AngularMomentumIndices::mofk[0], AngularMomentumIndices::mofk.size()*sizeof(int), deviceMemcpyHostToDevice);
+  deviceMemcpy(ilp1, &IFactors::ilp1[0], IFactors::ilp1.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
+  deviceMemcpy(illp, &IFactors::illp[0], IFactors::illp.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
+  deviceMemcpy(cgnt, &GauntCoeficients::cgnt[0], GauntCoeficients::cgnt.size()*sizeof(double), deviceMemcpyHostToDevice);
 
   return 0;
 }

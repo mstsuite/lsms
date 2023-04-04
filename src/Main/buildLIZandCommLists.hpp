@@ -1,4 +1,4 @@
-
+/* -*- c-file-style: "bsd"; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #ifndef LSMS_BUILDLIZANDCOMMLISTS_HPP
 #define LSMS_BUILDLIZANDCOMMLISTS_HPP
 
