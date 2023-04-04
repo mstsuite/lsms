@@ -478,7 +478,7 @@ void energyContourIntegration(LSMSCommunication &comm,LSMSSystemParameters &lsms
         {
 // openMP here
 #pragma omp parallel for                                  \
-  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,gauntCoeficients,dele1,tau00_l,gfOutFile) \
+  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,dele1,tau00_l,gfOutFile) \
 // what it was before Kubo pull request - edited because gauntCoefficients in shared was giving an error
 // 
 // pragma omp parallel for default(none)                                  \

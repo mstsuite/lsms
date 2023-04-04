@@ -121,6 +121,7 @@ public:
   int maxlmax;
   LSMSGlobals global;
   Matrix<Real> dl_factor;
+  AngularMomentumIndices angularMomentumIndices;
   EnergyContourParameters energyContour;
 
 // no. of Gaussian points for volume integration
