@@ -170,7 +170,7 @@ int loadPotentials(LSMSCommunication &comm,LSMSSystemParameters &lsms, CrystalPa
       read_scalar<int>(fid,"LSMS", lsmsFileFormat);
       if(comm.rank==0)
         printf("Reading LSMS HDF5 input file format %d\n", lsmsFileFormat);
-      if(lsmsFileFormat!=1 || lsmsFileFormat!=2)
+      if(lsmsFileFormat != 1 && lsmsFileFormat != 2)
       {
         if(comm.rank==0)
           printf("Attempting to read potential file version %d\nThis version of LSMS reads version 1 and 2 only!\n", lsmsFileFormat);
