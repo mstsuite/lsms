@@ -111,7 +111,7 @@ void transferFullTMatrixToGPUHip(Complex *devT, LSMSSystemParameters &lsms, Loca
     std::cout << std::endl;
   }
   */
-  hipMemcpy(devT, &bigT(0,0), nrmat_ns*nrmat_ns*sizeof(cuDoubleComplex), hipMemcpyHostToDevice);
+  hipMemcpy(devT, &bigT(0,0), nrmat_ns*nrmat_ns*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
 }
 
 void transferMatrixToGPUHip(Complex *devM, Matrix<Complex> &m)
@@ -136,7 +136,7 @@ __global__ void copyTMatrixToTauHip(hipDoubleComplex *tau, hipDoubleComplex *t, 
 
 __global__ void copyBigTMatrixToTauHip(hipDoubleComplex *tau, hipDoubleComplex *t, int nrmat)
 {
-   int i = hipblockIdx.x*hipblockDim.x + hipthreadIdx.x;
+   int i = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
    if (i < nrmat)
    {
      for(int j=0;j<nrmat;j++){
@@ -306,5 +306,4 @@ void solveTauFullzgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &loc
                                       (rocblas_double_complex *)devM, nrmat_ns, devIpiv, (rocblas_double_complex *)devTauFull, nrmat_ns);
 
   //transferMatrixFromGPUCuda(tau, devTauFull);
-  deviceCheckError();
 }

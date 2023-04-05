@@ -187,6 +187,7 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
         case MST_LINEAR_SOLVER_ZGETRF:
             buildKKRMatrix(lsms,local,a,is,energy,prel,0,m);
             solveTauFullzgetrf(lsms,local,a,m,tau1,0); break;
+#ifdef ACCELERATOR_CUDA_C
 	case MST_LINEAR_SOLVER_ZGETRF_CUSOLVER:
  	    deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads, 1);
 	    deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
@@ -229,6 +230,8 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
             //  std::cout << std::endl;
             //} 
 	    break;
+#endif
+#ifdef ACCELERATOR_HIP
 	case MST_LINEAR_SOLVER_ZGETRF_ROCSOLVER:
             deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads, 1);
             deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
@@ -261,7 +264,7 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
             //}
             printf("entering solveTauFullzgetrf_rocsolver:\n");
             solveTauFullzgetrf_rocsolver(lsms, local, *deviceStorage, a, devT, devM, devTauFull, is);
-            transferMatrixFromGPUHip(tau1, (cuDoubleComplex *)devTauFull);
+            transferMatrixFromGPUHip(tau1, (hipDoubleComplex *)devTauFull);
             //std::cout << "00 block of tau" << std::endl;
             //std::cout << std::endl;
             //for (int i=0; i<kkrsz;i++){
@@ -271,6 +274,8 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
             //  std::cout << std::endl;
             //}
             break;
+#endif
+	  /*
 	case MST_LINEAR_SOLVER_ZGETRF_CUBLAS:
             deviceStorage->allocate(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads, 1);
             deviceStorage->allocateAdditional(kkrsz,lsms.n_spin_cant,a.numLIZ,lsms.global.GPUThreads);
@@ -311,6 +316,7 @@ void CurrentMatrix::calTauFull(LSMSSystemParameters &lsms, LocalTypeInfo &local,
               }
               std::cout << std::endl;
             } break;
+	    */
     }
 }
 
