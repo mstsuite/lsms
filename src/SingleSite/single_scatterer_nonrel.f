@@ -6,7 +6,7 @@ c     ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      >                       vr,rr,h,jmt,jws,
      >                       tmat,matom,
      >                       zlr,jlr,
-     >                       r_sph,iprpts,iprint,istop)
+     >                       r_sph,iprpts,iprint,istop,writePhaseShift)
 c     ================================================================
 c
 c     ****************************************************************
@@ -49,6 +49,7 @@ c
       integer    l
       integer    m
       integer    lm
+      integer    writePhaseShift
 c
       real*8     vr(iprpts)
       real*8     rr(iprpts)
@@ -64,6 +65,8 @@ c
       complex*16 jlr(iprpts,0:lmax)
       complex*16 cone
       complex*16 sqrtm1
+      complex*16 i
+      complex*16 phaseShift(kkrsz,kkrsz)
 c
       parameter (sname='single_site')
       parameter (cone=(1.0d0,0.0d0))
@@ -101,11 +104,21 @@ c     calculate t-matrix and zlr and jlr...............................
 c     -----------------------------------------------------------------
       call zeroout(tmat,2*kkrsz*kkrsz)
 c     -----------------------------------------------------------------
+      if (writePhaseShift.eq.1) then
+         open(1, file = 'phaseShifts.dat',Access = 'append')
+      endif
       lm=0
+      i=(0,1)
       do l=0,lmax
          do m=-l,l
             lm=lm+1
             tmat(lm,lm)=cone/matom(l)
+            phaseShift(lm,lm) = log(1-2*i*lm*tmat(lm,lm))/(2*i)
+            if(writePhaseShift .eq. 1) then
+	        if (l.eq.0 .AND. m.eq.0) then 
+                  write(1,*) phaseShift(lm,lm),energy
+		endif
+            endif
          enddo
 c        --------------------------------------------------------------
 c        call zaxpy(jws,-tmat(lm,lm),zlr(1,l),1,jlr(1,l),1)

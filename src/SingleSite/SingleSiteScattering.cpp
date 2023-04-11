@@ -18,6 +18,9 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
   //YingWai's check
   //if(lsms.global.iprint>=0)
   //  printf("Inside calculateSingleScatterSolution. r_sph = %15.8f\n", r_sph);
+  int writePhaseShift=0;
+  
+  if(lsms.lsmsMode == LSMSMode::phase_shifts) writePhaseShift = 1;
 
   if(lsms.n_spin_pola==1) // non spin polarized
   {
@@ -28,7 +31,7 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
                              &solution.zlr(0,0,0),&solution.jlr(0,0,0),
                              &r_sph,
                              &iprpts,
-                             &lsms.global.iprint,lsms.global.istop,32);
+                             &lsms.global.iprint,lsms.global.istop,&writePhaseShift,32);
     int kkrszsqr=atom.kkrsz*atom.kkrsz;
     int one=1;
     BLAS::zcopy_(&kkrszsqr,&solution.tmat_l(0,0,0),&one,&solution.tmat_g(0,0),&one);
@@ -44,7 +47,7 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
                                &solution.zlr(0,0,is),&solution.jlr(0,0,is),
                                &r_sph,
                                &iprpts,
-                               &lsms.global.iprint,lsms.global.istop,32);
+                               &lsms.global.iprint,lsms.global.istop,&writePhaseShift,32);
       //printf("After single_scatterer_nonrel.\n");
     }
     if(lsms.n_spin_cant>1)

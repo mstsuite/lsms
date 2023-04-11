@@ -48,6 +48,7 @@
       integer    ipvt(2*kkrsz)
       integer    isq
       integer    isp
+      integer    writePhaseShift
 
       real*8     vr(iprpts,n_spin_pola),v0
       real*8     clight
@@ -108,7 +109,7 @@ c         -------------------------------------------------------------
      >                     vr(1,isq),r_mesh,h,jmt,jws,
      >                     tmat_l(1,isp),matom(1,isp),
      >                      zlr(1,isp),jlr(1,isp),
-     >                     r_sph,iprint,istop)
+     >                     r_sph,iprint,istop,writePhaseShift)
 c         -------------------------------------------------------------
           if(iprint.ge.1) then
 c           ===========================================================

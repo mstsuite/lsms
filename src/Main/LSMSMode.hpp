@@ -8,7 +8,8 @@ X(liz0) \
 X(dos) \
 X(gf_out) \
 X(matsubara) \
-X(kkrmat)
+X(kkrmat) \
+X(phase_shifts)
 
 #define X(name) name,
  
