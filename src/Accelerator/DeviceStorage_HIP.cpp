@@ -260,6 +260,7 @@ int DeviceStorage::copyTmatStoreToDevice(Matrix<Complex> &tmatStore,
 bool DeviceStorage::initialized = false;
 Complex *DeviceStorage::dev_m[MAX_THREADS], *DeviceStorage::dev_bgij[MAX_THREADS], *DeviceStorage::dev_tmat_n[MAX_THREADS];
 Complex *DeviceStorage::dev_tau[MAX_THREADS], *DeviceStorage::dev_tau00[MAX_THREADS];
+Complex *DeviceStorage::dev_tauFull[MAX_THREADS], *DeviceStorage::dev_tFull[MAX_THREADS];
 Complex *DeviceStorage::dev_t0[MAX_THREADS];
 Complex *DeviceStorage::dev_t[MAX_THREADS];
 void *DeviceStorage::dev_work[MAX_THREADS];
