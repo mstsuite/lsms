@@ -6,10 +6,10 @@ import numpy as np
 import pytest
 from numpy import testing
 
-MPIEXEC = "mpirun"
-MPI = "-np"
-PATH = "/home/fmoitzi/Development/lsms/cmake-build-debug/bin/lsms_asa"
 
+MPIEXEC = "@MPIEXEC_EXECUTABLE@"
+MPI = "@MPIEXEC_NUMPROC_FLAG@"
+PATH = "@CMAKE_BINARY_DIR@/bin/lsms_asa"
 
 @contextmanager
 def change_working_directory(directory):
