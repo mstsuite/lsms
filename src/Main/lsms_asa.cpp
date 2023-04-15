@@ -145,7 +145,6 @@ int main(int argc, char *argv[]) {
     lsms.mtasa = 1;
 
     fmt::printf("System information:\n");
-    fmt::printf("===================\n");
     fmt::printf("Number of atoms        : %10d\n", crystal.num_atoms);
     fmt::printf("Number of atomic types : %10d\n", crystal.num_types);
     fmt::printf("Performing Atomic Sphere Approximation (ASA) calculation\n");

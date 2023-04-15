@@ -327,7 +327,7 @@ void BroydenMixer::mix(RealMixingVector &mix) {
 void printMixingParameters(const MixingParameterPack &mix, LSMSCommunication &comm, LSMSSystemParameters &lsms) {
 
   if (comm.rank == 0) {
-    fmt::print("======= {} =======\n", "Mixing parameters");
+    fmt::print("============ {} ============\n", "Mixing parameters");
 
     fmt::print("Charge mixing method:    {}\n",
                lsms::getMixerName(mix.chd_mixer_type));
@@ -343,7 +343,7 @@ void printMixingParameters(const MixingParameterPack &mix, LSMSCommunication &co
     fmt::print("Initial mixing method:   {}\n",
                lsms::getMixerName(mix.init_mixer_type));
 
-    fmt::print("================\n");
+    fmt::print("===========================================\n");
   }
 
 }

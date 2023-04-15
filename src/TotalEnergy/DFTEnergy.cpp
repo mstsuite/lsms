@@ -8,6 +8,10 @@
 
 #include "num_digits.hpp"
 
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/printf.h>
+
 void lsms::print_dft_energy(const DFTEnergy &energy) {
   int size = -1;
 
@@ -36,37 +40,37 @@ void lsms::print_dft_energy(const DFTEnergy &energy) {
 
   size += 12;
 
-  std::printf("\n===================\n");
+  fmt::printf("\n===================\n");
 
-  std::printf("%-12s = %*.10f Ry\n", "Deepcore", size, energy.core_eigen);
-  std::printf("%-12s = %*.10f Ry\n", "Semicore", size, energy.semicore_eigen);
-  std::printf("%-12s = %*.10f Ry\n", "Core", size,
+  fmt::printf("%-12s = %*.10f Ry\n", "Deepcore", size, energy.core_eigen);
+  fmt::printf("%-12s = %*.10f Ry\n", "Semicore", size, energy.semicore_eigen);
+  fmt::printf("%-12s = %*.10f Ry\n", "Core", size,
               energy.semicore_eigen + energy.core_eigen);
-  std::printf("%-12s = %*.10f Ry\n", "One electron", size, energy.one_ele);
-  std::printf("%-12s = %*.10f Ry\n", "Kohn-Sham", size, energy.ks);
-  std::printf("%-12s = %*.10f Ry\n", "Kinetic", size, energy.kinetic);
+  fmt::printf("%-12s = %*.10f Ry\n", "One electron", size, energy.one_ele);
+  fmt::printf("%-12s = %*.10f Ry\n", "Kohn-Sham", size, energy.ks);
+  fmt::printf("%-12s = %*.10f Ry\n", "Kinetic", size, energy.kinetic);
 
-  std::printf("%-12s = %*.10f Ry\n", "Hartree", size, energy.hartree);
-  std::printf("%-12s = %*.10f Ry\n", "Core Hartree", size, energy.core_hartree);
-  std::printf("%-12s = %*.10f Ry\n", "Coloumb", size, energy.coloumb);
+  fmt::printf("%-12s = %*.10f Ry\n", "Hartree", size, energy.hartree);
+  fmt::printf("%-12s = %*.10f Ry\n", "Core Hartree", size, energy.core_hartree);
+  fmt::printf("%-12s = %*.10f Ry\n", "Coloumb", size, energy.coloumb);
 
-  std::printf("%-12s = %*.10f Ry\n", "XC", size, energy.xc);
-  std::printf("%-12s = %*.10f Ry\n", "ZPE", size, energy.zero_point);
-  std::printf("%-12s = %*.10f Ry\n", "LSF", size, energy.lsf);
-  std::printf("%-12s = %*.10f Ry\n", "U0", size, energy.u0);
+  fmt::printf("%-12s = %*.10f Ry\n", "XC", size, energy.xc);
+  fmt::printf("%-12s = %*.10f Ry\n", "ZPE", size, energy.zero_point);
+  fmt::printf("%-12s = %*.10f Ry\n", "LSF", size, energy.lsf);
+  fmt::printf("%-12s = %*.10f Ry\n", "U0", size, energy.u0);
 
-  std::printf("-------------------\n");
+  fmt::printf("-------------------\n");
 
-  std::printf("%-12s = %*.10f Ry\n", "MT Madelung", size, energy.madelung);
-  std::printf("%-12s = %*.10f Ry\n", "IT Madelung", size, energy.it_madelung);
-  std::printf("%-12s = %*.10f Ry\n", "IT XC", size, energy.it_xc);
-  std::printf("%-12s = %*.10f Ry\n", "MTZ", size, energy.mtz);
+  fmt::printf("%-12s = %*.10f Ry\n", "MT Madelung", size, energy.madelung);
+  fmt::printf("%-12s = %*.10f Ry\n", "IT Madelung", size, energy.it_madelung);
+  fmt::printf("%-12s = %*.10f Ry\n", "IT XC", size, energy.it_xc);
+  fmt::printf("%-12s = %*.10f Ry\n", "MTZ", size, energy.mtz);
 
-  std::printf("-------------------\n");
+  fmt::printf("-------------------\n");
 
-  std::printf("%-12s = %*.10f Ry\n", "Total energy", size, energy.total);
+  fmt::printf("%-12s = %*.10f Ry\n", "Total energy", size, energy.total);
 
-  std::printf("===================\n\n");
+  fmt::printf("===================\n\n");
 }
 
 static void sum_dft_energies(lsms::DFTEnergy *in, lsms::DFTEnergy *inout,

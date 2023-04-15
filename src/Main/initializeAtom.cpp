@@ -630,8 +630,6 @@ void initializeAtom(AtomData &a) {
 void initializeNewPotentials(LSMSCommunication &comm, LSMSSystemParameters &lsms,
                              CrystalParameters &crystal, LocalTypeInfo &local) {
 
-  fmt::printf("===================\n");
-
   lsms::AtomicDFT atomic_dft{};
 
   for (int i = 0; i < local.num_local; i++) {

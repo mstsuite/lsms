@@ -51,9 +51,7 @@ void lsms::printCell(LSMSSystemParameters &lsms, CrystalParameters &crystal,
   size = std::max(size, num_digits(static_cast<int>(total_volume)));
 
   if (lsms.global.iprint >= -1 && comm.rank == 0) {
-    std::printf("===================\n");
     std::printf("%-12s = %*.4f [bohr^3]\n", "Cell volume", size, crystal.omega);
     std::printf("%-12s = %*.4f [bohr^3]\n", "ASA volume", size, total_volume);
-    std::printf("===================\n");
   }
 }
