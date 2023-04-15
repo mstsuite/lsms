@@ -177,11 +177,14 @@ struct NeighborCells {
           int absk = n.k > 0 ? n.k - 1 : (n.k < 0 ? -n.k - 1 : 0);
           Real dz = absk * g.h[Geom::ZZ];  // equiv. to above, fewer operations
           R2z = Rc * Rc - dz * dz;
-          if(R2z < 0.0f) continue; // go to next kReal y0 = -n.k * g.h[Geom::ZY];
+          if(R2z < 0.0f) continue; // go to next kReal
+
+          Real y0 = -n.k * g.h[Geom::ZY];
           Real ywid = g.h[Geom::YY] + sqrt(R2z);
 
           n.j = ceil((y0 - ywid) / g.h[Geom::YY] + NeighborCells::eps);
           j1 = floor((y0 + ywid) / g.h[Geom::YY] - NeighborCells::eps);
+
         }
         // find new i-range for this j value
         Real dy =
