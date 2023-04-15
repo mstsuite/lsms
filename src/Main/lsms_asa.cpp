@@ -143,11 +143,12 @@ int main(int argc, char *argv[]) {
 
     // Fix to ASA
     lsms.mtasa = 1;
-
+    fmt::print("===========================================\n");
     fmt::printf("System information:\n");
     fmt::printf("Number of atoms        : %10d\n", crystal.num_atoms);
     fmt::printf("Number of atomic types : %10d\n", crystal.num_types);
     fmt::printf("Performing Atomic Sphere Approximation (ASA) calculation\n");
+    fmt::print("===========================================\n");
     fflush(stdout);
   }
 
@@ -159,11 +160,6 @@ int main(int argc, char *argv[]) {
   if (comm.rank != lsms.global.print_node)
     lsms.global.iprint = lsms.global.default_iprint;
 
-  if (comm.rank == 0) {
-    fmt::printf("communicated Parameters.\n");
-    fflush(stdout);
-  }
-
   // Set the number of local types
   int nr_local_types = distributeTypes(crystal, comm);
   local.setNumLocal(nr_local_types);
@@ -172,11 +168,6 @@ int main(int argc, char *argv[]) {
 #if defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
   deviceAtoms.resize(local.num_local);
 #endif
-
-  if (comm.rank == 0) {
-    fmt::printf("set global ids.\n");
-    fflush(stdout);
-  }
 
 #ifdef LSMS_DEBUG
   MPI_Barrier(comm.comm);
@@ -244,7 +235,7 @@ int main(int argc, char *argv[]) {
   local.setMaxCore(lsms.global.ipcore);
 
   if (lsms.global.iprint >= 0) printLSMSGlobals(stdout, lsms);
-  if (lsms.global.iprint >= 0) printLSMSSystemParameters(stdout, lsms);
+  if (comm.rank == 0) printLSMSSystemParameters(stdout, lsms);
   if (lsms.global.iprint >= 1) printCrystalParameters(stdout, crystal);
   if (lsms.global.iprint >= 0) printAlloyParameters(stdout, alloyDesc);
 
@@ -732,10 +723,21 @@ int main(int argc, char *argv[]) {
     lsms::updateChargePotential(lsms, local);
 
     if (kFile != nullptr) {
-      fmt::print(kFile, "{:4d} {:22.12f} {:15.12f} {:12.6e} {:12.6e}\n",
-                 iterationStart + iteration, lsms.totalEnergy, lsms.chempot,
-                 qrms, vrms);
+
+      if (lsms.n_spin_pola == 1) {
+        fmt::print(kFile, "{:4d} {:22.12f} {:15.12f} {:12.6e} {:12.6e}\n",
+                   iterationStart + iteration, lsms.totalEnergy, lsms.chempot,
+                   qrms, vrms);
+      } else {
+        fmt::print(kFile, "{:4d} {:22.12f} {:15.12f} {:12.6e} {:12.6e} {:7.5f}\n",
+                   iterationStart + iteration, lsms.totalEnergy, lsms.chempot,
+                   qrms, vrms, mag);
+      }
+
       fflush(kFile);
+
+
+
     }
 
     // Periodically write the new potential for scf calculations

@@ -30,23 +30,23 @@ void printLSMSGlobals(FILE *f, LSMSSystemParameters &lsms) {
 }
 
 void printLSMSSystemParameters(FILE *f, LSMSSystemParameters &lsms) {
-  fprintf(f, "Title    : '%s'\n", lsms.title);
-  fprintf(f, "Id       : '%s'\n", lsms.systemid);
-  fprintf(f, "No. Atoms: %d\n", lsms.num_atoms);
-  fprintf(f, "Mtasa    : %d\n", lsms.mtasa);
-  fprintf(f, "Voronoi  : %d\n", lsms.use_voronoi);
+  fprintf(f, "Title        : '%s'\n", lsms.title);
+  fprintf(f, "Id           : '%s'\n", lsms.systemid);
+  fprintf(f, "No. Atoms    : %d\n", lsms.num_atoms);
+  fprintf(f, "Mtasa        : %d\n", lsms.mtasa);
+  fprintf(f, "Voronoi      : %d\n", lsms.use_voronoi);
   if (lsms.pot_in_type >= 0)
-    fprintf(f, "Pot. In  : %s [%s]\n", lsms.potential_file_in,
+    fprintf(f, "Pot. In     : %s [%s]\n", lsms.potential_file_in,
             potentialTypeName[lsms.pot_in_type]);
   else
-    fprintf(f, "Pot. In  : generated.\n");
+    fprintf(f, "Pot. In      : generated.\n");
   if (lsms.pot_out_type >= 0)
-    fprintf(f, "Pot. Out : %s [%s]\n", lsms.potential_file_out,
+    fprintf(f, "Pot. Out     : %s [%s]\n", lsms.potential_file_out,
             potentialTypeName[lsms.pot_out_type]);
   else
-    fprintf(f, "Pot. Out : not written.\n");
-  fprintf(f, "spin_cant: %d\n", lsms.n_spin_cant);
-  fprintf(f, "Relativity: ");
+    fprintf(f, "Pot. Out  : not written.\n");
+  fprintf(f, "spin_cant    : %d\n", lsms.n_spin_cant);
+  fprintf(f, "Relativity   : ");
   switch (lsms.relativity) {
     case none:
       fprintf(f, "non relativistic\n");
@@ -60,16 +60,18 @@ void printLSMSSystemParameters(FILE *f, LSMSSystemParameters &lsms) {
     default:
       fprintf(f, "!!!!UNKNOWN!!!!\n");
   }
-  fprintf(f, "LSMS Mode : %s\n", lsmsModeToString(lsms.lsmsMode));
-  fprintf(f, "xcFunctional:");
+  fprintf(f, "LSMS Mode    : %s\n", lsmsModeToString(lsms.lsmsMode));
+  fprintf(f, "xcFunctional :");
   for (int i = 0; i < numFunctionalIndices; i++)
     fprintf(f, " %d", lsms.xcFunctional[i]);
   std::string name;
   getXCName(lsms, name);
   fprintf(f, " [%s]", name.c_str());
   fprintf(f, "\n");
-  fprintf(f, "Electron Temperature: %lgK\n", lsms.temperature);
-  fprintf(f, "RMS Tolerance: %lg\n", lsms.rmsTolerance);
+  fprintf(f, "Electron T   : %lgK\n", lsms.temperature);
+  fprintf(f, "RMS Tol.     : %lg\n", lsms.rmsTolerance);
+  fprintf(f, "Energy Tol.  : %lg\n", lsms.energyTolerance);
+
 }
 
 void printCrystalParameters(FILE *f, CrystalParameters &crystal) {
