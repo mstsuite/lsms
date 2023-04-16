@@ -126,20 +126,8 @@ int loadPotentials(LSMSCommunication &comm, LSMSSystemParameters &lsms,
             local.atom[crystal.types[i].local_id].evec[1] = crystal.evecs(1, i);
             local.atom[crystal.types[i].local_id].evec[2] = crystal.evecs(2, i);
 
-
             // Plot states
             int ncs = local.atom[crystal.types[i].local_id].ec.l_dim();
-
-            for (int i_states = 0; i_states < ncs; i_states++) {
-              std::cout << local.atom[crystal.types[i].local_id].ec(i_states, 0) << std::endl;
-              std::cout << local.atom[crystal.types[i].local_id].nc(i_states, 0) << std::endl;
-              std::cout << local.atom[crystal.types[i].local_id].lc(i_states, 0) << std::endl;
-              std::cout << local.atom[crystal.types[i].local_id].kc(i_states, 0) << std::endl;
-              std::cout << local.atom[crystal.types[i].local_id].ec(i_states, 1) << std::endl;
-              std::cout << local.atom[crystal.types[i].local_id].nc(i_states, 1) << std::endl;
-              std::cout << local.atom[crystal.types[i].local_id].lc(i_states, 1) << std::endl;
-              std::cout << local.atom[crystal.types[i].local_id].kc(i_states, 1) << std::endl;
-            }
 
           } else {
             readSingleAtomData_bigcell(fname, pot_data);
