@@ -74,7 +74,7 @@ TEST(SingleSiteTests, NewRadialSolver) {
   std::vector<Complex> Q(n);
 
   lsms::RadialSrelOut(energy, kappa, P.data(), Q.data(), r_mesh.data(),
-                        dr_mesh.data(), &vr(0, 0), n, 0, &beta);
+                      dr_mesh.data(), &vr(0, 0), n, 0, &beta);
 
   std::vector<Real> y(n);
   Real result;
