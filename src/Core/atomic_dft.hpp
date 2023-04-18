@@ -6,6 +6,7 @@
 #define LSMS_SRC_CORE_ATOMIC_DFT_HPP_
 
 #include <vector>
+#include <memory>
 
 #include "SingleSite/AtomData.hpp"
 #include "XCLDA.hpp"
