@@ -65,9 +65,20 @@ endif ()
 # Build mjson library
 include(mjson)
 
+# Build fmt library
+include(fmt)
+
 #
 # Define library and targets
 #
+
+add_executable(lsms_main_asa)
+set_target_properties(lsms_main_asa PROPERTIES OUTPUT_NAME "lsms_asa")
+
+set_target_properties(lsms_main_asa
+        PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
 
 add_executable(lsms_main)
 set_target_properties(lsms_main PROPERTIES OUTPUT_NAME "lsms")
@@ -84,9 +95,11 @@ set_target_properties(lsms_wl
         PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
+
 option(LEGACY_MONOPOLE "Use legacy for mono poles" OFF)
 
 if(LEGACY_MONOPOLE)
+    target_compile_definitions(lsms_main_asa PUBLIC LEGACY_MONOPOLE)
     target_compile_definitions(lsms_main PUBLIC LEGACY_MONOPOLE)
 endif()
 
@@ -98,6 +111,10 @@ set_target_properties(lsmscore PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
         Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
+target_link_libraries(lsmscore PUBLIC fmt::fmt)
+target_link_libraries(lsmscore PUBLIC Threads::Threads)
+
+target_link_libraries(lsms_main_asa PUBLIC lsmscore)
 target_link_libraries(lsms_main PUBLIC lsmscore)
 target_link_libraries(lsms_wl PUBLIC lsmscore)
 

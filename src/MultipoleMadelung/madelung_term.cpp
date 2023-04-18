@@ -8,7 +8,6 @@
 #include "Indices.hpp"
 #include "SphericalHarmonics.hpp"
 
-
 void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
                  int ibegin, matrix<Real> &knlat, int nknlat, double omega,
                  int lmax_mad, double eta, std::vector<Complex> &dlm) {
@@ -17,7 +16,6 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
   std::vector<Real> Plm((lmax_mad + 1) * (lmax_mad + 2) / 2, 0.0);
 
   lsms::SphericalHarmonics sph(lmax_mad);
-
 
   std::vector<Real> vec(3);
 
@@ -62,7 +60,6 @@ void lsms::dlsum(std::vector<Real> &aij, matrix<Real> &rslat, int nrslat,
 
     auto vlen = norm(vec.begin(), vec.end());
     auto knlatsq = norm_sq(vec.begin(), vec.end());
-
 
     // Ylm
     sph.computeYlm(lmax_mad, vec, Ylm);

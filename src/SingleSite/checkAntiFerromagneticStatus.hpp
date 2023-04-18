@@ -4,7 +4,6 @@
 #include "AtomData.hpp"
 #include "Main/SystemParameters.hpp"
 
-
 void checkIfSpinHasFlipped(LSMSSystemParameters &lsms, AtomData &a);
 
 void swapCoreStateEnergies(AtomData &a);

@@ -2,6 +2,7 @@
 #define WRITESINGLEATOMDATA_H
 
 #include <hdf5.h>
+
 #include "AtomData.hpp"
 
 int writeSingleAtomData_hdf5(hid_t loc_id, AtomData &atom, int present_atom);

@@ -1,6 +1,6 @@
       integer kmymaxp
       integer iplmax
-      
+
       parameter (iplmax=6, kmymaxp=2*(iplmax+1)*(iplmax+1))
 
       complex*16 sxcoeff(kmymaxp,kmymaxp),sxbcoeff(kmymaxp,kmymaxp)
@@ -16,7 +16,7 @@
       integer lamp,lammp
       parameter ( lamp=1,lammp=(lamp+1)*(lamp+1) )
 
-      
+
       complex*16 gacoeff((iplmax+1)*(iplmax+1),(iplmax+1)*(iplmax+1),
      >                   lammp)
       complex*16 rgacoeff(kmymaxp,kmymaxp,lammp)

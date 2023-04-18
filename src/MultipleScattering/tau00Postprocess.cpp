@@ -49,47 +49,51 @@ c     ----------------------------------------------------------------
 ++Q     &           kkrsz_ns,info)
 */
 
-void calculateTau00MinusT(LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom,
-                          int iie, Matrix<Complex> &tau00, Matrix<Complex> &tau00MinusT, int ispin) {
+void calculateTau00MinusT(LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                          AtomData &atom, int iie, Matrix<Complex> &tau00,
+                          Matrix<Complex> &tau00MinusT, int ispin) {
   // Redefine tau00 to be tau00-t
   // delta is 1-t*tau00^{-1} and is calculated in gettaucl
-  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz; // size of t00 block
+  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz;  // size of t00 block
 
-  if (lsms.n_spin_pola == lsms.n_spin_cant) { // non polarized or spin canted
+  if (lsms.n_spin_pola == lsms.n_spin_cant) {  // non polarized or spin canted
 
     for (int i = 0; i < kkrsz_ns; i++) {
       for (int j = 0; j < kkrsz_ns; j++) {
-        tau00MinusT(i, j) = tau00(i, j) - local.tmatStore(i + j * kkrsz_ns + iie * local.blkSizeTmatStore,
-                                                          atom.LIZStoreIdx[0]);
+        tau00MinusT(i, j) =
+            tau00(i, j) -
+            local.tmatStore(i + j * kkrsz_ns + iie * local.blkSizeTmatStore,
+                            atom.LIZStoreIdx[0]);
       }
     }
 
   } else {
-
     int jsm = kkrsz_ns * kkrsz_ns * ispin;
 
     for (int i = 0; i < kkrsz_ns; i++) {
       for (int j = 0; j < kkrsz_ns; j++) {
-        tau00MinusT(i, j) = tau00(i, j) - local.tmatStore(i + j * kkrsz_ns + iie * local.blkSizeTmatStore + jsm,
-                                                          atom.LIZStoreIdx[0]);
-
+        tau00MinusT(i, j) =
+            tau00(i, j) -
+            local.tmatStore(
+                i + j * kkrsz_ns + iie * local.blkSizeTmatStore + jsm,
+                atom.LIZStoreIdx[0]);
       }
     }
-
   }
-
-
 }
 
-extern "C"
-{
-void trgtol_(int *kkrsz0, int *kkrsz1, Complex *ubr, Complex *ubrd, Complex *tau00_tmp, Complex *tau00_l);
+extern "C" {
+void trgtol_(int *kkrsz0, int *kkrsz1, Complex *ubr, Complex *ubrd,
+             Complex *tau00_tmp, Complex *tau00_l);
 }
 
-void rotateTau00ToLocalFrameNonRelativistic(LSMSSystemParameters &lsms, AtomData &atom, Matrix<Complex> &tau00,
+void rotateTau00ToLocalFrameNonRelativistic(LSMSSystemParameters &lsms,
+                                            AtomData &atom,
+                                            Matrix<Complex> &tau00,
                                             Complex *tau00_l) {
   if (lsms.n_spin_cant == 2) {
-    trgtol_(&atom.kkrsz, &atom.kkrsz, atom.ubr, atom.ubrd, &tau00(0, 0), tau00_l);
+    trgtol_(&atom.kkrsz, &atom.kkrsz, atom.ubr, atom.ubrd, &tau00(0, 0),
+            tau00_l);
   } else {
     for (int i = 0; i < tau00.l_dim() * tau00.n_col(); i++)
       tau00_l[i] = tau00[i];
@@ -173,15 +177,16 @@ c        -------------------------------------------------------------
 
       end subroutine
 */
-extern "C"
-{
-  void tripmt_(Complex *dmatp,Complex *tau00_l,Complex *dmat,int *kkrsz_ns, int *, int *);
+extern "C" {
+void tripmt_(Complex *dmatp, Complex *tau00_l, Complex *dmat, int *kkrsz_ns,
+             int *, int *);
 }
 
-void rotateTau00ToLocalFrameRelativistic(LSMSSystemParameters &lsms, AtomData &atom, Matrix<Complex> &tau00,  Complex *tau00_l)
-{
-  int kkrsz_ns = lsms.n_spin_cant*atom.kkrsz;
-  for(int i=0; i<tau00.l_dim()*tau00.n_col(); i++)
-      tau00_l[i] = tau00[i];
-  tripmt_(&atom.dmatp(0,0), tau00_l, &atom.dmat(0,0), &kkrsz_ns, &kkrsz_ns, &kkrsz_ns);
+void rotateTau00ToLocalFrameRelativistic(LSMSSystemParameters &lsms,
+                                         AtomData &atom, Matrix<Complex> &tau00,
+                                         Complex *tau00_l) {
+  int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz;
+  for (int i = 0; i < tau00.l_dim() * tau00.n_col(); i++) tau00_l[i] = tau00[i];
+  tripmt_(&atom.dmatp(0, 0), tau00_l, &atom.dmat(0, 0), &kkrsz_ns, &kkrsz_ns,
+          &kkrsz_ns);
 }

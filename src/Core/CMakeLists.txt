@@ -2,6 +2,8 @@
 
 target_sources(lsmscore
         PUBLIC
+        atomic_dft.cpp
+        atomic_dft.hpp
         calculateCoreStates.hpp
         calculateCoreStates.cpp
         coreSolver.cpp
@@ -15,6 +17,10 @@ target_sources(lsmscore
         outws_c.f
         richnk_c.f
         semcst_c.f
+        radialSolver.cpp
+        radialSolver.hpp
+        States.cpp
+        States.hpp
         )
 
 target_include_directories(lsmscore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

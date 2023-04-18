@@ -3,29 +3,25 @@
 
 #include <vector>
 
-#include "Real.hpp"
-#include "Matrix.hpp"
-
 #include "Main/SystemParameters.hpp"
+#include "Matrix.hpp"
+#include "Real.hpp"
 
 class PotentialShifter {
+ public:
+  bool vSpinShiftFlag{false};
+  double minShift{0.0};
+  double maxShift{0.0};
 
-public:
+  void resetPotentials(LocalTypeInfo &local);
 
-    bool vSpinShiftFlag{false};
-    double minShift{0.0};
-    double maxShift{0.0};
+  void resize(int n);
 
-    void resetPotentials(LocalTypeInfo &local);
+  void applyShifts(LocalTypeInfo &local);
 
-    void resize(int n);
+  void restorePotentials(LocalTypeInfo &local);
 
-    void applyShifts(LocalTypeInfo &local);
-
-    void restorePotentials(LocalTypeInfo &local);
-
-    std::vector<Matrix<Real> > vr0{}; // the unshifted potential
-
+  std::vector<Matrix<Real> > vr0{};  // the unshifted potential
 };
 
 #endif

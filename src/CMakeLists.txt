@@ -11,6 +11,8 @@ add_subdirectory(Communication)
 
 add_subdirectory(Core)
 
+add_subdirectory(ChargeDensity)
+
 add_subdirectory(LuaInterface)
 
 add_subdirectory(Main)
@@ -18,6 +20,8 @@ add_subdirectory(Main)
 add_subdirectory(Madelung)
 
 add_subdirectory(MultipoleMadelung)
+
+add_subdirectory(Mixer)
 
 add_subdirectory(Misc)
 
@@ -32,9 +36,4 @@ add_subdirectory(SingleSite)
 add_subdirectory(TotalEnergy)
 
 add_subdirectory(VORPOL)
-
-
-if (LSMS_DEV_TESTS)
-  add_subdirectory(Test)
-endif ()
 

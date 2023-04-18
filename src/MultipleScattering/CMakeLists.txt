@@ -3,6 +3,8 @@
 
 target_sources(lsmscore
         PUBLIC
+        print_kkr_matrix.cpp
+        print_kkr_matrix.hpp
         calculateTauMatrix.cpp
         buildKKRMatrix_CPU.cpp
         linearSolvers_CPU.cpp
