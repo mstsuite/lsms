@@ -7,6 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
+#include <memory>
 
 #include "fmt/core.h"
 #include "fmt/ranges.h"
