@@ -27,7 +27,7 @@ if (NOT USE_ACCELERATOR_CUDA_C AND NOT USE_ACCELERATOR_HIP)
     find_package(Python COMPONENTS Interpreter REQUIRED)
 
     add_test(NAME RegressionTests
-            COMMAND ${Python_EXECUTABLE} -m pytest -s
+            COMMAND "${Python_EXECUTABLE} -m pytest -s"
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             )
 

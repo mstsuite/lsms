@@ -6,7 +6,7 @@
 #include <fmt/format.h>
 #include <fmt/printf.h>
 #include <gtest/gtest.h>
-#include <matplot/matplot.h>
+//#include <matplot/matplot.h>
 
 #include <cmath>
 #include <iostream>
@@ -174,7 +174,7 @@ TEST(SingleSiteTests, BasicSolver) {
   std::vector<Real> y(n);
   Real result;
 
-  auto ax1 = matplot::subplot(2, 1, 0);
+  // auto ax1 = matplot::subplot(2, 1, 0);
 
   for (auto ir = 0; ir < n; ir++) {
     y[ir] = std::real(zlr(ir, 0, 0));
