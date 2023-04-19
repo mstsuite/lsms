@@ -808,6 +808,36 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
   luaGetInteger(L,"print_node",&lsms.global.print_node);
   luaGetInteger(L,"default_iprint",&lsms.global.default_iprint);
   luaGetInteger(L,"iprint",&lsms.global.iprint);
+
+  lsms.efermi = 0.6;
+  luaGetReal(L, "efermi", &lsms.efermi);
+  lsms.rmin = 0.0001;
+  luaGetReal(L, "rmin", &lsms.rmin);
+  lsms.rmax = 50.0;
+  luaGetReal(L, "rmax", &lsms.rmax);
+  lsms.h_step = 0.02;
+  luaGetReal(L, "h_step", &lsms.h_step);
+
+  lsms.global.debug_atomic = false;
+  lsms.global.debug_chem_pot = false;
+  lsms.global.debug_madelung = false;
+  lsms.global.debug_core_states = false;
+  lsms.global.debug_radial_charge = false;
+  lsms.global.debug_charge = false;
+  lsms.global.debug_potential = false;
+  lsms.global.debug_energy = false;
+  lsms.global.debug_convergence = false;
+
+  luaGetBoolean(L, "debug_atomic", &lsms.global.debug_atomic);
+  luaGetBoolean(L, "debug_chem_pot", &lsms.global.debug_chem_pot);
+  luaGetBoolean(L, "debug_madelung", &lsms.global.debug_madelung);
+  luaGetBoolean(L, "debug_core_states", &lsms.global.debug_core_states);
+  luaGetBoolean(L, "debug_radial_charge", &lsms.global.debug_radial_charge);
+  luaGetBoolean(L, "debug_charge", &lsms.global.debug_charge);
+  luaGetBoolean(L, "debug_potential", &lsms.global.debug_potential);
+  luaGetBoolean(L, "debug_energy", &lsms.global.debug_energy);
+  luaGetBoolean(L, "debug_convergence", &lsms.global.debug_convergence);
+
 #ifdef _OPENMP
   lsms.global.GPUThreads=std::min(16,omp_get_max_threads());
 #else
@@ -921,6 +951,11 @@ int readInput(lua_State *L, LSMSSystemParameters &lsms, CrystalParameters &cryst
       luaGetIntegerFieldFromStack(L, "lsf", &crystal.types[crystal.num_types].lsf_functional);
       crystal.types[crystal.num_types].alloy_class--; // <-- zero-based indexing
       luaGetRealFieldFromStack(L,"rLIZ",&crystal.types[crystal.num_types].rLIZ);
+
+      crystal.types[crystal.num_types].mag_mom = 0.0;
+      luaGetRealFieldFromStack(L, "mag_mom",
+                               &crystal.types[crystal.num_types].mag_mom);
+
       luaGetFieldFromStack(L,"rsteps");
       for(int j=0; j<4; j++) luaGetRealPositionFromStack(L,j+1,&crystal.types[crystal.num_types].rsteps[j]);
       lua_pop(L,1);
