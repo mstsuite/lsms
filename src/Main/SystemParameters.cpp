@@ -27,6 +27,25 @@ void printLSMSGlobals(FILE *f, LSMSSystemParameters &lsms) {
           linearSolverName(lsms.global.linearSolver).c_str());
   fprintf(f, "  buildKKRMatrix=%d \"%s\"\n", lsms.global.linearSolver,
           buildKKRMatrixName(lsms.global.linearSolver).c_str());
+  
+  if(lsms.global.debug_atomic)
+    fprintf(f, "  debug_atomic=true\n");
+  if(lsms.global.debug_chem_pot)
+    fprintf(f, "  debug_chem_pot=true\n");
+  if(lsms.global.debug_madelung)
+    fprintf(f, "  debug_madelung=true\n");
+  if(lsms.global.debug_core_states)
+    fprintf(f, "  debug_core_states=true\n");
+  if(lsms.global.debug_radial_charge)
+    fprintf(f, "  debug_radial_charge=true\n");
+  if(lsms.global.debug_charge)
+    fprintf(f, "  debug_charge=true\n");
+  if(lsms.global.debug_potential)
+    fprintf(f, "  debug_potential=true\n");
+  if(lsms.global.debug_energy)
+    fprintf(f, "  debug_energy=true\n");
+  if(lsms.global.debug_convergence)
+    fprintf(f, "  debug_convergence=true\n);
 }
 
 void printLSMSSystemParameters(FILE *f, LSMSSystemParameters &lsms) {
