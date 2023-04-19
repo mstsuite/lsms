@@ -45,7 +45,7 @@ void printLSMSGlobals(FILE *f, LSMSSystemParameters &lsms) {
   if(lsms.global.debug_energy)
     fprintf(f, "  debug_energy=true\n");
   if(lsms.global.debug_convergence)
-    fprintf(f, "  debug_convergence=true\n);
+    fprintf(f, "  debug_convergence=true\n");
 }
 
 void printLSMSSystemParameters(FILE *f, LSMSSystemParameters &lsms) {
