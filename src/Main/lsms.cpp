@@ -57,6 +57,8 @@
 #include "read_input.hpp"
 #include "num_digits.hpp"
 
+#include "ChargeDensity/ChargeDensity.hpp"
+
 #ifdef USE_NVTX
 #include <nvToolsExt.h>
 #endif
@@ -396,7 +398,13 @@ int main(int argc, char *argv[])
 //  loadPotentials(comm,lsms,crystal,local);
   if (lsms.pot_in_type == -1) {
 
-    potential->calculatePotential(comm, lsms, local, crystal, qsub);
+    std::vector<Real> qsub(crystal.num_types, 0.0);
+
+    Array3d<Real> rhoTemp;
+    rhoTemp.resize(lsms.global.iprpts + 1, 2, local.num_local);
+    rhoTemp = 0.0;
+    
+    calculatePotential(comm, lsms, local, crystal, qsub, rhoTemp, 0);
 
     // Initialize potentials and charge densities
     lsms::copyChargesAndPotential(lsms, local);
