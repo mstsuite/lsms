@@ -19,6 +19,9 @@
 #include "gptl.h"
 #endif
 
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/printf.h>
 #include <hdf5.h>
 #include <lua.hpp>
 
