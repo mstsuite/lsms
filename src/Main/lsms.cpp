@@ -394,6 +394,21 @@ int main(int argc, char *argv[])
   }
   
 //  loadPotentials(comm,lsms,crystal,local);
+  if (lsms.pot_in_type == -1) {
+
+    potential->calculatePotential(comm, lsms, local, crystal, qsub);
+
+    // Initialize potentials and charge densities
+    lsms::copyChargesAndPotential(lsms, local);
+
+    // Check charge density after mixing
+    lsms::checkRadialChargeDensity(lsms, local);
+
+    if (comm.rank == 0) {
+      fmt::printf("Initial MTZ: %20.9f\n", lsms.vmt);
+    }
+
+  }
 
 // initialize Mixing
   double timeSetupMixing = MPI_Wtime();
