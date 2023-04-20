@@ -545,13 +545,45 @@ int calculateAtomLevels(AtomData &a, std::vector<InitialAtomLevel> &atomLevels,
   return coreElectrons;
 }
 
+void plotAtomPotential(AtomData &a, const char *fileName)
+{
+  FILE *plotFile = fopen(fileName, "w");;
+
+  fprintf(plotFile, "set term pdf\nset outp 'initialPotential.pdf'\n");
+  fprintf(plotFile, "set xrange [0:%lf]\n", a.r_mesh[a.r_mesh.size() - 1]);
+
+  fprintf(plotFile, "plot '-' with lines title 'Vr spin up'\n");
+  for (int ir = 0; ir < a.r_mesh.size(); ir++) {
+    fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.vr(ir, 0));
+  }
+  fprintf(plotFile, "e\n");
+
+  fprintf(plotFile, "plot '-' with lines title 'Vr spin down'\n");
+  for (int ir = 0; ir < a.r_mesh.size(); ir++) {
+    fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.vr(ir, 1));
+  }
+  fprintf(plotFile, "e\n");
+
+  fprintf(plotFile, "plot '-' with lines title 'rho spin up'\n");
+  for (int ir = 0; ir < a.r_mesh.size(); ir++) {
+    fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.rhotot(ir, 0));
+  }
+  fprintf(plotFile, "e\n");
+
+  fprintf(plotFile, "plot '-' with lines title 'rho spin down'\n");
+  for (int ir = 0; ir < a.r_mesh.size(); ir++) {
+    fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.rhotot(ir, 1));
+  }
+  fprintf(plotFile, "e\n");
+
+  fclose(plotFile);
+}
+
 void initializeAtom(AtomData &a) {
   a.generateRadialMesh();
 
   // for analysis purposes gnerate gnuplot files for the atom
   bool generatePlot = true;
-  FILE *plotFile;
-  if (generatePlot) plotFile = fopen("initializeAtom.plot", "w");
 
   // inititalize potential to be V(r) = -2Z/r
   // add a potential corresponding to a gaussian charge distribution
@@ -596,35 +628,8 @@ void initializeAtom(AtomData &a) {
   }
 
   if (generatePlot) {
-    fprintf(plotFile, "set term pdf\nset outp 'initialPotential.pdf'\n");
-    fprintf(plotFile, "set xrange [0:%lf]\n", a.r_mesh[a.r_mesh.size() - 1]);
-
-    fprintf(plotFile, "plot '-' with lines title 'Vr spin up'\n");
-    for (int ir = 0; ir < a.r_mesh.size(); ir++) {
-      fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.vr(ir, 0));
-    }
-    fprintf(plotFile, "e\n");
-
-    fprintf(plotFile, "plot '-' with lines title 'Vr spin down'\n");
-    for (int ir = 0; ir < a.r_mesh.size(); ir++) {
-      fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.vr(ir, 1));
-    }
-    fprintf(plotFile, "e\n");
-
-    fprintf(plotFile, "plot '-' with lines title 'rho spin up'\n");
-    for (int ir = 0; ir < a.r_mesh.size(); ir++) {
-      fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.rhotot(ir, 0));
-    }
-    fprintf(plotFile, "e\n");
-
-    fprintf(plotFile, "plot '-' with lines title 'rho spin down'\n");
-    for (int ir = 0; ir < a.r_mesh.size(); ir++) {
-      fprintf(plotFile, "%18.12lf   %18.12lf\n", a.r_mesh[ir], a.rhotot(ir, 1));
-    }
-    fprintf(plotFile, "e\n");
+    plotAtomPotential(a, "initializeAtom.plot");
   }
-
-  if (generatePlot) fclose(plotFile);
 }
 
 void initializeNewPotentials(LSMSCommunication &comm, LSMSSystemParameters &lsms,

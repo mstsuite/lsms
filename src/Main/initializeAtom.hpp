@@ -6,6 +6,8 @@
 #include "Main/SystemParameters.hpp"
 #include "SingleSite/AtomData.hpp"
 
+void plotAtomPotential(AtomData &a, const char *fileName);
+
 void initializeAtom(AtomData &a);
 void initializeNewPotentials(LSMSCommunication &comm, LSMSSystemParameters &lsms,
                             CrystalParameters &crystal, LocalTypeInfo &local);
