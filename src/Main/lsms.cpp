@@ -399,28 +399,7 @@ int main(int argc, char *argv[])
   }
   
 //  loadPotentials(comm,lsms,crystal,local);
-  if (lsms.pot_in_type == -1) {
-
-    std::vector<Real> qsub(crystal.num_types, 0.0);
-
-    Array3d<Real> rhoTemp;
-    rhoTemp.resize(lsms.global.iprpts + 1, 2, local.num_local);
-    rhoTemp = 0.0;
-    
-    calculatePotential(comm, lsms, local, crystal, qsub, rhoTemp, 0);
-
-    // Initialize potentials and charge densities
-    lsms::copyChargesAndPotential(lsms, local);
-
-    // Check charge density after mixing
-    lsms::checkRadialChargeDensity(lsms, local);
-
-    if (comm.rank == 0) {
-      fmt::printf("Initial MTZ: %20.9f\n", lsms.vmt);
-    }
-
-  }
-
+  
 // initialize Mixing
   double timeSetupMixing = MPI_Wtime();
   Mixing *mixing;
@@ -443,6 +422,28 @@ int main(int argc, char *argv[])
   if (lsms.global.iprint >= 0)
   {
     printf("time calculateMultiMadelungMatrices: %lf sec\n\n",timeCalculateMadelungMatrix);
+  }
+
+  if (lsms.pot_in_type == -1) {
+
+    std::vector<Real> qsub(crystal.num_types, 0.0);
+
+    Array3d<Real> rhoTemp;
+    rhoTemp.resize(lsms.global.iprpts + 1, 2, local.num_local);
+    rhoTemp = 0.0;
+    
+    calculatePotential(comm, lsms, local, crystal, qsub, rhoTemp, 0);
+
+    // Initialize potentials and charge densities
+    lsms::copyChargesAndPotential(lsms, local);
+
+    // Check charge density after mixing
+    lsms::checkRadialChargeDensity(lsms, local);
+
+    if (comm.rank == 0) {
+      fmt::printf("Initial MTZ: %20.9f\n", lsms.vmt);
+    }
+
   }
 
   if (lsms.global.iprint >= 1)
