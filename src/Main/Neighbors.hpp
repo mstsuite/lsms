@@ -99,7 +99,7 @@ struct Geom {
     const int ny = (y - y0) / h[YY];
 
     // 3. wrap into range x_0(ny,nz) + [0,Lx)
-    const Real x0 = nz * h[ZX] + ny * h[ZY];
+    const Real x0 = nz * h[ZX] + ny * h[YX];
     x -= L[XX] * floor((x - x0) / L[XX]);
     const int nx = (x - x0) / h[XX];
 
