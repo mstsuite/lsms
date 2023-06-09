@@ -10,19 +10,23 @@ target_sources(lsmscore
         energyContourIntegration.cpp
         solveSingleScatterers.hpp
         solveSingleScatterers.cpp
+		setupCell.cpp
+		setupCell.hpp
         calculateDensities.cpp
         calculateChemPot.cpp
         checkConsistency.cpp
         calculateEvec.cpp
         initializeAtom.cpp
-        mixing.cpp
-        ReplicaExchangeWL.cpp
+		mixing.cpp
+		ReplicaExchangeWL.cpp
         AlloyBankIO.cpp
         rotateToGlobal.cpp
         rotateToGlobal.hpp
         write_restart.cpp
-        mixing_params.hpp
-        calculateChemPot.hpp
+		updateChargePotential.cpp
+		updateChargePotential.hpp
+		mixing_params.hpp
+		calculateChemPot.hpp
         calculateDensities.hpp
         calculateEvec.hpp
         checkConsistency.hpp
@@ -59,14 +63,20 @@ target_include_directories(
 )
 
 
-target_sources(lsms_main
+target_sources(lsms_main_asa
         PUBLIC
-        lsms.cpp)
+        lsms_asa.cpp)
+
+
+target_sources(lsms_main
+		PUBLIC
+		lsms.cpp)
 
 
 target_sources(lsms_wl
-        PUBLIC
-	lsmsClass.cpp
-	lsmsClass.hpp
-        wl_lsms.cpp)
+		PUBLIC
+		lsmsClass.cpp
+		lsmsClass.hpp
+		wl_lsms.cpp)
+
 

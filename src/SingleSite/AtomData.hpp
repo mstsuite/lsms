@@ -209,7 +209,7 @@ public:
       }
       for(int i=0; i<semcor.l_dim(); i++)
 	semcor(i,1) = semcor(i,0) = 0.5*semcor(i,0);
-      
+
       nspin = 2;
     }
     if(nspinNew == 1) // extend from non spin polarized to spin polarized
@@ -225,7 +225,7 @@ public:
 	vrNew(i,0) = 0.5*(vrNew(i,0)+vrNew(i,1));
       for(int i=0; i<rhoNew.l_dim(); i++)
 	rhoNew(i,0) = 0.5*(rhoNew(i,0)+rhoNew(i,1));
-      
+
       for(int i=0; i<exchangeCorrelationPotential.l_dim(); i++)
 	exchangeCorrelationPotential(i,0) = 0.5*(exchangeCorrelationPotential(i,0)+exchangeCorrelationPotential(i,1));
       for(int i=0; i<exchangeCorrelationEnergy.l_dim(); i++)
@@ -249,7 +249,7 @@ public:
 	corden(i,0) = 0.5*(corden(i,0)+corden(i,1));
       for(int i=0; i<semcor.l_dim(); i++)
 	semcor(i,0) = 0.5*(semcor(i,0)+semcor(i,1));
-      
+
       nspin = 1;
     }
   }
@@ -257,7 +257,7 @@ public:
   void averageSpins()
   {
     if(nspin == 1) return;
-    
+
     xvalws[0] = 0.5*(xvalws[0]+xvalws[1]);
     xvalws[1] = xvalws[0];
     xvalwsNew[0] = 0.5*(xvalwsNew[0]+xvalwsNew[1]);
@@ -284,13 +284,13 @@ public:
       rhoNew(i,0) = 0.5*(rhoNew(i,0)+rhoNew(i,1));
       rhoNew(i,1) = rhoNew(i,0);
     }
-      
+
     for(int i=0; i<exchangeCorrelationPotential.l_dim(); i++)
     {
       exchangeCorrelationPotential(i,0) = 0.5*(exchangeCorrelationPotential(i,0)+exchangeCorrelationPotential(i,1));
       exchangeCorrelationPotential(i,1) = exchangeCorrelationPotential(i,0);
     }
-       
+
     exchangeCorrelationV[0] = 0.5*(exchangeCorrelationV[0]+exchangeCorrelationV[1]);
     exchangeCorrelationV[1] = exchangeCorrelationV[0];
 
@@ -305,7 +305,7 @@ public:
       semcor(i,1) = semcor(i,0);
     }
   }
-  
+
   AtomData &operator=(const AtomData &a)
   {
     jmt = a.jmt;
@@ -329,6 +329,7 @@ public:
     zcorss = a.zcorss;
     zsemss = a.zsemss;
     zvalss = a.zvalss;
+    mag_mom = a.mag_mom;
 
     nspin = a.nspin;
     forceZeroMoment = a.forceZeroMoment;
@@ -372,7 +373,7 @@ public:
     vr = a.vr;
     vSpinShift=a.vSpinShift;
     rhotot = a.rhotot;
-    
+
     exchangeCorrelationPotential = a.exchangeCorrelationPotential;
     exchangeCorrelationEnergy = a.exchangeCorrelationEnergy;
     exchangeCorrelationV[0] = a.exchangeCorrelationV[0];
@@ -459,6 +460,7 @@ public:
   int lmax{}, kkrsz{};
   Real alat{}, efermi{};
   Real ztotss{}, zcorss{}, zsemss{}, zvalss{};
+  Real mag_mom{};
   Real vdif{}, vdifNew{};
   Real evec[3]{}, evecNew[3]{}, evecOut[3]{};
   Complex ubr[4], ubrd[4];            // Spin transformation matrices
@@ -482,7 +484,7 @@ public:
 // local energy
   Real localEnergy{};
   Real localMadelungEnergy{};
-  
+
 // Alloy Class
   int alloy_class{};
 

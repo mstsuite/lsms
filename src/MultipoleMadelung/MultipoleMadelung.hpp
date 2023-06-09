@@ -8,8 +8,8 @@
 #include <complex>
 #include <vector>
 
-#include "Misc/Coeficients.hpp"
 #include "Main/SystemParameters.hpp"
+#include "Misc/Coeficients.hpp"
 #include "common.hpp"
 
 namespace lsms {

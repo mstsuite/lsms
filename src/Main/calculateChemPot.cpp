@@ -3,7 +3,7 @@
 
 // calculate the chemical potential and the eigenvalue sum
 // see LSMS_1.9 mufind
-void calculateChemPot(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local, Real &eigensum)
+void lsms::calculateChemPot(LSMSCommunication &comm, LSMSSystemParameters &lsms, LocalTypeInfo &local, Real &eigensum)
 {
   Real wspace[4];
 

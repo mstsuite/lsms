@@ -1,10 +1,12 @@
 
 #include "RadialGrid_lua.hpp"
 
-// a radial grid in lua is represented as a table that contains the radial grid pointer as light userdata
-// and the appropriate metatable "LSMS.RadialGrid".
-// radial grids that have been allocated by lua are considered temporary and contain the field "ownedByLua" set to true.
-// only LSMS internal functions are allowed to assign pointer values and care should be taken that pointers owned by lua are never passed to such functions!
+// a radial grid in lua is represented as a table that contains the radial grid
+// pointer as light userdata and the appropriate metatable "LSMS.RadialGrid".
+// radial grids that have been allocated by lua are considered temporary and
+// contain the field "ownedByLua" set to true. only LSMS internal functions are
+// allowed to assign pointer values and care should be taken that pointers owned
+// by lua are never passed to such functions!
 
 typedef struct {
   RadialGrid *g;
@@ -53,7 +55,7 @@ int copyRadialGridLua(lua_State *L)
 
 int radialGridLua__gc(lua_State *L) {
   lua_getfield(L, 1, "RadialGrid");
-  RadialGrid *g = (RadialGrid *) lua_touserdata(L, -1);
+  RadialGrid *g = (RadialGrid *)lua_touserdata(L, -1);
   lua_getfield(L, 1, "ownedByLua");
   if (lua_toboolean(L, -1)) delete g;
   return 0;
@@ -61,7 +63,7 @@ int radialGridLua__gc(lua_State *L) {
 
 int generateRadialGridLua(lua_State *L) {
   lua_getfield(L, 1, "RadialGrid");
-  RadialGrid *g = (RadialGrid *) lua_touserdata(L, -1);
+  RadialGrid *g = (RadialGrid *)lua_touserdata(L, -1);
   Real x0 = luaL_checknumber(L, 2);
   Real h = luaL_checknumber(L, 3);
   int N = luaL_checkint(L, 4);
@@ -75,7 +77,7 @@ int generateRadialGridLua(lua_State *L) {
 
 int sizeRadialGridLua(lua_State *L) {
   lua_getfield(L, 1, "RadialGrid");
-  RadialGrid *g = (RadialGrid *) lua_touserdata(L, -1);
+  RadialGrid *g = (RadialGrid *)lua_touserdata(L, -1);
   lua_pushnumber(L, g->N);
 
   return 1;
@@ -83,7 +85,7 @@ int sizeRadialGridLua(lua_State *L) {
 
 int getRadialGridLua(lua_State *L) {
   lua_getfield(L, 1, "RadialGrid");
-  RadialGrid *g = (RadialGrid *) lua_touserdata(L, -1);
+  RadialGrid *g = (RadialGrid *)lua_touserdata(L, -1);
   int idx = luaL_checkint(L, 2);
 
   luaL_argcheck(L, 0 <= idx && idx < g->N, 2, "index out of range");
@@ -93,7 +95,7 @@ int getRadialGridLua(lua_State *L) {
 
 int getRadialGridXLua(lua_State *L) {
   lua_getfield(L, 1, "RadialGrid");
-  RadialGrid *g = (RadialGrid *) lua_touserdata(L, -1);
+  RadialGrid *g = (RadialGrid *)lua_touserdata(L, -1);
   int idx = luaL_checkint(L, 2);
 
   luaL_argcheck(L, 0 <= idx && idx < g->N, 2, "index out of range");
@@ -103,10 +105,10 @@ int getRadialGridXLua(lua_State *L) {
 
 int luaRadialGridToString(lua_State *L) {
   lua_getfield(L, 1, "RadialGrid");
-  RadialGrid *g = (RadialGrid *) lua_touserdata(L, -1);
+  RadialGrid *g = (RadialGrid *)lua_touserdata(L, -1);
   if (g->N > 0)
-    lua_pushfstring(L, "RadialGrid(%f,%f,%d,%d,%d)", g->x_mesh[0],
-                    g->h, g->N, g->jmt, g->jws);
+    lua_pushfstring(L, "RadialGrid(%f,%f,%d,%d,%d)", g->x_mesh[0], g->h, g->N,
+                    g->jmt, g->jws);
   else
     lua_pushfstring(L, "RadialGrid(0)");
   return 1;
@@ -114,9 +116,8 @@ int luaRadialGridToString(lua_State *L) {
 
 static int radialGridLua__index(lua_State *L) {
   lua_getfield(L, 1, "RadialGrid");
-  RadialGrid *g = (RadialGrid *) lua_touserdata(L, -1);
-  if (lua_type(L, 2) == LUA_TNUMBER)
-    return getRadialGridLua(L);
+  RadialGrid *g = (RadialGrid *)lua_touserdata(L, -1);
+  if (lua_type(L, 2) == LUA_TNUMBER) return getRadialGridLua(L);
   lua_getmetatable(L, 1);
   lua_pushvalue(L, 2);
   lua_gettable(L, -2);

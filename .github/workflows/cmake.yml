@@ -20,13 +20,15 @@ jobs:
       - name: Install dependencies on ubuntu
         run: |
           sudo apt-get update -y 
+          sudo apt-get upgrade -y
           sudo apt-get install build-essential \
            openmpi-bin libopenmpi-dev \
            ninja-build \
            libblas-dev \
            liblapack-dev \
            gfortran \
-           libhdf5-dev
+           libhdf5-dev \
+           python3-pytest -y
 
       - name: Configure CMake
         run: |

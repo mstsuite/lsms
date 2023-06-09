@@ -10,7 +10,6 @@
 extern "C" {
 
 void sph_harm_1_(double *vec, int *lmax, Complex *ylm);
-
 }
 
 #endif  // MADELUNG_SPHERICAL_HARMONICS_H

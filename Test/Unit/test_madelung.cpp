@@ -14,6 +14,8 @@
 
 namespace madlung_tests {
 
+using namespace lsms;
+
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
   os << "[";

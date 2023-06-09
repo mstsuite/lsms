@@ -10,14 +10,10 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
 {
   int iprpts=atom.r_mesh.size();
   solution.energy=energy;
-  // Real r_sph=atom.r_mesh[atom.jws];
-  // if(lsms.mtasa==0) r_sph=atom.r_mesh[atom.jmt];
+
   Real r_sph = atom.rInscribed;
   if(lsms.mtasa > 0) r_sph = atom.rws;
 
-  //YingWai's check
-  //if(lsms.global.iprint>=0)
-  //  printf("Inside calculateSingleScatterSolution. r_sph = %15.8f\n", r_sph);
 
   if(lsms.n_spin_pola==1) // non spin polarized
   {
@@ -33,19 +29,16 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
     int one=1;
     BLAS::zcopy_(&kkrszsqr,&solution.tmat_l(0,0,0),&one,&solution.tmat_g(0,0),&one);
   } else {
-    for(int is=0; is<lsms.n_spin_pola; is++)
-    {
-      //YingWai's check
-      //printf("Before single_scatterer_nonrel.\n");
-      single_scatterer_nonrel_(&lsms.nrelv, &lsms.clight, &atom.lmax, &atom.kkrsz,
-                               &energy,&prel,&pnrel,
-                               &vr(0,is),&atom.r_mesh[0],&atom.h,&atom.jmt,&atom.jws,
-                               &solution.tmat_l(0,0,is),&solution.matom(0,is),
-                               &solution.zlr(0,0,is),&solution.jlr(0,0,is),
-                               &r_sph,
-                               &iprpts,
-                               &lsms.global.iprint,lsms.global.istop,32);
-      //printf("After single_scatterer_nonrel.\n");
+
+    for (int is = 0; is < lsms.n_spin_pola; is++) {
+
+      single_scatterer_nonrel_(
+          &lsms.nrelv, &lsms.clight, &atom.lmax, &atom.kkrsz, &energy, &prel,
+          &pnrel, &vr(0, is), &atom.r_mesh[0], &atom.h, &atom.jmt, &atom.jws,
+          &solution.tmat_l(0, 0, is), &solution.matom(0, is),
+          &solution.zlr(0, 0, is), &solution.jlr(0, 0, is), &r_sph, &iprpts,
+          &lsms.global.iprint, lsms.global.istop, 32);
+
     }
     if(lsms.n_spin_cant>1)
     {
@@ -115,7 +108,7 @@ void calculateSingleScattererSolution(LSMSSystemParameters &lsms, AtomData &atom
 
    printf("iprpts = %d    ir = %d\n", iprpts, ir);
    // exit(1);
-   
+
    single_scatterer_rel_(&energy, &psq, &atom.lmax, &kmymax,
                          &vacuumId, &v0,
                          &vrr[0], &brr[0], &boprr(0,0),

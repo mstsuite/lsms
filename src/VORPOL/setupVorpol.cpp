@@ -8,7 +8,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
 {
 
   const bool testingVorpol = false;
-  
+
   int ipvp=50; // parameter from LSMS_1.9 vorpol.h
   int iprcrit=260;
   int ipnode=ipvp*(ipvp-1);
@@ -26,7 +26,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
 
   Array3d<Real> vplanesTest(3,ipvp, local.num_local);
   std::vector<int> nvplanesTest(local.num_local);
-  
+
   bool useOldAlgorithm = false;
 
   if(lsms.global.iprint >= 0)
@@ -85,7 +85,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
                       &vplanesTest(0,0,i), &ipvp, &nvplanesTest[i], &rad[0]);
     }
   }
-  
+
   if(useOldAlgorithm)
   {
     std::vector<Real> atom_position_1(crystal.num_atoms);
@@ -129,7 +129,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
         atom_position_3[j] = local.atom[i].vpClusterPos(2, j);
         rad[j] = crystal.types[crystal.type[idx]].rad;
       }
-      
+
       setup_boundary_cluster_(&my_atom, &num_atoms,
                       &atom_position_1[0],
                       &atom_position_2[0], &atom_position_3[0],
@@ -171,7 +171,7 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
                   &local.atom[i].rCircumscribed,
                   &lsms.global.iprint,lsms.global.istop,32);
     */
-    
+
     setup_vorpol_vplane_(&vplanes(0,0,i), &nvplanes[i],
                          &lmax,&SphericalHarmonicsCoeficients::clm[0],&lsms.ngaussq,&lsms.ngaussr,
                          &local.atom[i].voronoi.rInscribedSphere,&local.atom[i].voronoi.omegaInt,
@@ -180,8 +180,8 @@ void setupVorpol(LSMSSystemParameters &lsms, CrystalParameters &crystal, LocalTy
                          &local.atom[i].voronoi.gwwylm(0,0),&local.atom[i].voronoi.grwylm(0,0),
                          &local.atom[i].voronoi.ncrit,&local.atom[i].voronoi.wylm(0,0,0),
                          &local.atom[i].rCircumscribed,
-                         &lsms.global.iprint,lsms.global.istop,32);      
-    
+                         &lsms.global.iprint,lsms.global.istop,32);
+
     local.atom[i].rInscribed=local.atom[i].voronoi.rInscribedSphere;
 // set rmt according to value of fixRMT
     if(lsms.fixRMT==0)
@@ -223,7 +223,7 @@ void calculateVolumes(LSMSCommunication &comm, LSMSSystemParameters &lsms, Cryst
   Real volumeTotal = 0.0;
   Real volumeMT = 0.0;
   const Real sphereVolumeFactor = 4.0 * M_PI / 3.0;
-  
+
   for (int i=0; i<local.num_local; i++)
   {
     volumeTotal += local.atom[i].omegaWS * local.n_per_type[i];

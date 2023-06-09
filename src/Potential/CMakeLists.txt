@@ -1,6 +1,9 @@
 
 target_sources(lsmscore
         PUBLIC
+
+        xc_lda_potential.hpp
+
         alpha2_c.f
         calculateASAro3.f
         calculateChargesPotential.cpp
@@ -25,10 +28,16 @@ target_sources(lsmscore
         newFunctionalInterface.hpp
         common.hpp
 
+        newPotential.cpp
+        newPotential.hpp
+
         XCLibxc.cpp
         XCLibxc.hpp
         XCBase.cpp
         XCBase.hpp
+        XCLDA.cpp
+        XCLDA.hpp
+
         )
 
 target_include_directories(

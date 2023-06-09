@@ -22,6 +22,4 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms,
                           LocalTypeInfo &local, CrystalParameters &crystal,
                           lsms::DFTEnergy &dft_energy);
 
-
-
 #endif

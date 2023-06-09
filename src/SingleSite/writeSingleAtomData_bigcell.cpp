@@ -1,4 +1,5 @@
 #include <string.h>
+
 #include "AtomData.hpp"
 #include "writeSingleAtomData.hpp"
 

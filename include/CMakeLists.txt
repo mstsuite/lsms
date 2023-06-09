@@ -16,4 +16,5 @@ target_sources(
          PhysicalConstants.hpp
          Real.hpp
          NDArray.hpp
+         utils.h
          TypeTraits.hpp)

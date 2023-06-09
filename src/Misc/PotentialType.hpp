@@ -7,17 +7,13 @@
 
 namespace lsms {
 
-  class PotentialType {
+class PotentialType {
+ public:
+  constexpr static int MT = 0;
+  constexpr static int ASA = 1;
+  constexpr static int MTASA = 2;
+};
 
-  public:
+}  // namespace lsms
 
-    constexpr static int MT = 0;
-    constexpr static int ASA = 1;
-    constexpr static int MTASA = 2;
-
-  };
-
-}
-
-
-#endif //LSMS_POTENTIALTYPE_HPP
+#endif  // LSMS_POTENTIALTYPE_HPP

@@ -68,10 +68,10 @@ if (NOT libxc_FOUND)
     find_package_handle_standard_args(Autotools
             REQUIRED_VARS AUTOCONF_EXECUTABLE AUTOMAKE_EXECUTABLE MAKE_EXECUTABLE)
 
-    file(COPY ${PROJECT_SOURCE_DIR}/external/libxc-5.1.6
+    file(COPY ${PROJECT_SOURCE_DIR}/external/libxc-6.1.0
             DESTINATION ${CMAKE_BINARY_DIR}/external)
 
-    set(_src ${CMAKE_BINARY_DIR}/external/libxc-5.1.6)
+    set(_src ${CMAKE_BINARY_DIR}/external/libxc-6.1.0)
     get_filename_component(_src "${_src}" REALPATH)
 
     set(_install ${CMAKE_BINARY_DIR}/external/libxc)

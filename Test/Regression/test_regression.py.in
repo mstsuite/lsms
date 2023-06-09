@@ -1,0 +1,53 @@
+import os
+import subprocess
+from contextlib import contextmanager
+
+import numpy as np
+import pytest
+from numpy import testing
+
+
+MPIEXEC = "@MPIEXEC_EXECUTABLE@"
+MPI = "@MPIEXEC_NUMPROC_FLAG@"
+PATH = "@CMAKE_BINARY_DIR@/bin/lsms_asa"
+
+@contextmanager
+def change_working_directory(directory):
+    owd = os.getcwd()
+
+    try:
+        os.chdir(directory)
+        yield directory
+    except FileNotFoundError:
+        yield
+    finally:
+        os.chdir(owd)
+
+
+@pytest.mark.parametrize(
+    "dirs, nproc",
+    [
+        ("01_al_fcc_asa", 1),
+        ("02_al_fcc_conv_asa", 2),
+        ("03_fe_bcc_asa", 1),
+        ("04_fe_bcc_conv_asa", 2),
+        ("05_cuzn_b2_asa", 1),
+        ("05_cuzn_b2_asa", 2),
+    ],
+)
+def test_regression(dirs, nproc):
+    with change_working_directory(dirs):
+
+        try:
+            os.remove("k.out")
+        except:
+            pass
+
+        cmds = [MPIEXEC, MPI, str(nproc), PATH, "i_lsms.lua"]
+
+        subprocess.run(cmds, env=os.environ)
+
+        ref = np.loadtxt("k.out.ref")[:, 1]
+        res = np.loadtxt("k.out")[:, 1]
+
+        testing.assert_allclose(ref, res, rtol=1e-5, atol=1e-7)

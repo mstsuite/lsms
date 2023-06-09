@@ -44,7 +44,6 @@ void associatedLegendreFunctionNormalized(R x, int lmax, R *Plm) {
   if (lmax < 1) return;
 
   for (int m = 1; m <= lmax; m++) {
-
     // \bar{P}_{mm} = - \sqrt{\frac{2m+1}{2m}} y \bar{P}_{m-1, m-1}
     Plm[plmIdx(m, m)] =
         -std::sqrt(R(2 * m + 1) / R(2 * m)) * y * Plm[plmIdx(m - 1, m - 1)];
@@ -55,9 +54,7 @@ void associatedLegendreFunctionNormalized(R x, int lmax, R *Plm) {
   }
 
   for (int m = 0; m < lmax; m++) {
-
     for (int l = m + 2; l <= lmax; l++) {
-
       // \bar{P}_{lm} = a_{lm} (x \bar{P}_{l-1. m} - b_{lm} \bar{P}_{l-2, m})
       // a_{lm} = \sqrt{\frac{(4 l^2 - 1)(l^2 - m^2)}}
       // b_{lm} = \sqrt{\frac{(l -1)^2 - m^2}{4 (l-1)^2 -1}}
@@ -67,7 +64,6 @@ void associatedLegendreFunctionNormalized(R x, int lmax, R *Plm) {
                          R(4 * (l - 1) * (l - 1) - 1));
       Plm[plmIdx(l, m)] =
           a_lm * (x * Plm[plmIdx(l - 1, m)] - b_lm * Plm[plmIdx(l - 2, m)]);
-
     }
   }
 }
