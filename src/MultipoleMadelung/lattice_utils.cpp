@@ -48,10 +48,9 @@ void lsms::insert_ordered(lsms::matrix<double> &latt_vec,
   latt_vec(2, len) = vec[2];
 }
 
-__attribute__((unused)) lsms::matrix<double> lsms::create_lattice(const lsms::matrix<double> &brav,
-                                          double cutoff,
-                                          const std::vector<int> &nm,
-                                          int size) {
+__attribute__((unused)) lsms::matrix<double> lsms::create_lattice(
+    const lsms::matrix<double> &brav, double cutoff, const std::vector<int> &nm,
+    int size) {
   lsms::matrix<double> latt_vec(3, size);
   std::vector<double> latt_vec_sq(size);
 

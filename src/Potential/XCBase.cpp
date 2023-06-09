@@ -4,8 +4,8 @@
 
 #include "XCBase.hpp"
 
-lsms::XCBase::XCBase(int nSpin, std::vector<int> xcFunctional)
-    : _nSpin{nSpin}, _xcFunctional{xcFunctional} {}
+lsms::XCBase::XCBase(int n_spin, std::vector<int> xc_functional)
+    : _nSpin{n_spin}, _xcFunctional{xc_functional} {}
 
-lsms::XCBase::XCBase(int nSpin, int xcFunctional[3])
-    : _nSpin{nSpin}, _xcFunctional(xcFunctional, xcFunctional + 3) {}
+lsms::XCBase::XCBase(int n_spin, int xc_functional[3])
+    : _nSpin{n_spin}, _xcFunctional(xc_functional, xc_functional + 3) {}

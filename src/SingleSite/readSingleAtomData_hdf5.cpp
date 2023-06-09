@@ -1,5 +1,6 @@
 #define H5_USE_16_API
 #include <hdf5.h>
+
 #include "AtomData.hpp"
 #include "Main/HDF5io.hpp"
 
@@ -82,5 +83,3 @@ int readSingleAtomData_hdf5(hid_t loc_id, AtomData &atom)
 
   return present_atom;
 }
-
-

@@ -7,7 +7,7 @@ void checkIfSpinHasFlipped(LSMSSystemParameters &lsms, AtomData &a)
   {
     Real spinFlipDirection = (a.xvalws[0] - a.xvalws[1]) * (a.xvalwsNew[0] - a.xvalwsNew[1]);
 
-    if (spinFlipDirection > 0.0) 
+    if (spinFlipDirection > 0.0)
       a.spinFlipped = false;
     else
       a.spinFlipped = true;

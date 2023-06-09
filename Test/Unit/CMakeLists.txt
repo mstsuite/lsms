@@ -4,6 +4,9 @@
 #
 
 include(FetchContent)
+set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+set(BUILD_GTEST ON CACHE BOOL "" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
@@ -20,7 +23,17 @@ add_executable(test_lua_library test_lua_library.cpp)
 target_sources(test_lua_library PUBLIC accel_common.hpp)
 target_include_directories(test_lua_library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_lua_library PUBLIC Lua::Lua)
+target_link_libraries(test_lua_library PUBLIC lsmscore)
 target_link_libraries(test_lua_library PUBLIC gtest_main)
+
+foreach (ref_file "input.lua")
+    add_custom_command(
+            TARGET test_lua_library
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_SOURCE_DIR}/${ref_file}"
+            "${CMAKE_CURRENT_BINARY_DIR}/${ref_file}")
+endforeach ()
 
 gtest_discover_tests(test_lua_library)
 ##################################################################
@@ -153,4 +166,62 @@ target_sources(test_multipole_madelung PUBLIC accel_common.hpp)
 target_include_directories(test_multipole_madelung PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 gtest_discover_tests(test_multipole_madelung)
+##################################################################
+
+##################################################################
+# 11. Test: Eigensolver routines
+add_executable(test_eigensolver test_eigensolver.cpp)
+target_link_libraries(test_eigensolver PUBLIC gtest_main)
+target_link_libraries(test_eigensolver PRIVATE lsmscore)
+target_sources(test_eigensolver PUBLIC accel_common.hpp)
+target_include_directories(test_eigensolver PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+gtest_discover_tests(test_eigensolver)
+##################################################################
+
+##################################################################
+# 12. Test: Mixer routines
+add_executable(test_mixer test_mixer.cpp vector_fun.f90)
+target_link_libraries(test_mixer PUBLIC gtest_main)
+target_link_libraries(test_mixer PRIVATE lsmscore)
+target_sources(test_mixer PUBLIC accel_common.hpp)
+target_include_directories(test_mixer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+gtest_discover_tests(test_mixer)
+##################################################################
+
+##################################################################
+# 13. Test: Mixer routines
+add_executable(test_atomicdft test_atomicdft.cpp)
+target_link_libraries(test_atomicdft PUBLIC gtest_main)
+target_link_libraries(test_atomicdft PRIVATE lsmscore)
+target_sources(test_atomicdft PUBLIC accel_common.hpp)
+target_include_directories(test_atomicdft PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+gtest_discover_tests(test_atomicdft)
+##################################################################
+
+##################################################################
+# 13. Test: Single site routines
+add_executable(test_ss test_single_site.cpp)
+target_link_libraries(test_ss PUBLIC gtest_main)
+target_link_libraries(test_ss PRIVATE lsmscore)
+target_sources(test_ss PUBLIC accel_common.hpp)
+target_include_directories(test_ss PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+FetchContent_Declare(matplotplusplus
+        GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
+        GIT_TAG origin/master) # or whatever tag you want
+
+
+FetchContent_GetProperties(matplotplusplus)
+if(NOT matplotplusplus_POPULATED)
+    FetchContent_Populate(matplotplusplus)
+    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+target_link_libraries(test_ss PUBLIC matplot)
+
+
+gtest_discover_tests(test_ss)
 ##################################################################

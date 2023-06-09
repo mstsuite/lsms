@@ -4,30 +4,29 @@
 
 #include <vector>
 
-#include "Real.hpp"
 #include "Matrix.hpp"
-
+#include "Real.hpp"
 #include "common.hpp"
 
-enum class XCFunctional
-{
-  VoskoWilkNusair
-};
+enum class XCFunctional { VoskoWilkNusair };
 
 // LibxcInterface is a singleton class to provide an interface to libxc
 class NewFunctionalInterface {
-public:
-  XCFunctional functional[numFunctionalIndices-1];
+ public:
+  XCFunctional functional[numFunctionalIndices - 1];
   int numFunctionals;
   bool spinPolarized;
-  bool needGradients; // the functional needs gradients of the density (for GGAs)
-  bool needLaplacian; // need laplacians of the density (for MetaGGAs)
-  bool needKineticEnergyDensity; // for MetaGGAs
-  bool needExactExchange; // for Hybrid Functionals
+  bool needGradients;  // the functional needs gradients of the density (for
+                       // GGAs)
+  bool needLaplacian;  // need laplacians of the density (for MetaGGAs)
+  bool needKineticEnergyDensity;  // for MetaGGAs
+  bool needExactExchange;         // for Hybrid Functionals
 
   int init(int nSpin, int *xcFunctional);
-  void evaluate(std::vector<Real> &rMesh, Matrix<Real> &rhoIn, int jmt, int nSpin, Matrix<Real> &xcEnergyOut, Matrix<Real> &xcPotOut);
-  void evaluateSingle(Real *rhoIn, int nSpin, Real *xcEnergyOut, Real *xcPotOut);
+  void evaluate(std::vector<Real> &rMesh, Matrix<Real> &rhoIn, int jmt,
+                int nSpin, Matrix<Real> &xcEnergyOut, Matrix<Real> &xcPotOut);
+  void evaluateSingle(Real *rhoIn, int nSpin, Real *xcEnergyOut,
+                      Real *xcPotOut);
 };
 
 #endif

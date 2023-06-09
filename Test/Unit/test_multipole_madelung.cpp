@@ -28,6 +28,8 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
 
 namespace multipole_tests {
 
+using namespace lsms;
+
 SphericalHarmonicsCoeficients sphericalHarmonicsCoeficients;
 GauntCoeficients gauntCoeficients;
 IFactors iFactors;

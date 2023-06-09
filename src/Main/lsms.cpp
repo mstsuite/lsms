@@ -19,6 +19,9 @@
 #include "gptl.h"
 #endif
 
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/printf.h>
 #include <hdf5.h>
 #include <lua.hpp>
 
@@ -57,6 +60,8 @@
 #include "mixing_params.hpp"
 #include "read_input.hpp"
 #include "num_digits.hpp"
+
+#include "ChargeDensity/ChargeDensity.hpp"
 
 #ifdef USE_NVTX
 #include <nvToolsExt.h>
@@ -395,7 +400,7 @@ int main(int argc, char *argv[])
   }
   
 //  loadPotentials(comm,lsms,crystal,local);
-
+  
 // initialize Mixing
   double timeSetupMixing = MPI_Wtime();
   Mixing *mixing;
@@ -412,7 +417,7 @@ int main(int argc, char *argv[])
 #ifdef LEGACY_MONOPOLE
   calculateMadelungMatrices(lsms, crystal, local);
 #else
-  calculateMultiMadelungMatrices(lsms, crystal, local);
+  lsms::calculateMultiMadelungMatrices(lsms, crystal, local);
 #endif
   timeCalculateMadelungMatrix = MPI_Wtime() - timeCalculateMadelungMatrix;
   if (lsms.global.iprint >= 0)
@@ -420,12 +425,34 @@ int main(int argc, char *argv[])
     printf("time calculateMultiMadelungMatrices: %lf sec\n\n",timeCalculateMadelungMatrix);
   }
 
+  if (lsms.pot_in_type == -1) {
+
+    std::vector<Real> qsub(crystal.num_types, 0.0);
+
+    Array3d<Real> rhoTemp;
+    rhoTemp.resize(lsms.global.iprpts + 1, 2, local.num_local);
+    rhoTemp = 0.0;
+    
+    calculatePotential(comm, lsms, local, crystal, qsub, rhoTemp, 0);
+
+    // Initialize potentials and charge densities
+    lsms::copyChargesAndPotential(lsms, local);
+
+    // Check charge density after mixing
+    lsms::checkRadialChargeDensity(lsms, local);
+
+    if (comm.rank == 0) {
+      fmt::printf("Initial MTZ: %20.9f\n", lsms.vmt);
+    }
+
+  }
+
   if (lsms.global.iprint >= 1)
   {
     printLocalTypeInfo(stdout, local);
   }
 
-  calculateCoreStates(comm, lsms, local);
+  lsms::calculateCoreStates(comm, lsms, local);
   if (lsms.global.iprint >= 0)
   {
     printf("Finished calculateCoreStates(...)\n");
@@ -564,7 +591,7 @@ int main(int argc, char *argv[])
     // if(!lsms.global.checkIstop("buildKKRMatrix"))
 
     // Calculate chemical potential 
-    calculateChemPot(comm, lsms, local, eband);
+    lsms::calculateChemPot(comm, lsms, local, eband);
     dTimeCCP = MPI_Wtime() - dTimeCCP;
     timeCalcChemPot += dTimeCCP;
 
@@ -623,7 +650,7 @@ int main(int argc, char *argv[])
           swapCoreStateEnergies(local.atom[i]);
       }
     }
-    calculateCoreStates(comm, lsms, local);
+    lsms::calculateCoreStates(comm, lsms, local);
 
     // pf = fopen("vr_test_4.dat","w");
     // printAtomPotential(pf, local.atom[0]);
@@ -719,7 +746,7 @@ int main(int argc, char *argv[])
     }
 
     // Recalculate core states for new potential if we are performing scf calculations
-    calculateCoreStates(comm, lsms, local);
+    lsms::calculateCoreStates(comm, lsms, local);
 
     // Periodically write the new potential for scf calculations 
     potentialWriteCounter++;

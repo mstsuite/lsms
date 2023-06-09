@@ -5,11 +5,11 @@
 #ifndef LSMS_NUM_DIGITS_HPP
 #define LSMS_NUM_DIGITS_HPP
 
-template<class T>
+template <class T>
 static int num_digits(T number) {
   int digits = 0;
 
-  if (number < 0) digits = 1; // remove this line if '-' counts as a digit
+  if (number < 0) digits = 1;  // remove this line if '-' counts as a digit
 
   while (number) {
     number /= 10;
@@ -18,4 +18,4 @@ static int num_digits(T number) {
   return digits;
 }
 
-#endif //LSMS_NUM_DIGITS_HPP
+#endif  // LSMS_NUM_DIGITS_HPP

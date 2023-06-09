@@ -8,20 +8,20 @@
 
 #include <vector>
 
-#include "Real.hpp"
 #include "../Potential/PotentialShifter.hpp"
+#include "Real.hpp"
 #include "mixing.hpp"
 
 class LSMS {
-
-public:
-
-  //LSMS(MPI_Comm comm, const char * i_lsms, const char * out_prefix, PotentialShifter &potentialShifter);
-  //LSMS(MPI_Comm comm, const char * i_lsms, const char * out_prefix);
-  LSMS(MPI_Comm _comm, const char* i_lsms, const char* out_prefix, int my_group = 0);
+ public:
+  // LSMS(MPI_Comm comm, const char * i_lsms, const char * out_prefix,
+  // PotentialShifter &potentialShifter); LSMS(MPI_Comm comm, const char *
+  // i_lsms, const char * out_prefix);
+  LSMS(MPI_Comm _comm, const char *i_lsms, const char *out_prefix,
+       int my_group = 0);
   ~LSMS();
 
-  int myWalkerID {0};
+  int myWalkerID{0};
 
   int version() { return LSMS_version; }
   int numSpins() { return lsms.num_atoms; }
@@ -39,18 +39,16 @@ public:
   void getMag(std::vector<std::vector<Real>> &);
   void getMag(Real *);
 
-  void setOccupancies(int*);
-  void getOccupancies(int*);
-  void getAlloyInfo(AlloyMixingDesc&, int**);
+  void setOccupancies(int *);
+  void getOccupancies(int *);
+  void getAlloyInfo(AlloyMixingDesc &, int **);
 
   Real oneStepEnergy(Real *eb);
-  Real oneStepEnergy()
-  {
+  Real oneStepEnergy() {
     Real eband;
     return oneStepEnergy(&eband);
   }
-  Real oneStepEnergy(std::vector<std::vector<Real>> &ev)
-  {
+  Real oneStepEnergy(std::vector<std::vector<Real>> &ev) {
     setEvec(ev);
     return oneStepEnergy();
   }
@@ -58,8 +56,7 @@ public:
   Real multiStepEnergy();
 
   Real scfEnergy(Real *eb);
-  Real scfEnergy()
-  {
+  Real scfEnergy() {
     Real eb;
     return scfEnergy(&eb);
   }
@@ -74,22 +71,19 @@ public:
 
   long energyLoopCount;
 
-  void savePotentials(std::vector<Matrix<Real> > &vrs)
-  {
-    if(vrs.size()!=local.num_local) vrs.resize(local.num_local);
-    for(int i=0; i<local.num_local; i++) vrs[i]=local.atom[i].vr;
+  void savePotentials(std::vector<Matrix<Real>> &vrs) {
+    if (vrs.size() != local.num_local) vrs.resize(local.num_local);
+    for (int i = 0; i < local.num_local; i++) vrs[i] = local.atom[i].vr;
   }
 
-  void restorePotentials(std::vector<Matrix<Real> > &vrs)
-  {
-    for(int i=0; i<local.num_local; i++) local.atom[i].vr=vrs[i];
-    mixing->prepare(comm,lsms,local.atom);
+  void restorePotentials(std::vector<Matrix<Real>> &vrs) {
+    for (int i = 0; i < local.num_local; i++) local.atom[i].vr = vrs[i];
+    mixing->prepare(comm, lsms, local.atom);
   }
 
-  void replaceAtom(AtomData& currAtom, AtomData& newAtom);
+  void replaceAtom(AtomData &currAtom, AtomData &newAtom);
 
-private:
-
+ private:
   char prefix[256];
   int LSMS_version;
   int max_num_local;
@@ -107,12 +101,10 @@ private:
   Real energyTolerance;
   Real rmsTolerance;
 
-  // retain a bank of atoms (per species type) that can be used to load 
+  // retain a bank of atoms (per species type) that can be used to load
   // a guess (or frozen) potential when site occupancy changes.
   AlloyMixingDesc alloyDesc;
-  AlloyAtomBank   alloyBank;
-
+  AlloyAtomBank alloyBank;
 };
 
 #endif
-

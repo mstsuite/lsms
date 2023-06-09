@@ -3,12 +3,12 @@
 // this is from LSMS_1.9 gettau_c.f after the call to green_function_rel.
 
 // this is rotr from LSMS_1.9
-// ! rotation matrix for 3D vectors 
+// ! rotation matrix for 3D vectors
 // ! Simon L. Altmann: Rotations,Quaternions,..., p.75, Eq.(3.3.11)
-// ! input: 
+// ! input:
 // !        tvec   normal vector of axis
 // !        phi    angle of rotation
-// ! output: 
+// ! output:
 // !        drot   matrix of rotation
 // !
 
@@ -16,10 +16,9 @@
 
 #include <cmath>
 
+#include "Array3d.hpp"
 #include "Complex.hpp"
 #include "Matrix.hpp"
-#include "Array3d.hpp"
-
 #include "SingleSite/AtomData.hpp"
 
 static void calculateRotationMatrix(Matrix<Real> &drot, Real *tvec, Real phi) {
@@ -43,9 +42,10 @@ static void calculateRotationMatrix(Matrix<Real> &drot, Real *tvec, Real phi) {
   drot(2, 1) = tx + 2.0 * ty2 * tz2;
 }
 
-void rotateToGlobal(AtomData &atom, Matrix<Complex> &dos, Matrix<Complex> &dosck,
-                    Matrix<Complex> &dos_orb, Matrix<Complex> &dosck_orb,
-                    Array3d<Complex> &green, Array3d<Complex> &dens_orb, int i) {
+void rotateToGlobal(AtomData &atom, Matrix<Complex> &dos,
+                    Matrix<Complex> &dosck, Matrix<Complex> &dos_orb,
+                    Matrix<Complex> &dosck_orb, Array3d<Complex> &green,
+                    Array3d<Complex> &dens_orb, int i) {
   Real axis[3];
   Matrix<Real> rot(3, 3);
 
@@ -67,45 +67,63 @@ void rotateToGlobal(AtomData &atom, Matrix<Complex> &dos, Matrix<Complex> &dosck
   axis[2] *= a;
 
   calculateRotationMatrix(rot, axis, phi);
-  Complex t1 = rot(0, 0) * dos(1, i) + rot(0, 1) * dos(2, i) + rot(0, 2) * dos(3, i);
-  Complex t2 = rot(1, 0) * dos(1, i) + rot(1, 1) * dos(2, i) + rot(1, 2) * dos(3, i);
-  Complex t3 = rot(2, 0) * dos(1, i) + rot(2, 1) * dos(2, i) + rot(2, 2) * dos(3, i);
+  Complex t1 =
+      rot(0, 0) * dos(1, i) + rot(0, 1) * dos(2, i) + rot(0, 2) * dos(3, i);
+  Complex t2 =
+      rot(1, 0) * dos(1, i) + rot(1, 1) * dos(2, i) + rot(1, 2) * dos(3, i);
+  Complex t3 =
+      rot(2, 0) * dos(1, i) + rot(2, 1) * dos(2, i) + rot(2, 2) * dos(3, i);
   dos(1, i) = t1;
   dos(2, i) = t2;
   dos(3, i) = t3;
 
-  t1 = rot(0, 0) * dosck(1, i) + rot(0, 1) * dosck(2, i) + rot(0, 2) * dosck(3, i);
-  t2 = rot(1, 0) * dosck(1, i) + rot(1, 1) * dosck(2, i) + rot(1, 2) * dosck(3, i);
-  t3 = rot(2, 0) * dosck(1, i) + rot(2, 1) * dosck(2, i) + rot(2, 2) * dosck(3, i);
+  t1 = rot(0, 0) * dosck(1, i) + rot(0, 1) * dosck(2, i) +
+       rot(0, 2) * dosck(3, i);
+  t2 = rot(1, 0) * dosck(1, i) + rot(1, 1) * dosck(2, i) +
+       rot(1, 2) * dosck(3, i);
+  t3 = rot(2, 0) * dosck(1, i) + rot(2, 1) * dosck(2, i) +
+       rot(2, 2) * dosck(3, i);
   dosck(1, i) = t1;
   dosck(2, i) = t2;
   dosck(3, i) = t3;
 
-  t1 = rot(0, 0) * dos_orb(0, i) + rot(0, 1) * dos_orb(1, i) + rot(0, 2) * dos_orb(2, i);
-  t2 = rot(1, 0) * dos_orb(0, i) + rot(1, 1) * dos_orb(1, i) + rot(1, 2) * dos_orb(2, i);
-  t3 = rot(2, 0) * dos_orb(0, i) + rot(2, 1) * dos_orb(1, i) + rot(2, 2) * dos_orb(2, i);
+  t1 = rot(0, 0) * dos_orb(0, i) + rot(0, 1) * dos_orb(1, i) +
+       rot(0, 2) * dos_orb(2, i);
+  t2 = rot(1, 0) * dos_orb(0, i) + rot(1, 1) * dos_orb(1, i) +
+       rot(1, 2) * dos_orb(2, i);
+  t3 = rot(2, 0) * dos_orb(0, i) + rot(2, 1) * dos_orb(1, i) +
+       rot(2, 2) * dos_orb(2, i);
   dos_orb(0, i) = t1;
   dos_orb(1, i) = t2;
   dos_orb(2, i) = t3;
 
-  t1 = rot(0, 0) * dosck_orb(0, i) + rot(0, 1) * dosck_orb(1, i) + rot(0, 2) * dosck_orb(2, i);
-  t2 = rot(1, 0) * dosck_orb(0, i) + rot(1, 1) * dosck_orb(1, i) + rot(1, 2) * dosck_orb(2, i);
-  t3 = rot(2, 0) * dosck_orb(0, i) + rot(2, 1) * dosck_orb(1, i) + rot(2, 2) * dosck_orb(2, i);
+  t1 = rot(0, 0) * dosck_orb(0, i) + rot(0, 1) * dosck_orb(1, i) +
+       rot(0, 2) * dosck_orb(2, i);
+  t2 = rot(1, 0) * dosck_orb(0, i) + rot(1, 1) * dosck_orb(1, i) +
+       rot(1, 2) * dosck_orb(2, i);
+  t3 = rot(2, 0) * dosck_orb(0, i) + rot(2, 1) * dosck_orb(1, i) +
+       rot(2, 2) * dosck_orb(2, i);
   dosck_orb(0, i) = t1;
   dosck_orb(1, i) = t2;
   dosck_orb(2, i) = t3;
 
   for (int j = 0; j < green.l_dim1(); j++) {
     // do j=1,jws
-    t1 = rot(0, 0) * green(j, 1, i) + rot(0, 1) * green(j, 2, i) + rot(0, 2) * green(j, 3, i);
-    t2 = rot(1, 0) * green(j, 1, i) + rot(1, 1) * green(j, 2, i) + rot(1, 2) * green(j, 3, i);
-    t3 = rot(2, 0) * green(j, 1, i) + rot(2, 1) * green(j, 2, i) + rot(2, 2) * green(j, 3, i);
+    t1 = rot(0, 0) * green(j, 1, i) + rot(0, 1) * green(j, 2, i) +
+         rot(0, 2) * green(j, 3, i);
+    t2 = rot(1, 0) * green(j, 1, i) + rot(1, 1) * green(j, 2, i) +
+         rot(1, 2) * green(j, 3, i);
+    t3 = rot(2, 0) * green(j, 1, i) + rot(2, 1) * green(j, 2, i) +
+         rot(2, 2) * green(j, 3, i);
     green(j, 1, i) = t1;
     green(j, 2, i) = t2;
     green(j, 3, i) = t3;
-    t1 = rot(0, 0) * dens_orb(j, 0, i) + rot(0, 1) * dens_orb(j, 1, i) + rot(0, 2) * dens_orb(j, 2, i);
-    t2 = rot(1, 0) * dens_orb(j, 0, i) + rot(1, 1) * dens_orb(j, 1, i) + rot(1, 2) * dens_orb(j, 2, i);
-    t3 = rot(2, 0) * dens_orb(j, 0, i) + rot(2, 1) * dens_orb(j, 1, i) + rot(2, 2) * dens_orb(j, 2, i);
+    t1 = rot(0, 0) * dens_orb(j, 0, i) + rot(0, 1) * dens_orb(j, 1, i) +
+         rot(0, 2) * dens_orb(j, 2, i);
+    t2 = rot(1, 0) * dens_orb(j, 0, i) + rot(1, 1) * dens_orb(j, 1, i) +
+         rot(1, 2) * dens_orb(j, 2, i);
+    t3 = rot(2, 0) * dens_orb(j, 0, i) + rot(2, 1) * dens_orb(j, 1, i) +
+         rot(2, 2) * dens_orb(j, 2, i);
     dens_orb(j, 0, i) = t1;
     dens_orb(j, 1, i) = t2;
     dens_orb(j, 2, i) = t3;

@@ -129,10 +129,12 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
   globalSum(comm, totalEnergy);
   globalSum(comm, totalPressure);
 
-  Real *emad;
-  Real *emadp;
-  emad = new Real[lsms.n_spin_pola];
-  emadp = new Real[lsms.n_spin_pola];
+  /**
+   *
+   */
+
+  std::vector<Real> emad(lsms.n_spin_pola, 0.0);
+  std::vector<Real> emadp(lsms.n_spin_pola, 0.0);
 
   Real spinFactor;
   switch (lsms.n_spin_pola)
@@ -182,9 +184,6 @@ void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms, L
   }
 
   lsms.totalEnergy = totalEnergy;
-
-  delete[] emad;
-  delete[] emadp;
 }
 
 void calculateTotalEnergy(LSMSCommunication &comm, LSMSSystemParameters &lsms,

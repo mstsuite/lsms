@@ -1,10 +1,12 @@
 
 #include "RadialPotential_lua.hpp"
 
-// a radial grid in lua is represented as a table that contains the radial grid pointer as light userdata
-// and the appropriate metatable "LSMS.RadialGrid".
-// radial grids that have been allocated by lua are considered temporary and contain the field "ownedByLua" set to true.
-// only LSMS internal functions are allowed to assign pointer values and care should be taken that pointers owned by lua are never passed to such functions!
+// a radial grid in lua is represented as a table that contains the radial grid
+// pointer as light userdata and the appropriate metatable "LSMS.RadialGrid".
+// radial grids that have been allocated by lua are considered temporary and
+// contain the field "ownedByLua" set to true. only LSMS internal functions are
+// allowed to assign pointer values and care should be taken that pointers owned
+// by lua are never passed to such functions!
 
 int newTemporaryRadialPotentialLua(lua_State *L) {
   RadialPotential *t = new RadialPotential;
@@ -22,7 +24,7 @@ int newTemporaryRadialPotentialLua(lua_State *L) {
 
 int radialPotentialLua__gc(lua_State *L) {
   lua_getfield(L, 1, "RadialPotential");
-  RadialPotential *g = (RadialPotential *) lua_touserdata(L, -1);
+  RadialPotential *g = (RadialPotential *)lua_touserdata(L, -1);
   lua_getfield(L, 1, "ownedByLua");
   if (lua_toboolean(L, -1)) delete g;
   return 0;
@@ -30,14 +32,14 @@ int radialPotentialLua__gc(lua_State *L) {
 
 int getRadialGridFromPotentialLua(lua_State *L) {
   lua_getfield(L, 1, "RadialPotential");
-  RadialPotential *p = (RadialPotential *) lua_touserdata(L, -1);
+  RadialPotential *p = (RadialPotential *)lua_touserdata(L, -1);
   RadialGrid *g = p->g;
 
   lua_newtable(L);
   lua_pushlightuserdata(L, g);
   lua_setfield(L, -2, "RadialGrid");
-//  lua_pushboolean(L,1);
-//  lua_setfield(L,-2,"ownedByLua");
+  //  lua_pushboolean(L,1);
+  //  lua_setfield(L,-2,"ownedByLua");
 
   luaL_getmetatable(L, "LSMS.RadialGrid");
   lua_setmetatable(L, -2);
@@ -45,10 +47,9 @@ int getRadialGridFromPotentialLua(lua_State *L) {
   return 1;
 }
 
-
 int getRadialPotentialLua(lua_State *L) {
   lua_getfield(L, 1, "RadialPotential");
-  RadialPotential *p = (RadialPotential *) lua_touserdata(L, -1);
+  RadialPotential *p = (RadialPotential *)lua_touserdata(L, -1);
   int is = luaL_checkint(L, 2);
   int ir = luaL_checkint(L, 3);
 
@@ -59,14 +60,14 @@ int getRadialPotentialLua(lua_State *L) {
 
 int syncRadialPotentialLua(lua_State *L) {
   lua_getfield(L, 1, "RadialPotential");
-  RadialPotential *p = (RadialPotential *) lua_touserdata(L, -1);
+  RadialPotential *p = (RadialPotential *)lua_touserdata(L, -1);
   p->sync();
   return 0;
 }
 
 int sizeRadialPotentialLua(lua_State *L) {
   lua_getfield(L, 1, "RadialPotential");
-  RadialPotential *g = (RadialPotential *) lua_touserdata(L, -1);
+  RadialPotential *g = (RadialPotential *)lua_touserdata(L, -1);
   lua_pushnumber(L, g->vr.n_row());
 
   return 1;
@@ -74,26 +75,25 @@ int sizeRadialPotentialLua(lua_State *L) {
 
 int luaRadialPotentialToString(lua_State *L) {
   lua_getfield(L, 1, "RadialPotential");
-  RadialPotential *g = (RadialPotential *) lua_touserdata(L, -1);
-//  if(g->N > 0)
-//    lua_pushfstring(L, "RadialPotential(%f,%f,%d,%d,%d)", g->x_mesh[0],
-//                    g->h, g->N, g->jmt, g->jws);
-//  else
+  RadialPotential *g = (RadialPotential *)lua_touserdata(L, -1);
+  //  if(g->N > 0)
+  //    lua_pushfstring(L, "RadialPotential(%f,%f,%d,%d,%d)", g->x_mesh[0],
+  //                    g->h, g->N, g->jmt, g->jws);
+  //  else
   lua_pushfstring(L, "RadialPotential(%p)", g);
   return 1;
 }
 
 int radialPotentialLua__index(lua_State *L) {
   lua_getfield(L, 1, "RadialPotential");
-  RadialPotential *g = (RadialPotential *) lua_touserdata(L, -1);
-  //if(lua_type(L,2)==LUA_TNUMBER)
+  RadialPotential *g = (RadialPotential *)lua_touserdata(L, -1);
+  // if(lua_type(L,2)==LUA_TNUMBER)
   //  return getRadialGridLua(L);
   lua_getmetatable(L, 1);
   lua_pushvalue(L, 2);
   lua_gettable(L, -2);
   return 1;
 }
-
 
 int luaopen_RadialPotential(lua_State *L) {
   luaL_newmetatable(L, "LSMS.RadialPotential");
