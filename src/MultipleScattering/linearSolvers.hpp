@@ -36,8 +36,10 @@ void solveTau00zgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local,
                      Matrix<Complex> &tau00, int ispin);
 #define MST_LINEAR_SOLVER_ZGETRF 2
 void solveTau00zgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local,
-                      AtomData &atom, int iie, Matrix<Complex> &m,
-                      Matrix<Complex> &tau00, int ispin);
+                      AtomData &atom, int iie, Matrix<Complex> &m, Matrix<Complex> &tau00, int ispin);
+void solveTauFullzgetrf(LSMSSystemParameters &lsms, LocalTypeInfo &local, 
+                      AtomData &atom, Matrix<Complex> &m, Matrix<Complex> &tau, int ispin);
+
 #define MST_LINEAR_SOLVER_ZCGESV 3
 void solveTau00zcgesv(LSMSSystemParameters &lsms, LocalTypeInfo &local,
                       AtomData &atom, int iie, Matrix<Complex> &m,
@@ -71,23 +73,23 @@ void solveTau00zblocklu_cpp(LSMSSystemParameters &lsms, LocalTypeInfo &local,
 #ifdef ACCELERATOR_CUDA_C
 void transferMatrixToGPUCuda(Complex *devM, Matrix<Complex> &m);
 void transferMatrixFromGPUCuda(Matrix<Complex> &m, cuDoubleComplex *devM);
-void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms,
-                               LocalTypeInfo &local, AtomData &atom, int iie,
-                               int ispin);
+void transferT0MatrixToGPUCuda(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                               AtomData &atom, int iie, int ispin);
+void transferFullTMatrixToGPUCUDA(Complex *devT, LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                                  AtomData &atom, int ispin);
 
-void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local,
-                             DeviceStorage &d, AtomData &atom, Complex *tMatrix,
-                             Complex *devM, Matrix<Complex> &tau00);
+void solveTau00zgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom, Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00);
+void solveTauFullzgetrf_cublas(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Complex *devTauFull);
+
 
 // CUDA Solvers
-void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
-                               DeviceStorage &d, AtomData &atom,
-                               Complex *tMatrix, Complex *devM,
-                               Matrix<Complex> &tau00, int ispin);
-void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
-                               DeviceStorage &d, AtomData &atom,
-                               Complex *tMatrix, Complex *devM,
-                               Matrix<Complex> &tau00, int ispin);
+void solveTau00zzgesv_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
+void solveTau00zgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Matrix<Complex> &tau00, int ispin);
+void solveTauFullzgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Complex *devTauFull, int ispin);
 
 #ifdef USE_XGETRF
 void solveTau00Xgetrf_cusolver(LSMSSystemParameters &lsms, LocalTypeInfo &local,
@@ -143,15 +145,19 @@ void unitMatrixCuda(T *devM, int lDim, int nCol) {
 #ifdef ACCELERATOR_HIP
 void transferMatrixToGPUHip(Complex *devM, Matrix<Complex> &m);
 void transferMatrixFromGPUHip(Matrix<Complex> &m, hipDoubleComplex *devM);
-void transferT0MatrixToGPUHip(Complex *devT0, LSMSSystemParameters &lsms,
-                              LocalTypeInfo &local, AtomData &atom, int iie);
+void transferT0MatrixToGPUHip(Complex *devT0, LSMSSystemParameters &lsms, LocalTypeInfo &local, AtomData &atom, int iie);
+void transferFullTMatrixToGPUHip(Complex *devT, LSMSSystemParameters &lsms, LocalTypeInfo &local,
+                                  AtomData &atom, int ispin);
 
 void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms,
                                 LocalTypeInfo &local, DeviceStorage &d,
                                 AtomData &atom, Complex *tMatrix, Complex *devM,
                                 Matrix<Complex> &tau00);
 
-#define IDX(i, j, lDim) (((j) * (lDim)) + (i))
+void solveTauFullzgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &local, DeviceStorage &d, AtomData &atom,
+                               Complex *tMatrix, Complex *devM, Complex *devTauFull, int ispin);
+
+#define IDX(i, j, lDim) (((j)*(lDim))+(i))
 
 #ifdef __HIPCC__
 template <typename T>

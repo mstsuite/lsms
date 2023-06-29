@@ -500,15 +500,21 @@ void energyContourIntegration(LSMSCommunication &comm,
         double timeCalcDensities = MPI_Wtime();
         if (lsms.relativity != full) {
 // openMP here
-#pragma omp parallel for default(none)                                    \
-    shared(local, lsms, dos, dosck, green, dipole, solutionNonRel, dele1, \
-           tau00_l, gfOutFile) firstprivate(ie, iie, pnrel, energy, nume)
-          for (int i = 0; i < local.num_local; i++) {
-            // Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
-            // if (lsms.mtasa==0) r_sph=local.atom[i].r_mesh[local.atom[i].jmt];
-            Real r_sph = local.atom[i].rInscribed;
-            if (lsms.mtasa > 0) r_sph = local.atom[i].rws;
-            Real rins = local.atom[i].rmt;
+#pragma omp parallel for                                  \
+  shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,dele1,tau00_l,gfOutFile) \
+	firstprivate(ie,iie,pnrel,energy,nume)
+// what it was before Kubo pull request - edited because gauntCoefficients in shared was giving an error
+// 
+// pragma omp parallel for default(none)                                  \
+// shared(local,lsms,dos,dosck,green,dipole,solutionNonRel,dele1,tau00_l,gfOutFile) \
+// firstprivate(ie,iie,pnrel,energy,nume)
+          for(int i=0; i<local.num_local; i++)
+          {
+            //Real r_sph=local.atom[i].r_mesh[local.atom[i].jws];
+            //if (lsms.mtasa==0) r_sph=local.atom[i].r_mesh[local.atom[i].jmt];
+            Real r_sph=local.atom[i].rInscribed;
+            if(lsms.mtasa>0) r_sph=local.atom[i].rws;
+            Real rins=local.atom[i].rmt;
             int jmt = local.atom[i].jmt;
             if (lsms.mtasa == 1) jmt = local.atom[i].jws;
             //        int nprpts=solutionNonRel[iie][i].zlr.l_dim1();

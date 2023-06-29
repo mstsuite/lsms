@@ -37,6 +37,7 @@
 #include "Madelung/Madelung.hpp"
 #include "MultipoleMadelung/calculateMultipoleMadelung.hpp"
 #include "VORPOL/VORPOL.hpp"
+#include "Kubo/Conductivity.hpp"
 #include "energyContourIntegration.hpp"
 #include "Accelerator/Accelerator.hpp"
 #include "calculateChemPot.hpp"
@@ -529,6 +530,19 @@ int main(int argc, char *argv[])
   PAPI_start_counters(papi_events, hw_counters);
 #endif
 
+
+  // Check if conductivity is to be done
+  if (lsms.lsmsMode == LSMSMode::kubo) {
+    if (comm.rank == 0) {
+      std::cout << "Doing kubo calculation at " << Complex(lsms.chempot,0.0001) << "  " << std::endl;
+    }
+    // do kubo stuff and end the program
+    Conductivity sigma(lsms, comm, local, crystal.omega);
+    MPI_Finalize();
+    //exitLSMS(comm,0);
+    return 0;
+  }
+
   auto lsmsEndInitTime = std::chrono::steady_clock::now();
   
 // -----------------------------------------------------------------------------
@@ -560,6 +574,7 @@ int main(int argc, char *argv[])
   }
 
   int iteration;
+  
 #ifdef USE_NVTX
   nvtxRangePushA("SCFLoop");
 #endif

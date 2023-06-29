@@ -192,7 +192,7 @@ int buildLIZ(CrystalParameters &crystal, int idx, std::vector<LIZInfoType> &LIZ,
 int buildLIZ(CrystalParameters &crystal, int idx,std::vector<LIZInfoType> &LIZ)
 {
   const Real rtol=1.0e-8;
-  const int n_max=5;
+  const int n_max=10;
   int nrsclu=0;
   Real r1,r2,r3,p1,p2,p3,atdistsqr,shift_1,shift_2,shift_3;
   Real rcirclu=crystal.types[crystal.type[idx]].rLIZ;
@@ -473,7 +473,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
 //  toList.resize(toListN);
   std::sort(fromList.begin(),fromList.end(),nodeLess_NodeIndexInfo);
   std::sort(toList.begin(),toList.end(),nodeLess_NodeIndexInfo);
-
+ 
 // count the nodes in toList and fromList
   if(lsms.global.iprint>0) printf("toList.size()=%zu\n",toList.size());
   int numToNodes=0;
@@ -489,7 +489,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
       if(h!=toList[i].node) {h=toList[i].node; numToNodes++; toCounts[numToNodes-1]=1;} else toCounts[numToNodes-1]++;
     }
   }
-
+ 
   if(lsms.global.iprint>0) printf("fromList.size()=%zu\n",fromList.size());
   int numFromNodes=0;
   if(fromList.size()>0)
@@ -503,7 +503,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
       if(h!=fromList[i].node) {h=fromList[i].node; numFromNodes++; fromCounts[numFromNodes-1]=1;} else fromCounts[numFromNodes-1]++;
     }
   }
-
+ 
   comm.numTmatTo=numToNodes;
   comm.tmatTo.resize(numToNodes);
   comm.numTmatFrom=numFromNodes;
@@ -523,7 +523,7 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
       comm.tmatTo[i].tmatStoreIdx[j]=toList[k++].localIdx;
     }
   }
-
+ 
   k=0;
   if(lsms.global.iprint>0) printf("numFromNodes=%d\n",numFromNodes);
   for(int i=0; i<numFromNodes; i++)
@@ -553,6 +553,46 @@ void buildLIZandCommLists(LSMSCommunication &comm, LSMSSystemParameters &lsms,
   local.blkSizeTmatStore=kkrsz2*kkrsz2;
   local.lDimTmatStore=local.blkSizeTmatStore*lsms.energyContour.groupSize();
   local.tmatStore.resize(local.lDimTmatStore,num_store);
+  if (lsms.lsmsMode == LSMSMode::kubo) {
+    local.JxStore.resize(local.lDimTmatStore, num_store);
+    local.JyStore.resize(local.lDimTmatStore, num_store);
+    local.JzStore.resize(local.lDimTmatStore, num_store);
+  }
+
+  k = 0;
+  if (lsms.lsmsMode == LSMSMode::kubo){
+    comm.numJTo=numToNodes;
+    comm.JTo.resize(numToNodes);
+    comm.numJFrom=numFromNodes;
+    comm.JFrom.resize(numFromNodes);
+    for(int i=0;i<numToNodes;i++){
+      comm.JTo[i].JStoreIdx.resize(toCounts[i]);
+      comm.JTo[i].globalIdx.resize(toCounts[i]);
+      comm.JTo[i].JxcommunicationRequest.resize(toCounts[i]);
+      comm.JTo[i].JycommunicationRequest.resize(toCounts[i]);
+      comm.JTo[i].JzcommunicationRequest.resize(toCounts[i]);
+      comm.JTo[i].remoteNode=toList[k].node;
+      comm.JTo[i].numJs=toCounts[i];
+      for(int j=0; j<toCounts[i];j++){
+        comm.JTo[i].globalIdx[j] = local.global_id[toList[k].localIdx];
+        comm.JTo[i].JStoreIdx[j] = toList[k++].localIdx;
+      }   
+    }   
+    k = 0;
+    for(int i=0;i<numFromNodes;i++){
+      comm.JFrom[i].JStoreIdx.resize(fromCounts[i]);
+      comm.JFrom[i].globalIdx.resize(fromCounts[i]);
+      comm.JFrom[i].JxcommunicationRequest.resize(fromCounts[i]);
+      comm.JFrom[i].JycommunicationRequest.resize(fromCounts[i]);
+      comm.JFrom[i].JzcommunicationRequest.resize(fromCounts[i]);
+      comm.JFrom[i].remoteNode = fromList[k].node;
+      comm.JFrom[i].numJs = fromCounts[i];
+      for(int j=0;j<fromCounts[i];j++){
+        comm.JFrom[i].globalIdx[j] = fromList[k++].globalIdx;
+        comm.JFrom[i].JStoreIdx[j] = crystal.types[fromList[k++].globalIdx].store_id;
+      }   
+    }   
+  }
 
 // set the StorIdx for the local atom LIZs
   for(int i=0; i<local.num_local; i++)

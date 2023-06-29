@@ -3,12 +3,13 @@
 #define LSMS_LSMSMODE_H
 
 #define MY_LSMSMODE_ENUM \
-  X(main)                \
-  X(liz0)                \
-  X(dos)                 \
-  X(gf_out)              \
-  X(matsubara)           \
-  X(kkrmat)
+X(main) \
+X(liz0) \
+X(dos) \
+X(gf_out) \
+X(matsubara) \
+X(kkrmat) \
+X(kubo)
 
 #define X(name) name,
 

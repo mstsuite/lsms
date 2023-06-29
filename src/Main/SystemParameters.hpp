@@ -126,6 +126,7 @@ class LSMSSystemParameters {
   int maxlmax;
   LSMSGlobals global;
   Matrix<Real> dl_factor;
+  AngularMomentumIndices angularMomentumIndices;
   EnergyContourParameters energyContour;
 
   // no. of Gaussian points for volume integration
@@ -259,6 +260,9 @@ class LocalTypeInfo {
   int lDimTmatStore, blkSizeTmatStore;
   Matrix<Complex> tmatStore;
   std::vector<int> tmatStoreGlobalIdx;
+// JStore matrices for current matrix
+// Memory allocation will only take place in kubo mode
+  Matrix<Complex> JxStore, JyStore, JzStore;
 
   Real qrms[2];
   Real vrms[2];

@@ -18,6 +18,8 @@ target_sources(lsmscore
         cgaunt_c.f90
 
         clock_time.c
+        ClebschGordan.hpp
+        ClebschGordan.cpp
         cgc.h
         cinterp.f
         clebsch.f
