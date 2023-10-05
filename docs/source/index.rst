@@ -15,16 +15,16 @@ Contents
 
 .. toctree::
 
-   Getting LSMS
-   Building LSMS
-   Running LSMS
-   Input File
-   Output Files
-   Density of States
-   Green's Function Output
-   Conductivity
-   Examples
-   FAQ
-   Known Issues
-   Acknowledgements
-   Contribute
+Getting LSMS
+Building LSMS
+Running LSMS
+Input File
+Output Files
+Density of States
+Green's Function Output
+Conductivity
+Examples
+FAQ
+Known Issues
+Acknowledgements
+Contribute
