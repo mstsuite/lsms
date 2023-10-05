@@ -6,3 +6,6 @@ Welcome to the LSMS documentation!
 .. note::
 
    This project is under active development.
+
+.. toctree::
+   installation
