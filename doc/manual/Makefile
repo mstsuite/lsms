@@ -1,24 +1,14 @@
-TEX_FILES = lsms_manual.tex \
-            constrained_moment.tex instalation.tex units.tex \
-            lsms_implementation.tex \
-            gpu_details.tex
+all: pdf_doxygen pdf_manual
 
-all: pdf
+pdf_doxygen:
+	doxygen
+	cd latex; pdflatex refman
+	cd latex; pdflatex refman
 
-pdf: $(TEX_FILES)
-	pdflatex lsms_manual.tex
-	bibtex lsms_manual
-	pdflatex lsms_manual.tex
-	pdflatex lsms_manual.tex
-	pdflatex lsms_implementation.tex
-	bibtex lsms_implementation
-	pdflatex lsms_implementation.tex
-	pdflatex lsms_implementation.tex
+pdf_manual:
+	cd manual && $(MAKE) pdf
 
 clean:
-	rm -f lsms_manual.pdf
-	rm -f lsms_implementation.pdf
-	rm -f *.aux
-	rm -f *.log
-	rm -f *.toc
-	rm -f *.bbl *.blg
+	cd latex && $(MAKE) clean
+	cd html && $(MAKE) clean
+	cd manual && $(MAKE) clean
