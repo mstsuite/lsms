@@ -8,4 +8,5 @@ Welcome to the LSMS documentation!
    This project is under active development.
 
 .. toctree::
+   :hidden:
    installation
