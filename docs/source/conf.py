@@ -29,12 +29,6 @@ templates_path = ['_templates']
 
 # -- Options for HTML output
 
-html_sidebars = {
-    '**': [
-        'globaltoc.html',
-    ]
-}
-
 html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
