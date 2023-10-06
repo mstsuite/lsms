@@ -12,3 +12,4 @@ Welcome to the LSMS documentation!
 
    acquisition
    installation
+   running
