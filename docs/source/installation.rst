@@ -1,3 +1,3 @@
 *****
-Getting LSMS
+Installing LSMS
 *****
