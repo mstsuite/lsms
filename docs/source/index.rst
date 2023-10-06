@@ -10,4 +10,5 @@ Welcome to the LSMS documentation!
 .. toctree::
    :hidden:
 
+   acquisition
    installation
