@@ -24,13 +24,13 @@ Run CMake. CMake will try to find all libaries automatically.
 .. parsed-literal::
 
    cmake <path/to/lsms/root> \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_CXX_COMPILER=mpic++ \
-      -DCMAKE_C_COMPILER=gcc \
-      -DCMAKE_Fortran_COMPILER=gfortran \
-      -DCMAKE_CXX_FLAGS="-O3 -mtune=native" \
-      -DCMAKE_Fortran_FLAGS="-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch" \
-      -DBLA_VENDOR=Intel10_64lp
+   -DCMAKE_BUILD_TYPE=Release \
+   -DCMAKE_CXX_COMPILER=mpic++ \
+   -DCMAKE_C_COMPILER=gcc \
+   -DCMAKE_Fortran_COMPILER=gfortran \
+   -DCMAKE_CXX_FLAGS="-O3 -mtune=native" \
+   -DCMAKE_Fortran_FLAGS="-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch" \
+   -DBLA_VENDOR=Intel10_64lp
 
 
 For a number of systems toolchain files are provided in the `toolchain` directory that provide the definitions to run CMake. Here is what the toolchain file (in toolchain/frontier-cray-hip.cmake) looks like for building on the Frontier supercomputer at OLCF using a combination of Cray and AMD compilers.
@@ -66,7 +66,7 @@ The toolchain file makes it easy to keep track of all the build options. To use 
 
 .. parsed-literal::
    cmake -DCMAKE_TOOLCHAIN_FILE=<path/to/lsms/root>/toolchain/<system-name>.cmake \
-      <path/to/lsms/root>
+   <path/to/lsms/root>
 
 This is just an example for creating the build-system. `CMAKE_BUILD_TYPE` can be either Release or Debug. This has only an
 effect if no compiler flags are specified. In this case cmake will preset some flags depending on the chosen 
@@ -84,16 +84,16 @@ the search is turned off.
 
 .. parsed-literal::
    cmake <path/to/lsms/root> \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_CXX_COMPILER=mpic++ \
-      -DCMAKE_C_COMPILER=gcc \
-      -DCMAKE_Fortran_COMPILER=gfortran \
-      -DCMAKE_CXX_FLAGS="-O3 -mtune=native" \
-      -DCMAKE_Fortran_FLAGS="-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch" \
-      -DSEARCH_LAPACK=OFF \
-      -DSEARCH_BLAS=OFF \
-      -DLAPACK_LIBARIES=liblapack.so \
-      -DBLAS_LIBARIES=libblas.so
+   -DCMAKE_BUILD_TYPE=Release \
+   -DCMAKE_CXX_COMPILER=mpic++ \
+   -DCMAKE_C_COMPILER=gcc \
+   -DCMAKE_Fortran_COMPILER=gfortran \
+   -DCMAKE_CXX_FLAGS="-O3 -mtune=native" \
+   -DCMAKE_Fortran_FLAGS="-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch" \
+   -DSEARCH_LAPACK=OFF \
+   -DSEARCH_BLAS=OFF \
+   -DLAPACK_LIBARIES=liblapack.so \
+   -DBLAS_LIBARIES=libblas.so
 
 
 The path to the LibXC and Lua libraries can be specified explicitly. In this case the libraries will not be installed
@@ -101,14 +101,14 @@ automatically.
 
 .. parsed-literal::
    cmake <path/to/lsms/root> \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_CXX_COMPILER=mpic++ \
-      -DCMAKE_C_COMPILER=gcc \
-      -DCMAKE_Fortran_COMPILER=gfortran \
-      -DCMAKE_CXX_FLAGS="-O3 -mtune=native" \
-      -DCMAKE_Fortran_FLAGS="-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch" \
-      -Dlibxc_LIBRARIES=<path/libxc>/lib/libxc.a
-      -Dlibxc_INCLUDE_DIR=<path/libxc>/include
+   -DCMAKE_BUILD_TYPE=Release \
+   -DCMAKE_CXX_COMPILER=mpic++ \
+   -DCMAKE_C_COMPILER=gcc \
+   -DCMAKE_Fortran_COMPILER=gfortran \
+   -DCMAKE_CXX_FLAGS="-O3 -mtune=native" \
+   -DCMAKE_Fortran_FLAGS="-O3 -mtune=native -fbacktrace -cpp -fallow-argument-mismatch" \
+   -Dlibxc_LIBRARIES=<path/libxc>/lib/libxc.a
+   -Dlibxc_INCLUDE_DIR=<path/libxc>/include
 
 Build all target.
 
