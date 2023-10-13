@@ -52,6 +52,7 @@ The ``k.out`` file presents only certain data at every SCF iteration, presented 
    4 -24348843.281203657389     0.660561     0.000000    0.0000000005
 
 It has 5 columns.
+
 1. Iteration number
 2. Total energy in atomic units, or Rydbergs (1 Ry = 13.6 eV)
 3. Fermi energy (in Ry)
