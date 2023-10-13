@@ -75,7 +75,7 @@ In lsms, the position data should be provided in the input file. The lattice vec
    bravais[2]={0,a,0}
    bravais[3]={0,0,a}
 
-The units are Bohr radii, also known as atomic units (1 a.u. = 0.5291 :math:`\angstrom`).
+The units are Bohr radii, also known as atomic units (1 a.u. = 0.5291 angstrom).
 Then to setup the cell some boilerplate code is needed
 
 .. parsed-literal::
