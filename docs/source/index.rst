@@ -14,3 +14,4 @@ Welcome to the LSMS documentation!
    installation
    running
    inputfile
+   outputfile
