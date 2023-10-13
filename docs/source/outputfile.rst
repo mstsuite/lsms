@@ -71,10 +71,17 @@ The ``info_evec_out`` file presents the charge and magnetic data for each atom. 
    0.000000000000000      0.000000000000000      1.000000000000000 ...
 
 The first line contains the total energy, band energy and Fermi energy. Each subsequent line has 18 columns.
+
 Column 1: Atomic number
+
 Column 2: Site index (starting at 0)
+
 Columns 3-5: Site coordinates (x,y,z)
+
 Column 6: Charge at site
+
 Column 7: Magnetic moment at site
+
 Column 8-10: Direction of magnetic moment
+
 Column 11-18: More information on magnetic calculation like torque, desired moment direction etc.
