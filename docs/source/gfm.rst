@@ -11,7 +11,7 @@ lsms can write out the Green's function at the Matsubara frequencies. To do this
 The relevant energy points are given by
 
 .. math::
-   E_n = E_F + \\pi ik_B T(2n + 1)
+   E_n = E_F + \pi ik_B T(2n + 1)
 
 To generate these energy points, we need to set the appropriate contour in the input file
 
