@@ -16,4 +16,5 @@ Welcome to the LSMS documentation!
    inputfile
    outputfile
    dos
+   gfm
    conductivity
