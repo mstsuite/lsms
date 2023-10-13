@@ -15,3 +15,5 @@ Welcome to the LSMS documentation!
    running
    inputfile
    outputfile
+   dos
+   conductivity
