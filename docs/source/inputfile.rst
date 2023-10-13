@@ -6,6 +6,10 @@ The input file is a script in the LUA language (lua.org)
 lsms will read the input values from LUA variables or use default values when appropriate. 
 Lines starting with -- are comments. 
 
+
+Run Parameters
+###############
+
 Let's go through the different variables that need to be specified in the input file for the example system FeCo
 
 .. parsed-literal::
@@ -59,3 +63,132 @@ This specifies the contour for integration of the Green's function. ``npts`` is 
 ``lmax`` represents the angular momentum cutoff and ``rLIZ`` is the radius of the local interaction zone. Refer to the theory behind LSMS to know more about the local interaction zone. 
 
 
+Position Data
+##################
+
+In lsms, the position data should be provided in the input file. The lattice vectors can be defined the following way
+
+.. parsed-literal::
+   a = 5.218
+   bravais = {}
+   bravais[1]={a,0,0}
+   bravais[2]={0,a,0}
+   bravais[3]={0,0,a}
+
+The units are Bohr radii, also known as atomic units (1 a.u. = 0.5291 :math:`\AA`).
+Then to setup the cell some boilerplate code is needed
+
+.. parsed-literal::
+   site = {}
+   for i=1,num_atoms do site[i]={} end
+
+After this the atoms have to be defined.
+
+.. parsed-literal::
+   -- FIRST ATOM
+   site[1].pos={0,0,0}
+   site[1].evec={0,0,1}
+   site[1].pot_in_idx=0
+   site[1].atom="Fe"
+   site[1].Z=26
+   site[1].Zc=10
+   site[1].Zs=8
+   site[1].Zv=8
+   
+   -- SECOND ATOM
+   site[2].pos={0.5*a,0.5*a,0.5*a}
+   site[2].evec={0,0,1}
+   site[2].pot_in_idx=1
+   site[2].atom="Co"
+   site[2].Z=27
+   site[2].Zc=10
+   site[2].Zs=8
+   site[2].Zv=9
+
+Here are the definitions for the different keywords
+
+1. ``pos`` represents the position of the atom in atomic units
+2. ``evec`` sets the direction of the spin quantization axis
+3. ``pot_in_idx`` is the index of the potential input file. If ``pot_in_idx=0``, the input potential for that atom will be read from the file v_FeCo.0. 
+4. ``atom`` is the name of the atomic species
+5. ``Z`` is the atomic number
+6.  ``Zc``, ``Zs`` and ``Zv`` are the number of core, semicore and valence electrons respectively. Note that these should sum to ``Z``.
+
+Finally some additional boilerplate code is needed to copy values defined in ``site_default`` into the atomic sites that have not defined them.
+
+.. parsed-literal::
+   -- set site defaults
+   for i=1,num_atoms do
+    for k,v in pairs(site_default) do
+     if(site[i][k]==nil) then site[i][k]=v end
+    end
+   end
+
+Reading from Position File
+###########################
+
+Alternatively, it is possible to create a separate position file and have the input file read from it. This is a more convenient option when the number of atoms is very large. the position file can be formatted in any way the user desires, there is no fixed way. Appropriate parsing code should then be provided in the input file. Additionally, the position file can also be given any file name. For example, consider the following format for the positions.
+
+.. parsed-literal::
+   117.057267       0.0       0.0
+   0.0       117.057267       0.0
+   0.0       0.0       117.057267
+   Al       0.0       35.1171801       17.55859005
+   Al       87.79295024999999       11.7057267       58.5286335
+   Al       14.632158375       90.719381925       67.307928525
+   Al       11.7057267       23.4114534       76.08722355
+   Al       32.190748424999995       67.307928525       20.485021725
+   Al       58.5286335       11.7057267       87.79295024999999
+   ...
+   ...
+   ...
+
+The first three lines are the lattice vectors and subsequent lines are the atom species name and the position, expressed in Cartesian coordinates. Let's call this file ``position.dat``. To parse this, the following lines are added to the input file
+
+.. parsed-literal::
+   posfile = io.open("position.dat")
+   bravais = {}
+   for i = 1, 3 do
+     l = next_line(posfile)
+     x, y, z = l:match("([+-]?%d*%.%d*)%s+([+-]?%d*%.%d*)%s+([+-]?%d*%.%d*)")
+     bravais[i] = {x, y, z}
+   end
+
+   for i = 1, num_atoms do
+     l = next_line(posfile)
+     at, x, y, z = l:match("(%a+)%s+([+-]?%d*%.%d*)%s+([+-]?%d*%.%d*)%s+([+-]?%d*%.%d*)")
+     print(l)
+     print(at, x, y, z)
+     site[i].atom = at
+     site[i].pos = {x, y, z}
+   end
+
+   posfile:close()
+
+   -- set atom types
+   for i = 1,num_atoms do
+     atom_name = site[i].atom
+     if(atom_name~=nil) then
+       for k,v in pairs(atom_type[atom_name]) do
+         site[i][k]=v
+       end
+     end
+   end
+
+   -- set site defaults
+   for i =1,num_atoms do
+     for k,v in pairs(site_default) do
+       if(site[i][k]==nil) then site[i][k]=v end
+     end
+   end
+
+This type of procedure can be carried out for any position format.
+
+Restarting Calculations
+########################
+
+After a calculation is complete lsms will generate output potentials with filenames starting with ``w_`` and the restart input file ``i_lsms.restart``. To restart, copy the new potential to the old potential and run the new input file
+
+.. parsed-literal::
+   cp w_FeCo v_FeCo
+   mpirun -np <number of MPI ranks> $LSMS_PATH/lsms i_lsms.restart
