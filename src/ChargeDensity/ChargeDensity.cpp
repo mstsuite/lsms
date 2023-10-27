@@ -170,11 +170,13 @@ void calculateCharge(LSMSSystemParameters &lsms, LocalTypeInfo &local,
     local.atom[i].qtotws = 0.0;
     local.atom[i].qtotmt = 0.0;
     for (auto is = 0; is < lsms.n_spin_pola; is++) {
-      local.atom[i].qtotws += local.atom[i].xvalwsNew[is] +
-          local.atom[i].zsemss + local.atom[i].zcorss;
-      local.atom[i].qtotmt += local.atom[i].xvalwsNew[is] +
-          local.atom[i].zsemss + local.atom[i].zcorss;
+      local.atom[i].qtotws += local.atom[i].xvalwsNew[is];
+      // + local.atom[i].zsemss + local.atom[i].zcorss;
+      local.atom[i].qtotmt += local.atom[i].xvalwsNew[is];
+      // + local.atom[i].zsemss + local.atom[i].zcorss;
     }
+    local.atom[i].qtotws += local.atom[i].zsemss + local.atom[i].zcorss;
+    local.atom[i].qtotmt += local.atom[i].zsemss + local.atom[i].zcorss;
 
     local.atom[i].mtotws = local.atom[i].xvalwsNew[0] -
         local.atom[i].xvalwsNew[lsms.n_spin_pola - 1];
