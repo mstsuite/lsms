@@ -5,6 +5,7 @@
 #include <cfloat>
 #include <cstdlib>
 #include <cmath>
+#include <algorithm>
 
 void lsms::nrel_in(double energy, int l_qn, double *p_array, double *q_array,
                    const double *__restrict__ r_mesh,

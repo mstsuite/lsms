@@ -30,6 +30,7 @@ class Potential {
                                   LocalTypeInfo &local,
                                   CrystalParameters &crystal,
                                   std::vector<Real> &qsub) = 0;
+  virtual ~Potential() = default;
 };
 
 class ASAPotential : public Potential {

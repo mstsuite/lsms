@@ -26,6 +26,8 @@ class AbstractMixer {
       unsigned int mixerType, const RealMixingVector &mixVector,
       const MixingParameter &params);
 
+  virtual ~AbstractMixer() = default;
+
 };
 
 /**

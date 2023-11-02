@@ -406,7 +406,7 @@ int calculateAtomLevels(AtomData &a, std::vector<InitialAtomLevel> &atomLevels,
   FILE *orbitalFile;
   if (writeOrbitals) {
     for (int nl = 0; nl < atomLevels.size(); nl++) {
-      sprintf(fname, "orbital_density_n%d_l%d", atomLevels[nl].n,
+      snprintf(fname, 250, "orbital_density_n%d_l%d", atomLevels[nl].n,
               atomLevels[nl].l);
       orbitalFile = fopen(fname, "w");
 

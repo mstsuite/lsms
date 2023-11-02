@@ -12,14 +12,14 @@
 #include "MultipleScattering/linearSolvers.hpp"
 #include "MultipleScattering/MultipleScattering.hpp"
 #include "MultipleScattering/buildKKRMatrix.hpp"
-#include "Accelerator/DeviceStorage.hpp"
 #if defined(ACCELERATOR_LIBSCI) || defined(ACCELERATOR_CUDA_C) || defined(ACCELERATOR_HIP)
+#include "Accelerator/DeviceStorage.hpp"
 extern DeviceStorage *deviceStorage;
 #endif
 
 class CurrentMatrix {
 public:
-    Complex sqrtm1 = (0.0,1.0);
+    const Complex sqrtm1 = Complex(0.0,1.0);
     Complex energy,prel,pnrel;
     int local_index, is,lmax_cg,kkrsz,nrmat;
     AtomData *atom;

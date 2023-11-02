@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
   num_steps = 1;
   initial_steps = 0;
 
-  sprintf(i_lsms_name, "i_lsms");
+  snprintf(i_lsms_name, 60, "i_lsms");
   gWL_in_name[0] = gWL_out_name[0] = 0;
   mode_name[0] = 0;
   energy_calculation_name[0] = 0;

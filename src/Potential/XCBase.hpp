@@ -30,6 +30,8 @@ class XCBase {
                         Real xc_pot_out[2]) = 0;
 
   virtual std::string get_name() = 0;
+
+  virtual ~XCBase() = default;
 };
 
 }  // namespace lsms
