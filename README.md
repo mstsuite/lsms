@@ -24,7 +24,7 @@ If you are using LSMS on a unit cell with over 1000 atoms, also cite:
 
 <div style="padding: 15px; border: 1px solid transparent; border-color: transparent; margin-bottom: 20px; border-radius: 4px; color: #a94442; background-color: #f2dede; border-color: #ebccd1;">
 
-The current CMake can now build both LSMS and WL-LSMS.
+The current CMake can now build both LSMS and WL-LSMS. The previous build system without CMake is depreciated an might be removed in future releases.
 
 </div>
 
