@@ -114,26 +114,26 @@ int main(int argc, char *argv[]) {
   if (comm.rank == 0) lsms.global.iprint = 0;
 
   if (comm.rank == 0) {
-    fmt::printf("LSMS_3: Program started\n");
-    fmt::printf("Using %d MPI processes\n", comm.size);
+    fmt::print("LSMS_3: Program started\n");
+    fmt::print("Using {} MPI processes\n", comm.size);
 #ifdef _OPENMP
-    fmt::printf("Using %d OpenMP threads\n", omp_get_max_threads());
+    fmt::print("Using {} OpenMP threads\n", omp_get_max_threads());
 #endif
     acceleratorPrint();
 #ifdef LSMS_NO_COLLECTIVES
-    fmt::printf(
+    fmt::print(
         "\nWARNING!!!\nCOLLECTIVE COMMUNICATION (ALLREDUCE etc.) ARE "
         "SKIPPED!\n");
-    fmt::printf("THIS IS FOR TESTING ONLY!\nRESULTS WILL BE WRONG!!!\n\n");
+    fmt::print("THIS IS FOR TESTING ONLY!\nRESULTS WILL BE WRONG!!!\n\n");
 #endif
-    fmt::printf("Reading input file '%s'\n", inputFileName);
+    fmt::print("Reading input file '{}'\n", inputFileName);
     fflush(stdout);
 
     if (luaL_loadfile(L, inputFileName) || lua_pcall(L, 0, 0, 0)) {
       fprintf(stderr, "!! Cannot run input file!!\n");
       exit(1);
     }
-    fmt::printf("Loaded input file!\n");
+    fmt::print("Loaded input file!\n");
     fflush(stdout);
 
     if (readInput(L, lsms, crystal, mix, potentialShifter, alloyDesc)) {
@@ -144,10 +144,10 @@ int main(int argc, char *argv[]) {
     // Fix to ASA
     lsms.mtasa = 1;
     fmt::print("===========================================\n");
-    fmt::printf("System information:\n");
-    fmt::printf("Number of atoms        : %10d\n", crystal.num_atoms);
-    fmt::printf("Number of atomic types : %10d\n", crystal.num_types);
-    fmt::printf("Performing Atomic Sphere Approximation (ASA) calculation\n");
+    fmt::print("System information:\n");
+    fmt::print("Number of atoms        : {:10d}\n", crystal.num_atoms);
+    fmt::print("Number of atomic types : {:10d}\n", crystal.num_types);
+    fmt::print("Performing Atomic Sphere Approximation (ASA) calculation\n");
     fmt::print("===========================================\n");
     fflush(stdout);
   }
@@ -196,14 +196,14 @@ int main(int argc, char *argv[]) {
 
   double timeBuildLIZandCommList = MPI_Wtime();
   if (lsms.global.iprint >= 0) {
-    fmt::printf(
+    fmt::print(
         "building the LIZ and Communication lists [buildLIZandCommLists]\n");
     fflush(stdout);
   }
   buildLIZandCommLists(comm, lsms, crystal, local);
   timeBuildLIZandCommList = MPI_Wtime() - timeBuildLIZandCommList;
   if (lsms.global.iprint >= 0) {
-    fmt::printf("time for buildLIZandCommLists [num_local=%d]: %lf sec\n",
+    fmt::print("time for buildLIZandCommLists [num_local={}]: {} sec\n",
                 local.num_local, timeBuildLIZandCommList);
     fflush(stdout);
   }
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef LSMS_DEBUG
   if (lsms.global.iprint >= 0) {
-    fmt::printf(
+    fmt::print(
         "Entering the Voronoi construction BEFORE loading the potentials.\n");
     fflush(stdout);
   }
@@ -262,7 +262,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef LSMS_DEBUG
   if (lsms.global.iprint >= 0) {
-    fmt::printf("Entering the LOADING of the potentials.\n");
+    fmt::print("Entering the LOADING of the potentials.\n");
     fflush(stdout);
   }
   MPI_Barrier(comm.comm);
@@ -273,12 +273,12 @@ int main(int argc, char *argv[]) {
   timeLoadPotential = MPI_Wtime() - timeLoadPotential;
 
   if (lsms.global.iprint >= 0) {
-    fmt::printf("time loadPotential: %lf sec\n\n", timeLoadPotential);
+    fmt::print("time loadPotential: {} sec\n\n", timeLoadPotential);
 
     fprintf(stdout, "LIZ for atom 0 on this node\n");
     printLIZInfo(stdout, local.atom[0]);
     if (local.atom[0].forceZeroMoment) {
-      fprintf(stdout, "\nMagnetic moment of atom 0 forced to be zero!\n\n");
+      fprint(stdout, "\nMagnetic moment of atom 0 forced to be zero!\n\n");
     }
   }
 
@@ -286,13 +286,13 @@ int main(int argc, char *argv[]) {
   if (lsms.infoEvecFileIn[0] != 0) {
     readInfoEvec(comm, lsms, crystal, local, lsms.infoEvecFileIn);
     if (lsms.global.iprint >= 0) {
-      fprintf(stdout, "Evec are read from: %s\n", lsms.infoEvecFileIn);
+      fprint(stdout, "Evec are read from: {}\n", lsms.infoEvecFileIn);
     }
   }
 
   if (!alloyDesc.empty()) {
     if (lsms.global.iprint >= 0) {
-      fmt::printf("Entering the LOADING of the alloy banks.\n");
+      fmt::print("Entering the LOADING of the alloy banks.\n");
       fflush(stdout);
     }
     loadAlloyBank(comm, lsms, alloyDesc, alloyBank);
@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef LSMS_DEBUG
   if (lsms.global.iprint >= 0) {
-    fmt::printf(
+    fmt::print(
         "Entering the Voronoi construction AFTER loading the potentials.\n");
     fflush(stdout);
   }
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
   calculateVolumes(comm, lsms, crystal, local);
   timeCalculateVolumes = MPI_Wtime() - timeCalculateVolumes;
   if (lsms.global.iprint >= 0) {
-    fmt::printf("time calculateVolumes: %lf sec\n\n", timeCalculateVolumes);
+    fmt::print("time calculateVolumes: {} sec\n\n", timeCalculateVolumes);
   }
 
   // initialize Mixing
@@ -365,7 +365,7 @@ int main(int argc, char *argv[]) {
 
   timeSetupMixing = MPI_Wtime() - timeSetupMixing;
   if (lsms.global.iprint >= 0) {
-    fmt::printf("time setupMixing: %lf sec\n\n", timeSetupMixing);
+    fmt::print("time setupMixing: {} sec\n\n", timeSetupMixing);
   }
 
   double timeCalculateMadelungMatrix = MPI_Wtime();
@@ -379,7 +379,7 @@ int main(int argc, char *argv[]) {
   timeCalculateMadelungMatrix = MPI_Wtime() - timeCalculateMadelungMatrix;
 
   if (comm.rank == 0) {
-    fmt::printf("time calculateMultiMadelungMatrices: %lf sec\n\n",
+    fmt::print("time calculateMultiMadelungMatrices: {} sec\n\n",
                 timeCalculateMadelungMatrix);
   }
 
@@ -424,7 +424,7 @@ int main(int argc, char *argv[]) {
   Real oldTotalEnergy = lsms.totalEnergy;
 
   if (lsms.global.iprint >= 0) {
-    fmt::printf("Total number of iterations:%d\n", lsms.nscf);
+    fmt::print("Total number of iterations:{}\n", lsms.nscf);
     fflush(stdout);
   }
 
@@ -462,7 +462,7 @@ int main(int argc, char *argv[]) {
     lsms::checkRadialChargeDensity(lsms, local);
 
     if (comm.rank == 0) {
-      fmt::printf("Initial MTZ: %20.9f\n", lsms.vmt);
+      fmt::print("Initial MTZ: {:20.9f}\n", lsms.vmt);
     }
 
   }
@@ -483,7 +483,7 @@ int main(int argc, char *argv[]) {
     std::fill(qsub.begin(), qsub.end(), 0.0);
 
     if (lsms.global.iprint >= -1 && comm.rank == 0)
-      fmt::printf("SCF iteration %d:\n", iteration);
+      fmt::print("SCF iteration {}:\n", iteration);
 
     // Recalculate core states from `vr`
     lsms::calculateCoreStates(comm, lsms, local);
@@ -541,13 +541,13 @@ int main(int argc, char *argv[]) {
         spdMixingParameter = mix.initSpdMixingParameter;
         spd_mixer_type = mix.init_spd_mixer_type;
         if (comm.rank == 0) {
-          fmt::printf(" === Change Mixer (Initial) ===\n");
+          fmt::print(" === Change Mixer (Initial) ===\n");
         }
       } else {
         spdMixingParameter = mix.spdMixingParameter;
         spd_mixer_type = mix.spd_mixer_type;
         if (comm.rank == 0) {
-          fmt::printf(" === Change Mixer ===\n");
+          fmt::print(" === Change Mixer ===\n");
         }
       }
 
@@ -558,7 +558,7 @@ int main(int argc, char *argv[]) {
     if (mix.n_init_spin_iterations > 0) {
       if (mix.n_init_spin_iterations == (iteration - mix.n_init_iterations)) {
         if (comm.rank == 0) {
-          fmt::printf(" === Change Mixer (After) ===\n");
+          fmt::print(" === Change Mixer (After) ===\n");
         }
         spdMixingParameter = mix.spdMixingParameter;
         spd_mixer_type = mix.spd_mixer_type;
@@ -704,17 +704,17 @@ int main(int argc, char *argv[]) {
       gap_size = std::max(gap_size, 2);
       size += 10;
 
-      fmt::printf("MTZ          = %*.9f Ry\n", size, lsms.vmt);
-      fmt::printf("Band Energy  = %*.9f Ry %*s Fermi Energy = %15.12f Ry\n",
+      fmt::print("MTZ          = {:{}.9f} Ry\n", size, lsms.vmt);
+      fmt::print("Band Energy  = {:{}.9f} Ry %*s Fermi Energy = %15.12f Ry\n",
                   size, eband, gap_size, "", lsms.chempot);
-      fmt::printf("Total Energy = %*.9f Ry\n", size, lsms.totalEnergy);
-      fmt::printf("QRMS         = %*.5e\n", size, qrms);
-      fmt::printf("VRMS         = %*.5e\n", size, vrms);
-      fmt::printf("atol. Energy = %*.5e\n", size,
+      fmt::print("Total Energy = {:{}.9f} Ry\n", size, lsms.totalEnergy);
+      fmt::print("QRMS         = {:{}.5e}\n", size, qrms);
+      fmt::print("VRMS         = {:{}.5e}\n", size, vrms);
+      fmt::print("atol. Energy = {:{}.5e}\n", size,
                   std::abs((lsms.totalEnergy - oldTotalEnergy)));
 
       if (lsms.n_spin_pola == 2) {
-        fmt::printf("ave. mag.    = %*.9f\n", size, mag);
+        fmt::print("ave. mag.    = {:{}.9f}\n", size, mag);
       }
 
     }
@@ -846,44 +846,44 @@ int main(int argc, char *argv[]) {
     size = std::max(size, num_digits(static_cast<int>(lsms.totalEnergy)));
     size += 17;
 
-    fmt::printf("Band Energy  = %*.15f Ry\n", size, eband);
-    fmt::printf("Fermi Energy = %*.15f Ry\n", size, lsms.chempot);
-    fmt::printf("Total Energy = %*.15f Ry\n", size, lsms.totalEnergy);
+    fmt::print("Band Energy  = {:{}.15f} Ry\n", size, eband);
+    fmt::print("Fermi Energy = {:{}.15f} Ry\n", size, lsms.chempot);
+    fmt::print("Total Energy = {:{}.15f} Ry\n", size, lsms.totalEnergy);
 
-    fmt::printf("\nTimings:\n========\n");
+    fmt::print("\nTimings:\n========\n");
 
-    fmt::printf("LSMS Runtime               = %lf s\n", lsmsRuntime.
+    fmt::print("LSMS Runtime               = {} s\n", lsmsRuntime.
         count()
     );
-    fmt::printf("LSMS Initialization Time   = %lf s\n", lsmsInitTime.
+    fmt::print("LSMS Initialization Time   = {} s\n", lsmsInitTime.
         count()
     );
-    fmt::printf("timeScfLoop                = %lf s\n", timeScfLoop);
-    fmt::printf("     number of iteration:%d\n", iteration);
-    fmt::printf("timeScfLoop/iteration      = %lf s\n",
+    fmt::print("timeScfLoop                = {} s\n", timeScfLoop);
+    fmt::print("     number of iteration: {}\n", iteration);
+    fmt::print("timeScfLoop/iteration      = {} s\n",
                 timeScfLoop / (double) iteration);
-    fmt::printf("timeCalcChemPot/iteration  = %lf s\n",
+    fmt::print("timeCalcChemPot/iteration  = {} s\n",
                 timeCalcChemPot / (double) iteration);
-    fmt::printf("timeCalcPotenial/iteration = %lf s\n",
+    fmt::print("timeCalcPotenial/iteration = {} s\n",
                 timeCalcPotential / (double) iteration);
-    fmt::printf("timeCalcCharge/iteration   = %lf s\n",
+    fmt::print("timeCalcCharge/iteration   = {} s\n",
                 timeCalcCharge / (double) iteration);
-    fmt::printf("timeCalcMixPotal/iteration = %lf s\n",
+    fmt::print("timeCalcMixPotal/iteration = {} s\n",
                 timeCalcMixPotential / (double) iteration);
-    fmt::printf("timeCalcMixChd/iteration   = %lf s\n",
+    fmt::print("timeCalcMixChd/iteration   = {} s\n",
                 timeCalcMixCharge / (double) iteration);
-    fmt::printf("timeBuildLIZandCommList    = %lf s\n",
+    fmt::print("timeBuildLIZandCommList    = {} s\n",
                 timeBuildLIZandCommList);
 
     long energyContourPoints = 1;
     if (lsms.energyContour.grid == 2) {
       energyContourPoints = lsms.energyContour.npts + 1;
     }
-    fmt::printf("FOM Scale                  = %lf\n", (double) fomScale);
-    fmt::printf("Energy Contour Points      = %ld\n", energyContourPoints);
-    fmt::printf("FOM / energyContourPoint   = %lg/s\n",
+    fmt::print("FOM Scale                  = {}\n", (double) fomScale);
+    fmt::print("Energy Contour Points      = {}\n", energyContourPoints);
+    fmt::print("FOM / energyContourPoint   = {}/s\n",
                 fomScale * (double) iteration / timeScfLoop);
-    fmt::printf("FOM                        = %lg/s\n",
+    fmt::print("FOM                        = {}/s\n",
                 (double) energyContourPoints * (double) fomScale *
                     (double) iteration / timeScfLoop);
   }
