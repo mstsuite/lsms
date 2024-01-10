@@ -130,14 +130,14 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
 
     if (luaL_loadfile(L, inputFileName) || lua_pcall(L, 0, 0, 0)) {
-      fprintf(stderr, "!! Cannot run input file!!\n");
+      fmt::print(stderr, "!! Cannot run input file!!\n");
       exit(1);
     }
     fmt::print("Loaded input file!\n");
     fflush(stdout);
 
     if (readInput(L, lsms, crystal, mix, potentialShifter, alloyDesc)) {
-      fprintf(stderr, "!! Something wrong in input file!!\n");
+      fmt::print(stderr, "!! Something wrong in input file!!\n");
       exit(1);
     }
 
@@ -275,10 +275,10 @@ int main(int argc, char *argv[]) {
   if (lsms.global.iprint >= 0) {
     fmt::print("time loadPotential: {} sec\n\n", timeLoadPotential);
 
-    fprintf(stdout, "LIZ for atom 0 on this node\n");
+    fmt::print("LIZ for atom 0 on this node\n");
     printLIZInfo(stdout, local.atom[0]);
     if (local.atom[0].forceZeroMoment) {
-      fprint(stdout, "\nMagnetic moment of atom 0 forced to be zero!\n\n");
+      fmt::print("\nMagnetic moment of atom 0 forced to be zero!\n\n");
     }
   }
 
@@ -286,7 +286,7 @@ int main(int argc, char *argv[]) {
   if (lsms.infoEvecFileIn[0] != 0) {
     readInfoEvec(comm, lsms, crystal, local, lsms.infoEvecFileIn);
     if (lsms.global.iprint >= 0) {
-      fprint(stdout, "Evec are read from: {}\n", lsms.infoEvecFileIn);
+      fmt::print(stdout, "Evec are read from: {}\n", lsms.infoEvecFileIn);
     }
   }
 
