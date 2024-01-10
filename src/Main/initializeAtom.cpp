@@ -721,13 +721,12 @@ void initializeNewPotentials(LSMSCommunication &comm, LSMSSystemParameters &lsms
         local.atom[i].ztotss, n, l, spin, kappa, occupation);
 
     if (lsms.global.debug_atomic) {
-
-      fmt::print("{:>10}: {:4d}\n", "n", n);
-      fmt::print("{:>10}: {:4d}\n", "l", l);
-      fmt::print("{:>10}: {:4d}\n", "spin", spin);
-      fmt::print("{:>10}: {:4d}\n", "kappa", kappa);
-      fmt::print("{:>10}: {:4.2f}\n", "occ", occupation);
-      fmt::print("{:>10}: {:8.3f}\n", "ks", ks_energies);
+       fmt::print("{:>10}: {:4d}\n", "n", fmt::join(n, " "));
+       fmt::print("{:>10}: {:4d}\n", "l", fmt::join(l, " "));
+       fmt::print("{:>10}: {:4d}\n", "spin", fmt::join(spin, " "));
+       fmt::print("{:>10}: {:4d}\n", "kappa", fmt::join(kappa, " "));
+       fmt::print("{:>10}: {:4.2f}\n", "occ", fmt::join(occupation, " "));
+       fmt::print("{:>10}: {:8.3f}\n", "ks", fmt::join(ks_energies, " "));
     }
 
     auto n_states = n.size();
