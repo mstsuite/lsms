@@ -41,7 +41,7 @@ Complex* get_host_m_(const int &max_nrmat_ns) {
   static Complex * m_v=0;
   static int cur_size=0;
   static deviceError_t pinned;
-
+  deviceError_t err;
   /*
   if(cur_size<max_nrmat_ns) {
 
@@ -61,7 +61,7 @@ Complex* get_host_m_(const int &max_nrmat_ns) {
 
     //release previously allocated memory
     if(m_v!=0) {
-      if(pinned) deviceFreeHost(m_v);
+      if(pinned) err = deviceFreeHost(m_v);
       else free(m_v);
     }
 
@@ -106,13 +106,13 @@ int DeviceStorage::allocateAdditional(int kkrsz_max, int nspin, int numLIZ, int 
      deviceError_t err;
      err = deviceMalloc((void **) &dev_tauFull[i],(size_t)N * (size_t)N * sizeof(Complex));
      if (err != deviceSuccess) {
-        printf("failed to allocate dev_tauFull[%d], size=%d, err=%d\n",
+        printf("failed to allocate dev_tauFull[%d], size=%zu, err=%d\n",
                i, (size_t)N * (size_t)N * sizeof(Complex), err);
         exit(1);
      }
      err = deviceMalloc((void **) &dev_tFull[i], (size_t)N * (size_t)N * sizeof(Complex));
      if (err != deviceSuccess) {
-        printf("failed to allocate dev_tFull[%d], size=%d, err=%d\n",
+        printf("failed to allocate dev_tFull[%d], size=%zu, err=%d\n",
                i, (size_t)N * (size_t)N * sizeof(Complex), err);
         exit(1);
      }
@@ -144,8 +144,20 @@ int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, 
                 i,(size_t)N*(size_t)N*sizeof(Complex),err);
           exit(1);
         }
-        deviceMalloc((void**)&dev_ipvt[i],(size_t)N*sizeof(int));
-	deviceMalloc((void**)&dev_info[i],(size_t)nThreads*sizeof(int));
+        err = deviceMalloc((void**)&dev_ipvt[i],(size_t)N*sizeof(int));
+	if(err!=deviceSuccess)
+        {
+          printf("failed to allocate dev_ipvt[%d], size=%zu, err=%d\n",
+                i,(size_t)N*sizeof(int),err);
+          exit(1);
+        }      
+	err = deviceMalloc((void**)&dev_info[i],(size_t)nThreads*sizeof(int));
+	if(err!=deviceSuccess)
+        {
+          printf("failed to allocate dev_info[%d], size=%zu, err=%d\n",
+                i,(size_t)nThreads*sizeof(int),err);
+          exit(1);
+        }
 	if (iskubo == 0){
 	  err = deviceMalloc((void**)&dev_bgij[i],(size_t)N*(size_t)N*sizeof(Complex));
           if(err!=deviceSuccess)
@@ -157,12 +169,36 @@ int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, 
 	}
 #ifdef BUILDKKRMATRIX_GPU
         // cudaMalloc((void**)&dev_bgij[i],4*kkrsz_max*kkrsz_max*numLIZ*numLIZ*sizeof(Complex));
-        deviceMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
+        err = deviceMalloc((void**)&dev_tmat_n[i],4*kkrsz_max*kkrsz_max*numLIZ*sizeof(Complex)); 
 #endif
-        deviceMalloc((void**)&dev_tau[i], 4*(size_t)N*kkrsz_max*sizeof(Complex));
-        deviceMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
-        deviceMalloc((void**)&dev_t[i], 4*N*kkrsz_max*sizeof(Complex));
-        deviceMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
+        err = deviceMalloc((void**)&dev_tau[i], 4*(size_t)N*kkrsz_max*sizeof(Complex));
+	if(err!=deviceSuccess)
+        {
+          printf("failed to allocate dev_tau[%d], size=%zu, err=%d\n",
+                  i,4*(size_t)N*kkrsz_max*sizeof(Complex),err);
+          exit(1);
+        }
+        err = deviceMalloc((void**)&dev_tau00[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
+        if(err!=deviceSuccess)
+        {
+          printf("failed to allocate dev_tau00[%d], size=%zu, err=%d\n",
+                  i,4*kkrsz_max*kkrsz_max*sizeof(Complex),err);
+          exit(1);
+        }
+	err = deviceMalloc((void**)&dev_t[i], 4*N*kkrsz_max*sizeof(Complex));
+	if(err!=deviceSuccess)
+        {
+          printf("failed to allocate dev_t[%d], size=%zu, err=%d\n",
+                  i,4*(size_t)N*kkrsz_max*sizeof(Complex),err);
+          exit(1);
+        }
+        err = deviceMalloc((void**)&dev_t0[i], 4*kkrsz_max*kkrsz_max*sizeof(Complex));
+	if(err!=deviceSuccess)
+        {
+          printf("failed to allocate dev_t0[%d], size=%zu, err=%d\n",
+                  i,4*kkrsz_max*kkrsz_max*sizeof(Complex),err);
+          exit(1);
+        }
         deviceStreamCreate(&stream[i][0]);
         deviceStreamCreate(&stream[i][1]);
         deviceEventCreateWithFlags(&event[i],deviceEventDisableTiming);
@@ -181,8 +217,14 @@ int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, 
 
 	dev_workBytes[i] = std::max(dev_workBytes[i]*sizeof(deviceDoubleComplex),
 				    lWork*sizeof(deviceDoubleComplex));
-	deviceMalloc((void**)&dev_work[i], dev_workBytes[i]);
-        // printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
+	err = deviceMalloc((void**)&dev_work[i], dev_workBytes[i]);
+        if(err!=deviceSuccess)
+        {
+          printf("failed to allocate dev_work[%d], size=%zu, err=%d\n",
+                  i,dev_workBytes[i],err);
+          exit(1);
+        }
+	// printf("  dev_m[%d]=%zx\n",i,dev_m[i]);
       }
       deviceCheckError();
       initialized=true;
@@ -192,27 +234,28 @@ int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, 
   
   void DeviceStorage::free()
   {
+    deviceError_t err;
     if(initialized) {
    //     printf("*************************************MEMORY IS BEING FREED\n");
       // for(int i=0;i<omp_get_max_threads();i++)
       for(int i=0; i<nThreads; i++)
       {
-        deviceFree(dev_m[i]);
-        deviceFree(dev_ipvt[i]);
-        deviceFree(dev_info[i]);
+        err = deviceFree(dev_m[i]);
+        err = deviceFree(dev_ipvt[i]);
+        err = deviceFree(dev_info[i]);
 #ifdef BUILDKKRMATRIX_GPU
-        deviceFree(dev_bgij[i]);
-        deviceFree(dev_tmat_n[i]);
+        err = deviceFree(dev_bgij[i]);
+        err = deviceFree(dev_tmat_n[i]);
 #endif
-	deviceFree(dev_work[i]);
-        deviceFree(dev_t0[i]);
-        deviceStreamDestroy(stream[i][0]);
-        deviceStreamDestroy(stream[i][1]);
-        deviceEventDestroy(event[i]);
-        hipblasDestroy(hipblas_h[i]);
+	err = deviceFree(dev_work[i]);
+        err = deviceFree(dev_t0[i]);
+        err = deviceStreamDestroy(stream[i][0]);
+        err = deviceStreamDestroy(stream[i][1]);
+        err = deviceEventDestroy(event[i]);
+        err = hipblasDestroy(hipblas_h[i]);
       }
       // dev_tmat_store.clear();
-      deviceFree(devTmatStore);
+      err = deviceFree(devTmatStore);
       deviceCheckError();
       initialized=false;
     }
