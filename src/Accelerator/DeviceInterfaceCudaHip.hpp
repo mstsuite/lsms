@@ -88,7 +88,7 @@ inline deviceError_t deviceFree (void* devPtr)
   {return hipFree(devPtr);}
 
 inline deviceError_t deviceFreeHost (void* devPtr)
-  { return hipHostFree(defPtr); }
+  { return hipHostFree(devPtr); }
   // {return hipFreeHost(devPtr); }
   // /* {return hipHostFree(devPtr); /* hipFreeHost(devPtr);  } */
 
