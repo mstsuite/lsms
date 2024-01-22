@@ -60,7 +60,8 @@
           }
           else { free(); nRow=0; nCol=0; lDim=0; } 
         }
-        deviceMemcpy(data,&mat[0],num_bytes,deviceMemcpyHostToDevice);
+        deviceError_t err;
+        err = deviceMemcpy(data,&mat[0],num_bytes,deviceMemcpyHostToDevice);
       }
 
       __inline__ void copy_async(Matrix<T> &mat, deviceStream_t s) {
@@ -75,7 +76,8 @@
           }
           else { nRow=0; nCol=0; lDim=0; data=0;} 
         }
-        deviceMemcpyAsync(data,&mat[0],num_bytes,deviceMemcpyHostToDevice,s);
+        deviceError_t err;
+        err = deviceMemcpyAsync(data,&mat[0],num_bytes,deviceMemcpyHostToDevice,s);
       }
 
 
@@ -94,10 +96,11 @@
       DeviceMatrix<T> *owner;
       
       __inline__ void allocate(size_type num_bytes) {
+        deviceError_t err;
         if(num_bytes>0) {
           free();
           owner=this;
-          deviceMalloc((void **)&data,num_bytes);
+          err = deviceMalloc((void **)&data,num_bytes);
           deviceCheckError();
         }
         else {      // DANGEROUS!! Might cause memory leak!
@@ -109,8 +112,9 @@
         }
       }
       __inline__ void free() {
+        deviceError_t err;
         if(owner==this && data!=0) {
-          deviceFree(data);
+          err = deviceFree(data);
         }
         owner=0;
         data=0;
