@@ -199,9 +199,9 @@ int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, 
                   i,4*kkrsz_max*kkrsz_max*sizeof(Complex),err);
           exit(1);
         }
-        deviceStreamCreate(&stream[i][0]);
-        deviceStreamCreate(&stream[i][1]);
-        deviceEventCreateWithFlags(&event[i],deviceEventDisableTiming);
+        err = deviceStreamCreate(&stream[i][0]);
+        err = deviceStreamCreate(&stream[i][1]);
+        err = deviceEventCreateWithFlags(&event[i],deviceEventDisableTiming);
         hipblasCreate(&hipblas_h[i]);
         // cusolverDnCreate(&cusolverDnHandle[i]);
 
@@ -252,7 +252,7 @@ int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, 
         err = deviceStreamDestroy(stream[i][0]);
         err = deviceStreamDestroy(stream[i][1]);
         err = deviceEventDestroy(event[i]);
-        err = hipblasDestroy(hipblas_h[i]);
+        hipblasDestroy(hipblas_h[i]);
       }
       // dev_tmat_store.clear();
       err = deviceFree(devTmatStore);
@@ -282,17 +282,25 @@ int DeviceStorage::allocate(int kkrsz_max,int nspin, int numLIZ, int _nThreads, 
 int DeviceStorage::copyTmatStoreToDevice(Matrix<Complex> &tmatStore,
     int blkSize)
 { 
+  deviceError_t err;
+
   if((tmatStoreSize > 0) && (tmatStoreSize < tmatStore.size()))
   { 
-    deviceFree(devTmatStore);
+    err = deviceFree(devTmatStore);
     tmatStoreSize = 0;
   }
   if(tmatStoreSize == 0)
   { 
-    deviceMalloc((void **)&devTmatStore, tmatStore.size()*sizeof(Complex));
+    err = deviceMalloc((void **)&devTmatStore, tmatStore.size()*sizeof(Complex));
     tmatStoreSize = tmatStore.size();
+    if(err!=deviceSuccess)
+        {
+          printf("failed to allocate devTmatStore, size=%zu, err=%d\n",
+                  tmatStore.size()*sizeof(Complex),err);
+          exit(1);
+        }
   }
-  deviceMemcpy(devTmatStore, &tmatStore(0,0),
+  err = deviceMemcpy(devTmatStore, &tmatStore(0,0),
     tmatStore.size()*sizeof(Complex), deviceMemcpyHostToDevice);
   blkSizeTmatStore = blkSize;
   tmatStoreLDim = tmatStore.l_dim();
@@ -327,36 +335,58 @@ std::vector<DeviceAtom> deviceAtoms;
 // Device Atom
 int DeviceAtom::allocate(int _lmax, int _nspin, int _numLIZ)
 {
+  deviceError_t err;
+
   if(allocated) free();
   allocated = true;
   numLIZ = _numLIZ;
-  deviceMalloc((void**)&LIZPos,numLIZ*3*sizeof(Real));
-  deviceMalloc((void**)&LIZlmax,numLIZ*sizeof(int));
-  deviceMalloc((void**)&LIZStoreIdx,numLIZ*sizeof(int));
+  err = deviceMalloc((void**)&LIZPos,numLIZ*3*sizeof(Real));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate LIZPos, size=%zu, err=%d\n",
+                  numLIZ*3*sizeof(Real),err);
+          exit(1);
+        }
+  err = deviceMalloc((void**)&LIZlmax,numLIZ*sizeof(int));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate LIZlmax, size=%zu, err=%d\n",
+                  numLIZ*sizeof(int),err);
+          exit(1);
+        }
+  err = deviceMalloc((void**)&LIZStoreIdx,numLIZ*sizeof(int));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate LIZStoreIdx, size=%zu, err=%d\n",
+                  numLIZ*sizeof(int),err);
+          exit(1);
+        }
   
   return 0;
 }
 
 void DeviceAtom::free()
 {
+  deviceError_t err;
   if(allocated)
   {
-    deviceFree(LIZPos);
-    deviceFree(LIZlmax);
-    deviceFree(LIZStoreIdx);
+    err = deviceFree(LIZPos);
+    err = deviceFree(LIZlmax);
+    err = deviceFree(LIZStoreIdx);
   }
   allocated = false;
 }
 
 void DeviceAtom::copyFromAtom(AtomData &atom)
 {
+  deviceError_t err;
   if(!allocated)
   {
     allocate(atom.lmax, atom.nspin, atom.numLIZ);
   }
-  deviceMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), deviceMemcpyHostToDevice);
-  deviceMemcpy(LIZlmax, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
-  deviceMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
+  err = deviceMemcpy(LIZPos, &atom.LIZPos(0,0), atom.numLIZ*3*sizeof(Real), deviceMemcpyHostToDevice);
+  err = deviceMemcpy(LIZlmax, &atom.LIZlmax[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
+  err = deviceMemcpy(LIZStoreIdx, &atom.LIZStoreIdx[0], atom.numLIZ*sizeof(int), deviceMemcpyHostToDevice);
 }
 
 int *DeviceConstants::lofk;
@@ -375,28 +405,62 @@ int DeviceConstants::allocate()
   lmaxp1_cgnt = GauntCoeficients::cgnt.l_dim1();
   ndlj_cgnt = GauntCoeficients::cgnt.l_dim2();
 
-  deviceMalloc((void**)&lofk, AngularMomentumIndices::lofk.size()*sizeof(int));
-  deviceMalloc((void**)&mofk, AngularMomentumIndices::mofk.size()*sizeof(int));
-  deviceMalloc((void**)&ilp1, IFactors::ilp1.size()*sizeof(deviceDoubleComplex));
-  deviceMalloc((void**)&illp, IFactors::illp.size()*sizeof(deviceDoubleComplex));
-  deviceMalloc((void**)&cgnt, GauntCoeficients::cgnt.size()*sizeof(double));
+  deviceError_t err;
 
-  deviceMemcpy(lofk, &AngularMomentumIndices::lofk[0], AngularMomentumIndices::lofk.size()*sizeof(int), deviceMemcpyHostToDevice);
-  deviceMemcpy(mofk, &AngularMomentumIndices::mofk[0], AngularMomentumIndices::mofk.size()*sizeof(int), deviceMemcpyHostToDevice);
-  deviceMemcpy(ilp1, &IFactors::ilp1[0], IFactors::ilp1.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
-  deviceMemcpy(illp, &IFactors::illp[0], IFactors::illp.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
-  deviceMemcpy(cgnt, &GauntCoeficients::cgnt[0], GauntCoeficients::cgnt.size()*sizeof(double), deviceMemcpyHostToDevice);
+  err = deviceMalloc((void**)&lofk, AngularMomentumIndices::lofk.size()*sizeof(int));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate DeviceConstant lofk, size=%zu, err=%d\n",
+                  AngularMomentumIndices::lofk.size()*sizeof(int),err);
+          exit(1);
+        }
+  err = deviceMalloc((void**)&mofk, AngularMomentumIndices::mofk.size()*sizeof(int));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate DeviceConstant mofk, size=%zu, err=%d\n",
+                  AngularMomentumIndices::mofk.size()*sizeof(int),err);
+          exit(1);
+        }
+  err = deviceMalloc((void**)&ilp1, IFactors::ilp1.size()*sizeof(deviceDoubleComplex));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate DeviceConstant ilp1, size=%zu, err=%d\n",
+                  IFactors::ilp1.size()*sizeof(deviceDoubleComplex),err);
+          exit(1);
+        }
+  err = deviceMalloc((void**)&illp, IFactors::illp.size()*sizeof(deviceDoubleComplex));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate DeviceConstant illp, size=%zu, err=%d\n",
+                  IFactors::illp.size()*sizeof(deviceDoubleComplex),err);
+          exit(1);
+        }
+  err = deviceMalloc((void**)&cgnt, GauntCoeficients::cgnt.size()*sizeof(double));
+  if(err!=deviceSuccess)
+        {
+          printf("failed to allocate DeviceConstant cgnt, size=%zu, err=%d\n",
+                  GauntCoeficients::cgnt.size()*sizeof(double),err);
+          exit(1);
+        }
+
+  err = deviceMemcpy(lofk, &AngularMomentumIndices::lofk[0], AngularMomentumIndices::lofk.size()*sizeof(int), deviceMemcpyHostToDevice);
+  err = deviceMemcpy(mofk, &AngularMomentumIndices::mofk[0], AngularMomentumIndices::mofk.size()*sizeof(int), deviceMemcpyHostToDevice);
+  err = deviceMemcpy(ilp1, &IFactors::ilp1[0], IFactors::ilp1.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
+  err = deviceMemcpy(illp, &IFactors::illp[0], IFactors::illp.size()*sizeof(deviceDoubleComplex), deviceMemcpyHostToDevice);
+  err = deviceMemcpy(cgnt, &GauntCoeficients::cgnt[0], GauntCoeficients::cgnt.size()*sizeof(double), deviceMemcpyHostToDevice);
 
   return 0;
 }
 
 void DeviceConstants::free()
 {
-  deviceFree(lofk);
-  deviceFree(mofk);
-  deviceFree(ilp1);
-  deviceFree(illp);
-  deviceFree(cgnt);
+  deviceError_t err;
+
+  err = deviceFree(lofk);
+  err = deviceFree(mofk);
+  err = deviceFree(ilp1);
+  err = deviceFree(illp);
+  err = deviceFree(cgnt);
 }
 
 /****************Fortran Interfaces*********************/
