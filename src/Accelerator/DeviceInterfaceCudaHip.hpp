@@ -80,15 +80,17 @@ inline deviceError_t deviceMalloc (void** devPtr, size_t size )
   {return hipMalloc (devPtr, size);}
 
 inline deviceError_t deviceMallocHost (void** devPtr, size_t size )
-  {return hipMallocHost (devPtr, size); }
-  /* {return hipHostMalloc(devPtr, size, 0); /* hipMallocHost (devPtr, size);  } */
+  { return hipHostMalloc(devPtr, size, hipHostMallocNumaUser); }
+  // {return hipMallocHost (devPtr, size); }
+  // /* {return hipHostMalloc(devPtr, size, 0); /* hipMallocHost (devPtr, size);  } */
 
 inline deviceError_t deviceFree (void* devPtr)
   {return hipFree(devPtr);}
 
 inline deviceError_t deviceFreeHost (void* devPtr)
-  {return hipFreeHost(devPtr); }
-  /* {return hipHostFree(devPtr); /* hipFreeHost(devPtr);  } */
+  { return hipHostFree(defPtr); }
+  // {return hipFreeHost(devPtr); }
+  // /* {return hipHostFree(devPtr); /* hipFreeHost(devPtr);  } */
 
 inline deviceError_t deviceMemcpy (void* dst, const void* src, size_t count, hipMemcpyKind kind)
   {return hipMemcpy(dst, src, count, kind);}
