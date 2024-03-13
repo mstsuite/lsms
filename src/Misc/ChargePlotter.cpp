@@ -74,7 +74,11 @@ void ChargePlotter::plotCharges(LSMSCommunication &comm,
                  MPI_DOUBLE, MPI_SUM, 0, comm.comm);
     }
 
-    auto result_up = std::reduce(global_qtot_up.begin(), global_qtot_up.end());
+    // auto result_up = std::reduce(global_qtot_up.begin(), global_qtot_up.end());
+    double result_up = 0.0;
+    for(int i = 0; i < num_atoms; i++) {
+      result_up += global_qtot_up[i];
+    }
 
     // Print step
     file << std::setw(5) << iter << " ";
@@ -85,8 +89,12 @@ void ChargePlotter::plotCharges(LSMSCommunication &comm,
     file << std::fixed << std::showpoint << std::setprecision(12) << result_up
          << " ";
 
-    auto result_down =
-        std::reduce(global_qtot_down.begin(), global_qtot_down.end());
+    // auto result_down =
+    //     std::reduce(global_qtot_down.begin(), global_qtot_down.end());
+    double result_down = 0.0;
+    for(int i = 0; i < num_atoms; i++) {
+      result_up += global_qtot_down[i];
+    }
 
     for (int i = 0; i < num_atoms; i++) {
       file << std::fixed << std::showpoint << std::setprecision(12)
@@ -127,7 +135,11 @@ void ChargePlotter::plotCharges(LSMSCommunication &comm,
                  MPI_DOUBLE, MPI_SUM, 0, comm.comm);
     }
 
-    auto result = std::reduce(global_qtot_up.begin(), global_qtot_up.end());
+    // auto result = std::reduce(global_qtot_up.begin(), global_qtot_up.end());
+    double result = 0.0;
+    for(int i = 0; i < num_atoms; i++) {
+      result += global_qtot_up[i];
+    }
 
     // Print step
     file << std::setw(5) << iter << " ";
