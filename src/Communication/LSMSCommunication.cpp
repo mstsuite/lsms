@@ -636,6 +636,7 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to,
     MPI_Pack(atom.xvalws, 2, MPI_DOUBLE, buf, s, &pos, comm.comm);
     MPI_Pack(&atom.localEnergy, 1, MPI_DOUBLE, buf, s, &pos, comm.comm);
     MPI_Pack(&atom.localMadelungEnergy, 1, MPI_DOUBLE, buf, s, &pos, comm.comm);
+    MPI_Pack(&atom.localMadelungPotential, 1, MPI_DOUBLE, buf, s, &pos, comm.comm);
     MPI_Pack(&atom.alloy_class, 1, MPI_INT, buf, s, &pos, comm.comm);
     MPI_Pack(&atom.omegaMT, 1, MPI_DOUBLE, buf, s, &pos, comm.comm);
     MPI_Pack(&atom.omegaWS, 1, MPI_DOUBLE, buf, s, &pos, comm.comm);
@@ -706,8 +707,8 @@ void communicateSingleAtomData(LSMSCommunication &comm, int from, int to,
     MPI_Unpack(buf, s, &pos, atom.evecOut, 3, MPI_DOUBLE, comm.comm);
     MPI_Unpack(buf, s, &pos, atom.xvalws, 2, MPI_DOUBLE, comm.comm);
     MPI_Unpack(buf, s, &pos, &atom.localEnergy, 1, MPI_DOUBLE, comm.comm);
-    MPI_Unpack(buf, s, &pos, &atom.localMadelungEnergy, 1, MPI_DOUBLE,
-               comm.comm);
+    MPI_Unpack(buf, s, &pos, &atom.localMadelungEnergy, 1, MPI_DOUBLE, comm.comm);
+    MPI_Unpack(buf, s, &pos, &atom.localMadelungPotential, 1, MPI_DOUBLE, comm.comm);
     MPI_Unpack(buf, s, &pos, &atom.alloy_class, 1, MPI_INT, comm.comm);
     MPI_Unpack(buf, s, &pos, &atom.omegaMT, 1, MPI_DOUBLE, comm.comm);
     MPI_Unpack(buf, s, &pos, &atom.omegaWS, 1, MPI_DOUBLE, comm.comm);

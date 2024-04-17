@@ -88,6 +88,7 @@ void lsms::ASAPotential::calculatePotential(LSMSCommunication &comm,
     }
 
     local.atom[i].localMadelungEnergy = u0;
+    local.atom[i].localMadelungPotential = vmt1;
     u0Sum += u0;
 
     /**

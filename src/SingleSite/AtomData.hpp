@@ -485,6 +485,8 @@ public:
   Real localEnergy{};
   Real localMadelungEnergy{};
 
+  Real localMadelungPotential{};
+
 // Alloy Class
   int alloy_class{};
 

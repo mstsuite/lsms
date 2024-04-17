@@ -689,6 +689,7 @@ void calculatePotential(LSMSCommunication &comm, LSMSSystemParameters &lsms, Loc
     u0Sum += u0 * local.n_per_type[i];
     u0MTSum += u0MT * local.n_per_type[i];
     local.atom[i].localMadelungEnergy = u0;
+    local.atom[i].localMadelungPotential = vmt1[1];
   }
 
 /*

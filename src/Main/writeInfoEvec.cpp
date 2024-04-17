@@ -25,13 +25,13 @@ static void writeSingleLocalAtomData(FILE *f, int z, int i, Real posX,
   fprintf(f,
           "%3d %8d  %21.15lf  %21.15lf  %21.15lf  %12.6lf %12.6lf  %21.15lf  "
           "%21.15lf  %21.15lf  %21.15lf  %21.15lf  %21.15lf  %8.4lf  %.15lf  "
-          "%.15lf %21.15lf %21.15lf %21.15lf %10.6lf %10.6lf  %.15lf\n",
+          "%.15lf %21.15lf %21.15lf %21.15lf %10.6lf %10.6lf  %.15lf %.15lf\n",
           z, i, posX, posY, posZ, atom.qtotws, atom.mtotws, atom.evec[0],
           atom.evec[1], atom.evec[2], atom.b_con[0], atom.b_con[1],
           atom.b_con[2], atom.vSpinShift, atom.omegaWS,
           atom.localEnergy + atom.localMadelungEnergy, atom.mtotmt, atom.mvalmt,
           atom.mvalws, atom.r_mesh[atom.jmt], atom.r_mesh[atom.jws],
-          atom.localMadelungEnergy);
+          atom.localMadelungEnergy, atom.localMadelungPotential);
 }
 
 static void readSingleEvec(FILE *f, int &z, int &i, Real &posX, Real &posY,
@@ -170,7 +170,7 @@ int writeLocalAtomData(LSMSCommunication &comm, LSMSSystemParameters &lsms,
     fprintf(outf,
             "# Z global_id x y z  qtotws  mtotws  evec_x evec_y evec_z  e_mix  "
             "B_x B_y B_z  vSpinShift localVolume localEnergy  mtotmt  mvalmt  "
-            "mvalws localElectrostaticEnergy\n");
+            "mvalws localElectrostaticEnergy Vmad\n");
 
     fprintf(outf, "%.15lf %.15lf %.15lf %.15lf\n", lsms.totalEnergy, eband,
             lsms.chempot, lsms.u0);
