@@ -63,7 +63,7 @@ inline deviceError_t deviceStreamDestroy(cudaStream_t stream)
 
 #include <hip/hip_runtime.h>
 #include <hip/hip_complex.h>
-#include <hipblas.h>
+#include <hipblas/hipblas.h>
 
 typedef hipDoubleComplex deviceDoubleComplex;
 

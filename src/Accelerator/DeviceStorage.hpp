@@ -14,7 +14,7 @@
 
 #if defined(ACCELERATOR_HIP)
 #include <hip/hip_runtime_api.h> 
-#include <rocsolver.h>
+#include <rocsolver/rocsolver.h>
 #endif
 
 #include "DeviceInterfaceCudaHip.hpp"
