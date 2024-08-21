@@ -21,7 +21,8 @@ void acceleratorFinalize(void)
   cudaDeviceReset();
 #endif
 #if defined(ACCELERATOR_HIP)
-  hipDeviceReset();
+  hipError_t hipError;
+  hipError = hipDeviceReset();
 #endif
 }
 
