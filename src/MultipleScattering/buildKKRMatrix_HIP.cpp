@@ -14,8 +14,8 @@
 #include <hip/hip_runtime.h>
 #include <hip/hip_complex.h>
 #include <hip/hip_runtime.h>
-#include <hipblas.h>
-#include <rocsolver.h>
+#include <hipblas/hipblas.h>
+#include <rocsolver/rocsolver.h>
 #include <stdio.h>
 
 #include <vector>
@@ -39,7 +39,7 @@
 
 __device__ __inline__ deviceDoubleComplex complexExp(deviceDoubleComplex z) {
   double mExp = exp(hipCreal(z));
-  return make_hipDoubleComplex(mExp * cos(hipCimag(z)),
+  return (deviceDoubleComplex) make_hipDoubleComplex(mExp * cos(hipCimag(z)),
                                mExp * sin(hipCimag(z)));
 }
 
@@ -47,21 +47,26 @@ __device__ inline void calculateHankelHip(deviceDoubleComplex prel, double r,
                                           int lend, deviceDoubleComplex *ilp1,
                                           deviceDoubleComplex *hfn) {
   if (hipThreadIdx_x == 0) {
-    const deviceDoubleComplex sqrtm1 = make_hipDoubleComplex(0.0, 1.0);
-    deviceDoubleComplex z = prel * make_hipDoubleComplex(r, 0.0);
-    hfn[0] = make_hipDoubleComplex(0.0, -1.0);  //-sqrtm1;
-    hfn[1] = make_hipDoubleComplex(-1.0, 0.0) - sqrtm1 / z;
+    const deviceDoubleComplex sqrtm1 =  make_hipDoubleComplex(0.0, 1.0);
+    deviceDoubleComplex z = hipCmul(prel , make_hipDoubleComplex(r, 0.0) );
+    // deviceDoubleComplex z = prel * (deviceDoubleComplex) make_hipDoubleComplex(r, 0.0);
+    hfn[0] = (deviceDoubleComplex) make_hipDoubleComplex(0.0, -1.0);  //-sqrtm1;
+    hfn[1] = hipCdiv(make_hipDoubleComplex(-1.0, 0.0) - sqrtm1, z);
+    // hfn[1] = (deviceDoubleComplex) make_hipDoubleComplex(-1.0, 0.0) - sqrtm1 / z;
     for (int l = 1; l < lend; l++) {
-      hfn[l + 1] = ((2.0 * l + 1.0) * hfn[l] / z) - hfn[l - 1];
+      hfn[l + 1] = hipCdiv((2.0 * l + 1.0) * hfn[l], z) - hfn[l - 1];
+      // hfn[l + 1] = ((2.0 * l + 1.0) * hfn[l] / z) - hfn[l - 1];
     }
 
     //             l+1
     //     hfn = -i   *h (k*R  )*sqrt(E)
     //                  l    ij
 
-    z = complexExp(sqrtm1 * z) / r;
+    z = complexExp( hipCmul(sqrtm1, z)) / r;
+    // z = complexExp(sqrtm1 * z) / r;
     for (int l = 0; l <= lend; l++) {
-      hfn[l] = ((-hfn[l]) * z) * ilp1[l];
+      hfn[l] = hipCmul( hipCmul((-hfn[l]), z), ilp1[l] );
+      // hfn[l] = ((-hfn[l]) * z) * ilp1[l];
     }
   }
   //  __syncthreads();
@@ -145,11 +150,13 @@ __device__ __inline__ deviceDoubleComplex dlmFunction(deviceDoubleComplex *hfn,
   if (m == 0) return dlm;
 
   if (m < 0) {
-    dlm = dlm * make_hipDoubleComplex(cosmp[mAbs], sinmp[mAbs]);
+    dlm = hipCmul(dlm, make_hipDoubleComplex(cosmp[mAbs], sinmp[mAbs]) );
+    // dlm = dlm * make_hipDoubleComplex(cosmp[mAbs], sinmp[mAbs]);
     if ((mAbs & 0x01) != 0)  // m is odd
       dlm = -dlm;
   } else {
-    dlm = dlm * make_hipDoubleComplex(cosmp[mAbs], -sinmp[mAbs]);
+    dlm = hipCmul(dlm, make_hipDoubleComplex(cosmp[mAbs], -sinmp[mAbs]) );
+	    // dlm * make_hipDoubleComplex(cosmp[mAbs], -sinmp[mAbs]);
   }
 
   return dlm;
@@ -399,7 +406,8 @@ __global__ void buildGijHipKernel(
       // devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] *devBgijPointer =
       // *devBgijPointer
       devBgij[IDX(iOffset + lm2, jOffset + lm1, nrmat_ns)] =
-          devBgijValue * pi4 * illp[IDX(lm2, lm1, ndlj_illp)];
+	      pi4 * hipCmul(devBgijValue, illp[IDX(lm2, lm1, ndlj_illp)]);
+          // devBgijValue * pi4 * illp[IDX(lm2, lm1, ndlj_illp)];
     }
 
     // might do this as a seperate kernel
@@ -525,10 +533,11 @@ __global__ void buildKKRMatrixMultiplyKernelHip(
         // devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devM[IDX(iOffset + i,
         // jOffset + j, nrmat_ns)] -
         devMValue = devMValue -
-                    // tmat_n[IDX(i,k,kkr1_ns)] *
+		hipCmul (tmat_n[tmat_nIdx], devBgij[k + devBgijIdx0]);
+                    /* // tmat_n[IDX(i,k,kkr1_ns)] *
                     tmat_n[tmat_nIdx] *
                         // devBgij[IDX(iOffset + k, jOffset + j, nrmat_ns)];
-                        devBgij[k + devBgijIdx0];
+                    devBgij[k + devBgijIdx0]; */
         tmat_nIdx += kkr1_ns;
       }
       devM[IDX(iOffset + i, jOffset + j, nrmat_ns)] = devMValue;
@@ -567,7 +576,7 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms,
   std::vector<int> offsets(devAtom.numLIZ);
   for (int ir = 0; ir < devAtom.numLIZ; ir++) offsets[ir] = ir * kkrsz_ns;
 
-  deviceMemcpy(devOffsets, &offsets[0], atom.numLIZ * sizeof(int),
+  deviceError_t ret = deviceMemcpy(devOffsets, &offsets[0], atom.numLIZ * sizeof(int),
                deviceMemcpyHostToDevice);
 
   size_t hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset;
@@ -575,7 +584,7 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms,
                                       &cosmpOffset, &plmOffset, &dlmOffset);
 #ifdef COMPARE_ORIGINAL
   char *devTestSM;
-  deviceMalloc((void **)&devTestSM, smSize);
+  ret = deviceMalloc((void **)&devTestSM, smSize);
 #endif
   // int threads = 256;
   int threads = 1;
@@ -600,11 +609,11 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms,
   Matrix<Real> testLIZPos(3, atom.numLIZ);
   Matrix<Complex> bgij(nrmat_ns, nrmat_ns);
   Complex testIlp1[2 * lsms.maxlmax + 1];
-  deviceMemcpy(&bgij[0], devBgij, nrmat_ns * nrmat_ns * sizeof(Complex),
+  ret = deviceMemcpy(&bgij[0], devBgij, nrmat_ns * nrmat_ns * sizeof(Complex),
                deviceMemcpyDeviceToHost);
-  deviceMemcpy(&testLIZPos[0], devAtom.LIZPos, 3 * atom.numLIZ * sizeof(Real),
+  ret = deviceMemcpy(&testLIZPos[0], devAtom.LIZPos, 3 * atom.numLIZ * sizeof(Real),
                deviceMemcpyDeviceToHost);
-  deviceMemcpy(&testIlp1[0], DeviceConstants::ilp1,
+  ret = deviceMemcpy(&testIlp1[0], DeviceConstants::ilp1,
                (2 * lsms.maxlmax + 1) * sizeof(Complex),
                deviceMemcpyDeviceToHost);
 
@@ -620,11 +629,11 @@ void buildKKRMatrixLMaxIdenticalHip(LSMSSystemParameters &lsms,
   // Real plm[((lsms.maxlmax+1) * (lsms.maxlmax+2)) / 2];
   Real testPlm[AngularMomentumIndices::ndlm];
 // Complex testDlm[AngularMomentumIndices::ndlj];
-  deviceMemcpy(testHfn, devTestSM + hfnOffset, (2*lsms.maxlmax + 1)*sizeof(Complex), deviceMemcpyDeviceToHost);
-  deviceMemcpy(testSinmp, devTestSM + sinmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), deviceMemcpyDeviceToHost);
-  deviceMemcpy(testCosmp, devTestSM + cosmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), deviceMemcpyDeviceToHost);
-  deviceMemcpy(testPlm, devTestSM + plmOffset, AngularMomentumIndices::ndlm*sizeof(Real), deviceMemcpyDeviceToHost);
-// deviceMemcpy(testDlm, devTestSM + dlmOffset, AngularMomentumIndices::ndlj*sizeof(Complex), deviceMemcpyDeviceToHost);
+  ret = deviceMemcpy(testHfn, devTestSM + hfnOffset, (2*lsms.maxlmax + 1)*sizeof(Complex), deviceMemcpyDeviceToHost);
+  ret = deviceMemcpy(testSinmp, devTestSM + sinmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), deviceMemcpyDeviceToHost);
+  ret = deviceMemcpy(testCosmp, devTestSM + cosmpOffset, (2*lsms.maxlmax + 1)*sizeof(Real), deviceMemcpyDeviceToHost);
+  ret = deviceMemcpy(testPlm, devTestSM + plmOffset, AngularMomentumIndices::ndlm*sizeof(Real), deviceMemcpyDeviceToHost);
+// ret = deviceMemcpy(testDlm, devTestSM + dlmOffset, AngularMomentumIndices::ndlj*sizeof(Complex), deviceMemcpyDeviceToHost);
 
   for (int i = 0; i < atom.numLIZ; i++) {
     if (atom.LIZPos(0, i) != testLIZPos(0, i) ||
@@ -907,7 +916,7 @@ void buildKKRMatrixLMaxDifferentHip(LSMSSystemParameters &lsms,
                                         (atom.LIZlmax[ir - 1] + 1) *
                                         (atom.LIZlmax[ir - 1] + 1);
 
-  deviceMemcpy(devOffsets, &offsets[0], atom.numLIZ * sizeof(int),
+  deviceError_t ret = deviceMemcpy(devOffsets, &offsets[0], atom.numLIZ * sizeof(int),
                deviceMemcpyHostToDevice);
 
   size_t hfnOffset, sinmpOffset, cosmpOffset, plmOffset, dlmOffset;
@@ -915,7 +924,7 @@ void buildKKRMatrixLMaxDifferentHip(LSMSSystemParameters &lsms,
                                       &cosmpOffset, &plmOffset, &dlmOffset);
 #ifdef COMPARE_ORIGINAL
   char *devTestSM;
-  deviceMalloc((void **)&devTestSM, smSize);
+  ret = deviceMalloc((void **)&devTestSM, smSize);
 #endif
   int threads = 256;
   dim3 blocks = dim3(devAtom.numLIZ, devAtom.numLIZ, 1);

@@ -3,8 +3,8 @@
 
 #include <hip/hip_complex.h>
 #include <hip/hip_runtime.h>
-#include <hipblas.h>
-#include <rocsolver.h>
+#include <hipblas/hipblas.h>
+#include <rocsolver/rocsolver.h>
 #include <stdio.h>
 
 #include <vector>
@@ -13,6 +13,7 @@
 #include "Complex.hpp"
 #include "Matrix.hpp"
 #include "linearSolvers.hpp"
+
 
 /*
 #define IDX(i, j, lDim) (((j)*(lDim))+(i))
@@ -23,7 +24,7 @@ void zeroMatrixHip(T *devM, int lDim, int nCol)
 //  for(int i=0; i<m.n_row(); i++)
 //    for(int j=0; j<m.n_col(); j++)
 //      m(i,j) = 0.0;
-  hipMemset(devM, 0, lDim*nCol*sizeof(T));
+  hipError_t ret = hipMemset(devM, 0, lDim*nCol*sizeof(T));
 }
 
 template <typename T>
@@ -49,7 +50,7 @@ __global__ void addDiagonalKernelHip(T *devM, int lDim, int nCol, T val)
 template <typename T>
 void unitMatrixHip(T *devM, int lDim, int nCol)
 {
-  zeroMatrixHip(devM, lDim, nCol);
+  hipError_t ret = zeroMatrixHip(devM, lDim, nCol);
   setDiagonalKernelHip<<<nCol,1>>>(devM, lDim, nCol, 1.0);
 }
 */
@@ -72,7 +73,7 @@ __global__ void zeroDiagonalBlocksKernelHip(T *devM, int lDim, int nCol,
 void transferT0MatrixToGPUHip(Complex *devT0, LSMSSystemParameters &lsms,
                               LocalTypeInfo &local, AtomData &atom, int iie) {
   int kkrsz_ns = lsms.n_spin_cant * atom.kkrsz;
-  hipMemcpy(devT0,
+  hipError_t ret = hipMemcpy(devT0,
             &local.tmatStore(iie * local.blkSizeTmatStore, atom.LIZStoreIdx[0]),
             kkrsz_ns * kkrsz_ns * sizeof(hipDoubleComplex),
             hipMemcpyHostToDevice);
@@ -112,16 +113,16 @@ void transferFullTMatrixToGPUHip(Complex *devT, LSMSSystemParameters &lsms, Loca
     std::cout << std::endl;
   }
   */
-  hipMemcpy(devT, &bigT(0,0), nrmat_ns*nrmat_ns*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
+  hipError_t ret = hipMemcpy(devT, &bigT(0,0), nrmat_ns*nrmat_ns*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
 }
 
 void transferMatrixToGPUHip(Complex *devM, Matrix<Complex> &m)
 {
-  hipMemcpy(devM, &m(0,0), m.l_dim()*m.n_col()*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
+  hipError_t ret = hipMemcpy(devM, &m(0,0), m.l_dim()*m.n_col()*sizeof(hipDoubleComplex), hipMemcpyHostToDevice);
 }
 
 void transferMatrixFromGPUHip(Matrix<Complex> &m, hipDoubleComplex *devM) {
-  hipMemcpy(&m(0, 0), devM, m.l_dim() * m.n_col() * sizeof(hipDoubleComplex),
+  hipError_t ret = hipMemcpy(&m(0, 0), devM, m.l_dim() * m.n_col() * sizeof(hipDoubleComplex),
             hipMemcpyDeviceToHost);
 }
 
@@ -258,8 +259,17 @@ void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms,
   // printf("LSMS solveTau00zgetrf_rocsolver: entering\n");
   // fflush(stdout);
   zeroMatrixHip(devTau, nrmat_ns, kkrsz_ns);
+
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  hipError_t ret = hipDeviceSynchronize();
+#endif
+
   copyTMatrixToTauHip<<<kkrsz_ns, 1>>>(devTau, (hipDoubleComplex *)tMatrix,
                                        kkrsz_ns, nrmat_ns);
+
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
 
   //  cusolverDnZgetrf(cusolverDnHandle, nrmat_ns, nrmat_ns,
   //                   (cuDoubleComplex *)devM, nrmat_ns, devWork, devIpiv,
@@ -269,6 +279,10 @@ void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms,
   // fflush(stdout);
   rocsolver_zgetrf(rocblasHandle, nrmat_ns, nrmat_ns,
                    (rocblas_double_complex *)devM, nrmat_ns, devIpiv, devInfo);
+
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
 
   //  cusolverDnZgetrs(cusolverDnHandle, CUBLAS_OP_N, nrmat_ns, kkrsz_ns,
   //                   (cuDoubleComplex *)devM, nrmat_ns, devIpiv, devTau,
@@ -280,11 +294,25 @@ void solveTau00zgetrf_rocsolver(LSMSSystemParameters &lsms,
                    (rocblas_double_complex *)devM, nrmat_ns, devIpiv,
                    (rocblas_double_complex *)devTau, nrmat_ns);
 
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
+
   // copy result into tau00
   // printf("LSMS solveTau00zgetrf_rocsolver: copy result into tau00\n");
   // fflush(stdout);
   copyTauToTau00Hip<<<kkrsz_ns, 1>>>(devTau00, devTau, kkrsz_ns, nrmat_ns);
+
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
+
   transferMatrixFromGPUHip(tau00, devTau00);
+
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
+
   // printf("LSMS solveTau00zgetrf_rocsolver: leaving\n");
   //  fflush(stdout);
 }
@@ -302,17 +330,31 @@ void solveTauFullzgetrf_rocsolver(LSMSSystemParameters &lsms, LocalTypeInfo &loc
 
   hipDoubleComplex *devWork = (hipDoubleComplex *)d.getDevWork();
   zeroMatrixHip(devTauFull, nrmat_ns, nrmat_ns);
+
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  hipError_t ret = hipDeviceSynchronize();
+#endif
+
   copyBigTMatrixToTauHip<<<nrmat_ns,1>>>((hipDoubleComplex *)devTauFull, (hipDoubleComplex *)tMatrix, nrmat_ns);
 
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
 
   rocsolver_zgetrf(rocblashandle, nrmat_ns, nrmat_ns,
                                       (rocblas_double_complex *)devM, nrmat_ns, devIpiv, devInfo);
 
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
 
   //std::cout << nrmat_ns << "  " << std::endl;
   //printf(" %p %p %p %p\n", devM, devTauFull, devIpiv, devInfo);
   rocsolver_zgetrs(rocblashandle, rocblas_operation_none, nrmat_ns, nrmat_ns,
                                       (rocblas_double_complex *)devM, nrmat_ns, devIpiv, (rocblas_double_complex *)devTauFull, nrmat_ns);
 
+#ifdef INCLUDE_ADDITIONAL_SYNCHRONIZE
+  ret = hipDeviceSynchronize();
+#endif
   //transferMatrixFromGPUCuda(tau, devTauFull);
 }

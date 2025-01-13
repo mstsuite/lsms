@@ -165,7 +165,7 @@ void zeroMatrixHip(T *devM, int lDim, int nCol) {
   //  for(int i=0; i<m.n_row(); i++)
   //    for(int j=0; j<m.n_col(); j++)
   //      m(i,j) = 0.0;
-  hipMemset(devM, 0, lDim * nCol * sizeof(T));
+  hipError_t ret = hipMemset(devM, 0, lDim * nCol * sizeof(T));
 }
 
 template <typename T>

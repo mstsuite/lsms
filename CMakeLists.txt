@@ -22,6 +22,8 @@ option(USE_ACCELERATOR_CUDA_C "Use the cuda accelerator" OFF)
 # option(USE_BUILDKKRMATRIX_GPU "Build also the kkr matrix on GPU" ON)
 option(USE_ACCELERATOR_HIP "Use HIP for accelerator" OFF)
 
+option(INCLUDE_ADDITIONAL_SYNCHRONIZE "Add additional syncronize in accelerator code" OFF)
+
 if (USE_ACCELERATOR_CUDA_C AND USE_ACCELERATOR_HIP)
     message(FATAL_ERROR "Both ACCELERATOR_CUDA_C and ACCELERATOR_HIP defined.\nOnly ONE of these allowed!")
 endif ()

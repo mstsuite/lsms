@@ -6,7 +6,7 @@
 
 message(STATUS "Use toolchain file SUMMIT")
 
-set(BUILD_TESTING ON)
+set(BUILD_TESTING OFF)
 
 set(USE_ACCELERATOR_CUDA_C ON)
 set(USE_ESSL ON)
@@ -22,6 +22,13 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS "-O3 -mtune=native -mcpu=native")
 set(CMAKE_Fortran_FLAGS "-O3 -mtune=native -mcpu=native")
 set(CMAKE_Fortran_PREPROCESS TRUE)
+
+# Currently Loaded Modules:
+#   1) lsf-tools/2.0       6) cmake/3.27.7                    11) nsight-compute/2023.2.2
+#   2) hsi/5.0.2.p5        7) spectrum-mpi/10.4.0.6-20230210  12) cuda/11.7.1
+#   3) xalt/1.2.1          8) fftw/3.3.10                     13) hdf5/1.14.3
+#   4) DefApps             9) netlib-scalapack/2.2.0
+#   5) essl/6.1.0-1  (H)  10) gcc/9.3.0-compiler_only
 
 
 
