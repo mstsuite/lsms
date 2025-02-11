@@ -555,9 +555,17 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,
   // Write the kkrmatrix?
   if (lsms.lsmsMode == LSMSMode::kkrmat) {
     if (lsms.global.iprint >= 0) {
-      FILE *f1 = fopen("kkrmat.out", "w");
-      FILE *f2 = fopen("kkrmat.pattern", "w");
+      char fname[256];
+      snprintf(fname, 200, "kkrmat_%03d.dat",iie);
+      FILE *f1 = fopen(fname, "w");
+      snprintf(fname, 200, "kkrmat_%03d.pattern",iie);
+      FILE *f2 = fopen(fname, "w");
+      snprintf(fname, 200, "tmat_%03d.dat",iie);
+      FILE *f3 = fopen(fname, "w");
       fprintf(f1, "# %6d x %6d\n", nrmat_ns, nrmat_ns);
+      fprintf(f1, "# energy: %lg %lg\n", std::real(energy), std::imag(energy));
+      fprintf(f3, "# %3d x %3d\n", kkrsz_ns, kkrsz_ns);
+      fprintf(f3, "# energy: %lg %lg\n", std::real(energy), std::imag(energy));
       for (int i = 0; i < nrmat_ns; i++) {
         fprintf(f2, "%5d ", i);
         for (int j = 0; j < nrmat_ns; j++) {
@@ -570,11 +578,38 @@ void calculateTauMatrix(LSMSSystemParameters &lsms, LocalTypeInfo &local,
         }
         fprintf(f2, "\n");
       }
+
+      if (lsms.n_spin_pola == lsms.n_spin_cant) {  // non polarized or spin canted
+
+        for (int i = 0; i < kkrsz_ns; i++) {
+          for (int j = 0; j < kkrsz_ns; j++) {
+            fprintf(f3, "%6d %6d %lg %lg\n", i, j, // tMatrix(i, j) =
+              std::real(local.tmatStore(i + j * kkrsz_ns + iie * local.blkSizeTmatStore,
+                            atom.LIZStoreIdx[0])),
+              std::imag(local.tmatStore(i + j * kkrsz_ns + iie * local.blkSizeTmatStore,
+                            atom.LIZStoreIdx[0])));
+          }
+        }
+
+      } else {
+        int jsm = kkrsz_ns * kkrsz_ns * ispin;
+
+        for (int i = 0; i < kkrsz_ns; i++) {
+          for (int j = 0; j < kkrsz_ns; j++) {
+            fprintf(f3, "%6d %6d %lg %lg\n", i, j, // local.tmatStore(
+              std::real(local.tmatStore(i + j * kkrsz_ns + iie * local.blkSizeTmatStore + jsm,
+              atom.LIZStoreIdx[0])),
+              std::imag(local.tmatStore(i + j * kkrsz_ns + iie * local.blkSizeTmatStore + jsm,
+              atom.LIZStoreIdx[0])));
+          }
+        }
+      }
+
       fclose(f1);
       fclose(f2);
+      fclose(f3);
     }
     // exitLSMS(comm, 0);
-    exit(0);
   }
 
 #ifdef USE_NVTX

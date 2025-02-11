@@ -668,7 +668,8 @@ void energyContourIntegration(LSMSCommunication &comm,
           printf("timeCalculateDensities = %lf sec\n", timeCalcDensities);
       }
     }
-  }
+  } // energy group interation (ig)
+
   timeEnergyContourIntegration_2 = MPI_Wtime() - timeEnergyContourIntegration_2;
   if (lsms.global.iprint >= 0) {
     printf("time in energyContourIntegration = %lf sec\n",
@@ -680,6 +681,14 @@ void energyContourIntegration(LSMSCommunication &comm,
     printf("    in calculateAllTauMatrices   = %lf sec\n",
            timeCalculateAllTauMatrices);
   }
+
+  if (lsms.lsmsMode == LSMSMode::kkrmat) {
+    if (lsms.global.iprint >= 0) {
+      printf("finished writing matrices!\nSTOP\n");
+    }
+    exitLSMS(comm, 0);
+  }
+
   if (lsms.lsmsMode == LSMSMode::dos) {
     for (int i = 0; i < nume; i++) {
       dosOut[i] = 0.0;
