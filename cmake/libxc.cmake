@@ -1,101 +1,64 @@
 #
 # Created by Franco P. Moitzi
+# Edited by Zhantong Qiu
 #
 
-#
-# Libxc libaries
-#
-
+# Check if libxc is already available
 if (DEFINED libxc_LIBRARIES)
-    get_filename_component(libxc_PARENT_PATH ${libxc_LIBRARIES} DIRECTORY )
+    get_filename_component(libxc_PARENT_PATH ${libxc_LIBRARIES} DIRECTORY)
 endif()
 
+set(libxc_BUILD_SRC_PATH ${CMAKE_BINARY_DIR}/external/libxc-6.1.0)
+set(libxc_LIBRARIES_PATH ${CMAKE_BINARY_DIR}/external/libxc-build)
+set(libxc_INCLUDE_DIR_PATH ${CMAKE_BINARY_DIR}/external/libxc-build/src)
 
-set(libxc_FOUND true)
+# check if neccessary files are available
+find_library(libxc_LIBRARIES NAMES xc PATHS ${libxc_LIBRARIES_PATH} ${libxc_PARENT_PATH})
+find_path(libxc_INCLUDE_DIR NAMES xc.h PATHS ${libxc_INCLUDE_DIR_PATH} ${libxc_INCLUDE_DIR})
+find_path(libxc_INCLUDE_BUILD_DIR NAMES xc_version.h PATHS ${libxc_LIBRARIES_PATH} ${libxc_INCLUDE_BUILD_DIR})
 
-find_library(libxc_LIBRARIES NAMES xc PATHS ${CMAKE_BINARY_DIR}/external/libxc/lib/ ${libxc_PARENT_PATH})
+message(STATUS "libxc_LIBRARIES: ${libxc_LIBRARIES}")
+message(STATUS "libxc_INCLUDE_DIR: ${libxc_INCLUDE_DIR}")
+message(STATUS "libxc_INCLUDE_BUILD_DIR: ${libxc_INCLUDE_BUILD_DIR}")
 
-if (NOT libxc_LIBRARIES)
-    message(STATUS "Libxc library was not found")
-    set(libxc_FOUND false)
-    set(libxc_LIBRARIES
-            ${CMAKE_BINARY_DIR}/external/libxc/lib/${CMAKE_STATIC_LIBRARY_PREFIX}xc${CMAKE_STATIC_LIBRARY_SUFFIX}
-            CACHE FILEPATH "libxc file path" FORCE)
-endif()
-
-find_path(libxc_INCLUDE_DIR NAMES xc.h PATHS ${CMAKE_BINARY_DIR}/external/libxc/include ${libxc_INCLUDE_DIR})
-
-if (NOT libxc_INCLUDE_DIR)
-    message(STATUS "Libxc include dir was not found")
-    set(libxc_FOUND false)
-    set(libxc_INCLUDE_DIR
-            ${CMAKE_BINARY_DIR}/external/libxc/include CACHE PATH "libxc include dir" FORCE)
-endif()
-
-if (EXISTS ${libxc_LIBRARIES} AND EXISTS ${libxc_INCLUDE_DIR})
-    set(libxc_FOUND true)
+if (EXISTS ${libxc_LIBRARIES} AND EXISTS ${libxc_INCLUDE_DIR} AND EXISTS ${libxc_INCLUDE_BUILD_DIR})
     message(STATUS "libxc was found")
+    
+    # Create imported target for existing installation
+    add_library(libxc::libxc SHARED IMPORTED GLOBAL)
+    set_target_properties(libxc::libxc PROPERTIES IMPORTED_LOCATION ${libxc_LIBRARIES})
+    target_include_directories(libxc::libxc INTERFACE ${libxc_BUILD_SRC_PATH}/src ${libxc_INCLUDE_DIR} ${libxc_INCLUDE_BUILD_DIR})
+        
+    target_compile_definitions(libxc::libxc INTERFACE USE_LIBXC)
 else()
-    set(libxc_FOUND false)
-    message(STATUS "libxc was not found and will be installed")
-endif ()
-
-message(STATUS "libxc library: " ${libxc_LIBRARIES})
-message(STATUS "libxc include: " ${libxc_INCLUDE_DIR})
-
-if (NOT libxc_FOUND)
-
-    cmake_policy(SET CMP0111 NEW)
-
-    find_program(AUTORECONF_EXECUTABLE
-            NAMES autoreconf
-            DOC "Autoreconf" REQUIRED)
-
-    find_program(AUTOCONF_EXECUTABLE
-            NAMES autoconf
-            DOC "Autoconf" REQUIRED)
-
-    find_program(AUTOMAKE_EXECUTABLE
-            NAMES automake
-            DOC "Automake" REQUIRED)
-
-    find_program(MAKE_EXECUTABLE
-            NAMES gmake make
-            NAMES_PER_DIR
-            DOC "GNU Make")
-
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(Autotools
-            REQUIRED_VARS AUTOCONF_EXECUTABLE AUTOMAKE_EXECUTABLE MAKE_EXECUTABLE)
-
+    message(STATUS "libxc was not found and will be built from source")
+    
+    # Build libxc from source
+    # Copy the source file to the build directory
     file(COPY ${PROJECT_SOURCE_DIR}/external/libxc-6.1.0
-            DESTINATION ${CMAKE_BINARY_DIR}/external)
-
-    set(_src ${CMAKE_BINARY_DIR}/external/libxc-6.1.0)
+    DESTINATION ${CMAKE_BINARY_DIR}/external)
+    
+    set(_src ${libxc_BUILD_SRC_PATH})
     get_filename_component(_src "${_src}" REALPATH)
+    
+    # Add subdirectory to build the native target
+    # This will include the CMakeLists.txt in the libxc source directory
+    # So we can use the target libxc::xc
+    add_subdirectory(${_src} ${libxc_LIBRARIES_PATH})
+    
+    # Set proper include directories for both source and generated files
+    set(libxc_INCLUDE_DIRS
+        ${_src}/src                 # Original source headers
+        ${libxc_INCLUDE_DIR_PATH}   # Generated xc.h
+        ${libxc_LIBRARIES_PATH}     # Generated xc_version.h
+    )
+    
+    # Create alias target and set include directories
+    add_library(libxc::libxc ALIAS xc)
+    
+    target_include_directories(xc PUBLIC 
+        $<BUILD_INTERFACE:${_src}/src>
+        $<BUILD_INTERFACE:${libxc_INCLUDE_DIR_PATH}>
+        $<BUILD_INTERFACE:${libxc_LIBRARIES_PATH}>)
+endif()
 
-    set(_install ${CMAKE_BINARY_DIR}/external/libxc)
-    file(MAKE_DIRECTORY ${_install})
-    file(MAKE_DIRECTORY ${_install}/include)
-    get_filename_component(_install "${_install}" REALPATH)
-    include(ExternalProject)
-
-    ExternalProject_Add(libxc
-            SOURCE_DIR ${_src}
-            BUILD_IN_SOURCE true
-            CONFIGURE_COMMAND ${AUTORECONF_EXECUTABLE} -i
-            COMMAND ./configure --prefix=${_install} CC=${CMAKE_C_COMPILER}
-            BUILD_COMMAND ${MAKE_EXECUTABLE}
-            INSTALL_COMMAND ${MAKE_EXECUTABLE} install
-            BUILD_BYPRODUCTS ${_install}/lib/libxc.a ${_install}/lib/libxc.so
-            )
-
-
-endif ()
-
-
-add_library(libxc::libxc SHARED IMPORTED GLOBAL)
-set_target_properties(libxc::libxc PROPERTIES IMPORTED_LOCATION ${libxc_LIBRARIES})
-target_include_directories(libxc::libxc INTERFACE ${libxc_INCLUDE_DIR})
-target_compile_definitions(libxc::libxc INTERFACE USE_LIBXC)
-add_dependencies(libxc::libxc libxc)

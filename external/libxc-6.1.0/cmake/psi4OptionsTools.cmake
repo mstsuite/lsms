@@ -21,7 +21,10 @@ endmacro()
 #
 macro(option_with_print variable msge default)
    print_option(${variable} ${default})
-   option(${variable} ${msge} ${default})
+   # don't redefine the variable if it is already defined
+   if(NOT DEFINED ${variable})
+       option(${variable} ${msge} ${default})
+   endif()
 endmacro(option_with_print)
 
 #Wraps an option with a default other than ON/OFF and prints it
